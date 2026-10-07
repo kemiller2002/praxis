@@ -1,0 +1,90 @@
+{
+  "schema": "a021-publication.metric-conflicts/1",
+  "note": "Every known discrepancy between a reported figure and the extracted data. verify_metrics.py allows a MISMATCH or NOT-COMPARABLE result only for the check ids listed here. Detail and evidence: metrics-sources.md.",
+  "conflicts": [
+    {
+      "id": "CF-01",
+      "kind": "definition",
+      "title": "A021 tokens and work counts: platform usage (EV-A064) versus transcript script (EV-A070, POST-UNBLINDING)",
+      "reported": {
+        "EV-A064": "output 112,377 vs 244,630; cache-read 24.5 M vs 45.1 M (platform get_session usage)",
+        "EV-A070 / POST-UNBLINDING-METRICS": "output 110,627 vs 176,304; cache-read 23,872,205 vs 32,211,852; 114 vs 237 requests; 52 vs 134 reads; 53 vs 159 searches; 16 vs 34 builds; 13 vs 15 test runs"
+      },
+      "finding": "Both sets reproduce exactly from committed sources. EV-A064's token figures are sums of sessions.json platformUsage over all 7 independent-arm sessions (5 items + item-04 attempts 1 and 2). EV-A070's are sums of the session_metrics.py files: grouped.json at 5face88 and the five control-0N.json files at 8ea9be2. Those files miss item-04 attempts 1-2 entirely (no transcript metrics exist), control-04.json covers only attempt 3 (bookkeeping), and every file was written before its session's final checkpoint/commit. So the transcript independent-arm figures are lower bounds; EV-A064 says 'at least' for the counts, EV-A070 and POST-UNBLINDING-METRICS drop the qualifier and present them alongside R2 platform figures.",
+      "resolution": "Use platform figures (output_tokens_platform, cache_read_tokens_platform, cost_usd_platform, agg:workers) for A021 resources. Use transcript figures only for metrics the platform does not supply (requests, reads, searches, builds, test runs, governance reads, time to first code), always marked lower_bound for the independent arm. Do not quote the transcript token totals as A021 token usage.",
+      "checks": ["A070-a021-mr-g", "A070-a021-mr-i", "A070-a021-out-g", "A070-a021-out-i", "A070-a021-reads-i", "A070-a021-search-i", "A070-a021-builds-g", "A070-a021-builds-i", "POST-a021-cr-g", "POST-a021-cr-i", "POST-a021-out-i", "POST-a021-tests-g", "POST-a021-tests-i"]
+    },
+    {
+      "id": "CF-02",
+      "kind": "incorrect_claim",
+      "title": "POST-UNBLINDING-METRICS: 'Original A021 ... platform cost was unavailable'",
+      "reported": {"POST-UNBLINDING-METRICS": "platform cost was unavailable"},
+      "finding": "False. sessions.json (committed on main since the A021 run; pinned at bc5a8d8) records get_session cost_usd for every A021 session: grouped $9.476795, independent arm $21.514808 over 7 sessions. EV-A064 and the A021 protocol's Results both report $9.48 vs $21.51. What was unavailable was Praxis's own cost.* telemetry and the planner's cost prediction, not platform cost. The R2 post-unblinding evaluator likely consulted only the transcript metrics files, whose costUsd is null.",
+      "resolution": "A021 platform cost is available: $9.48 vs $21.51 (55.95% reduction, ratio 2.27). The manuscript must not repeat the 'unavailable' claim.",
+      "checks": ["POST-a021-cost-unavailable"]
+    },
+    {
+      "id": "CF-03",
+      "kind": "rounding",
+      "title": "A021 independent-arm active session time: reported 112 min, recomputed 111 min 22 s",
+      "reported": {"EV-A064": "112 min (sum of sessions)", "EX-ROS-2026-A021 Results": "112 min of session time"},
+      "finding": "Sum of the seven session spans in sessions.json (createdAt to finishedAt; attempt 2 to blockedAt) is 6,682 s = 111.37 min. Using minute-rounded spans gives 111. No combination of the recorded timestamps gives 112 except a different end for attempt 2; the cause of the 1-minute difference is not recorded. Using abandonedAt for attempt 2 would give 238.5 min, so 112 does treat the permission block as blocked time.",
+      "resolution": "Report 111 min (6,682 s) computed from timestamps. The 1-minute difference does not change any ratio materially (1.82 vs 1.83).",
+      "checks": ["A064-active-i", "EX-i-summary-min"]
+    },
+    {
+      "id": "CF-04",
+      "kind": "definition",
+      "title": "'Peak context' is final context occupancy",
+      "reported": {"EV-A064": "Peak context in one session 319 k of 1 M tokens / 263 k (control-05); '32 % of the context window at peak'"},
+      "finding": "The figure is sessions.json platformUsage.context_used_tokens, i.e. get_session external_metadata.context_usage.used_tokens at the time the orchestrator recorded it (after the session ended). It is the final context size, not a measured maximum. With 0 compactions the context only grows, so it approximates the peak.",
+      "resolution": "Label it 'context in use at session end (no compactions; approximates peak)'. R2 has no committed context figure (unknown).",
+      "checks": ["A064-ctx-g", "A064-ctx-i"]
+    },
+    {
+      "id": "CF-05",
+      "kind": "definition",
+      "title": "R2 independent-arm cost and tokens include the control orchestrator session",
+      "reported": {"EV-A070 / POST-UNBLINDING-METRICS / publication README": "$26.0492768; output 262,893; cache-read 62,960,709; input 956; cache-write 1,074,120; ratios 2.4224x / 1.9781x / 2.2557x; cost reduction 58.72%"},
+      "finding": "Reproduced exactly as the sum of the six R2 independent-arm sessions in the run record (EX-ROS-2026-A021-R2-run.txt at 063e6b5, section 4): orchestrator C ($3.4929240) plus workers C1-C5. The grouped arm had no arm-specific orchestrator, and A021's per-arm figures exclude the single shared orchestrator. Excluding C, the independent arm is $22.5563528, output 236,654, cache-read 54,488,269; cost reduction 52.33% (ratio 2.10), output reduction 43.84%, cache-read reduction 48.77%.",
+      "resolution": "Report both. The A021-comparable R2 figures are agg:workers (cost reduction 52.33%). The 58.72% figure is agg:workers+orchestration and must be labelled as including the independent arm's orchestration session. It is arguably a real cost of independent execution, but it is not defined like A021's 55.95%.",
+      "checks": ["A070-i-cost", "A070-i-out", "A070-i-cr", "A070-ratio-cost", "A070-ratio-out", "A070-ratio-cr", "A070-red-cost", "POST-i-input", "POST-i-cw", "POST-i-cost", "POST-red-cost", "README-red-cost"]
+    },
+    {
+      "id": "CF-06",
+      "kind": "definition",
+      "title": "R2 'elapsed' is a wall-clock span including orchestration, measured from the common arm start",
+      "reported": {"EV-A070 / POST-UNBLINDING-METRICS / publication README": "2h23m35s; ratio 2.5693x; elapsed reduction 61.08%"},
+      "finding": "2h23m35s = 8,615 s = control orchestrator's end (get_session.updated_at 17:46:30Z) minus the run record's common arm start 15:22:55Z, which is the grouped session's created_at. The control orchestrator itself was created at 15:22:57Z (own-session span 8,613 s, 61.07% reduction). It is a wall-clock span, not a sum of session durations: it includes the orchestrator's waiting between workers (gaps of 12.7, 9.8, 2.3 and 7.9 min) and the 9.8 min after C5 ended. Workers only: span 15:23:28-17:36:44 = 7,996 s (58.07% reduction); sum of worker sessions = 6,033 s = 100 min 33 s (44.42% reduction). The grouped arm's 55m53s is both its span and its active time. A021's comparable figures: active session sum 61.2 vs 111.4 min (45.06% reduction); wall-clock span 61.2 min vs 4 h 52 min (79.05%), the latter including a 2 h 7 min permission block.",
+      "resolution": "61.08% is comparable in kind only to A021's wall-clock span reduction (79.05%), and even then it adds an orchestrator tail that A021 does not have. For the A021-comparable active-time definition use R2 44.42% vs A021 45.06%. Never compare R2 61.08% with A021 'active session time'.",
+      "checks": ["A070-i-elapsed", "A070-ratio-elapsed", "A070-red-elapsed", "POST-i-elapsed", "POST-red-elapsed", "README-red-elapsed"]
+    },
+    {
+      "id": "CF-07",
+      "kind": "live_drift",
+      "title": "Live get_session lookups on 2026-10-07 differ from committed usage for two A021 sessions",
+      "reported": {"sessions.json": "control-02 $3.4215014 / output 33,231 / cache-read 7,899,527 / context 185,168; control-04-attempt-2 $1.9885424 / output 26,866 / cache-read 3,017,392 / context 143,277"},
+      "finding": "Verification-only lookup on 2026-10-07: control-02 now reports $7.7282552, output 69,421, cache-read 15,654,336, cache-write 401,030, context 290,443, updated_at 2026-09-30T14:43:15Z; its post-turn summary shows it later did evaluation-kit work (EV-A065/A066), after the experiment record was taken at 12:37:43Z. Control-04-attempt-2 now reports $3.3838144, output 29,184, cache-read 3,877,392, cache-write 253,045, context 174,323, updated_at 17:10:20Z (it ran again after being abandoned and after attempt 3 completed the item). Every other A021 and R2 session, including the R2 orchestrator C, matches its committed usage exactly.",
+      "resolution": "Keep the committed figures, which were recorded when each session's experiment work ended. The later usage is not experiment work. Neither live value is used in metrics.json.",
+      "checks": []
+    },
+    {
+      "id": "CF-08",
+      "kind": "coverage",
+      "title": "Grouped-arm transcript figures are also lower bounds",
+      "reported": {"EV-A064": "presents grouped script figures (114 requests, 52/53 reads/searches) as exact and only the control figures as lower bounds"},
+      "finding": "The harness note instructs every session to run session_metrics.py immediately before its final checkpoint, so all transcript files (grouped included) miss the final minutes. Grouped transcript output tokens 110,627 vs platform 112,377 (-1.6%); R2 grouped 127,220 vs 132,902 (-4.3%).",
+      "resolution": "Mark every transcript count lower_bound. The independent arm's undercount is far larger (two whole sessions missing in A021).",
+      "checks": []
+    },
+    {
+      "id": "CF-09",
+      "kind": "coverage",
+      "title": "R2 worker metrics files have heterogeneous schemas",
+      "reported": {"R2 run record deviation C4": "metrics schemas differ between workers"},
+      "finding": "control-04/05 keep the raw script output under 'raw' and report session-corrected builds/testRuns at top level (C5 builds 6 vs script 8; testRuns 3 vs 2). control-03 reports only a session-corrected builds value (4); the script's count is unrecoverable. control-03 tokens exclude one Explore subagent (138,787 tokens, untyped). The R2 grouped summary renames cacheCreation to cacheCreated; extraction uses its unmodified session-metrics-raw.json.",
+      "resolution": "Extract only the script's own values (paths listed in extract_metrics.R2_SCRIPT_OVERRIDES); control-03 builds_transcript = null, so the independent-arm build total (26) is a lower bound. No reported figure depends on these.",
+      "checks": []
+    }
+  ]
+}

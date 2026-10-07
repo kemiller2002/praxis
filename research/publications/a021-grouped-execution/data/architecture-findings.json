@@ -1,0 +1,2722 @@
+{
+  "baseline_commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "comparisons": [
+    {
+      "behavioral_difference": false,
+      "confidence": "high",
+      "dimension": "D1",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "duplicated-compatible",
+      "rationale": "One file versus two new files plus the pre-existing event log. Organization difference; the behavioral consequence (non-atomic two-file write) is scored in D6.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D2",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Probe P9/P10: independent create accepts what its add refuses. Grouped is unified but uses a weaker repository rule than the planner (P2), and no arm enforces the planner's inferred location at create (P3). Both independent create-time omissions violate PRX-GRP-051 (R2: confirmed defect M-D2); both grouped rules are the required general rule, implemented without the planner's external inference (P2 at add, P3 at create).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "medium",
+      "dimension": "D3",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Grouped show and checkpoint share one classification on one state source; independent checkpoint uses a separate live-only classification. Stale-sensitive: the independent divergence is in item 05, which started from the baseline.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D4",
+      "direction": "independent_more_unified",
+      "grouped_category": "missing",
+      "independent_category": "unified",
+      "rationale": "Independent reuses work checkpoint's ownership half and re-validates stored checkpoints; grouped shares only the Git rule and stores blank decisions. Stale-sensitive: the independent code is from the stale item 05.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D5",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Probes P4-P7 reproduce independent's mixed envelopes, rejection shapes and exit codes; survives excluding item 05.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D6",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Independent create/add/remove are unlocked (CC: 40/40 exit 0, 8 stored over 5 runs); grouped serializes all group writes (on its own lock, not work-protocol).",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D7",
+      "direction": "independent_more_unified",
+      "grouped_category": "divergent",
+      "independent_category": "unified",
+      "rationale": "Scored on reuse of baseline rules: independent extracted and reused the grouping.groups reader, Grouping.executionLocation, the event log and journal and the durability rule; grouped re-derived the location rule (P2 shows the behavioral cost) and duplicated the reader. Grouped's advantage in feature-internal helpers (one parser, pipeline, renderer) is already scored under D5 and D6, so counting it here again would double-count; the earlier 'mixed' label is withdrawn.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": false,
+      "confidence": "medium",
+      "dimension": "D8",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "duplicated-compatible",
+      "rationale": "Two nested group-ID grammars in independent, applied to different domains; no contradictory behavior for stored groups. Introduced by stale item 05; does not survive the sensitivity analysis.",
+      "spec_refs": [],
+      "study": "A021"
+    },
+    {
+      "behavioral_difference": false,
+      "confidence": "high",
+      "dimension": "D1",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "duplicated-compatible",
+      "rationale": "One file versus groups.json plus group-checkpoints.json for two separate concepts; membership provenance is not split in either arm. Organization only.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D2",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Probe P9/P10 reproduce M-D2. Grouped's unified rule is weaker than the planner's (P2 accepted in grouped, refused in independent), which the R2 evaluator missed. Both independent create-time omissions violate PRX-GRP-051 (R2: confirmed defect M-D2); both grouped rules are the required general rule, implemented without the planner's external inference (P2 at add, P3 at create).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": false,
+      "confidence": "medium",
+      "dimension": "D3",
+      "direction": "equivalent",
+      "grouped_category": "divergent",
+      "independent_category": "divergent",
+      "rationale": "Both arms' show and checkpoint disagree for abandoned and blocked members; grouped shares one view value but derives checkpoint lists inconsistently (abandoned members vanish), independent uses two sources but keeps abandoned explicit. Not evidence for either execution mode.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D4",
+      "direction": "independent_more_unified",
+      "grouped_category": "missing",
+      "independent_category": "unified",
+      "rationale": "Independent requires active member and own execution, rejects blank decisions and validates checkpoint ownership; grouped does none. Not stale-sensitive in R2.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "medium",
+      "dimension": "D5",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Grouped has one envelope and one coded rejection type; independent has one envelope family but uncoded string rejections with exit 1 for create/add/remove, coded ones for checkpoint, and a planner-style show with no JSON on not-found. The gap is clearly smaller than in A021.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D6",
+      "direction": "grouped_more_unified",
+      "grouped_category": "unified",
+      "independent_category": "divergent",
+      "rationale": "Runtime probe confirms independent lost updates (CC: 40/40 exit 0, 7 stored over 5 runs); grouped serializes writes but reads lifecycle facts outside the lock.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": true,
+      "confidence": "high",
+      "dimension": "D7",
+      "direction": "independent_more_unified",
+      "grouped_category": "divergent",
+      "independent_category": "unified",
+      "rationale": "Scored on reuse of baseline rules: independent reuses executionLocation, the declaration reader and effectiveStatus; grouped re-derives location (P2) and terminal standing. Feature-internal helpers (one pipeline, one codec) are scored under D5 and D6; the earlier 'mixed' label is withdrawn.",
+      "spec_refs": [],
+      "study": "R2"
+    },
+    {
+      "behavioral_difference": false,
+      "confidence": "high",
+      "dimension": "D8",
+      "direction": "equivalent",
+      "grouped_category": "unified",
+      "independent_category": "unified",
+      "rationale": "Each arm has one group-ID grammar; the arms differ from each other (one vs two segments), which is not an intra-arm duplication.",
+      "spec_refs": [],
+      "study": "R2"
+    }
+  ],
+  "executed": {
+    "builds": "dotnet build src/Ros.Cli/Ros.Cli.fsproj -c Release -p:FSharpCoreImplicitPackageVersion=10.1.400 (SDK 10.0.112) in detached worktrees of all four heads: 0 warnings, 0 errors",
+    "probes": "P1-P10 (P8 included) and the concurrent-create probe CC (8 processes, 5 runs), run by scripts/run_probes.py on throwaway clones of each head with each arm's own ros-fs.dll; normalized raw outputs in data/probes/<implementation>.json. P1-P10 are deterministic; CC is not (counts per run are recorded).",
+    "tests": "not run by this audit; test counts are the evaluators'"
+  },
+  "falsification_attempts": [
+    {
+      "claim": "A021 independent used 'three stores' for one concept (EV1, EV-A064)",
+      "evidence": "WorkGroupStore.fs:13-14, GroupMembershipStore.fs:14-15 and FileGroupCheckpointRepository.fs (Work) 111-141 at 8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "note": "Two new group files plus the baseline event log, which EV1 itself lists as reuse. Sequential behavior is consistent (validate reconciles); the cost is under concurrency (D6).",
+      "result": "weakened"
+    },
+    {
+      "claim": "A021 independent had 'two group-ID grammars' as an incompatible duplication",
+      "evidence": "GroupDeclaration.fs:51 vs GroupCheckpoint.fs:239-240 and GroupCheckpointCommands.fs:206 at 8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "note": "Nested grammars on different domains (stored vs config-declared groups); introduced by stale item 05.",
+      "result": "weakened"
+    },
+    {
+      "claim": "A021 'three member classifications' versus grouped 'one'",
+      "evidence": "GA WorkGroups.fs:82-103 (MemberStanding) and 194-220 (MemberCategory); CA GroupDeclaration.fs:11, GroupView.fs:59-82, GroupCheckpoint.fs:34-41",
+      "note": "Grouped has two (admission standing, progress category); the substantive difference is only show vs checkpoint, which in independent comes from the stale item.",
+      "result": "weakened"
+    },
+    {
+      "claim": "Grouped arms apply 'one member-join rule' that enforces the repository invariant",
+      "evidence": "Probes P2, P3, P9 on all four arms",
+      "note": "Unified but weaker: both grouped arms admit an item the planner infers to be external (P2); all four arms admit it at create (P3). Independent add is the only path that enforces the full planner rule.",
+      "result": "weakened"
+    },
+    {
+      "claim": "R2 grouped (N) has confirmed repository-compatibility enforcement (R2-eval N-F01/N-F03, POST-UNBLINDING)",
+      "evidence": "WorkGroups.fs:272-296 at 0b5284c37482d16bceafac214fa81f93417e2987; probe P2 exit 0 (grouped) vs exit 1 (independent)",
+      "note": "Only explicit executionRepositories mappings are enforced; the planner's UnknownExternal inference is ignored, replicating A021-grouped's gap X-1.",
+      "result": "refuted"
+    },
+    {
+      "claim": "R2 grouped mutation 'cannot race a lifecycle transition' (code comment; R2-eval N-F09)",
+      "evidence": "WorkGroupCommands.fs:194-210, 266-268, 410-422 at 0b5284c37482d16bceafac214fa81f93417e2987",
+      "note": "Store writes are serialized; member facts are read before the lock.",
+      "result": "weakened"
+    },
+    {
+      "claim": "R2 independent lost-update risk is only a design risk (R2-eval M-R1)",
+      "evidence": "probe CC on 8bb8f78adbaa67273ac507d1d14ad475e46fedd3: 40 of 40 exit 0, 7 groups stored over 5 runs (data/probes/R2-independent.json)",
+      "note": "Refuted as stated: the risk is an observed defect (lost updates in every concurrency run, data/probes/R2-independent.json). The underlying evaluator concern is thereby strengthened.",
+      "result": "refuted"
+    },
+    {
+      "claim": "Grouped show and checkpoint share one classification (R2, by replication)",
+      "evidence": "WorkGroups.fs:467, 495, 630 at 0b5284c37482d16bceafac214fa81f93417e2987",
+      "note": "Upheld for A021-grouped; refuted for R2-grouped, whose show and checkpoint disagree for abandoned members.",
+      "result": "refuted"
+    },
+    {
+      "claim": "Grouped arms have no internal inconsistencies the evaluators missed",
+      "evidence": "GA WorkGroups.fs:546 (blank decisions stored, unreported in A021); GR WorkGroups.fs:272-296 (location, terminal rule), 467/495/630 (show/checkpoint), WorkGroupCommands.fs:195-210 (facts outside lock)",
+      "note": "None changes D2/D5/D6, but they shrink the R2 cohesion margin.",
+      "result": "refuted"
+    },
+    {
+      "claim": "EV-A064: the consistency finding holds without control item 05",
+      "evidence": "Commits 51086ac, 13e26f4, 881a34d at 8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "note": "D2, D5, D6 and the D1 organization difference survive; D3 and D8 do not, and the independent arm's D4 advantage also comes from the stale item.",
+      "result": "upheld"
+    },
+    {
+      "claim": "Grouped produced substantially more unified cross-item architecture in both executions",
+      "evidence": "comparisons D1-D8 for A021 and R2",
+      "note": "A021: grouped more unified on 6 of 8 dimensions (4 with behavioral difference: D2, D3, D5, D6), independent on 2 (D4, D7). R2: grouped on 4 (3 with behavioral difference: D2, D5, D6), independent on 2 (D4, D7), equivalent 2. The R2 margin is narrower; 'substantially' fits A021 better than R2.",
+      "result": "weakened"
+    },
+    {
+      "claim": "A reasonable reviewer would see the R2 difference as smaller than A021's",
+      "evidence": "R2-independent: one parser for four verbs (WorkGroupCommands.fs:66-73), one envelope family, one grammar, membership provenance in one file, consistent unknown-group exit codes (probes P5, P6)",
+      "note": "R2-independent fixed most of A021-independent's surface fragmentation; the remaining behavioral gaps are admission (D2), locking (D6) and rejection shape (D5).",
+      "result": "upheld"
+    }
+  ],
+  "findings": [
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One file .ros/work/groups.json holds declaration, append-only history and group checkpoints; one reader/writer.",
+      "category": "unified",
+      "dimension": "D1",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (X), 'One storage location and format'",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json store-model arm-X",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "72-77",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "type StoredWorkGroup"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "15-15",
+          "path": "src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs",
+          "symbol": "let relativePath = \".ros/work/groups.json\""
+        }
+      ],
+      "id": "F-A021-G-D1",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21",
+        "40abb9f254747e236ab0d877d3c4352a16fbd303"
+      ],
+      "notes": "Group checkpoints are embedded in groups.json rather than in the pre-existing event log, so they are consistent with the feature but not with the baseline work-checkpoint persistence pattern (EV1 notes this).",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Declarations in groups.json (with declaredAt/declaredBy), later membership provenance in a separate ledger group-membership.json (written first, then groups.json, with a compensating restore), group checkpoints as work.group.checkpointed events in the pre-existing events.jsonl through the work-state journal.",
+      "category": "duplicated-compatible",
+      "dimension": "D1",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (Y), 'Three storage locations and formats'",
+          "note": "Counting inflation: only two of the three are new group stores; the third is the baseline event log, reused deliberately (EV1 itself lists it under Y's reuse strengths). Under sequential use validate reconciles ledger and group (GroupMembership.findings), so no contradictory behavior; the real behavioral cost is under concurrency and is scored in D6."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json store-model arm-Y",
+          "note": "Same facts; EV2 also notes the event-log choice fits the existing checkpoint model."
+        },
+        {
+          "agrees": "partial",
+          "evaluation": "EV-ROS-2026-A064",
+          "locator": "Quality, 'three stores'",
+          "note": "As for EV1."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "13-14",
+          "path": "src/Ros.Infrastructure/Planning/WorkGroupStore.fs",
+          "symbol": "RelativePath = \".ros/work/groups.json\""
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "14-15",
+          "path": "src/Ros.Infrastructure/Planning/GroupMembershipStore.fs",
+          "symbol": "RelativePath = \".ros/work/group-membership.json\""
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "96-106",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "let private record root stored ledger"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "111-141",
+          "path": "src/Ros.Infrastructure/Work/FileGroupCheckpointRepository.fs",
+          "symbol": "WorkStateTransaction.prepare root writes"
+        }
+      ],
+      "id": "F-A021-I-D1",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-03 (ledger), PRAXIS-GROUP-05 (event log)",
+      "introducing_commits": [
+        "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "881a34dcbac9909e7efa8d2d41f7f491aa923a9a",
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
+      ],
+      "notes": "Ledger introduced by 13e26f4 (item 03, correct start); event-log checkpoint by 8d435cb (item 05, stale start). Excluding item 05 the arm still has two group files, so the organization difference survives; it is organization, not behavior.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One file .ros/work/groups.json with each group's members, history (actor per change) and embedded content-addressed checkpoints.",
+      "category": "unified",
+      "dimension": "D1",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 PERSISTENCE STORES; N-F09",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "13-13",
+          "path": "src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs",
+          "symbol": "let relativePath = \".ros/work/groups.json\""
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "84-84",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "type StoredGroup ="
+        }
+      ],
+      "id": "F-R2-G-D1",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4",
+        "cc65ee198c92fecd28dac84753782478e1eefd8d"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "groups.json holds declaration plus additions/removals provenance in the same record; group checkpoints in a second file .ros/work/group-checkpoints.json written under the work-protocol lock.",
+      "category": "duplicated-compatible",
+      "dimension": "D1",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "M-F10, M-R2",
+          "note": "The evaluator itself classed this as 'separation, not proven duplication'. Agreed: membership provenance is not split (unlike A021 control); the two files hold two concepts and never need a joint write."
+        },
+        {
+          "agrees": "partial",
+          "evaluation": "POST-UNBLINDING-METRICS.txt",
+          "locator": "'one group store' listed as a grouped strength",
+          "note": "True as a count; not a behavioral difference."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "10-19",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "Additions: MemberAddition list"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "21-21",
+          "path": "src/Ros.Infrastructure/Planning/FileGroupCheckpointRepository.fs",
+          "symbol": "let relativePath = \".ros/work/group-checkpoints.json\""
+        }
+      ],
+      "id": "F-R2-I-D1",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
+      ],
+      "notes": "Introduced by 2d55157 (item 05, correct start). The R2 store difference is organizational only.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One join rule WorkGroups.eligibility (known, non-terminal, same execution repository unless cross-repository) used by create and add. Repository comes only from grouping.executionRepositories or this repository; the planner's description-based UnknownExternal inference is not applied.",
+      "category": "unified",
+      "dimension": "D2",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "GROUP-03 table, repository row; Consistency assessment (X)",
+          "note": "Runtime probe reproduces EV1's confirmation: P2 add of an external-by-description item exits 0."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json validation arm-X; reuse arm-X",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "329-343",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let eligibility (context: GroupContext)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "373-373",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "List.collect (eligibility context declaration)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "400-400",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "else eligibility context declaration request.WorkItemId"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "110-122",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let private repositoryOf"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "543-543",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "None when externalPattern.IsMatch description"
+        }
+      ],
+      "id": "F-A021-G-D2",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
+      ],
+      "notes": "Probe P3: create with an external-by-description member also exits 0, so the unified rule is unified but weaker than the planner's rule; P9 (explicit --execution-repository elsewhere) is refused at create, consistent with add. Specification: every PRAXIS-GROUP item cites requirements/PLANNING-WORK-GROUPS.md, whose PRX-GRP-051 requires every group to identify where implementation occurs and forbids mixing repositories unless the group is cross-repository. The generalized create+add rule is therefore required, not a generalization beyond the specification; the arm always stores an execution repository (WorkGroups.fs:361). It implements the invariant without the planner's description-based external inference, so an item the planner treats as external joins a local group at add (P2) and at create (P3), which falls short of PRX-GRP-051's second sentence.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create (GroupDeclaration.decide) checks standing only; add (GroupMembership.itemChecks/repositoryCheck) checks standing and the planner's executionLocation. A group declared with --execution-repository elsewhere accepts local members at create and then refuses the next local member at add.",
+      "category": "divergent",
+      "dimension": "D2",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "GROUP-01 'Beyond the criteria'; Consistency assessment (Y) 'Two member-validation rules'",
+          "note": "Reproduced by probe P9 (exit 0) and P10 (exit 1)."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json validation arm-Y",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "EV-ROS-2026-A064",
+          "locator": "Threats, 'item 03 alone added a second store and a second join rule'",
+          "note": "Verified: 13e26f4 adds GroupMembership.fs with repositoryCheck only on the add path."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "101-124",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let decide"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "132-138",
+          "path": "src/Ros.Domain/Planning/GroupMembership.fs",
+          "symbol": "let private repositoryCheck"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "140-149",
+          "path": "src/Ros.Domain/Planning/GroupMembership.fs",
+          "symbol": "let private itemChecks"
+        }
+      ],
+      "id": "F-A021-I-D2",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-03 (with PRAXIS-GROUP-01's omission)",
+      "introducing_commits": [
+        "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "13e26f4caeab2c4468a65365fa2ad389d9542820"
+      ],
+      "notes": "Introduced when item 03 (13e26f4, started from the correct head 9c17936) added the repository check to add without retrofitting create (51086ac). Survives excluding item 05. Note: create also admits external-by-description items (P3), exactly like both grouped arms. Specification: the create-time omission is a violation of the cited PRX-GRP-051 (the invariant applies to every group, not only at add), not literal compliance with the item text. create also accepts no --execution-repository and stores none (the CLI then describes it as 'this repository'), which is the same shape as R2's M-D1. Neither A021 evaluator scored it against PRX-GRP-051; EV1 reports the create/add inconsistency itself.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "stale_start_sensitive": false,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One admission rule WorkGroups.admit used by create and addMember; memberFacts locates an item by grouping.executionRepositories else this repository and ignores the planner's UnknownExternal inference.",
+      "category": "unified",
+      "dimension": "D2",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "N-F01, N-F03; section 15 'One reusable member-admission rule'",
+          "note": "Unification agreed. The evaluator's 'repository compatibility ... confirmed' is contradicted for the planner's inferred external location: probe P2 adds an external-by-description item to a local group with exit 0 (M refuses it). The R2 evaluator did not notice the same gap EV1 found in A021-grouped."
+        },
+        {
+          "agrees": "partial",
+          "evaluation": "POST-UNBLINDING-METRICS.txt",
+          "locator": "'execution-repository default/enforcement' as grouped strength",
+          "note": "Default (always Some repository) agreed; enforcement is only of explicit mappings."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "301-311",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let admit (groupRepository: string)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "330-330",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "List.collect (admit declaration.ExecutionRepository"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "389-389",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "admit group.ExecutionRepository group.CrossRepository facts change.WorkItemId"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "295-295",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "ExecutionRepository = repositories.TryFind id |> Option.defaultValue localRepository"
+        }
+      ],
+      "id": "F-R2-G-D2",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4"
+      ],
+      "notes": "Same weaker-but-unified pattern as A021-grouped; P3 (create with external member) exits 0, P9 refused. Specification: as F-A021-G-D2. The rule is required by PRX-GRP-051 and the group always has an execution repository (toDeclared, WorkGroups.fs:526), but without the planner's external inference (P2 add and P3 create both accept the inferred-external item).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create (GroupDeclaration.decide) checks standing only and may store ExecutionRepository = None; decideAddition checks the planner's executionLocation against the group repository (defaulting to this repository).",
+      "category": "divergent",
+      "dimension": "D2",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "M-F02/M-D1, M-F03/M-D2",
+          "note": "Reproduced by probe P9 (create elsewhere, exit 0) and P10 (add local, exit 1)."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "125-164",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let decide (existingIds: Set<string>)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "184-229",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let decideAddition"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "63-63",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "Grouping.executionLocation configuration.Grouping repository id"
+        }
+      ],
+      "id": "F-R2-I-D2",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-03 (with PRAXIS-GROUP-01's omission)",
+      "introducing_commits": [
+        "7e01fb9638ba299e0f5202e6770db9378d2d23e6",
+        "5a034526eb1f60d94929b4d8420e1664639cc52c",
+        "dae978843237721a8679d51c112473b66ce569a4"
+      ],
+      "notes": "Item 03 started stale (b05fd8b parented on the baseline) but merged items 01-02 (5a03452) before its implementation commit dae9788, so it saw create's code; staleness is an implausible cause. Survives excluding item 02. Excluding item 03 removes add and so the comparison itself. Specification: R2's blind evaluator classed this exact behavior as confirmed acceptance defect M-D2 (and the stored ExecutionRepository = None as M-D1), both against PRX-GRP-051. This audit agrees: it is a requirement violation, not literal compliance.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "WorkGroups.progress (MemberCategory.ofState over recorded state) serves show and checkpoint. show's state comes from the planner's ItemAnalysis.LifecycleState, checkpoint's from MemberStanding.lookup; both are QueuePresentation.effectiveStatus, so the categories agree. Blocked = recorded 'blocked' only; abandoned is its own category in both.",
+      "category": "unified",
+      "dimension": "D3",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Shape of the change (X) 'One classification, progress'",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "GROUP-02 'Met, narrowly'",
+          "note": "The unified classification is narrower than the planner's (planner-derived blocking is not 'blocked')."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "478-509",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let progress (group: StoredWorkGroup)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "538-538",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let standing = progress group facts"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "389-389",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "MemberFacts.ofStanding context.Standing"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "450-450",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "{ State = Some item.LifecycleState"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "395-402",
+          "path": "src/Ros.Domain/Planning/Inventory.fs",
+          "symbol": "QueuePresentation.effectiveStatus"
+        }
+      ],
+      "id": "F-A021-G-D3",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-02",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "show (GroupView) uses GroupDeclaration.standing ('live wins over backlog') and counts a member blocked if recorded blocked or planner Blocked/AwaitingHuman/AwaitingEvidence; checkpoint uses GroupMemberStanding.ofState over the live state only (backlog-only items and blocked items are 'remaining'). A planner-blocked member is 'blocked' in show and 'remaining' in the group checkpoint.",
+      "category": "divergent",
+      "dimension": "D3",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (Y) 'Three member classifications'",
+          "note": "Divergence agreed. Count is inflated as a contrast: A021-grouped also has two classifications (MemberStanding for admission, MemberCategory for progress); the substantive difference is only that show and checkpoint do not share one."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "PRAXIS-GROUP-05 table 'blocked members are counted as remaining'",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "59-61",
+          "path": "src/Ros.Domain/Planning/GroupView.fs",
+          "symbol": "let isBlocked (view: GroupMemberView)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "70-74",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let standing (queue: PlanningQueueItem list)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "34-41",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "let ofState (state: LiveWorkState option)"
+        }
+      ],
+      "id": "F-A021-I-D3",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-05 (checkpoint classification) vs PRAXIS-GROUP-02 (show)",
+      "introducing_commits": [
+        "60e3f03157f85637753860192097c1b42d4f3433",
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
+      ],
+      "notes": "GroupMemberStanding was written in 8d435cb, the item-05 commit that started from the baseline without items 01-04. Excluding item 05 there is no checkpoint, so D3 becomes not-assessable for the independent arm: the divergence does not survive the sensitivity analysis.",
+      "spec_refs": [],
+      "stale_start_sensitive": true,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "checkpoint reuses show's GroupView, but show's progress counts planner MemberStatus.Complete (abandoned counts as complete) while checkpoint derives CompletedMembers from RecordedState = 'complete' and RemainingMembers from Status <> complete, so an abandoned member is 'complete' in show and in none of active/completed/remaining in the checkpoint. A blocked member is 'blocked' in show and 'remaining' in the checkpoint.",
+      "category": "divergent",
+      "dimension": "D3",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "N-F08/N-R2; section 10 SHOW/CHECKPOINT CLASSIFICATION ('mostly cohesive')",
+          "note": "The evaluator found the checkpoint loss; it did not note that show and checkpoint disagree, which makes the shared view behaviorally divergent, not unified."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "467-467",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let remaining = view.Members |> List.filter (fun row -> row.Status <> complete)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "495-495",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "CompletedMembers = view.Members |> List.filter (fun row -> row.RecordedState = \"complete\")"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "630-630",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let complete = count (MemberStatus.code MemberStatus.Complete)"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "203-204",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "| PlanningWorkState.Abandoned -> MemberStatus.Complete"
+        }
+      ],
+      "id": "F-R2-G-D3",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "cc65ee198c92fecd28dac84753782478e1eefd8d"
+      ],
+      "notes": "A grouped-arm internal inconsistency. Organizationally unified (one view value), behaviorally divergent.",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "show (Grouping.show over the planner's group) counts abandoned members as complete (planner MemberStatus) and blocked as blocked; checkpoint (GroupCheckpoints.progress over effectiveStatus) lists abandoned apart and blocked as remaining.",
+      "category": "divergent",
+      "dimension": "D3",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 SHOW/CHECKPOINT CLASSIFICATION",
+          "note": "Evaluator describes M's two bases correctly."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "1628-1628",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "let show (analysis: PlanningAnalysis)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "155-162",
+          "path": "src/Ros.Domain/Planning/GroupCheckpoint.fs",
+          "symbol": "let progress (lifecycle: Map<string, string>)"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "932-934",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "let complete = count MemberStatus.Complete"
+        }
+      ],
+      "id": "F-R2-I-D3",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-02 (show, stale start) vs PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "962b1f47214c93951b5d2c50d5489af981fa6b3b",
+        "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
+      ],
+      "notes": "show was designed in 962b1f4 on a stale checkout as a planner view (Grouping.show in PlanCommands). Excluding item 02 there is no show, so D3 is not-assessable without it. Both R2 arms disagree between show and checkpoint for abandoned and blocked members; N's disagreement additionally drops abandoned members from the checkpoint.",
+      "spec_refs": [],
+      "stale_start_sensitive": true,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Durability is the shared Git rule (verifyLocation extracted from CheckpointVerification) with ExecutionObservation.NoneActive; no active-member or own-execution check; decisions are stored verbatim (a blank --decision is accepted); validate's findings never re-check stored group checkpoints.",
+      "category": "missing",
+      "dimension": "D4",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "GROUP-05 table 'Partially met'; Gap paragraph",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json checkpoint-shape arm-X",
+          "note": ""
+        },
+        {
+          "agrees": false,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "(not reported)",
+          "note": "Neither A021 evaluator reports that blank decisions are stored verbatim; A021-independent rejects them (GroupCheckpointRejection.BlankDecision). This is the same class as R2's N-D1 and was missed in A021."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "435-442",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs",
+          "symbol": "let verifyLocation (repository: string)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "344-344",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "546-546",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "Decisions = request.Decisions"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "447-474",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let findings (context: GroupContext)"
+        }
+      ],
+      "id": "F-A021-G-D4",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "40abb9f254747e236ab0d877d3c4352a16fbd303"
+      ],
+      "notes": "Ownership validation is missing; durability verification itself is shared with work checkpoint (unified with the baseline).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Group checkpoint uses the shared CheckpointVerification.durableLocation, requires an active member and the caller's own execution (mirroring work checkpoint's ownership rule), rejects blank decisions, warns when a member's own checkpoint is behind, is a content-addressed event, and validate re-checks every stored event (paths empty, commit equality, member references).",
+      "category": "unified",
+      "dimension": "D4",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "GROUP-05 table (Y) 'Met (fuller reading)'",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json checkpoint-shape arm-Y",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "435-447",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs",
+          "symbol": "let durableLocation (repository: string)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "285-292",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "let private executionRejections"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "249-250",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "GroupCheckpointRejection.BlankDecision ]"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "410-437",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "let problems (stored: StoredGroupCheckpoint)"
+        }
+      ],
+      "id": "F-A021-I-D4",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc",
+        "2bb713f36a593fa7936e98c6803b990cce81a870"
+      ],
+      "notes": "Written in 8d435cb, the stale-start item. The independent arm's A021 advantage on this dimension comes entirely from the stale item; it is real code, but excluding item 05 makes D4 not-assessable for this arm.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
+      "stale_start_sensitive": true,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Durability via the extracted CheckpointVerification.durableLocation with ExecutionObservation.NoneActive; no active-member or own-execution check; blank decisions are trimmed and silently dropped; validate checks content address, commit syntax, time and text but not that a referenced checkpoint belongs to the named member; refuses a group with nothing remaining.",
+      "category": "missing",
+      "dimension": "D4",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "N-D1, N-D2; section 15/14",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "POST-UNBLINDING-METRICS.txt",
+          "locator": "control stronger on checkpoint ownership/attribution validation",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "448-455",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs",
+          "symbol": "let durableLocation (candidate: CheckpointCandidate)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "438-438",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "485-485",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "List.filter (String.IsNullOrWhiteSpace >> not)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "583-593",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "for recorded in group.Checkpoints do"
+        }
+      ],
+      "id": "F-R2-G-D4",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "cc65ee198c92fecd28dac84753782478e1eefd8d"
+      ],
+      "notes": "Same omission as A021-grouped: the grouped pattern replicates.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Group checkpoint uses the shared CheckpointVerification.verifyLocation, requires an active member and an own execution, rejects blank decisions, separates abandoned members, sequential IDs, and validate detects a member reference to another member's checkpoint.",
+      "category": "unified",
+      "dimension": "D4",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "M-F08; section 14",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "469-472",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs",
+          "symbol": "let verifyLocation (repository: string)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "203-246",
+          "path": "src/Ros.Domain/Planning/GroupCheckpoint.fs",
+          "symbol": "let decide (observations: GroupCheckpointObservations)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "289-294",
+          "path": "src/Ros.Domain/Planning/GroupCheckpoint.fs",
+          "symbol": "belongs to {owner}, not {reference.Member}"
+        }
+      ],
+      "id": "F-R2-I-D4",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
+      ],
+      "notes": "Item 05 started from the correct head (c28009f on d728cd6); not stale-sensitive.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One envelope {command, schemaVersion, status} for every verb, one GroupRejection with codes (wrapped for checkpoint), one renderer 'ERROR [code] message', exit 2 for argument-shaped refusals and 1 for state refusals, one argument parser, one mutate pipeline.",
+      "category": "unified",
+      "dimension": "D5",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (X)",
+          "note": "Probes P4-P8: invalid ID exit 2, undeclared group exit 1 for add, checkpoint and show, all with the same JSON envelope."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json output-contracts arm-X",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "141-142",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let private envelope (command: string)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "168-168",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "if rejections |> List.forall GroupRejection.isArgumentError then 2 else 1"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "59-73",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let parse (valueFlags: string list)"
+        }
+      ],
+      "id": "F-A021-G-D5",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
+      ],
+      "notes": "The envelope matches the baseline work checkpoint convention ({command, schemaVersion}).",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create/add/remove/show emit {schema, kind: work-group-*}; checkpoint emits {command, schemaVersion}; create's JSON rejections are bare strings, add/remove {code, message}, checkpoint {code, message, remedy}; an invalid group ID exits 1 from create; an undeclared group exits 1 from add but 2 from checkpoint; two CLI modules with different parsers.",
+      "category": "divergent",
+      "dimension": "D5",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (Y) error styles, exit codes, envelopes, parsers",
+          "note": "Reproduced by probes P4 (exit 1, kind work-group-create), P5 (exit 1), P6 (exit 2)."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json output-contracts arm-Y",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "101-101",
+          "path": "src/Ros.Contracts/Planning/WorkGroupJson.fs",
+          "symbol": "rejections |> List.map (GroupDeclarationRejection.message >> text)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "123-129",
+          "path": "src/Ros.Cli/GroupCheckpointCommands.fs",
+          "symbol": "let private document (groupId: string)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "31-34",
+          "path": "src/Ros.Cli/GroupCheckpointCommands.fs",
+          "symbol": "let private optionValues (name: string)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "205-205",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "| GroupCheckpointRejection.GroupNotDeclared _"
+        }
+      ],
+      "id": "F-A021-I-D5",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (string rejections), PRAXIS-GROUP-03/04 (coded), PRAXIS-GROUP-05 (checkpoint envelope)",
+      "introducing_commits": [
+        "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
+      ],
+      "notes": "Both envelope families exist in the baseline (planner {schema, kind}; work commands {command, schemaVersion}), so each choice copies a baseline convention. The checkpoint envelope and exit-2 come from stale item 05; excluding it, create (strings) vs add/remove (codes) still diverge, so the finding survives.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One envelope {command, schemaVersion, groupId, status} for all five verbs, one GroupRejection with code, message and remedy, exit 2 for argument errors and 1 for state errors; add and remove share one membershipChange pipeline; one argument splitter.",
+      "category": "unified",
+      "dimension": "D5",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 JSON ENVELOPES; ERROR HANDLING",
+          "note": "Probes P4-P8 consistent."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "211-217",
+          "path": "src/Ros.Contracts/Work/WorkGroupJson.fs",
+          "symbol": "let envelope (command: string) (groupId: string) (status: string)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "151-151",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "if rejections |> List.forall GroupRejection.isArgumentError then 2 else 1"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "236-236",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let private membershipChange"
+        }
+      ],
+      "id": "F-R2-G-D5",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create/add/remove/checkpoint share one parser and one {schema, kind} envelope family, but create/add/remove rejections are bare strings with exit 1 (even for an invalid ID), checkpoint rejections are {code, message, remedy} with exit 2 for argument errors; show lives in PlanCommands and on an unknown group prints a planner error with no JSON even under --json.",
+      "category": "divergent",
+      "dimension": "D5",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 ERROR HANDLING ('less uniform'); CLI PARSING",
+          "note": "Agreed on less uniform. The evaluator's 'create/add/remove ... call separate application operations' overstates fragmentation: one parser, one Application module (WorkGroupOperations) and one port serve them. R2-independent is markedly more uniform than A021-independent: one envelope family, unknown group exits 1 from both add and checkpoint (probes P5, P6)."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "1362-1363",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+          "symbol": "let renderGroupRejected (errors: string list)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "1485-1488",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+          "symbol": "let renderGroupCheckpointRejected"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "636-647",
+          "path": "src/Ros.Cli/PlanCommands.fs",
+          "symbol": "let showDeclaredGroup (root: string)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "66-73",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let rec private parse (parsed: Parsed)"
+        }
+      ],
+      "id": "F-R2-I-D5",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (string rejections), PRAXIS-GROUP-02 (planner show), PRAXIS-GROUP-05 (coded rejections)",
+      "introducing_commits": [
+        "7e01fb9638ba299e0f5202e6770db9378d2d23e6",
+        "962b1f47214c93951b5d2c50d5489af981fa6b3b",
+        "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
+      ],
+      "notes": "show's planner placement comes from stale item 02 (962b1f4). Excluding item 02, string-vs-coded rejections and exit-code rules between 01/03/04 and 05 still diverge, so the finding survives.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Every mutation including checkpoint runs FileWorkGroupRepository.transact: read, decide, write under RegistryLock 'work-groups'. The lock is not the work-protocol lock, so group mutations do not serialize with lifecycle transitions or work checkpoint.",
+      "category": "unified",
+      "dimension": "D6",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Concurrency row",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json defects arm-X",
+          "note": "Probe CC (5 runs x 8 concurrent creates, data/probes/A021-grouped.json): 17 of 40 exit 0, 17 stored, 0 lost; 23 fail with 'unexpected operational failure' (pre-existing lock module). Counts vary per run; the absence of lost updates is the claim."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "61-75",
+          "path": "src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs",
+          "symbol": "RegistryLock.acquire root \"work-groups\""
+        }
+      ],
+      "id": "F-A021-G-D6",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create, add and remove read-modify-write groups.json (and the ledger) with no lock; checkpoint alone takes the work-protocol lock and the work-state journal.",
+      "category": "divergent",
+      "dimension": "D6",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json defects arm-Y (8 concurrent creates exit 0, 2 stored)",
+          "note": "Probe CC (5 runs x 8, data/probes/A021-independent.json): 40 of 40 exit 0, 8 stored (1-2 per run), 32 lost updates."
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Concurrency row",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "57-70",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "let declare (root: string)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "111-130",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "let add (root: string)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "230-230",
+          "path": "src/Ros.Cli/GroupCheckpointCommands.fs",
+          "symbol": "RegistryLock.acquire root \"work-protocol\""
+        }
+      ],
+      "id": "F-A021-I-D6",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (unlocked pattern), copied by 03/04",
+      "introducing_commits": [
+        "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "13e26f4caeab2c4468a65365fa2ad389d9542820",
+        "881a34dcbac9909e7efa8d2d41f7f491aa923a9a",
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
+      ],
+      "notes": "Introduced in 51086ac (item 01) and copied by 13e26f4/881a34d. Excluding stale item 05 the arm has no lock anywhere (category would be 'missing'); the deficit survives.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Every group write (create, add, remove, checkpoint) goes through FileWorkGroupRepository.mutate under the work-protocol lock with an atomic write. Member facts (lifecycle states, execution repositories) and the planner view are read before the lock is taken, so a lifecycle transition can still interleave with an admission decision.",
+      "category": "unified",
+      "dimension": "D6",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "N-F09 ('keeps read-decide-write inside the lease')",
+          "note": "Lost-update protection agreed (probe CC, 5 runs x 8: 31 of 40 exit 0, 31 stored, 0 lost; data/probes/R2-grouped.json). The code comment and the evaluator's implication that a membership decision 'cannot race a lifecycle transition' is not supported: facts are read outside the lease (WorkGroupCommands.fs 194-210, 266-268, 410-422)."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "39-57",
+          "path": "src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs",
+          "symbol": "RegistryLock.acquire root \"work-protocol\""
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "195-196",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "|> Result.bind (fun config -> facts root config)"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "210-210",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "FileWorkGroupRepository.mutate root dryRun (fun stored -> WorkGroups.create stored known declaration)"
+        }
+      ],
+      "id": "F-R2-G-D6",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "create, add and remove (WorkGroupOperations over FileWorkGroupRepository.port) read-modify-write groups.json with only an atomic replace; checkpoint alone runs under the work-protocol lock.",
+      "category": "divergent",
+      "dimension": "D6",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "M-F09/M-R1 ('design-risk', runtime not confirmed)",
+          "note": "Now runtime-confirmed: probe CC (5 runs x 8, data/probes/R2-independent.json) had 40 of 40 exit 0 and 7 stored (1-2 per run), 33 lost updates. The design risk is an observed lost-update defect."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "40-50",
+          "path": "src/Ros.Application/Planning/WorkGroups.fs",
+          "symbol": "let create (port: WorkGroupPort)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "31-43",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "let private writeAtomic (root: string)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "395-396",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let private locked root"
+        }
+      ],
+      "id": "F-R2-I-D6",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (unlocked pattern), copied by 03/04; 05 locked",
+      "introducing_commits": [
+        "7e01fb9638ba299e0f5202e6770db9378d2d23e6",
+        "dae978843237721a8679d51c112473b66ce569a4",
+        "a3566ad50a2476f97e2f53653859bf0d4de07f81",
+        "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
+      ],
+      "notes": "Not stale-related: item 01 started correctly. Same pattern as A021-independent.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Reuses QueuePresentation.effectiveStatus and extracts the Git half of CheckpointVerification. Re-implements the grouping.groups declaration reader (same field names and defaults: compatible) and re-derives execution location without the planner's UnknownExternal inference (incompatible: probe P2). New shared helpers inside the feature: one parser, one mutate pipeline, one renderer.",
+      "category": "divergent",
+      "dimension": "D7",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (X) departures; 'Which differences matter' item 2",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json reuse arm-X",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "204-225",
+          "path": "src/Ros.Contracts/Work/WorkGroupJson.fs",
+          "symbol": "let readDeclaration (node: JsonObject)"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "110-122",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs",
+          "symbol": "let private repositoryOf"
+        },
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "101-101",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "QueuePresentation.effectiveStatus (queued.TryFind id) (current.TryFind id)"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "753-763",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+          "symbol": "optionalList \"groups\" (fun group ->"
+        }
+      ],
+      "id": "F-A021-G-D7",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01 (reader, location), PRAXIS-GROUP-05 (verifyLocation)",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21",
+        "40abb9f254747e236ab0d877d3c4352a16fbd303"
+      ],
+      "notes": "Divergent with respect to the baseline location rule; duplicated-compatible with respect to the parser.",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Extracts and reuses PlanningJson.readDeclaredGroup/parseDeclaredGroup for stored groups, extracts and reuses Grouping.executionLocation for add, reuses the event log and work-state journal, extracts durableLocation. One baseline rule is re-implemented: GroupDeclaration.standing ('live wins') instead of QueuePresentation.effectiveStatus (they differ when the live state is ready and the backlog status is not).",
+      "category": "unified",
+      "dimension": "D7",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (Y) last paragraph",
+          "note": ""
+        },
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json reuse arm-Y",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "703-714",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+          "symbol": "let private readDeclaredGroup (group: JsonObject)"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "58-58",
+          "path": "src/Ros.Contracts/Planning/WorkGroupJson.fs",
+          "symbol": "PlanningJson.parseDeclaredGroup value"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "537-551",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "let executionLocation"
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "70-74",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let standing (queue: PlanningQueueItem list)"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "25-31",
+          "path": "src/Ros.Domain/Work/QueuePresentation.fs",
+          "symbol": "let effectiveStatus"
+        }
+      ],
+      "id": "F-A021-I-D7",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (parser), PRAXIS-GROUP-03 (executionLocation)",
+      "introducing_commits": [
+        "51086ac0ad9216cc08f0508a468d763832d2c8b0",
+        "13e26f4caeab2c4468a65365fa2ad389d9542820"
+      ],
+      "notes": "Parser reuse from 51086ac and executionLocation from 13e26f4, both non-stale; survives excluding item 05.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Reuses Grouping.recommend for show and extracts durableLocation. Re-derives execution location (explicit mapping else this repository, no UnknownExternal inference: probe P2) and a terminal rule 'complete or abandoned in either queue or live context' instead of QueuePresentation.effectiveStatus; re-implements the planner's progress statement inside view. Its own stored-group schema is projected into the planner by toDeclared (compatible).",
+      "category": "divergent",
+      "dimension": "D7",
+      "evaluator_agreement": [
+        {
+          "agrees": false,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 EXISTING PARSER/RULE REUSE ('Both reuse existing ... planner Grouping')",
+          "note": "The evaluator did not detect that N bypasses the planner's executionLocation rule; probe P2 shows the behavioral consequence (M refuses, N accepts)."
+        },
+        {
+          "agrees": "partial",
+          "evaluation": "POST-UNBLINDING-METRICS.txt",
+          "locator": "(not addressed)",
+          "note": "POST-UNBLINDING lists control strengths only in checkpoint concerns; the A021 'independent reused more baseline rules' finding also replicates in R2."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "272-296",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let memberFacts"
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "520-528",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let toDeclared (group: StoredGroup) : DeclaredGroup ="
+        },
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "650-650",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "each member completes on its own evidence and the group never implies that every member succeeded"
+        }
+      ],
+      "id": "F-R2-G-D7",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4"
+      ],
+      "notes": "The grouped arm's analysis (group-analysis.txt, cited as 'analysis D4' in the code comment) chose explicit-or-derived location deliberately; it is still a departure from the baseline rule.",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Extracts and reuses Grouping.executionLocation for add, reuses PlanningJson.readDeclaredGroup for stored declarations, reuses QueuePresentation.effectiveStatus for standing, extracts verifyLocation, and implements show on the planner's own Grouping.recommend/Grouping.show.",
+      "category": "unified",
+      "dimension": "D7",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "M-F04, M-F05; section 10",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "554-558",
+          "path": "src/Ros.Domain/Planning/Grouping.fs",
+          "symbol": "let executionLocation (grouping: GroupingConfiguration)"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "1298-1298",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+          "symbol": "{ Declaration = readDeclaredGroup group"
+        },
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "28-28",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+          "symbol": "QueuePresentation.effectiveStatus (queued.TryFind id) (current.TryFind id)"
+        }
+      ],
+      "id": "F-R2-I-D7",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01 (parser, effectiveStatus), PRAXIS-GROUP-03 (executionLocation)",
+      "introducing_commits": [
+        "7e01fb9638ba299e0f5202e6770db9378d2d23e6",
+        "dae978843237721a8679d51c112473b66ce569a4"
+      ],
+      "notes": "executionLocation extraction in dae9788 (item 03, merged before implementing); not stale-caused.",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One group-ID grammar (WorkGroups.groupIdPattern), one rejection family, one history-operation type, used by every verb and by validate.",
+      "category": "unified",
+      "dimension": "D8",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Side-by-side 'Group-ID rule: one'",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+          "lines": "311-311",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "let private groupIdPattern = Regex(\"^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$\""
+        }
+      ],
+      "id": "F-A021-G-D8",
+      "implementation": "A021-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "Two group-ID grammars: GroupDeclaration's ^GROUP-[A-Z0-9]+(?:-[A-Z0-9]+)*$ and GroupCheckpoint's ^[A-Za-z0-9][A-Za-z0-9._-]*$. The second is a strict superset, is applied only after the group has been resolved from stored declarations or planner configuration (whose IDs the baseline does not constrain), so no stored group is accepted by one grammar and rejected by the other.",
+      "category": "duplicated-compatible",
+      "dimension": "D8",
+      "evaluator_agreement": [
+        {
+          "agrees": "partial",
+          "evaluation": "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+          "locator": "Consistency assessment (Y) 'Two group-ID rules'",
+          "note": "Duplication agreed; incompatibility not shown. The permissive grammar exists because item 05 also checkpoints groups declared only in planner configuration, which A021-grouped cannot do at all. The observable effect is limited to message/remedy text and to config-declared IDs."
+        },
+        {
+          "agrees": "partial",
+          "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+          "locator": "findings.json validation arm-Y",
+          "note": "As above."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "51-51",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let private groupIdPattern = Regex(@\"^GROUP-[A-Z0-9]+(?:-[A-Z0-9]+)*$\""
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "239-240",
+          "path": "src/Ros.Domain/Work/GroupCheckpoint.fs",
+          "symbol": "Regex(\"^[A-Za-z0-9][A-Za-z0-9._-]*$\""
+        },
+        {
+          "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+          "lines": "206-206",
+          "path": "src/Ros.Cli/GroupCheckpointCommands.fs",
+          "symbol": "| Error reason -> Ok(Error [ GroupCheckpointRejection.GroupNotDeclared reason ])"
+        }
+      ],
+      "id": "F-A021-I-D8",
+      "implementation": "A021-independent",
+      "introduced_by_item": "PRAXIS-GROUP-05",
+      "introducing_commits": [
+        "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
+      ],
+      "notes": "Introduced by 8d435cb (stale start); EV1 itself attributes it to 'that independent start'. Excluding item 05 the independent arm has one grammar, so this finding does not survive the sensitivity analysis.",
+      "spec_refs": [],
+      "stale_start_sensitive": true,
+      "study": "A021"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One group-ID grammar (^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$) and one rejection type.",
+      "category": "unified",
+      "dimension": "D8",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 GROUP-ID GRAMMARS",
+          "note": ""
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+          "lines": "250-251",
+          "path": "src/Ros.Domain/Work/WorkGroups.fs",
+          "symbol": "Regex(\"^GROUP-[A-Z0-9]+(-[A-Z0-9]+)*$\""
+        }
+      ],
+      "id": "F-R2-G-D8",
+      "implementation": "R2-grouped",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "b09aaecd24c5d519046047155b155537ee4194e4"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": null,
+      "study": "R2"
+    },
+    {
+      "basis": "observed",
+      "behavior_or_invariant": "One group-ID grammar (^GROUP-[A-Z0-9]+(-[A-Z0-9]+)+$, at least two segments) used by create and validate; checkpoint has no grammar of its own. Rejection types are per verb (creation, addition, removal, checkpoint), scored under D5.",
+      "category": "unified",
+      "dimension": "D8",
+      "evaluator_agreement": [
+        {
+          "agrees": true,
+          "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+          "locator": "section 10 GROUP-ID GRAMMARS",
+          "note": "Cross-arm grammar difference is indeterminate, not an intra-arm duplication."
+        }
+      ],
+      "evidence": [
+        {
+          "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+          "lines": "96-96",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+          "symbol": "let private idPattern = Regex(\"^GROUP-[A-Z0-9]+(-[A-Z0-9]+)+$\""
+        }
+      ],
+      "id": "F-R2-I-D8",
+      "implementation": "R2-independent",
+      "introduced_by_item": "PRAXIS-GROUP-01",
+      "introducing_commits": [
+        "7e01fb9638ba299e0f5202e6770db9378d2d23e6"
+      ],
+      "notes": "",
+      "spec_refs": [],
+      "stale_start_sensitive": false,
+      "study": "R2"
+    }
+  ],
+  "implementations": [
+    {
+      "arm": "grouped",
+      "blind_alias": "arm X (experiment/a021-arm-x 9c978cdb68e13ffbdf87c27b891f0e261c1e0517); src/ tests/ docs/ trees identical to the head",
+      "branch": "experiment/a021-grouped",
+      "evidence_refs": [
+        "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+        "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+        "EV-ROS-2026-A064"
+      ],
+      "head_commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+      "id": "A021-grouped",
+      "study": "A021"
+    },
+    {
+      "arm": "independent",
+      "blind_alias": "arm Y (experiment/a021-arm-y 5d100ed1b986ba5df7ff5999d265ca4c000c2e25); src/ tests/ docs/ trees identical to the head",
+      "branch": "experiment/a021-control",
+      "evidence_refs": [
+        "A021-eval-1 (research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt)",
+        "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
+        "EV-ROS-2026-A064"
+      ],
+      "head_commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "id": "A021-independent",
+      "study": "A021"
+    },
+    {
+      "arm": "grouped",
+      "blind_alias": "arm N (blind/a021-r2/arm-N f6d0b5c49a2c592d3d8791dc819518578116a1cc); src/ tests/ docs/ trees identical to the head",
+      "branch": "experiment/a021-r2-grouped",
+      "evidence_refs": [
+        "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+        "EV-ROS-2026-A070",
+        "POST-UNBLINDING-METRICS.txt"
+      ],
+      "head_commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "id": "R2-grouped",
+      "study": "R2"
+    },
+    {
+      "arm": "independent",
+      "blind_alias": "arm M (blind/a021-r2/arm-M 72a6c0408140bce1b9c1b60fe174e7080d3f3c05); src/ tests/ docs/ trees identical to the head",
+      "branch": "experiment/a021-r2-control",
+      "evidence_refs": [
+        "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
+        "EV-ROS-2026-A070",
+        "POST-UNBLINDING-METRICS.txt"
+      ],
+      "head_commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "id": "R2-independent",
+      "study": "R2"
+    }
+  ],
+  "local_correctness": [
+    {
+      "basis": "observed",
+      "behavior": "add accepts an item whose description names an external repository into a local, non-cross-repository group",
+      "evidence": "probe P2 exit 0 (grouped arms) vs exit 1 (independent arms)",
+      "id": "LC-01",
+      "implementations": [
+        "A021-grouped",
+        "R2-grouped"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "observed",
+      "behavior": "create accepts such an item at creation",
+      "evidence": "probe P3 exit 0 on all four arms",
+      "id": "LC-02",
+      "implementations": [
+        "A021-grouped",
+        "A021-independent",
+        "R2-grouped",
+        "R2-independent"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "observed",
+      "behavior": "create with --execution-repository elsewhere admits local members; the following add of a local member is refused",
+      "evidence": "probes P9 exit 0 / P10 exit 1 (independent); P9 exit 1 (grouped)",
+      "id": "LC-03",
+      "implementations": [
+        "A021-independent",
+        "R2-independent"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "observed",
+      "behavior": "concurrent creates lose updates while every process exits 0",
+      "evidence": "CC, 5 runs x 8 processes (nondeterministic counts): independent arms 40/40 exit 0 with 8 and 7 groups stored (32 and 33 lost updates); grouped arms stored every exit-0 run (17/17 and 31/31)",
+      "id": "LC-04",
+      "implementations": [
+        "A021-independent",
+        "R2-independent"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "observed",
+      "behavior": "blank --decision text is stored verbatim in the group checkpoint",
+      "evidence": "5face886176839da30805c07fa893d2c18f3b5d2 src/Ros.Domain/Work/WorkGroups.fs:546; src/Ros.Cli/WorkGroupCommands.fs:379",
+      "id": "LC-05",
+      "implementations": [
+        "A021-grouped"
+      ],
+      "method": "code-reading"
+    },
+    {
+      "basis": "observed",
+      "behavior": "blank --decision is silently dropped (N-D1)",
+      "evidence": "0b5284c37482d16bceafac214fa81f93417e2987 src/Ros.Domain/Work/WorkGroups.fs:485",
+      "id": "LC-06",
+      "implementations": [
+        "R2-grouped"
+      ],
+      "method": "code-reading"
+    },
+    {
+      "basis": "observed",
+      "behavior": "work group show --json on an unknown group prints a planner error and no JSON",
+      "evidence": "probe P7 on 8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "id": "LC-07",
+      "implementations": [
+        "R2-independent"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "observed",
+      "behavior": "under lock contention some concurrent creates fail with 'unexpected operational failure' (pre-existing RegistryLock)",
+      "evidence": "CC, 5 runs x 8: 23 of 40 (A021-grouped) and 9 of 40 (R2-grouped) exit 1; independent arms 0 of 40",
+      "id": "LC-08",
+      "implementations": [
+        "A021-grouped",
+        "R2-grouped"
+      ],
+      "method": "probe"
+    },
+    {
+      "basis": "evaluated",
+      "behavior": "tests added (evaluator counts): A021 19 vs 37; R2 27 vs 47 (819 and 839 against 792 baseline tests)",
+      "evidence": "EV1 'Build and test results'; R2-eval section 6",
+      "id": "LC-09",
+      "implementations": [
+        "A021-grouped",
+        "A021-independent",
+        "R2-grouped",
+        "R2-independent"
+      ],
+      "method": "evaluator-report"
+    }
+  ],
+  "probe_claims": [
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P1",
+      "implementation": "A021-grouped",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P2",
+      "implementation": "A021-grouped",
+      "probe": "P2",
+      "supports": [
+        "F-A021-G-D2",
+        "F-A021-G-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P3",
+      "implementation": "A021-grouped",
+      "probe": "P3",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P9",
+      "implementation": "A021-grouped",
+      "probe": "P9",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P10",
+      "implementation": "A021-grouped",
+      "note": "P9 refused to create the group, so P10 fails as unknown-group; it does not test admission.",
+      "probe": "P10",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_max": 0
+      },
+      "id": "PC-A021-G-CC",
+      "implementation": "A021-grouped",
+      "probe": "CC",
+      "supports": [
+        "F-A021-G-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P1",
+      "implementation": "A021-independent",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P2",
+      "implementation": "A021-independent",
+      "probe": "P2",
+      "supports": [
+        "F-A021-I-D2",
+        "F-A021-I-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P3",
+      "implementation": "A021-independent",
+      "probe": "P3",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P9",
+      "implementation": "A021-independent",
+      "probe": "P9",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P10",
+      "implementation": "A021-independent",
+      "probe": "P10",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_min": 1
+      },
+      "id": "PC-A021-I-CC",
+      "implementation": "A021-independent",
+      "probe": "CC",
+      "supports": [
+        "F-A021-I-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P1",
+      "implementation": "R2-grouped",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P2",
+      "implementation": "R2-grouped",
+      "probe": "P2",
+      "supports": [
+        "F-R2-G-D2",
+        "F-R2-G-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P3",
+      "implementation": "R2-grouped",
+      "probe": "P3",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P9",
+      "implementation": "R2-grouped",
+      "probe": "P9",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P10",
+      "implementation": "R2-grouped",
+      "note": "P9 refused to create the group, so P10 fails as unknown-group; it does not test admission.",
+      "probe": "P10",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_max": 0
+      },
+      "id": "PC-R2-G-CC",
+      "implementation": "R2-grouped",
+      "probe": "CC",
+      "supports": [
+        "F-R2-G-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P1",
+      "implementation": "R2-independent",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P2",
+      "implementation": "R2-independent",
+      "probe": "P2",
+      "supports": [
+        "F-R2-I-D2",
+        "F-R2-I-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P3",
+      "implementation": "R2-independent",
+      "probe": "P3",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P9",
+      "implementation": "R2-independent",
+      "probe": "P9",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P10",
+      "implementation": "R2-independent",
+      "probe": "P10",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_min": 1
+      },
+      "id": "PC-R2-I-CC",
+      "implementation": "R2-independent",
+      "probe": "CC",
+      "supports": [
+        "F-R2-I-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"code\": \"invalid-group-id\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-G-P4",
+      "implementation": "A021-grouped",
+      "probe": "P4",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"kind\": \"work-group-create\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-I-P4",
+      "implementation": "A021-independent",
+      "probe": "P4",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"remedy\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-G-P4",
+      "implementation": "R2-grouped",
+      "probe": "P4",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"errors\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-I-P4",
+      "implementation": "R2-independent",
+      "probe": "P4",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P5",
+      "implementation": "A021-grouped",
+      "probe": "P5",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P5",
+      "implementation": "A021-independent",
+      "probe": "P5",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P5",
+      "implementation": "R2-grouped",
+      "probe": "P5",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P5",
+      "implementation": "R2-independent",
+      "probe": "P5",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-group\""
+      },
+      "id": "PC-A021-G-P6",
+      "implementation": "A021-grouped",
+      "probe": "P6",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"group-not-declared\""
+      },
+      "id": "PC-A021-I-P6",
+      "implementation": "A021-independent",
+      "probe": "P6",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P6",
+      "implementation": "R2-grouped",
+      "probe": "P6",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P6",
+      "implementation": "R2-independent",
+      "probe": "P6",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-G-P7",
+      "implementation": "A021-grouped",
+      "probe": "P7",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-I-P7",
+      "implementation": "A021-independent",
+      "probe": "P7",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-G-P7",
+      "implementation": "R2-grouped",
+      "probe": "P7",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": false
+      },
+      "id": "PC-R2-I-P7",
+      "implementation": "R2-independent",
+      "probe": "P7",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-member\""
+      },
+      "id": "PC-A021-G-P8",
+      "implementation": "A021-grouped",
+      "probe": "P8",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"kind\": \"work-group-create\""
+      },
+      "id": "PC-A021-I-P8",
+      "implementation": "A021-independent",
+      "probe": "P8",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-work-item\""
+      },
+      "id": "PC-R2-G-P8",
+      "implementation": "R2-grouped",
+      "probe": "P8",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"errors\""
+      },
+      "id": "PC-R2-I-P8",
+      "implementation": "R2-independent",
+      "probe": "P8",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    }
+  ],
+  "probe_data": "data/probes/<implementation>.json (scripts/run_probes.py)",
+  "rubric": {
+    "basis_values": {
+      "evaluated": "evaluator judgment, cited",
+      "inferred": "this audit's inference",
+      "observed": "verified in code or by a probe in this audit"
+    },
+    "category_definitions": {
+      "divergent": "More than one implementation, or one shared input derived differently, and concrete code or runtime evidence shows different behavior or invariants for the same input. Organization differences alone never qualify.",
+      "duplicated-compatible": "More than one implementation or representation of the concern exists, but no CLI-reachable input produces contradictory behavior; the difference is organization, naming, file layout or message wording.",
+      "missing": "The concern is not implemented where the items need it (for example no lock around a read-modify-write, or no ownership check).",
+      "not-assessable": "The concern cannot be judged from the code at this commit (for example it requires an item that the sensitivity analysis excludes).",
+      "unified": "One implementation (or one shared rule) serves every item that needs the concern, and every verb that exercises it shows the same behavior and invariant on the same input."
+    },
+    "dimensions": [
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "persistence/store model",
+        "id": "D1",
+        "name": "persistence/store model"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "member admission/repository rule (create vs add)",
+        "id": "D2",
+        "name": "member admission/repository rule (create vs add)"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "lifecycle/member classification (show vs checkpoint)",
+        "id": "D3",
+        "name": "lifecycle/member classification (show vs checkpoint)"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "checkpoint durability and ownership validation",
+        "id": "D4",
+        "name": "checkpoint durability and ownership validation"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "error/JSON/command contract shape",
+        "id": "D5",
+        "name": "error/JSON/command contract shape"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "mutation/concurrency model",
+        "id": "D6",
+        "name": "mutation/concurrency model"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "reuse of baseline rules and abstractions (feature-internal shared helpers are scored under D5 and D6)",
+        "id": "D7",
+        "name": "reuse of baseline rules and abstractions (feature-internal shared helpers are scored under D5 and D6)"
+      },
+      {
+        "categories": [
+          "divergent",
+          "duplicated-compatible",
+          "missing",
+          "not-assessable",
+          "unified"
+        ],
+        "definition": "duplicated incompatible abstractions inside the feature",
+        "id": "D8",
+        "name": "duplicated incompatible abstractions inside the feature"
+      }
+    ],
+    "direction_values": [
+      "grouped_more_unified",
+      "independent_more_unified",
+      "equivalent",
+      "mixed",
+      "not_assessable"
+    ]
+  },
+  "schema_version": "a021-publication.architecture-findings/1"
+}

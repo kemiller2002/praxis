@@ -1,0 +1,176 @@
+{
+  "actor": {
+    "id": "probe",
+    "kind": "agent"
+  },
+  "concurrency": {
+    "description": "8 concurrent 'work group create' processes on a fresh clone, repeated 5 times",
+    "deterministic": false,
+    "id": "CC",
+    "note": "Process interleaving is not controlled: per-run counts vary between executions; compare totals and the presence or absence of lost updates, not exact counts.",
+    "runs": [
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 1,
+        "lost_updates": 7,
+        "processes": 8,
+        "run": 1
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 1,
+        "lost_updates": 7,
+        "processes": 8,
+        "run": 2
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 1,
+        "lost_updates": 7,
+        "processes": 8,
+        "run": 3
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 2,
+        "lost_updates": 6,
+        "processes": 8,
+        "run": 4
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 2,
+        "lost_updates": 6,
+        "processes": 8,
+        "run": 5
+      }
+    ],
+    "totals": {
+      "exit_nonzero": 0,
+      "exit_zero": 40,
+      "groups_stored": 7,
+      "lost_updates": 33
+    }
+  },
+  "group_flag": "--id",
+  "head_commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+  "implementation": "R2-independent",
+  "occurred_at": "2026-10-07T00:00:00.000Z",
+  "probes": [
+    {
+      "arguments": "work group create --id GROUP-PROBE-ONE --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create a local group {01,03}",
+      "exit_code": 0,
+      "id": "P1",
+      "stderr": "",
+      "stdout": "recorded GROUP-PROBE-ONE in .ros/work/groups.json\n  members: PRAXIS-PROBE-01, PRAXIS-PROBE-03\n  kind: unspecified (the planner infers it)\n  origin: human-declared\n  execution repository: unspecified\n  declared by probe at 2026-10-07T00:00:00.000Z\nmember lifecycle states are unchanged; each member is still started, checkpointed and completed on its own\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-ONE --member PRAXIS-PROBE-02 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "add 02 (description names an external repository; planner infers UnknownExternal) to that local group",
+      "exit_code": 1,
+      "id": "P2",
+      "stderr": "ERROR PRAXIS-PROBE-02 executes in unknown external repository but the group executes in repository-operating-system; only a cross-repository group may span repositories\nwork group add rejected; nothing was recorded\n",
+      "stdout": ""
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-TWO --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-02 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create a local group {01,02} (02 inferred external)",
+      "exit_code": 0,
+      "id": "P3",
+      "stderr": "",
+      "stdout": "recorded GROUP-PROBE-TWO in .ros/work/groups.json\n  members: PRAXIS-PROBE-01, PRAXIS-PROBE-02\n  kind: unspecified (the planner infers it)\n  origin: human-declared\n  execution repository: unspecified\n  declared by probe at 2026-10-07T00:00:00.000Z\nmember lifecycle states are unchanged; each member is still started, checkpointed and completed on its own\n"
+    },
+    {
+      "arguments": "work group create --id bad-id --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "create with the invalid group ID 'bad-id' (--json)",
+      "exit_code": 1,
+      "id": "P4",
+      "stderr": "ERROR 'bad-id' is not a group ID; use GROUP-<REPOSITORY-OR-AREA>-<SEQUENCE>, e.g. GROUP-PRAXIS-PLANNING-001 (PRX-GRP-010)\nwork group create rejected; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-groups/1.0.0\",\n  \"kind\": \"work-group-rejected\",\n  \"errors\": [\n    \"'bad-id' is not a group ID; use GROUP-<REPOSITORY-OR-AREA>-<SEQUENCE>, e.g. GROUP-PRAXIS-PLANNING-001 (PRX-GRP-010)\"\n  ]\n}\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-NONE --member PRAXIS-PROBE-04 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "add to an undeclared group (--json)",
+      "exit_code": 1,
+      "id": "P5",
+      "stderr": "ERROR group GROUP-PROBE-NONE is not a stored group; declare it with work group create (a group only in planner configuration is changed there)\nwork group add rejected; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-groups/1.0.0\",\n  \"kind\": \"work-group-rejected\",\n  \"errors\": [\n    \"group GROUP-PROBE-NONE is not a stored group; declare it with work group create (a group only in planner configuration is changed there)\"\n  ]\n}\n"
+    },
+    {
+      "arguments": "work group checkpoint --id GROUP-PROBE-NONE --occurred-at 2026-10-07T00:00:00.000Z --summary s --next-action n --json",
+      "description": "checkpoint an undeclared group (--json)",
+      "exit_code": 1,
+      "id": "P6",
+      "stderr": "ERROR [unknown-group] group GROUP-PROBE-NONE is not a stored group; declare it with work group create (a group only in planner configuration cannot be checkpointed)\n  REMEDY Check the ID with './ros work group show'; declare the group with 'work group create'.\nERROR [detached-head] HEAD is detached at 8bb8f78adbaa; a checkpoint needs a named branch that carries the work\n  REMEDY Create or switch to a named branch for the work (git switch -c NAME), push it with an upstream, then checkpoint.\nwork group checkpoint rejected; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-group-checkpoints/1.0.0\",\n  \"kind\": \"work-group-checkpoint-rejected\",\n  \"rejections\": [\n    {\n      \"code\": \"unknown-group\",\n      \"message\": \"group GROUP-PROBE-NONE is not a stored group; declare it with work group create (a group only in planner configuration cannot be checkpointed)\",\n      \"remedy\": \"Check the ID with './ros work group show'; declare the group with 'work group create'.\"\n    },\n    {\n      \"code\": \"detached-head\",\n      \"message\": \"HEAD is detached at 8bb8f78adbaa; a checkpoint needs a named branch that carries the work\",\n      \"remedy\": \"Create or switch to a named branch for the work (git switch -c NAME), push it with an upstream, then checkpoint.\"\n    }\n  ]\n}\n"
+    },
+    {
+      "arguments": "work group show GROUP-PROBE-NONE --json",
+      "description": "show an undeclared group (--json)",
+      "exit_code": 1,
+      "id": "P7",
+      "stderr": "ERROR no declared group 'GROUP-PROBE-NONE' (declared: GROUP-PROBE-ONE, GROUP-PROBE-TWO)\n",
+      "stdout": ""
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-THREE --member PRAXIS-PROBE-01 --member PRAXIS-NOPE-99 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "create with an unknown member (--json)",
+      "exit_code": 1,
+      "id": "P8",
+      "stderr": "ERROR member PRAXIS-NOPE-99 is not a known work item (backlog queue or live context)\nwork group create rejected; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-groups/1.0.0\",\n  \"kind\": \"work-group-rejected\",\n  \"errors\": [\n    \"member PRAXIS-NOPE-99 is not a known work item (backlog queue or live context)\"\n  ]\n}\n"
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-FOUR --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --execution-repository elsewhere --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create with --execution-repository elsewhere and local members {01,03}",
+      "exit_code": 0,
+      "id": "P9",
+      "stderr": "",
+      "stdout": "recorded GROUP-PROBE-FOUR in .ros/work/groups.json\n  members: PRAXIS-PROBE-01, PRAXIS-PROBE-03\n  kind: unspecified (the planner infers it)\n  origin: human-declared\n  execution repository: elsewhere\n  declared by probe at 2026-10-07T00:00:00.000Z\nmember lifecycle states are unchanged; each member is still started, checkpointed and completed on its own\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-FOUR --member PRAXIS-PROBE-04 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "add local 04 to the P9 group (if P9 created it)",
+      "exit_code": 1,
+      "id": "P10",
+      "stderr": "ERROR PRAXIS-PROBE-04 executes in repository-operating-system but the group executes in elsewhere; only a cross-repository group may span repositories\nwork group add rejected; nothing was recorded\n",
+      "stdout": ""
+    }
+  ],
+  "schema": "a021-publication.architecture-probes/1",
+  "setup": {
+    "captured_items": [
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-01"
+      },
+      {
+        "description": "Implemented in an external repository",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-02"
+      },
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-03"
+      },
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-04"
+      }
+    ]
+  }
+}

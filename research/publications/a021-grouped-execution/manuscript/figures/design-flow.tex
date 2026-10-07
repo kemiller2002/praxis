@@ -1,0 +1,27 @@
+% Study design flow (Fig. 1). TikZ; no data values. Explicit coordinates (column width).
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw, rounded corners=1pt, align=center, inner sep=1.5pt, minimum height=6mm},
+  arm/.style={box, anchor=west, text width=24mm},
+  eval/.style={box, anchor=west, text width=16mm},
+  rev/.style={box, anchor=west, text width=12mm},
+  study/.style={font=\scriptsize\bfseries, anchor=west},
+  arr/.style={-{Latex[length=1.4mm]}, thin}]
+  % rows: A021 cohort, A021 per-item, R2 cohort, R2 per-item
+  \node[study] at (1.55, 0.72) {A021: protocol frozen before the arms};
+  \node[arm] (ag) at (1.6, 0.0) {Cohort: one session; committed cross-item analysis, then items 1--5};
+  \node[arm] (ai) at (1.6, -1.25) {Per-item: five fresh sessions, serial on one branch};
+  \node[eval] (ae) at (4.45, -0.625) {Two evaluations, neutral labels (blinding ineffective)};
+  \node[rev] (ar) at (6.6, -0.625) {Mapping file read after evaluation};
+  \node[study] at (1.55, -2.18) {R2: internal re-execution, not preregistered};
+  \node[arm] (rg) at (1.6, -2.9) {Cohort: one session; committed cross-item analysis, then items 1--5};
+  \node[arm] (ri) at (1.6, -4.15) {Per-item: five fresh worker sessions, serial; own orchestrator};
+  \node[eval] (re) at (4.45, -3.525) {Cross-vendor evaluator, neutral patches (blind by self-report)};
+  \node[rev] (rr) at (6.6, -3.525) {Mapping by source-tree identity};
+  % common baseline
+  \node[box, text width=10mm] (b) at (0.62, -2.075) {Common baseline commit; same five items and criteria};
+  \foreach \t in {ag, ai, rg, ri} \draw[arr] (b.east) -- (\t.west);
+  \foreach \s/\e in {ag/ae, ai/ae, rg/re, ri/re} \draw[arr] (\s.east) -- (\e.west);
+  \draw[arr] (ae) -- (ar);
+  \draw[arr] (re) -- (rr);
+\end{tikzpicture}

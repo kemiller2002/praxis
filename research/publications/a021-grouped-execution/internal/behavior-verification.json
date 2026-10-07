@@ -1,0 +1,102 @@
+{
+  "schema": "a021-anonymous-artifact.behavior/1",
+  "dotnet_sdk": "10.0.112",
+  "build": "dotnet build Ros.slnx -c Release -p:FSharpCoreImplicitPackageVersion=10.1.400",
+  "tests": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll",
+  "review_dependency_aliases": [
+    {
+      "real": "EchelonFoundry.Aegis.Core",
+      "alias": "AcmelabFoundry.Aegis.Core",
+      "version": "1.0.0"
+    }
+  ],
+  "review_dependency_note": "external packages whose id contains an aliased token were repacked under the alias id into a temporary local feed (nuspec id and file name only; binaries unchanged) for the review builds; they are not shipped",
+  "missing_dependencies": [],
+  "targets": {
+    "baseline": {
+      "faithful_pass": 792,
+      "review_pass": 792,
+      "faithful_total": 792,
+      "review_total": 792,
+      "runner_summary": {
+        "review": "792 test(s); 792 passed; 0 failed",
+        "faithful": "792 test(s); 792 passed; 0 failed"
+      },
+      "expected": 792,
+      "per_test_identical": true,
+      "differences": [],
+      "problems": {
+        "review": {},
+        "faithful": {}
+      }
+    },
+    "a021/arm-x": {
+      "faithful_pass": 811,
+      "review_pass": 811,
+      "faithful_total": 811,
+      "review_total": 811,
+      "runner_summary": {
+        "review": "811 test(s); 811 passed; 0 failed",
+        "faithful": "811 test(s); 811 passed; 0 failed"
+      },
+      "expected": 811,
+      "per_test_identical": true,
+      "differences": [],
+      "problems": {
+        "review": {},
+        "faithful": {}
+      }
+    },
+    "a021/arm-y": {
+      "faithful_pass": 829,
+      "review_pass": 829,
+      "faithful_total": 829,
+      "review_total": 829,
+      "runner_summary": {
+        "review": "829 test(s); 829 passed; 0 failed",
+        "faithful": "829 test(s); 829 passed; 0 failed"
+      },
+      "expected": 829,
+      "per_test_identical": true,
+      "differences": [],
+      "problems": {
+        "review": {},
+        "faithful": {}
+      }
+    },
+    "r2/arm-M": {
+      "faithful_pass": 839,
+      "review_pass": 839,
+      "faithful_total": 839,
+      "review_total": 839,
+      "runner_summary": {
+        "review": "839 test(s); 839 passed; 0 failed",
+        "faithful": "839 test(s); 839 passed; 0 failed"
+      },
+      "expected": 839,
+      "per_test_identical": true,
+      "differences": [],
+      "problems": {
+        "review": {},
+        "faithful": {}
+      }
+    },
+    "r2/arm-N": {
+      "faithful_pass": 819,
+      "review_pass": 819,
+      "faithful_total": 819,
+      "review_total": 819,
+      "runner_summary": {
+        "review": "819 test(s); 819 passed; 0 failed",
+        "faithful": "819 test(s); 819 passed; 0 failed"
+      },
+      "expected": 819,
+      "per_test_identical": true,
+      "differences": [],
+      "problems": {
+        "review": {},
+        "faithful": {}
+      }
+    }
+  }
+}

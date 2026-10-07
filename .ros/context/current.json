@@ -7792,11 +7792,73 @@
         }
       },
       "completedAt": "2026-10-07T05:19:53.422Z"
+    },
+    {
+      "id": "WI-0074",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/publications/a021-grouped-execution/scripts/extract_metrics.py"
+        },
+        {
+          "type": "implementation",
+          "path": "research/publications/a021-grouped-execution/scripts/build_anonymous_artifact.py"
+        },
+        {
+          "type": "tests",
+          "path": "research/publications/a021-grouped-execution/scripts/verify_metrics.py"
+        },
+        {
+          "type": "tests",
+          "path": "research/publications/a021-grouped-execution/scripts/verify_artifact.py"
+        },
+        {
+          "type": "report",
+          "path": "research/publications/a021-grouped-execution/READINESS.md"
+        },
+        {
+          "type": "manuscript",
+          "path": "research/publications/a021-grouped-execution/manuscript/paper.tex"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A074--a021-r2-evidence-errata.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:58:39.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T140703062Z-100aa587"
+      ],
+      "latestCheckpoint": {
+        "id": "dbd69289ae8dd8477a192912",
+        "recordedAt": "2026-10-07T17:58:29.000Z",
+        "executionId": "EXE-20261007T140703062Z-100aa587",
+        "repository": "repository-operating-system",
+        "branch": "research/a021-publication-package",
+        "commit": "cc3a1349ac3263d517e860b0787511b66913400c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "research/a021-publication-package",
+        "remoteCommit": "cc3a1349ac3263d517e860b0787511b66913400c",
+        "summary": "A021 publication package complete: audits, errata EV-A074, full and short manuscripts, anonymous artifact (review+faithful), three independent reviews, readiness decision C",
+        "nextAction": "Close WI-0075..0077 (human IRR coding, reference verification, venue confirmation); owner decides on WI-0078/0079 empirical work",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T17:58:39.000Z",
+      "conclusion": "Publication package ready; more empirical work required before submission (state C)"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T06:24:45.000Z",
+  "updatedAt": "2026-10-07T17:58:39.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

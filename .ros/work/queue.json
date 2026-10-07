@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 74,
+  "nextSeq": 80,
   "items": [
     {
       "id": "WI-0001",
@@ -5342,6 +5342,147 @@
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.753Z",
       "updatedAt": "2026-10-07T05:05:03.598Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0074",
+      "title": "PRAXIS-PUB-A021: A021 grouped-execution publication package (evidence audit, manuscript, anonymous artifact, readiness decision)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-07T14:06:50.827Z",
+      "updatedAt": "2026-10-07T17:58:39.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0075",
+      "title": "A021-PUB-IRR: independent human second coding of the 8-dimension architecture rubric with agreement statistics",
+      "description": "Blocking for any submission: the rubric was defined after unblinding and applied by one AI auditor. A human coder (or two) blind to arm mapping applies research/publications/a021-grouped-execution/architecture-findings.md's rubric to the four implementations from the review-mode anonymous artifact (arm aliases only), using the written category definitions frozen BEFORE coding; report per-dimension agreement (raw agreement and Cohen's kappa where defined) and adjudication. Acceptance: frozen codebook committed before coding; codings committed; agreement reported; manuscript updated from data.",
+      "tags": [
+        "research",
+        "a021-publication"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T15:03:53.000Z",
+      "updatedAt": "2026-10-07T15:03:53.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0076",
+      "title": "A021-PUB-REFS: verify all 57 references against authoritative records",
+      "description": "41/57 references in research/publications/a021-grouped-execution/references.bib are verified only from search-engine extracts because arxiv.org, doi.org, dl.acm.org, ieeexplore, dblp.org, openreview.net and aclanthology.org were blocked by the environment network policy. Open each record, confirm title/authors/year/venue/DOI and the characterization in related-work.md; update data/references-verification.json depth; drop anything that fails. Also check arXiv 2608.25955 ('Praxist') for self-citation/anonymity risk.",
+      "tags": [
+        "research",
+        "a021-publication"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T15:03:54.000Z",
+      "updatedAt": "2026-10-07T15:03:54.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0077",
+      "title": "A021-PUB-VENUE: confirm SANER 2027 / MSR 2027 submission facts on official pages",
+      "description": "submission-plan.md and data/venues.json were assembled from official-domain search extracts because conf.researchr.org, 2027.msrconf.org, easychair.org and ieee.org were egress-blocked. Confirm deadlines (abstract 2026-10-19 AoE, paper 2026-10-23 AoE), page limits, template options, AI-disclosure placement vs no-acknowledgments rule (ask chairs), and short-paper track limits before registering an abstract.",
+      "tags": [
+        "research",
+        "a021-publication"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T15:03:55.000Z",
+      "updatedAt": "2026-10-07T15:03:55.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0078",
+      "title": "EXP-GRANULARITY-ARMS: multi-arm execution-granularity experiment separating retained context from mandated cross-item analysis (complements preregistered EX-ROS-2026-A024 handoff study)",
+      "description": "A021/R2 bundle two treatment components (one retained-context session; mandated up-front cross-item analysis) and cannot attribute effects to either. EX-ROS-2026-A024 (preregistered on main 2026-10-07, status proposed) tests structured handoffs between fresh sessions; this item covers the remaining arms: cohort session without the analysis step, and per-item sessions given a shared pre-written analysis, with >=3 executions per arm to bound run-to-run variance, implementers unable to see hypothesis/protocol/cohort labels, blind evaluation with a pre-frozen rubric and human coders. Coordinate with EX-ROS-2026-A024 rather than duplicating it. Needs owner authorization for cost.",
+      "tags": [
+        "research",
+        "a021-publication"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T15:03:55.000Z",
+      "updatedAt": "2026-10-07T17:32:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0079",
+      "title": "EXP-A022-UNBLOCK: find or create a gate-satisfying target for the A022 affinity falsification",
+      "description": "EX-ROS-2026-A022 is blocked at its target-repository gate (EV-ROS-2026-A072). The A021 publication can only claim a high-affinity case; the affinity moderator (HY-A029) and generalization to another repository remain untested. Decide with the owner whether to relax the same-repository requirement via a new preregistration (never by editing the frozen one) or wait for a qualifying repository.",
+      "tags": [
+        "research",
+        "a021-publication"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T15:03:56.000Z",
+      "updatedAt": "2026-10-07T15:03:56.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

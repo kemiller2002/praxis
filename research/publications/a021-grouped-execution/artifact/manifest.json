@@ -1,0 +1,1290 @@
+{
+  "schema": "a021-anonymous-artifact.manifest/2",
+  "mode": "review",
+  "bundle": "anonymous-artifact",
+  "source_date_epoch": 1790726400,
+  "baseline": {
+    "commit": "00080c00080c00080c00080c00080c00080c0008",
+    "tree": "0005dc0005dc0005dc0005dc0005dc0005dc0005",
+    "bundle_dir": "baseline/source",
+    "files_in_commit": 913,
+    "files_shipped": 571,
+    "files_redacted": 43,
+    "excluded_prefixes": [
+      ".ros/",
+      ".github/workflows/",
+      ".github/actions/",
+      "research/",
+      "input-documents/"
+    ],
+    "file_list": "baseline/FILES.tsv"
+  },
+  "policy": {
+    "removed": [
+      "personal names",
+      "e-mail addresses",
+      "account names and account-scoped URLs",
+      "agent-session identifiers and URLs",
+      "transcript/tool UUIDs (records only)",
+      "Co-Authored-By / session trailer lines (records only)",
+      "fields named internal_ref",
+      "product and organisation names (same-length aliases, contents and paths)",
+      "object ids that resolve in the study repository (same-length pseudonyms)"
+    ],
+    "retained": [
+      "the three-letter project prefix used in namespaces and record ids (generic acronym)",
+      "tool identities (model and evaluator names, disclosed by the paper)"
+    ],
+    "patches": "person redaction (none needed) then the mechanical review rename; they apply to baseline/source",
+    "document": "README.md, section 'Anonymization'"
+  },
+  "entries": [
+    {
+      "path": "MAPPING.json",
+      "status": "included",
+      "profile": "authored",
+      "sha256": "a9bd0bb17f5bcfa94009c79867c5c58775fb45a7e2a8127f5937f2abffb2c95d",
+      "bytes": 801
+    },
+    {
+      "path": "README.md",
+      "status": "included",
+      "profile": "authored",
+      "sha256": "fa6058a1560bd16e5fa0f0febb545c21f4b4a1c63c499ca95b4603de977ad8d9",
+      "bytes": 10315
+    },
+    {
+      "path": "a021/arm-x.patch",
+      "status": "included",
+      "profile": "code",
+      "sha256": "1d835be89c2fd9eb5aca115fb90e4ff83943c314eda88a7593714d085d1d3fff",
+      "bytes": 146179,
+      "redactions": {},
+      "origin": {
+        "kind": "git-diff",
+        "base": "00080c00080c00080c00080c00080c00080c0008",
+        "head": "00095c00095c00095c00095c00095c00095c0009",
+        "pathspec": [
+          ".",
+          ":(exclude).ros",
+          ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+        ],
+        "role": "A021 blinded arm x, squashed diff against the baseline (Subjex state and the arm's own experiment records excluded, as in the original blind kit)"
+      },
+      "source_sha256": "beb4e1eb6aa01ec413adf1a0d274bd6a5f523b57886a58147491990b5db6c37a",
+      "byte_identical_to_source": true,
+      "review_changes": {
+        "alias-token:1": 20,
+        "alias-bounded:1": 12,
+        "commit-sha": 32
+      }
+    },
+    {
+      "path": "a021/arm-y.patch",
+      "status": "included",
+      "profile": "code",
+      "sha256": "f65d7305929d65610e476d9c12189b81adc17add5695434be7f1f281ed1ff137",
+      "bytes": 249848,
+      "redactions": {},
+      "origin": {
+        "kind": "git-diff",
+        "base": "00080c00080c00080c00080c00080c00080c0008",
+        "head": "00053c00053c00053c00053c00053c00053c0005",
+        "pathspec": [
+          ".",
+          ":(exclude).ros",
+          ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+        ],
+        "role": "A021 blinded arm y, squashed diff against the baseline (same exclusions)"
+      },
+      "source_sha256": "196138b9c6e73af4e0bc8f2781a66c0aa4a552245a782033a64dc11449c7feab",
+      "byte_identical_to_source": true,
+      "review_changes": {
+        "alias-token:1": 120,
+        "alias-token:2": 3,
+        "alias-bounded:1": 12,
+        "commit-sha": 59
+      }
+    },
+    {
+      "path": "a021/blind-mapping.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "809de5146eb3022dfa5223dc95242d0ad80e62c1d2e279a9c84b25492bee6d72",
+      "bytes": 318,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/blind-mapping.json",
+        "role": "A021 arm-x/arm-y mapping, drawn and unsealed after evaluation"
+      },
+      "review_changes": {
+        "commit-sha": 3
+      }
+    },
+    {
+      "path": "a021/evaluation/evaluation.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "e07d71ad72a09939f2115a15fc633081d55dc8bc274c0379968120477d4c96f1",
+      "bytes": 31842,
+      "redactions": {
+        "session-id": 1
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt",
+        "role": "A021 blind evaluation 1 report"
+      },
+      "review_changes": {
+        "alias-token:1": 21,
+        "commit-sha": 12
+      }
+    },
+    {
+      "path": "a021/evaluation/evaluator-prompt.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "bc725af106c0a098a77357f70f090874d340adbdf191a531edb13e7341730165",
+      "bytes": 9125,
+      "redactions": {
+        "account": 1
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00026c00026c00026c00026c00026c00026c0002",
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+        "role": "A021 evaluation-kit evaluator brief"
+      },
+      "review_changes": {
+        "alias-phrase:1": 1,
+        "alias-token:1": 7
+      }
+    },
+    {
+      "path": "a021/evaluation/findings.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "6ee31e6260132ac1594a0b5cdbfb99278363317bf61dd10ad0a6b48282812f1f",
+      "bytes": 9977,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "00026c00026c00026c00026c00026c00026c0002",
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json",
+        "role": "A021 blind evaluation 2 (evaluation kit) findings"
+      },
+      "review_changes": {
+        "alias-token:1": 15
+      }
+    },
+    {
+      "path": "a021/evaluation/prepare-blind-bundle.sh",
+      "status": "included",
+      "profile": "record",
+      "sha256": "16c3ae5e56849134981e3db4dc661af4ce6a70ccc3c79ec38248c222285329af",
+      "bytes": 5525,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "00026c00026c00026c00026c00026c00026c0002",
+        "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh",
+        "role": "A021 evaluation-kit blinding script (randomised arm naming and scrubbing)"
+      },
+      "review_changes": {
+        "alias-token:1": 2
+      }
+    },
+    {
+      "path": "a021/harness/harness-note.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "c7c82fe73536751a0fbd82793894d7bb58a9334b80d4fa98f8ef80c81af02a40",
+      "bytes": 984,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/harness-note.txt",
+        "role": "harness note given identically to every implementing session"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "a021/harness/prompts/control-01.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "1d68eba1dbbf3ae01454c594e37615f6c0ba8ff0657904153192f3b668971192",
+      "bytes": 1424,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-01.txt",
+        "role": "independent-arm implementation prompt, item 01"
+      },
+      "review_changes": {
+        "alias-token:1": 3
+      }
+    },
+    {
+      "path": "a021/harness/prompts/control-02.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "91a647d014324be16ea1d2dbd3002ec654c2f82e982c93ac349f0befdd5fea53",
+      "bytes": 1424,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-02.txt",
+        "role": "independent-arm implementation prompt, item 02"
+      },
+      "review_changes": {
+        "alias-token:1": 3
+      }
+    },
+    {
+      "path": "a021/harness/prompts/control-03.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "131c05228f1bcc9f8535c7ea26dac7a2e390c29be3271ebd20bb7911a7f80b4c",
+      "bytes": 1424,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-03.txt",
+        "role": "independent-arm implementation prompt, item 03"
+      },
+      "review_changes": {
+        "alias-token:1": 3
+      }
+    },
+    {
+      "path": "a021/harness/prompts/control-04.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ee89424fffc3ae7b8db16e6ea88662d24aac31a9ec9cabe0ac2cf7eca2082989",
+      "bytes": 1424,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-04.txt",
+        "role": "independent-arm implementation prompt, item 04"
+      },
+      "review_changes": {
+        "alias-token:1": 3
+      }
+    },
+    {
+      "path": "a021/harness/prompts/control-05.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "b68c7ef1afe3750dae237bd8456d86d1097178f1104a2e1e9ca58eb88ec71e96",
+      "bytes": 1424,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-05.txt",
+        "role": "independent-arm implementation prompt, item 05"
+      },
+      "review_changes": {
+        "alias-token:1": 3
+      }
+    },
+    {
+      "path": "a021/harness/prompts/evaluator.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "aa7970f941e9362de4f0837290f178dfcbf95303f6e8a707f3c390663eb54561",
+      "bytes": 2496,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/evaluator.txt",
+        "role": "A021 evaluation 1 evaluator prompt"
+      },
+      "review_changes": {
+        "alias-token:1": 3,
+        "commit-sha": 4
+      }
+    },
+    {
+      "path": "a021/harness/prompts/grouped.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "971af07fe550463a127e1b5b041537a3b567fcaebdc1aa1c5e573c70aa456083",
+      "bytes": 2071,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt",
+        "role": "grouped-arm implementation prompt"
+      },
+      "review_changes": {
+        "alias-token:1": 4
+      }
+    },
+    {
+      "path": "a021/harness/session_metrics.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "a5bf93656419a1a385f6e362c1f351dcdf84da5b8d2c7e02fdad621b38348cb1",
+      "bytes": 7384,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+        "role": "per-session metrics capture script used by every arm session"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "a021/harness/sessions.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "2dce13af284d952163acea37b2462070f997fbf8eab064307791fe83c3f7dcd0",
+      "bytes": 10023,
+      "redactions": {
+        "session-id": 10
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "000d5c000d5c000d5c000d5c000d5c000d5c000d",
+        "path": "research/experiments/EX-ROS-2026-A021-harness/sessions.json",
+        "role": "A021 session ledger with platform usage; session identifiers pseudonymised"
+      },
+      "review_changes": {
+        "alias-token:1": 12,
+        "commit-sha": 44
+      }
+    },
+    {
+      "path": "a021/metrics-raw/control-01.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ba249a152280e2b5034d2b5f9e28112a35ba77d2a045a182a0a785cb1fdfe5ac",
+      "bytes": 1240,
+      "redactions": {
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00084c00084c00084c00084c00084c00084c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-01.json",
+        "role": "A021 independent-arm session metrics, item 01"
+      },
+      "review_changes": {
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "a021/metrics-raw/control-02.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "0c0eb20231bc365aafd9c412e3a6d054fae7b70064ae0d914424426f2df774e5",
+      "bytes": 1291,
+      "redactions": {
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00084c00084c00084c00084c00084c00084c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-02.json",
+        "role": "A021 independent-arm session metrics, item 02"
+      },
+      "review_changes": {
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "a021/metrics-raw/control-03.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "6b64162df642b6fba275daab6c6484d8465f5488f397e63daf9ef1111e4185b0",
+      "bytes": 1142,
+      "redactions": {
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00084c00084c00084c00084c00084c00084c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-03.json",
+        "role": "A021 independent-arm session metrics, item 03"
+      },
+      "review_changes": {
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "a021/metrics-raw/control-04.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "aca8c075a6bc0770e5af7c13cb463720eaf18517d57169c8b62dc80d9849ea62",
+      "bytes": 890,
+      "redactions": {
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00084c00084c00084c00084c00084c00084c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-04.json",
+        "role": "A021 independent-arm session metrics, item 04"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "a021/metrics-raw/control-05.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "b4e116837a07b19ecb7f9043324f38558051970dbf7d09225ae509cb8d36e399",
+      "bytes": 1394,
+      "redactions": {
+        "uuid": 3
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00084c00084c00084c00084c00084c00084c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-05.json",
+        "role": "A021 independent-arm session metrics, item 05"
+      },
+      "review_changes": {
+        "alias-token:1": 1,
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "a021/metrics-raw/group-analysis.md",
+      "status": "included",
+      "profile": "record",
+      "sha256": "f9fab528c4ab1e6e5ef24e2e1861ec38c15938022c542486712b9b9eb2c22625",
+      "bytes": 15645,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "00056c00056c00056c00056c00056c00056c0005",
+        "path": "research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md",
+        "role": "A021 grouped-arm group analysis note"
+      },
+      "review_changes": {
+        "alias-phrase:1": 1,
+        "alias-token:1": 7
+      }
+    },
+    {
+      "path": "a021/metrics-raw/grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "2141af27dbf6072e6de347cfb2f88901a20198ceb47fb5a5c2a3950e5009499d",
+      "bytes": 1515,
+      "redactions": {
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00056c00056c00056c00056c00056c00056c0005",
+        "path": "research/experiments/EX-ROS-2026-A021-grouped/metrics/grouped.json",
+        "role": "A021 grouped-arm session metrics as captured in-session"
+      },
+      "review_changes": {
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "acceptance-criteria.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "8833a9012a16518643059c32214517ae8d4bb11b4f46ce00110c532817e91624",
+      "bytes": 2997,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+        "role": "the five work items and acceptance criteria, verbatim from the baseline backlog (shared by both studies)"
+      },
+      "review_changes": {
+        "alias-token:1": 16
+      }
+    },
+    {
+      "path": "analysis/anonymize.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "5168897282be7e022360b6a1dbeeda781ad3eaf7d09c4674665c824bf1686869",
+      "bytes": 20442,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/anonymize.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/build_anonymous_artifact.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "976707996fa60c2ab2d3b0642094cd1260d3cb9f3022e638877417442de65e60",
+      "bytes": 34181,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/build_anonymous_artifact.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/build_architecture_table.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "b4b4b5120038c51128e0881bf85705e41f1e01e41c75aea450bdae3f91ea72c6",
+      "bytes": 17903,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/build_architecture_table.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/build_tables.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "c98d2a3c011cac60ee67e12b93f25eadef40a1033eff6cf453748d82b01dd9d3",
+      "bytes": 32000,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/build_tables.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/check_architecture_findings.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "82462d482155dbe73d3e1a0ab542fb83be4d47552a7c6e241d2a91c8dc13f545",
+      "bytes": 12017,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/check_architecture_findings.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/extract_metrics.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "f5eca18778a9fb97e7ce318d926975b46cf5da2f6883e59fff2699dbd8570cf8",
+      "bytes": 59541,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/extract_metrics.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {
+        "alias-token:1": 2,
+        "commit-sha": 8
+      }
+    },
+    {
+      "path": "analysis/run_probes.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "4808b201f4d97f70aedd8c27641fcc82f355364f53ec029c048d9f7969ba58c3",
+      "bytes": 8869,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/run_probes.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {
+        "alias-token:1": 19
+      }
+    },
+    {
+      "path": "analysis/verify_artifact.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "cd45dff994f5221405ec53cf74189747b2d6bdf8ffaadc92fec6735ab923645f",
+      "bytes": 24026,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/verify_artifact.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "analysis/verify_metrics.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "535f18dd30440382c6a24d5a729c991dc65c7d1842ba9da879079e77c9b1f300",
+      "bytes": 25459,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/verify_metrics.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {
+        "commit-sha": 9
+      }
+    },
+    {
+      "path": "baseline/BASELINE.txt",
+      "status": "included",
+      "profile": "authored",
+      "sha256": "fc6dfbf1b90c43f7c98a6e3d1a7ef760ebada19af9f7e46c37f0ae54f4645d05",
+      "bytes": 1840
+    },
+    {
+      "path": "baseline/FILES.tsv",
+      "status": "included",
+      "profile": "authored",
+      "sha256": "a1e9bf96428bd2ea5f600746ef38a7e6d37e3406766fd2aecdeea891eac8f02b",
+      "bytes": 64998
+    },
+    {
+      "path": "baseline/work-items-SUBJEX-GROUP-01..05.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "2b09b8dbee5fc511976678c9a8aedd8bbc06cd42c6aba6475b7faa7e2910d7c6",
+      "bytes": 5645,
+      "redactions": {},
+      "origin": {
+        "commit": "00080c00080c00080c00080c00080c00080c0008",
+        "path": ".ros/work/queue.json",
+        "filter": "items whose id starts with SUBJEX-GROUP-"
+      },
+      "review_changes": {
+        "alias-token:1": 16
+      }
+    },
+    {
+      "path": "data/architecture-findings.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "b2a75c5e088737ef41ae7da19f80ab2786830f2f45b476151b0951769d333964",
+      "bytes": 112174,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/architecture-findings.json",
+        "role": "qualitative architecture findings with source locations for both arms"
+      },
+      "review_changes": {
+        "alias-token:1": 46,
+        "commit-sha": 214
+      }
+    },
+    {
+      "path": "data/metric-conflicts.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "b0b64c97b3f35a8c345183873fb00a468123c72f2caadc80b8e54645eb8be5d1",
+      "bytes": 11384,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/metric-conflicts.json",
+        "role": "every known discrepancy between a reported figure and the extracted data"
+      },
+      "review_changes": {
+        "alias-token:1": 1,
+        "commit-sha": 11
+      }
+    },
+    {
+      "path": "data/metrics.csv",
+      "status": "included",
+      "profile": "record",
+      "sha256": "fdbe408cb6b6f38753d2398d08a2a9705a5d1935ae3cb8ef36da6c16a364c4f1",
+      "bytes": 245947,
+      "redactions": {},
+      "transform": "csv-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/metrics.csv",
+        "role": "paper metric table dataset (produced by the metrics agent)"
+      },
+      "review_changes": {
+        "alias-token:1": 5,
+        "commit-sha": 698
+      }
+    },
+    {
+      "path": "data/metrics.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "65d0d75628a8f5bb2de6f4d33b73285fc2dddd6df9b24e50c668c836ac3095b3",
+      "bytes": 462414,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/metrics.json",
+        "role": "paper metric dataset, JSON form"
+      },
+      "review_changes": {
+        "alias-token:1": 5,
+        "commit-sha": 735
+      }
+    },
+    {
+      "path": "data/probes/A021-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "7b705fb58110413366783d28107498eb0d3a89fc3df61aae2ee03d3e94dbd32e",
+      "bytes": 8927,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-grouped, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 4,
+        "alias-token:1": 36,
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "data/probes/A021-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "06b91da4745b840018cd17842a85949c1d7bc0df319237e4ddac89a6726ef3d5",
+      "bytes": 10497,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-independent, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 3,
+        "alias-token:1": 42,
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "data/probes/R2-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "000109b73d866aec8611801451f9fcb4ebcb13a219d99c54f0947cc2c4e2fe69",
+      "bytes": 9840,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-grouped, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 5,
+        "alias-token:1": 36,
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "data/probes/R2-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ac8f3bf1ddd7a35ed4cbe8776534b2b741a4878cf459813e605de024e1d942bf",
+      "bytes": 9405,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-independent, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 2,
+        "alias-token:1": 33,
+        "commit-sha": 3
+      }
+    },
+    {
+      "path": "data/threats.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "6fa00e9c3fd51a5ae484e1637abd5ce97eb9811294c2882db239a3aa745c84ce",
+      "bytes": 36900,
+      "redactions": {
+        "session-id": 3,
+        "account": 1
+      },
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/threats.json",
+        "role": "threats to validity and protocol deviations"
+      },
+      "review_changes": {
+        "alias-token:1": 4,
+        "commit-sha": 55
+      }
+    },
+    {
+      "path": "evaluation-protocol-with-results.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "bf2484a87f022a110c6deb6fea1b1d65a62a4e38c1b3ca35fb63fead874dd76d",
+      "bytes": 16707,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "00026c00026c00026c00026c00026c00026c0002",
+        "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+        "role": "the same protocol after results were appended (diff against the frozen text shows every post-freeze change)"
+      },
+      "review_changes": {
+        "alias-phrase:1": 1,
+        "alias-token:1": 21,
+        "commit-sha": 8
+      }
+    },
+    {
+      "path": "evaluation-protocol.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "dde8c2603eb1d1fa497f2908defe051adbb40149bb55227665e653acd1bbdbbf",
+      "bytes": 13023,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "00080c00080c00080c00080c00080c00080c0008",
+        "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+        "role": "frozen pre-execution protocol, as it stood at the baseline commit"
+      },
+      "review_changes": {
+        "alias-phrase:1": 1,
+        "alias-token:1": 18,
+        "commit-sha": 3
+      }
+    },
+    {
+      "path": "r2/README.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ac980b891d328d4d73b97b717e93afd1952308d3832233cc3a3cc10650efc118",
+      "bytes": 3654,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/README.txt",
+        "role": "R2 blind bundle README as given to the R2 evaluator"
+      },
+      "review_changes": {
+        "alias-token:1": 4,
+        "commit-sha": 3
+      }
+    },
+    {
+      "path": "r2/SHA256SUMS",
+      "status": "included",
+      "profile": "record",
+      "sha256": "119491ae725ccc717f8f9c781c5375b2f42a3ec7d9314ae1758b9fca7d1c5eb8",
+      "bytes": 246,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/SHA256SUMS",
+        "role": "pre-evaluation checksums of the R2 patches and criteria"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "r2/acceptance-criteria.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "8833a9012a16518643059c32214517ae8d4bb11b4f46ce00110c532817e91624",
+      "bytes": 2997,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+        "role": "R2 copy of the acceptance criteria (covered by r2/SHA256SUMS)"
+      },
+      "review_changes": {
+        "alias-token:1": 16
+      }
+    },
+    {
+      "path": "r2/arm-M.patch",
+      "status": "included",
+      "profile": "code",
+      "sha256": "02d59459f0f0962c177d0aaada169108b6908e2e17f61a9adbe6d1ecfd4732ae",
+      "bytes": 212268,
+      "redactions": {},
+      "origin": {
+        "kind": "blob",
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-M.patch",
+        "role": "R2 blinded arm M patch exactly as the blind evaluator received it"
+      },
+      "source_sha256": "8a275ee42f0a63f06a510da1819844e4da51b138c692afde8447665230a39c00",
+      "byte_identical_to_source": true,
+      "review_changes": {
+        "alias-token:1": 214,
+        "alias-bounded:1": 13,
+        "commit-sha": 52
+      }
+    },
+    {
+      "path": "r2/arm-N.patch",
+      "status": "included",
+      "profile": "code",
+      "sha256": "b30bd298a0d6e1b992cfce5e4432fd25b19dd3172302f8e8351dfc8f64df9f4f",
+      "bytes": 150414,
+      "redactions": {},
+      "origin": {
+        "kind": "blob",
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-N.patch",
+        "role": "R2 blinded arm N patch exactly as the blind evaluator received it"
+      },
+      "source_sha256": "ca35f3d46432b048f2e0f786e31145863de9f499bb4901db622a5fcbae33f541",
+      "byte_identical_to_source": true,
+      "review_changes": {
+        "alias-token:1": 31,
+        "alias-bounded:1": 13,
+        "commit-sha": 32
+      }
+    },
+    {
+      "path": "r2/evaluation/EVALUATION.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "86591f150f50a11de093acb979d9638266c6cd7af68ac041e7df135d6076b1b2",
+      "bytes": 40894,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt",
+        "role": "R2 blind evaluation report"
+      },
+      "review_changes": {
+        "alias-token:1": 26,
+        "commit-sha": 4
+      }
+    },
+    {
+      "path": "r2/evaluation/EVIDENCE-PENDING-ID.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "5767a1b79adda1f7426068ac2f97372030c76755911369fe61ff825de1f95b34",
+      "bytes": 3178,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVIDENCE-PENDING-ID.txt",
+        "role": "R2 evaluator summary record (permitted inputs, blinding status, threats)"
+      },
+      "review_changes": {
+        "commit-sha": 4
+      }
+    },
+    {
+      "path": "r2/evaluation/POST-UNBLINDING-METRICS.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "c58be1c4631d5227a21c9fbad12ae1fd765e4d2c3ca83927f4f8291ac9d7fdeb",
+      "bytes": 4733,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/POST-UNBLINDING-METRICS.txt",
+        "role": "R2 mapping reveal and resource comparison, written after the blind report"
+      },
+      "review_changes": {
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "r2/evaluation/findings.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "77d0054c629b64d1a95445d0f7e98bb24dda47cbe4d9201676f11a20702ed53e",
+      "bytes": 11752,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/findings.json",
+        "role": "R2 blind evaluator findings"
+      },
+      "review_changes": {
+        "alias-token:1": 14,
+        "commit-sha": 6
+      }
+    },
+    {
+      "path": "r2/mapping-commitment.sha256",
+      "status": "included",
+      "profile": "record",
+      "sha256": "f011bd2afdeaf7c4dfe82b45bba8f1e117a1a1c2fa46291e83b4a47d09f8fe30",
+      "bytes": 65,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "000afc000afc000afc000afc000afc000afc000a",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-blind/mapping-commitment.sha256",
+        "role": "R2 pre-evaluation mapping commitment"
+      },
+      "review_changes": {}
+    },
+    {
+      "path": "r2/metrics-raw/control-01.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "64858a192f91772dfead973e83ade53005e82267a4159b88ca75fd7fd005dcf3",
+      "bytes": 4317,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 1
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-01.json",
+        "role": "R2 independent-arm session metrics, item 01"
+      },
+      "review_changes": {
+        "alias-token:1": 5,
+        "alias-token:2": 1,
+        "alias-bounded:1": 3,
+        "commit-sha": 7
+      }
+    },
+    {
+      "path": "r2/metrics-raw/control-02.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "87735b3dbd79150a2ec2dc41d869fcf8c29e99c9f2025c636886d97fdec1754f",
+      "bytes": 4595,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-02.json",
+        "role": "R2 independent-arm session metrics, item 02"
+      },
+      "review_changes": {
+        "alias-token:1": 7,
+        "alias-token:2": 1,
+        "commit-sha": 8
+      }
+    },
+    {
+      "path": "r2/metrics-raw/control-03.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "f33a62a3c59c8c00602bdbd9a8a5af109511fa779ec7fa569de6248585e2955d",
+      "bytes": 4900,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 3
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-03.json",
+        "role": "R2 independent-arm session metrics, item 03"
+      },
+      "review_changes": {
+        "alias-token:1": 9,
+        "alias-token:2": 1,
+        "alias-bounded:1": 2,
+        "commit-sha": 10
+      }
+    },
+    {
+      "path": "r2/metrics-raw/control-04.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "57e90bb7a5edef9733c1c16cf564703473c21b9a50aade8e92a7b8d8633c19d7",
+      "bytes": 5721,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 3
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-04.json",
+        "role": "R2 independent-arm session metrics, item 04"
+      },
+      "review_changes": {
+        "alias-token:1": 6,
+        "commit-sha": 10
+      }
+    },
+    {
+      "path": "r2/metrics-raw/control-05.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "6b82fa8db6ed941d0fb2b5c689262fd835924c87a12c4abd1a49e0546c126129",
+      "bytes": 6694,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 5
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-05.json",
+        "role": "R2 independent-arm session metrics, item 05"
+      },
+      "review_changes": {
+        "alias-token:1": 10,
+        "alias-bounded:1": 2,
+        "commit-sha": 12
+      }
+    },
+    {
+      "path": "r2/metrics-raw/control-run-log.md",
+      "status": "included",
+      "profile": "record",
+      "sha256": "5e8f78b01a0c1ed76e0d0ccbeedd07e6106b2b87a9142f56c569429dd555b90a",
+      "bytes": 6408,
+      "redactions": {
+        "session-id": 6,
+        "account": 1
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "00081c00081c00081c00081c00081c00081c0008",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-control/control-run-log.md",
+        "role": "R2 independent-arm orchestration run log"
+      },
+      "review_changes": {
+        "alias-token:1": 9,
+        "alias-token:2": 1,
+        "alias-bounded:1": 1,
+        "commit-sha": 44
+      }
+    },
+    {
+      "path": "r2/metrics-raw/group-analysis.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "1fa366e8b46b1e9bf68a4484b81378dcd5fd692a61b9126c619ebdaea2476b8d",
+      "bytes": 21670,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "0000cc0000cc0000cc0000cc0000cc0000cc0000",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt",
+        "role": "R2 grouped-arm group analysis note"
+      },
+      "review_changes": {
+        "alias-phrase:1": 1,
+        "alias-token:1": 11,
+        "commit-sha": 3
+      }
+    },
+    {
+      "path": "r2/metrics-raw/grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ec434e6beb51b94f0b33ec2b290e367d67e99b83481c6a5687e4ea32e246995d",
+      "bytes": 6177,
+      "redactions": {
+        "session-id": 1,
+        "uuid": 2
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "0000cc0000cc0000cc0000cc0000cc0000cc0000",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/grouped.json",
+        "role": "R2 grouped-arm session metrics"
+      },
+      "review_changes": {
+        "alias-token:1": 22,
+        "commit-sha": 16
+      }
+    },
+    {
+      "path": "r2/metrics-raw/plan-explain-group-at-start.txt",
+      "status": "included",
+      "profile": "record",
+      "sha256": "e4afd5b58a53075828299035530367e82809b5b1ee10f1aceb76947150c99e41",
+      "bytes": 10513,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "commit": "0000cc0000cc0000cc0000cc0000cc0000cc0000",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/plan-explain-group-at-start.txt",
+        "role": "R2 planner explanation captured at grouped-arm start"
+      },
+      "review_changes": {
+        "alias-phrase:1": 2,
+        "alias-token:1": 103,
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "r2/metrics-raw/session-metrics-raw.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "056b3093e32f587b19131e96c4b7750dba80036e60f561a9240d9f5d39f138d0",
+      "bytes": 1900,
+      "redactions": {
+        "uuid": 3
+      },
+      "transform": "none",
+      "origin": {
+        "commit": "0000cc0000cc0000cc0000cc0000cc0000cc0000",
+        "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/session-metrics-raw.json",
+        "role": "R2 grouped-arm raw transcript metrics"
+      },
+      "review_changes": {
+        "alias-token:1": 1,
+        "commit-sha": 4
+      }
+    },
+    {
+      "path": "validity-audit.md",
+      "status": "included",
+      "profile": "record",
+      "sha256": "15021adb30c473e6f5125ddf8ba454bffa282bec95deb678eda1793dc4c99214",
+      "bytes": 24897,
+      "redactions": {
+        "session-id": 2,
+        "account": 1
+      },
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/validity-audit.md",
+        "role": "threat list and protocol-deviations register referenced by the paper's deviations table"
+      },
+      "review_changes": {
+        "alias-token:1": 6,
+        "commit-sha": 37
+      }
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "actor": {
+    "id": "probe",
+    "kind": "agent"
+  },
+  "concurrency": {
+    "description": "8 concurrent 'work group create' processes on a fresh clone, repeated 5 times",
+    "deterministic": false,
+    "id": "CC",
+    "note": "Process interleaving is not controlled: per-run counts vary between executions; compare totals and the presence or absence of lost updates, not exact counts.",
+    "runs": [
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 1,
+        "lost_updates": 7,
+        "processes": 8,
+        "run": 1
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 1,
+        "lost_updates": 7,
+        "processes": 8,
+        "run": 2
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 2,
+        "lost_updates": 6,
+        "processes": 8,
+        "run": 3
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 2,
+        "lost_updates": 6,
+        "processes": 8,
+        "run": 4
+      },
+      {
+        "exit_nonzero": 0,
+        "exit_zero": 8,
+        "failure_messages": [],
+        "groups_stored": 2,
+        "lost_updates": 6,
+        "processes": 8,
+        "run": 5
+      }
+    ],
+    "totals": {
+      "exit_nonzero": 0,
+      "exit_zero": 40,
+      "groups_stored": 8,
+      "lost_updates": 32
+    }
+  },
+  "group_flag": "--id",
+  "head_commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+  "implementation": "A021-independent",
+  "occurred_at": "2026-10-07T00:00:00.000Z",
+  "probes": [
+    {
+      "arguments": "work group create --id GROUP-PROBE-ONE --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create a local group {01,03}",
+      "exit_code": 0,
+      "id": "P1",
+      "stderr": "",
+      "stdout": "declared group GROUP-PROBE-ONE in .ros/work/groups.json\n  members:    PRAXIS-PROBE-01 PRAXIS-PROBE-03\n  kind:       unspecified\n  executes:   this repository (repository-local)\nno member's lifecycle state changed; 'plan groups' now reads this declaration\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-ONE --member PRAXIS-PROBE-02 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "add 02 (description names an external repository; planner infers UnknownExternal) to that local group",
+      "exit_code": 1,
+      "id": "P2",
+      "stderr": "ERROR PRAXIS-PROBE-02 executes in unknown external repository but the group executes in repository-operating-system; declare the group --cross-repository or use a group local to unknown external repository (PRX-GRP-051)\nPRAXIS-PROBE-02 was not added to GROUP-PROBE-ONE; nothing was recorded\n",
+      "stdout": ""
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-TWO --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-02 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create a local group {01,02} (02 inferred external)",
+      "exit_code": 0,
+      "id": "P3",
+      "stderr": "",
+      "stdout": "declared group GROUP-PROBE-TWO in .ros/work/groups.json\n  members:    PRAXIS-PROBE-01 PRAXIS-PROBE-02\n  kind:       unspecified\n  executes:   this repository (repository-local)\nno member's lifecycle state changed; 'plan groups' now reads this declaration\n"
+    },
+    {
+      "arguments": "work group create --id bad-id --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "create with the invalid group ID 'bad-id' (--json)",
+      "exit_code": 1,
+      "id": "P4",
+      "stderr": "ERROR 'bad-id' is not a valid group ID; use GROUP-<AREA>-<SEQUENCE> in upper case, for example GROUP-PRAXIS-PLANNING-001\ngroup bad-id was not declared; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-group/1.0.0\",\n  \"kind\": \"work-group-create\",\n  \"status\": \"rejected\",\n  \"path\": \".ros/work/groups.json\",\n  \"group\": {\n    \"id\": \"bad-id\",\n    \"members\": [\n      \"PRAXIS-PROBE-01\",\n      \"PRAXIS-PROBE-03\"\n    ],\n    \"origin\": \"human-declared\",\n    \"sharedContext\": [],\n    \"crossRepository\": false,\n    \"architectureNotes\": [],\n    \"declaredAt\": \"2026-10-07T00:00:00.000Z\",\n    \"declaredBy\": {\n      \"kind\": \"agent\",\n      \"id\": \"probe\",\n      \"provider\": \"anthropic\",\n      \"model\": \"unknown\",\n      \"runtime\": \"claude-code\"\n    }\n  },\n  \"rejections\": [\n    \"'bad-id' is not a valid group ID; use GROUP-<AREA>-<SEQUENCE> in upper case, for example GROUP-PRAXIS-PLANNING-001\"\n  ],\n  \"lifecycleChanged\": false\n}\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-NONE --member PRAXIS-PROBE-04 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "add to an undeclared group (--json)",
+      "exit_code": 1,
+      "id": "P5",
+      "stderr": "ERROR group GROUP-PROBE-NONE is not declared (see 'work group create')\nPRAXIS-PROBE-04 was not added to GROUP-PROBE-NONE; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-group/1.0.0\",\n  \"kind\": \"work-group-add\",\n  \"status\": \"rejected\",\n  \"group\": \"GROUP-PROBE-NONE\",\n  \"workItem\": \"PRAXIS-PROBE-04\",\n  \"members\": [],\n  \"addition\": {\n    \"change\": \"added\",\n    \"group\": \"GROUP-PROBE-NONE\",\n    \"workItem\": \"PRAXIS-PROBE-04\",\n    \"addedAt\": \"2026-10-07T00:00:00.000Z\",\n    \"addedBy\": {\n      \"kind\": \"agent\",\n      \"id\": \"probe\",\n      \"provider\": \"anthropic\",\n      \"model\": \"unknown\",\n      \"runtime\": \"claude-code\"\n    },\n    \"reason\": null\n  },\n  \"paths\": [\n    \".ros/work/groups.json\",\n    \".ros/work/group-membership.json\"\n  ],\n  \"lifecycleChanged\": false,\n  \"rejections\": [\n    {\n      \"code\": \"undeclared-group\",\n      \"message\": \"group GROUP-PROBE-NONE is not declared (see \\u0027work group create\\u0027)\"\n    }\n  ]\n}\n"
+    },
+    {
+      "arguments": "work group checkpoint --id GROUP-PROBE-NONE --occurred-at 2026-10-07T00:00:00.000Z --summary s --next-action n --json",
+      "description": "checkpoint an undeclared group (--json)",
+      "exit_code": 2,
+      "id": "P6",
+      "stderr": "",
+      "stdout": "{\n  \"command\": \"work group checkpoint\",\n  \"schemaVersion\": 1,\n  \"groupId\": \"GROUP-PROBE-NONE\",\n  \"status\": \"rejected\",\n  \"rejections\": [\n    {\n      \"code\": \"group-not-declared\",\n      \"message\": \"group 'GROUP-PROBE-NONE' is not declared in .ros/work/groups.json\",\n      \"remedy\": \"Declare the group first ('work group create'), or pass --config FILE naming planner configuration that declares it under grouping.groups.\"\n    }\n  ]\n}"
+    },
+    {
+      "arguments": "work group show GROUP-PROBE-NONE --json",
+      "description": "show an undeclared group (--json)",
+      "exit_code": 1,
+      "id": "P7",
+      "stderr": "ERROR group GROUP-PROBE-NONE is not declared in .ros/work/groups.json (see 'work group create')\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-group/1.0.0\",\n  \"kind\": \"work-group-show\",\n  \"status\": \"not-found\",\n  \"path\": \".ros/work/groups.json\",\n  \"groupId\": \"GROUP-PROBE-NONE\",\n  \"lifecycleChanged\": false\n}\n"
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-THREE --member PRAXIS-PROBE-01 --member PRAXIS-NOPE-99 --occurred-at 2026-10-07T00:00:00.000Z --json",
+      "description": "create with an unknown member (--json)",
+      "exit_code": 1,
+      "id": "P8",
+      "stderr": "ERROR PRAXIS-NOPE-99 is not a work item this repository tracks (neither in the backlog nor in live work)\ngroup GROUP-PROBE-THREE was not declared; nothing was recorded\n",
+      "stdout": "{\n  \"schema\": \"praxis.work-group/1.0.0\",\n  \"kind\": \"work-group-create\",\n  \"status\": \"rejected\",\n  \"path\": \".ros/work/groups.json\",\n  \"group\": {\n    \"id\": \"GROUP-PROBE-THREE\",\n    \"members\": [\n      \"PRAXIS-PROBE-01\",\n      \"PRAXIS-NOPE-99\"\n    ],\n    \"origin\": \"human-declared\",\n    \"sharedContext\": [],\n    \"crossRepository\": false,\n    \"architectureNotes\": [],\n    \"declaredAt\": \"2026-10-07T00:00:00.000Z\",\n    \"declaredBy\": {\n      \"kind\": \"agent\",\n      \"id\": \"probe\",\n      \"provider\": \"anthropic\",\n      \"model\": \"unknown\",\n      \"runtime\": \"claude-code\"\n    }\n  },\n  \"rejections\": [\n    \"PRAXIS-NOPE-99 is not a work item this repository tracks (neither in the backlog nor in live work)\"\n  ],\n  \"lifecycleChanged\": false\n}\n"
+    },
+    {
+      "arguments": "work group create --id GROUP-PROBE-FOUR --member PRAXIS-PROBE-01 --member PRAXIS-PROBE-03 --execution-repository elsewhere --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "create with --execution-repository elsewhere and local members {01,03}",
+      "exit_code": 0,
+      "id": "P9",
+      "stderr": "",
+      "stdout": "declared group GROUP-PROBE-FOUR in .ros/work/groups.json\n  members:    PRAXIS-PROBE-01 PRAXIS-PROBE-03\n  kind:       unspecified\n  executes:   elsewhere (repository-local)\nno member's lifecycle state changed; 'plan groups' now reads this declaration\n"
+    },
+    {
+      "arguments": "work group add --id GROUP-PROBE-FOUR --member PRAXIS-PROBE-04 --occurred-at 2026-10-07T00:00:00.000Z",
+      "description": "add local 04 to the P9 group (if P9 created it)",
+      "exit_code": 1,
+      "id": "P10",
+      "stderr": "ERROR PRAXIS-PROBE-04 executes in repository-operating-system but the group executes in elsewhere; declare the group --cross-repository or use a group local to repository-operating-system (PRX-GRP-051)\nPRAXIS-PROBE-04 was not added to GROUP-PROBE-FOUR; nothing was recorded\n",
+      "stdout": ""
+    }
+  ],
+  "schema": "a021-publication.architecture-probes/1",
+  "setup": {
+    "captured_items": [
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-01"
+      },
+      {
+        "description": "Implemented in an external repository",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-02"
+      },
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-03"
+      },
+      {
+        "description": "local work",
+        "exit_code": 0,
+        "id": "PRAXIS-PROBE-04"
+      }
+    ]
+  }
+}

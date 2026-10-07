@@ -1,0 +1,712 @@
+{
+  "audit": "A021/R2 protocol and validity audit",
+  "generated": "2026-10-07",
+  "severity_scale": [
+    "fatal",
+    "major-manageable",
+    "moderate",
+    "minor",
+    "informational"
+  ],
+  "threats": [
+    {
+      "affected_claims": [
+        "shared agent context reduces architectural drift (working title)",
+        "PGEI mechanism as tested",
+        "grouped execution produces a more unified architecture because of shared context"
+      ],
+      "affected_metrics": [
+        "architectural consistency findings",
+        "time to first code change",
+        "cost",
+        "elapsed time"
+      ],
+      "category": "construct",
+      "evidence": [
+        "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt (requires ./ros plan explain-group and a committed group-analysis.md covering PRX-GRP-040 'common architecture, shared invariants, ... reusable abstractions, ... where one design can serve several items, risks of solving each separately' before any code; 'label any shared change shared group infrastructure'; milestone checkpoints)",
+        "research/experiments/EX-ROS-2026-A021-harness/prompts/control-01..05.txt (no group framing, no planner output, no design step, no consistency instruction)",
+        "experiment/a021-grouped 9e8fc2e4 (267-line group analysis before code)",
+        "experiment/a021-r2-grouped e604b81 (392-line group-analysis.txt, 20 sections) and plan-explain-group-at-start.txt",
+        "claude/a021-r2-orchestration-e0gty2 063e6b58 EX-ROS-2026-A021-R2-run.txt deviation O2 (R2 prompts carry fuller owner-written group-analysis sections)"
+      ],
+      "id": "T01",
+      "invalidates": [
+        "attribution of the architectural-consistency difference to shared context per se",
+        "working-title framing 'Does Shared Agent Context Reduce Architectural Drift?'",
+        "claim that PGEI was tested as distinct from instructed upfront design"
+      ],
+      "mitigation_present": "none in design; no arm isolates shared context from the explicit design step (no 'grouped without analysis' or 'independent with shared analysis' arm)",
+      "required_disclosure": "Define the independent variable as 'one session for the cohort with a mandated, committed cross-item design analysis and planner group output' versus 'one uninstructed session per item'. State that the design cannot attribute any effect to shared context alone, and that only the grouped arm was told cross-item consistency mattered.",
+      "severity": "fatal",
+      "study": "both",
+      "title": "Treatment is a bundle: shared context + mandated pre-coding cross-item design document + planner group explanation + shared-infrastructure labelling"
+    },
+    {
+      "affected_claims": [
+        "A021 was blindly evaluated",
+        "two blinded evaluations (alternate title)",
+        "evaluator ranked consistency the most important difference",
+        "grouped gaps local and small to close"
+      ],
+      "affected_metrics": [
+        "A021 evaluator qualitative judgements (importance ranking, severity, maintainability)"
+      ],
+      "category": "internal",
+      "evidence": [
+        "experiment/a021-arm-x 9c978cdb parent 5face886: history includes 99592467 subject 'EX-ROS-2026-A021 grouped-arm session metrics' and 9e8fc2e4 'group analysis for GROUP-PRAXIS-WORK-GROUP-001 (PRX-GRP-040)'",
+        "9c978cdb / 5d100ed1 (blinding commits) delete research/experiments/EX-ROS-2026-A021-grouped/... and .../EX-ROS-2026-A021-control/metrics/... respectively: the tip commit of each blind branch names its arm",
+        "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt lines 26-35: 'Commit messages and committed Praxis state on both arms name experiment labels. I read them'; uses arm-Y merge commit 1aa11fbf",
+        "protocol section Evaluation: evaluator should receive 'patch series exported under neutral names' (not followed)",
+        "research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md section 3: 'Blinding was compromised, and I believe I know the mapping' (seen at step 1-2, before code)"
+      ],
+      "id": "T02",
+      "invalidates": [
+        "describing A021 evaluation as blind",
+        "'two blinded evaluations' framing",
+        "A021 evaluators' subjective importance/severity judgements as blind evidence"
+      ],
+      "mitigation_present": "partial: structural findings (number of stores, join rules, rejection types, exit codes) are objective and re-verifiable from code; both evaluators applied identical checks to both arms; A067 used one shared fixture script",
+      "required_disclosure": "State that neither A021 evaluation was effectively blind (primary: arm labels in commit subjects and deletion paths it read; secondary: self-reported mapping knowledge). Present A021 quality evidence as unblinded expert review whose objective structural facts were re-verifiable; reserve 'blind' for R2 only.",
+      "severity": "fatal",
+      "study": "A021",
+      "title": "A021 quality evaluations were not blind: arm identity visible in the evaluated branches' history and self-reported by the second evaluator"
+    },
+    {
+      "affected_claims": [
+        "R2 measured 58.72% lower platform cost"
+      ],
+      "affected_metrics": [
+        "R2 cost",
+        "R2 output and cache-read token ratios"
+      ],
+      "category": "construct",
+      "evidence": [
+        "EX-ROS-2026-A021-R2-run.txt section 4 (claude/a021-r2-orchestration-e0gty2 063e6b58): C control orch. session_01HySizJjio1tGqfvPAXp3WV $3.4929240 included; grouped arm has no orchestrator; top-level R2 orchestrator session_0186wu2wQu7VnhTJQnVPeQuc not counted for either arm",
+        "research/experiments/EX-ROS-2026-A021-R2-blind/output/POST-UNBLINDING-METRICS.txt ('5 implementing sessions + 1 control orchestrator'; $26.0492768)",
+        "A021 cost ($21.51, EV-ROS-2026-A064) counts no orchestrator: cost definition differs between studies",
+        "recomputed: workers only $22.5564 -> reduction 52.33%; output-token ratio 1.78x not 1.98x"
+      ],
+      "id": "T03",
+      "invalidates": [
+        "58.72% as the execution-mode cost difference without qualification",
+        "direct comparison of A021 and R2 cost reductions"
+      ],
+      "mitigation_present": "raw per-session usage is recorded, so the metric can be recomputed",
+      "required_disclosure": "Report R2 cost both with and without the control orchestrator (58.72% vs 52.33%), state that orchestrator overhead is counted in R2 but not in A021, and that neither study counts the top-level orchestrator.",
+      "severity": "major-manageable",
+      "study": "R2",
+      "title": "R2 58.72% cost reduction counts a control-only orchestrator session"
+    },
+    {
+      "affected_claims": [
+        "R2 measured 61.08% lower elapsed time",
+        "A021 112 vs 61 min",
+        "durations underestimated by the planner"
+      ],
+      "affected_metrics": [
+        "elapsed time",
+        "active session time"
+      ],
+      "category": "construct",
+      "evidence": [
+        "EX-ROS-2026-A021-R2-run.txt section 4: control elapsed = orchestrator C created_at 15:22:57 to updated_at 17:46:30 (143.55 min); sum of worker sessions = 100.55 min; gaps 43.0 min incl. 9.8 min after C5 ended (run log)",
+        "recomputed: grouped 55.88 min vs workers 100.55 min -> 44.4% reduction",
+        "EV-ROS-2026-A064 Resources table: A021 primary time = sum of session time (61 vs 112 min, 45.1%); first-start-to-last-finish 4h52m (79.1%)",
+        "research/experiments/EX-ROS-2026-A021-harness/sessions.json control-03 note: idle gap is orchestration latency, not arm effort"
+      ],
+      "id": "T04",
+      "invalidates": [
+        "61.08% as an execution-time effect",
+        "any cross-study comparison of 'elapsed' figures"
+      ],
+      "mitigation_present": "timestamps per session are recorded; EV-A064 already distinguished active and elapsed time",
+      "required_disclosure": "Use one time definition across both studies (sum of implementing-session time) as primary; report wall-clock elapsed only as a secondary, orchestration-dependent figure; state that R2's 61.08% and A021's 45% are not the same quantity.",
+      "severity": "major-manageable",
+      "study": "both",
+      "title": "Elapsed-time definition drift; R2 61.08% includes 43 min of orchestration latency"
+    },
+    {
+      "affected_claims": [
+        "control arm fragmented the architecture",
+        "control-05 divergence",
+        "R2 GROUP-02 drift",
+        "cost and time reductions"
+      ],
+      "affected_metrics": [
+        "architectural consistency",
+        "merge conflicts",
+        "rework/churn",
+        "cost",
+        "time"
+      ],
+      "category": "internal",
+      "evidence": [
+        "sessions.json deviations[1]: A021 control-05 first commit 8d435cb7 parented on 8b4ffa3; merge 1aa11fbf (Program.fs conflict); reconcile 2bb713f3",
+        "research/evidence/EV-ROS-2026-A066--a021-control-02-session-record.md: A021 control-02 also began on a stale clone; .ros state hand-reconciled as a union; metrics overstated",
+        "EV-ROS-2026-A064 threats: 'items 02-04 started from the correct heads' (contradicted by EV-A066 for 02)",
+        "EX-ROS-2026-A021-R2-run.txt deviation C2: R2 C2 962b1f4 and C3 b05fd8b parented on 8b4ffa3; merges fa821cc, 5a03452",
+        "a single grouped session cannot experience this hazard"
+      ],
+      "id": "T05",
+      "invalidates": [
+        "attributing control item-05 (A021) and GROUP-02 (R2) divergence to independent reasoning"
+      ],
+      "mitigation_present": "partial: EV-A064 argues the A021 consistency finding holds without item 05 (item 03 alone added a second store); no equivalent sensitivity analysis for R2; cause unknown",
+      "required_disclosure": "Report all four stale starts (including A021 control-02, missing from sessions.json), state that the cause is unknown, that only per-item arms are exposed to it, and that it can inflate control-side drift, and give the A021 finding excluding item 05 and an R2 assessment excluding GROUP-02.",
+      "severity": "major-manageable",
+      "study": "both",
+      "title": "Stale-checkout hazard struck only control sessions (4 of 10), inflating control inconsistency, cost and time"
+    },
+    {
+      "affected_claims": [
+        "replication",
+        "effect sizes",
+        "any statistical or general claim"
+      ],
+      "affected_metrics": [
+        "all"
+      ],
+      "category": "conclusion",
+      "evidence": [
+        "sessions.json: one grouped session and one control sequence per study",
+        "same baseline 8b4ffa3, same cohort, same model claude-opus-5-5, same environment, same day (2026-09-30)",
+        "A021 grouped and R2 grouped change exactly the same 14 src/tests files (Jaccard 14/14; text similarity of WorkGroups.fs 0.18): outcomes are strongly determined by condition+model, so R2 adds little independent information about variance across contexts",
+        "EV-ROS-2026-A070 Threats: 'two executions of one setup, not independent-domain replication'"
+      ],
+      "id": "T06",
+      "invalidates": [
+        "statistical significance or confidence intervals",
+        "treating per-item observations as n=5 or n=10 samples",
+        "calling R2 an independent replication"
+      ],
+      "mitigation_present": "records already disclaim causal and general claims (PRX-GRP-087)",
+      "required_disclosure": "Two cells x two runs; no inferential statistics; percentages are single-run observations, not effect estimates; five items within an arm are dependent and must not be treated as samples; describe R2 as a same-setup re-execution.",
+      "severity": "major-manageable",
+      "study": "both",
+      "title": "n = 1 run per arm per study; items are not independent samples; R2 is a correlated resample"
+    },
+    {
+      "affected_claims": [
+        "R2 replicated the A021 protocol",
+        "R2 treatment comparability"
+      ],
+      "affected_metrics": [
+        "all R2 metrics",
+        "R2 analysis choices (cost with orchestrator, elapsed via orchestrator)"
+      ],
+      "category": "reliability",
+      "evidence": [
+        "no R2 protocol document in any ref before the R2 arm branches were created (GitHub activity: experiment/a021-r2-control 15:21:29Z, -grouped 15:21:31Z)",
+        "EX-ROS-2026-A021-R2-run.txt deviations E2 and O2: harness note and prompts differ from A021's frozen prompts; R2 prompts 'carry the fuller R2 instructions given by the repository owner'",
+        "the prompt texts are in no branch (searched all refs)",
+        "R2 metric definitions first appear in POST-UNBLINDING-METRICS.txt (pushed 2026-10-01T10:27:51Z)",
+        "first preregistration in the programme after A021 is EX-ROS-2026-A022 (b335e166, 2026-10-01, after R2 unblinding)"
+      ],
+      "id": "T07",
+      "invalidates": [
+        "describing R2 as a replication under the frozen A021 protocol",
+        "auditing R2 prompt symmetry"
+      ],
+      "mitigation_present": "R2 run record and per-session usage committed before evaluation; blind outputs unchanged after unblinding",
+      "required_disclosure": "State that R2 had no frozen protocol, that prompts differed from A021 and are not available, and that its metrics were defined after unblinding.",
+      "severity": "major-manageable",
+      "study": "R2",
+      "title": "R2 was not preregistered and its prompts were not archived"
+    },
+    {
+      "affected_claims": [
+        "R2 reproduced the architectural pattern"
+      ],
+      "affected_metrics": [
+        "R2 architectural consistency findings"
+      ],
+      "category": "internal",
+      "evidence": [
+        "A021 grouped finished 12:51:26Z and control 01-03 by 13:05:16Z; R2 branches created 15:21Z with owner-written prompts (run record O2)",
+        "EV-ROS-2026-A063 preliminary PGEI observation 3aef2bd5 (2026-09-30 16:14Z) 'recorded the early context-reacquisition signal from the grouped arm and control items 01-03'",
+        "R2 group-analysis.txt sections 9 Persistence strategy, 10 Validation strategy, 11 JSON and output contracts, 12 Failure and exit-code conventions, 18 Anticipated duplication if implemented separately (experiment/a021-r2-grouped e604b81); A021 analysis had none of these headings",
+        "R2 evaluator found arm N stronger exactly in shared admission rule, one store, one locked mutation path, one JSON envelope (POST-UNBLINDING-METRICS.txt)"
+      ],
+      "id": "T08",
+      "invalidates": [
+        "R2 architectural result as independent confirmation of an emergent effect"
+      ],
+      "mitigation_present": "none; prompt text unavailable (T07) so the link cannot be confirmed or excluded",
+      "required_disclosure": "Disclose that R2 instructions were written after interim A021 results were known, that the grouped analysis template covered the evaluation dimensions, and that the control arm received no corresponding instruction.",
+      "severity": "major-manageable",
+      "study": "R2",
+      "title": "R2 designed by an experimenter who knew interim A021 outcomes; R2 grouped analysis enumerates the very dimensions later scored"
+    },
+    {
+      "affected_claims": [
+        "R2 evaluator remained blind while evaluating"
+      ],
+      "affected_metrics": [
+        "R2 qualitative findings"
+      ],
+      "category": "internal",
+      "evidence": [
+        "EVALUATION.txt section 1: GitHub connector plus local container (whole repository reachable)",
+        "mapping recoverable at any time by tree identity (the method later used to unblind); verified: blind/a021-r2/arm-N == experiment/a021-r2-grouped and arm-M == experiment/a021-r2-control on src/tests/docs (0 differing files)",
+        "origin/main before evaluation contained EV-ROS-2026-A064 (PR #132 merged 2026-09-30 17:55Z) and the phase-two implementation built on the A021 grouped arm (PR #134, da83cd24, 18:29Z)",
+        "R2 blind README forbids EV-A060..A062 and arm branches but not main or EV-A064",
+        "evaluation pushed 2026-10-01T06:00:42Z (bf8baece), unblinding pushed 10:27:51Z (6b538516), GitHub activity API",
+        "EVALUATION.txt/findings.json blobs identical at bf8baece, HEAD and origin/main (no post-unblinding edits)"
+      ],
+      "id": "T09",
+      "invalidates": [],
+      "mitigation_present": "different model family (OpenAI GPT-5.6 Sol) from implementers; squashed neutral commits; .ros reset; no arm-label strings found in blind diffs; server-side push order; no later edits",
+      "required_disclosure": "State that blinding was procedural and self-reported, that the evaluator could technically recover the mapping and read A021's results, and give the server-side push timestamps as the only verifiable ordering evidence.",
+      "severity": "major-manageable",
+      "study": "R2",
+      "title": "R2 evaluator blinding rested on instructions only; mapping and A021 results were reachable"
+    },
+    {
+      "affected_claims": [
+        "grouping clearly beneficial for high-affinity work",
+        "HY-ROS-2026-A028 supported"
+      ],
+      "affected_metrics": [
+        "outcome classification"
+      ],
+      "category": "conclusion",
+      "evidence": [
+        "HY-ROS-2026-A028 at 370e0a4d: 'Weakened if the grouped arm ... loses quality'; 'Quality must not fall'",
+        "EV-ROS-2026-A064 Quality: control met individual criteria more faithfully, reused planner parser/executionLocation, fuller checkpoint verification, 37 vs 19 tests; grouped add accepts an external item (confirmed)",
+        "EV-ROS-2026-A067: control has an unlocked-store data-loss defect (quality mixed both ways)",
+        "HY statement 'reduces repeated work, improves architectural consistency, or both' - supported if either holds"
+      ],
+      "id": "T12",
+      "invalidates": [
+        "the unqualified class 'grouping clearly beneficial'"
+      ],
+      "mitigation_present": "EV-A064 qualifies the class with the individual-criterion finding",
+      "required_disclosure": "Reclassify as 'saves repeated context and cost; more consistent cross-item architecture; mixed per-criterion quality', and note the disjunctive hypothesis.",
+      "severity": "major-manageable",
+      "study": "A021",
+      "title": "A021 outcome class 'clearly beneficial' is inconsistent with the preregistered falsification rule; HY-A028 is disjunctive"
+    },
+    {
+      "affected_claims": [
+        "PGEI mechanism supported",
+        "affinity moderation"
+      ],
+      "affected_metrics": [],
+      "category": "conclusion",
+      "evidence": [
+        "HY-ROS-2026-A028 core statement and falsification created at 370e0a4d (pushed 2026-09-30T11:18:15Z, before arm branches 11:46:20Z) and unchanged since",
+        "PGEI section added 7385838b (2026-09-30 16:17Z) from 'the first A021 execution data'; EV-ROS-2026-A063 3aef2bd5 (16:14Z)",
+        "HY-ROS-2026-A029 created b335e166 (2026-10-01 15:40Z), after R2 unblinding"
+      ],
+      "id": "T21",
+      "invalidates": [
+        "presenting PGEI or affinity moderation as confirmed by A021/R2"
+      ],
+      "mitigation_present": "HY-A028 core prediction was preregistered",
+      "required_disclosure": "Label PGEI and HY-A029 as post hoc, hypothesis-generating; only HY-A028's core statement was tested as preregistered (A021 only).",
+      "severity": "major-manageable",
+      "study": "both",
+      "title": "PGEI mechanism and HY-A029 were formed after seeing A021 data"
+    },
+    {
+      "affected_claims": [
+        "R2 SUPPORTS HY-ROS-2026-A028",
+        "R2 classification"
+      ],
+      "affected_metrics": [
+        "R2 classification",
+        "R2 derived ratios"
+      ],
+      "category": "reliability",
+      "evidence": [
+        "POST-UNBLINDING-METRICS.txt: 'this evaluator cannot independently recompute the commitment'; 'not recoverable from available prior context'",
+        "bf8baece and 6b538516 both authored/pushed as kemiller2002",
+        "HY-ROS-2026-A028 provenance EXE-20261001T160615840Z-adece80d actor openai/chatgpt gpt-5.6-sol; 00f421e8"
+      ],
+      "id": "T10",
+      "invalidates": [],
+      "mitigation_present": "blind outputs were frozen before unblinding",
+      "required_disclosure": "Name the roles each agent played; state that interpretation after unblinding was not independent of the evaluator.",
+      "severity": "moderate",
+      "study": "R2",
+      "title": "R2 evaluator, unblinder, metrics analyst and hypothesis updater are the same agent"
+    },
+    {
+      "affected_claims": [
+        "no cross-arm visibility"
+      ],
+      "affected_metrics": [
+        "all"
+      ],
+      "category": "internal",
+      "evidence": [
+        "protocol Isolation: 'the evaluator verifies this from session event logs' - no such verification in EV-ROS-2026-A064 or evaluation.txt",
+        "EX-ROS-2026-A021-R2-run.txt section 5: 'The orchestrator did not check the arms' session event logs for compliance'",
+        "A021 arm branches on origin from 12:51Z; R2 sessions began 15:22Z and knew they were a replication (R2 group-analysis.txt header)",
+        "no textual copying detected: A021 vs R2 grouped WorkGroups.fs line-similarity 0.18"
+      ],
+      "id": "T11",
+      "invalidates": [],
+      "mitigation_present": "prompt prohibitions; low textual overlap between studies",
+      "required_disclosure": "State that isolation is instruction-based and unaudited; transcripts are not in the repository.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "Arm isolation was never verified from session event logs"
+    },
+    {
+      "affected_claims": [
+        "56% lower cost",
+        "112 vs 61 min"
+      ],
+      "affected_metrics": [
+        "cost",
+        "active session time",
+        "executions"
+      ],
+      "category": "internal",
+      "evidence": [
+        "sessions.json control-04-attempt-1 ($1.85, 10.25 min, stalled) and attempt-2 ($1.99, 12.8 min to block)",
+        "control-04 attempt 3 and control-05 ran with extraAllowedTools Bash(./ros work:*) and harness line 5; earlier sessions did not",
+        "recomputed without the stalled attempt 1 only (attempt 2 implemented the item): cost reduction about 52%, session-time reduction about 39% (build_tables.py macros); the earlier 46.4%/30.7% wrongly excluded attempt 2"
+      ],
+      "id": "T13",
+      "invalidates": [],
+      "mitigation_present": "recorded as deviations; costs disclosed",
+      "required_disclosure": "Give sensitivity figures excluding the failed attempts and state the permission configuration differed across control sessions.",
+      "severity": "moderate",
+      "study": "A021",
+      "title": "A021 control cost and time include environment-specific failed attempts; permission environment changed mid-arm"
+    },
+    {
+      "affected_claims": [
+        "context reacquisition savings"
+      ],
+      "affected_metrics": [
+        "cost",
+        "time",
+        "retries",
+        "time to first code change"
+      ],
+      "category": "construct",
+      "evidence": [
+        "A021 harness-note.txt gives exact apt/override steps; R2 deviation E2 gave only 'install .NET with the repository's own scripts'",
+        "R2 control-01..05.json infrastructure/retries: each worker hit the 403 installer block and NU1605 and re-derived the workaround"
+      ],
+      "id": "T14",
+      "invalidates": [],
+      "mitigation_present": "none quantified",
+      "required_disclosure": "Separate environment set-up from architectural context reacquisition; note that this overhead is platform-specific.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "Per-session environment setup (toolchain discovery) scales with session count and differs between studies"
+    },
+    {
+      "affected_claims": [
+        "AGENTS.md read 1 vs 5",
+        "governance reads 6 vs 15",
+        "cold starts 1 vs 4+",
+        "model requests/file reads"
+      ],
+      "affected_metrics": [
+        "context overhead metrics"
+      ],
+      "category": "construct",
+      "evidence": [
+        "every prompt says 'following AGENTS.md': one read per session is expected",
+        "EV-ROS-2026-A064: script figures miss control-04 attempts 1-2 and the end of control-05 (lower bounds)",
+        "experiment/a021-control control-04.json covers bookkeeping only (3,377 output tokens) though implementation happened in attempt 2",
+        "R2 deviation C4: metrics schemas differ across workers"
+      ],
+      "id": "T15",
+      "invalidates": [
+        "presenting AGENTS.md/governance read counts as evidence about grouping beyond session count"
+      ],
+      "mitigation_present": "lower-bound direction is conservative for the claimed effect",
+      "required_disclosure": "Present per-session reads as an expected consequence of session count, not a finding; report transcript metrics as lower bounds with missing sessions listed.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "Several 'repeated context' metrics are entailed by design; transcript metrics are partial and asymmetric"
+    },
+    {
+      "affected_claims": [
+        "two confirmed defects in each arm",
+        "comparable acceptance quality",
+        "control tested more broadly"
+      ],
+      "affected_metrics": [
+        "acceptance criteria",
+        "defect counts",
+        "test counts"
+      ],
+      "category": "construct",
+      "evidence": [
+        "R2 EVALUATION.txt section 5: no local .NET; exact-SHA CI without the FSharpCore override; no evaluator-authored fixture or concurrency probe; findings rely on arms' own tests",
+        "EV-ROS-2026-A067 section 1: 02 'blocked member' rows checked only through each arm's own tests",
+        "A021 evaluator ran builds/tests for both arms; A067 used one shared fixture",
+        "test totals 811 vs 829 (A021), 819 vs 839 (R2) count tests, not test quality"
+      ],
+      "id": "T17",
+      "invalidates": [
+        "'two defects each' as a symmetric measured defect rate"
+      ],
+      "mitigation_present": "A067 shared fixture in A021; symmetric CI evidence in R2",
+      "required_disclosure": "State that R2 acceptance verification was static plus CI and arm-authored tests; defect counts are not comparable across studies; test counts are not quality measures.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "Acceptance verification asymmetry and reliance on implementation-supplied tests"
+    },
+    {
+      "affected_claims": [
+        "evaluator ranked one model of a declared group as most important"
+      ],
+      "affected_metrics": [
+        "evaluator findings"
+      ],
+      "category": "construct",
+      "evidence": [
+        "sessions.json evaluator configuredModel claude-opus-5-5 (same as implementers)",
+        "prompts/evaluator.txt item 3 asks whether there is 'one model of a declared group (one storage location and format, one validation rule ...)'"
+      ],
+      "id": "T18",
+      "invalidates": [],
+      "mitigation_present": "rubric follows the frozen protocol's Evaluation section; R2 used a different model family",
+      "required_disclosure": "Disclose same-family evaluation in A021 and that the rubric emphasised the property the grouped prompt asked for.",
+      "severity": "moderate",
+      "study": "A021",
+      "title": "A021 evaluators share the implementers' model; evaluator rubric written by the unblinded orchestrator foregrounds the treatment's target"
+    },
+    {
+      "affected_claims": [
+        "all"
+      ],
+      "affected_metrics": [
+        "all"
+      ],
+      "category": "internal",
+      "evidence": [
+        "protocol Cohort: items authored by the agent that designed the experiment; cohort extends the grouping feature itself",
+        "sessions.json orchestrator session_01E8aLYDesB49uhTD6Mpg4yo wrote prompts, drew the mapping and authored EV-ROS-2026-A064",
+        "EV-ROS-2026-A063 / HY-A028 PGEI section authored by the owner during the arms (7385838b)"
+      ],
+      "id": "T19",
+      "invalidates": [],
+      "mitigation_present": "recorded as a threat in the protocol",
+      "required_disclosure": "State all role overlaps explicitly.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "Designer, cohort author, orchestrator and analyst are the same lab/agent lineage"
+    },
+    {
+      "affected_claims": [
+        "any generalisation beyond this cohort"
+      ],
+      "affected_metrics": [
+        "all"
+      ],
+      "category": "external",
+      "evidence": [
+        "EV-ROS-2026-A070 Threats",
+        "EV-ROS-2026-A072: EX-ROS-2026-A022 blocked; no other-repository or low-affinity arm ran"
+      ],
+      "id": "T20",
+      "invalidates": [
+        "generalisation to other repositories, models, cohort sizes or loosely related work"
+      ],
+      "mitigation_present": "claims already scoped narrowly in the publication README",
+      "required_disclosure": "Restrict claims to this cohort, repository, model and platform.",
+      "severity": "moderate",
+      "study": "both",
+      "title": "External validity: one repository, one feature family, one implementer model, no low-affinity control"
+    },
+    {
+      "affected_claims": [
+        "deviations are recorded, never silently corrected"
+      ],
+      "affected_metrics": [
+        "control-02 metrics",
+        "step telemetry"
+      ],
+      "category": "reliability",
+      "evidence": [
+        "EV-ROS-2026-A066: control-02 stale clone and hand-reconciled .ros state - absent from sessions.json deviations",
+        "evaluation input was full branches, not patch series (protocol Evaluation)",
+        "isolation verification not done (T11)",
+        "step telemetry: 25 step markers in experiment/a021-grouped .ros diff, 0 in experiment/a021-control (protocol requires step telemetry per item)"
+      ],
+      "id": "T24",
+      "invalidates": [],
+      "mitigation_present": "EV-A066 itself documents the control-02 issue",
+      "required_disclosure": "Add these to the deviation register.",
+      "severity": "moderate",
+      "study": "A021",
+      "title": "Unrecorded A021 deviations"
+    },
+    {
+      "affected_claims": [
+        "R2 records' statement of A021 results"
+      ],
+      "affected_metrics": [
+        "A021 output tokens",
+        "A021 cost"
+      ],
+      "category": "reliability",
+      "evidence": [
+        "POST-UNBLINDING-METRICS.txt: A021 'platform cost was unavailable' and 110,627 vs 176,304 output tokens",
+        "EV-ROS-2026-A064: platform cost $9.48 vs $21.51 and platform output 112,377 vs 244,630; 176,304 is the script sum excluding attempts 1-2",
+        "EV-ROS-2026-A070 repeats the script figures"
+      ],
+      "id": "T16",
+      "invalidates": [
+        "the POST-UNBLINDING statement that A021 platform cost was unavailable"
+      ],
+      "mitigation_present": "source records are intact",
+      "required_disclosure": "Cite A021 figures from EV-A064 with their source (platform vs script) stated.",
+      "severity": "minor",
+      "study": "both",
+      "title": "Cross-record inconsistency in A021 figures quoted by R2 records"
+    },
+    {
+      "affected_claims": [
+        "time comparisons"
+      ],
+      "affected_metrics": [
+        "time"
+      ],
+      "category": "internal",
+      "evidence": [
+        "sessions.json: grouped created 11:50:34Z, control-01 11:50:35Z (concurrent arms)",
+        "R2 (15:22-17:46Z) overlapped A021 control-04 attempt 3, control-05 and the A021 evaluator",
+        "sessions.json worker_epoch 2 for grouped and control-05 (worker restart) unexplained",
+        "A021 container version not recorded (R2: 2.1.285)"
+      ],
+      "id": "T22",
+      "invalidates": [],
+      "mitigation_present": "same model and environment recorded per session",
+      "required_disclosure": "Note concurrent execution and worker restarts.",
+      "severity": "minor",
+      "study": "both",
+      "title": "Uncontrolled concurrency and platform events"
+    },
+    {
+      "affected_claims": [
+        "random assignment of neutral labels"
+      ],
+      "affected_metrics": [],
+      "category": "reliability",
+      "evidence": [
+        "blind-mapping.json drawnAt 2026-09-30T16:52Z, but arm-x/arm-y branches created 16:51:55Z/16:51:57Z (GitHub activity), 9c978cdb authored 16:51:53Z; no commitment",
+        "R2 mapping-commitment.sha256 b5873a54...: salt not committed (EV-ROS-2026-A070); run record says salt given to the owner",
+        "R2 mapping verified independently by tree identity (this audit: 0 differing src/tests/docs files)"
+      ],
+      "id": "T23",
+      "invalidates": [
+        "claim that the R2 precommitment was verified"
+      ],
+      "mitigation_present": "mapping correctness established by commit ancestry (A021) and tree identity (R2)",
+      "required_disclosure": "State that label randomisation cannot be verified and that the R2 commitment was not checked; mapping correctness is independently established.",
+      "severity": "minor",
+      "study": "both",
+      "title": "Randomisation and mapping commitments are unverifiable"
+    },
+    {
+      "affected_claims": [
+        "shared reasoning did not erase per-item lifecycle/attribution (PGEI prediction 5)"
+      ],
+      "affected_metrics": [
+        "attribution"
+      ],
+      "category": "construct",
+      "evidence": [
+        "R2 README: .ros reset to baseline; lifecycle verified only by orchestrator",
+        "protocol threat PRAXIS-STATE-MERGE-01"
+      ],
+      "id": "T26",
+      "invalidates": [],
+      "mitigation_present": "A021 evaluators assessed attribution from commits (unblinded)",
+      "required_disclosure": "Attribution evidence for R2 is orchestrator-only.",
+      "severity": "minor",
+      "study": "both",
+      "title": "Lifecycle/attribution compliance not blind-evaluated in R2; Praxis state of both arms cannot both be merged"
+    },
+    {
+      "affected_claims": [
+        "resource savings",
+        "architecture quality"
+      ],
+      "affected_metrics": [
+        "cost",
+        "time to first code change"
+      ],
+      "category": "construct",
+      "evidence": [
+        "EV-ROS-2026-A065 'Known limits': group-analysis.md excluded from evaluation",
+        "EV-A064: 9.6 min to first code including analysis"
+      ],
+      "id": "T25",
+      "invalidates": [],
+      "mitigation_present": "analysis cost is inside grouped totals (conservative for resource claims)",
+      "required_disclosure": "State that the upfront design cost is included in grouped resources and that the design document itself was not evaluated.",
+      "severity": "informational",
+      "study": "both",
+      "title": "Grouped analysis document: cost counted, artifact excluded from evaluation"
+    },
+    {
+      "affected_claims": [
+        "same baseline and criteria"
+      ],
+      "affected_metrics": [],
+      "category": "internal",
+      "evidence": [
+        "merge-base of all four arm branches with 8b4ffa3 is 8b4ffa39",
+        "GitHub activity: experiment/a021-grouped and -control pushed fb6a0f9->8b4ffa3 at 11:49:57Z",
+        "R2 SHA256SUMS verified OK (this audit)"
+      ],
+      "id": "T27",
+      "invalidates": [],
+      "mitigation_present": "yes",
+      "required_disclosure": "None beyond reporting.",
+      "severity": "informational",
+      "study": "both",
+      "title": "Baseline and acceptance criteria equivalence (verified)"
+    },
+    {
+      "affected_claims": [
+        "same model and runtime"
+      ],
+      "affected_metrics": [],
+      "category": "internal",
+      "evidence": [
+        "sessions.json configuredModel and last_served_model claude-opus-5-5 for all nine A021 sessions",
+        "R2 run record section 3"
+      ],
+      "id": "T28",
+      "invalidates": [],
+      "mitigation_present": "yes",
+      "required_disclosure": "Model ID is a platform label; provider-side changes cannot be excluded.",
+      "severity": "informational",
+      "study": "both",
+      "title": "Model identity held constant (verified from records)"
+    },
+    {
+      "affected_claims": [
+        "frozen predictions"
+      ],
+      "affected_metrics": [
+        "prediction comparison"
+      ],
+      "category": "reliability",
+      "evidence": [
+        "2d0ec5c0 'WI-0064: keep group JSON bounded' (pushed 11:13:30Z); protocol frozen at 370e0a4d (pushed 11:18:15Z)",
+        "post-start protocol edits (e06c7abe, da9dd159, 287693c8) touch only status, Results, Conclusion, provenance and cross-references",
+        "the working clone was shallow; 2d0ec5c only resolved after unshallowing"
+      ],
+      "id": "T29",
+      "invalidates": [],
+      "mitigation_present": "yes; server-side push timestamps corroborate ordering",
+      "required_disclosure": "Cite 370e0a4 as the freeze commit and 2d0ec5c as the planner version.",
+      "severity": "informational",
+      "study": "A021",
+      "title": "Protocol freeze verified; '2d0ec5c' is the planner code commit, not the protocol commit"
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+\documentclass[10pt,conference]{IEEEtran}
+% SANER 2027 Agentic AI4SE track: IEEEtran conference, no compsoc; 10 pages + 2 pages of references.
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdfauthor={},pdftitle={Cohort versus Per-Item Coding-Agent Execution of Coupled Work Items},pdfsubject={},pdfkeywords={},pdfcreator={},pdfproducer={}}
+
+% Every result number in the prose comes from these generated files.
+\input{tables/macros.tex}
+\input{tables/architecture-macros.tex}
+
+\newcommand{\G}{G}
+\newcommand{\I}{I}
+
+\begin{document}
+
+\title{Cohort versus Per-Item Coding-Agent Execution of Coupled Work Items: Cost and Cross-Item Consistency in a Case Study and an Internal Re-Execution}
+
+\author{\IEEEauthorblockN{Anonymous Author(s)}\IEEEauthorblockA{Anonymous Institution(s)}}
+
+\maketitle
+
+\begin{abstract}
+Coding agents are usually given one work item per fresh session, even when several items share design decisions. We compare two ways of executing the same five coupled work items in an F\#/.NET command-line tool. In arm \G{} (cohort execution), one session implements all five items after writing and committing a mandated cross-item analysis. In arm \I{} (per-item execution), five fresh sessions run serially on one shared branch; their prompts do not frame the items as a cohort or ask for cross-item analysis. % CLAIM: C01
+The arms differ in retained context and in the mandated analysis, so we compare two bundled treatments. The repository visible to every session also contained the study's hypothesis, protocol and cohort labels, a demand-characteristics threat for both arms. % CLAIM: C02 C52
+An original study and an internal, non-preregistered re-execution each ran one execution per arm. % CLAIM: C08
+On worker-only figures, \I{} used about \AcostRatio$\times$ the platform cost of \G{} in the original study and about \RtwoCostRatio$\times$ in the re-execution, and about \AactiveRatio$\times$ and \RtwoActiveRatio$\times$ the summed session time; it also inserted about \AinsLinesRatio$\times$ and \RtwoInsLinesRatio$\times$ as many lines, so per inserted line the cost ratio is about \AcostPerLineRatio$\times$ and \RtwoCostPerLineRatio$\times$. These are single runs: agent token use varies widely between identical runs, and part of the gap is per-session overhead (toolchain setup, mandated instruction reads). % CLAIM: C11 C13 C12 C14 C60 C61 C62
+On a rubric written after unblinding and applied by one AI auditor, \G{} applied one rule where \I{} behaved inconsistently on member admission (create vs.\ add), the error and exit-code contract, and write locking in both studies; \G's shared admission rule is nonetheless weaker than the planner's for external items. % CLAIM: C21 C22 C53
+\I{} had stronger checkpoint ownership validation in both studies (in the original only through an item that started from a stale checkout). Both arms had confirmed defects of different kinds. % CLAIM: C23 C34
+The original evaluations were not effectively blind. The results are hypothesis-generating observations, not effect estimates.
+\end{abstract}
+
+\begin{IEEEkeywords}
+coding agents, agentic software engineering, execution granularity, architectural consistency, case study
+\end{IEEEkeywords}
+
+% ======================================================================
+\section{Introduction}\label{sec:intro}
+
+Agentic coding tools are increasingly used to implement backlog items~\cite{watanabe2025agentic}, usually one work item per fresh session. That is also the unit of issue-resolution benchmarks~\cite{jimenez2024swebench,yang2024sweagent}. Many backlogs, however, contain clusters of items that share a domain model, a persistence format, validation rules and command conventions. Separate sessions must rebuild that context and may settle shared invariants differently. One longer session may settle them once, but may lose per-item detail as its context grows~\cite{liu2024lost}.
+
+Prior work shows that how coupled work is divided among agents changes outcomes: one agent implementing two coupled features outperformed two communicating agents~\cite{khatua2026cooperbench}, and collaboration topology changes quality and time~\cite{ren2026coordination}. Grouping tasks in one call is known to cut cost~\cite{cheng2023batch,son2024multitask}. We therefore claim neither that execution granularity matters nor that grouping saves tokens. We report one narrow observation set: \emph{serial, non-communicating fresh sessions on one branch} versus \emph{one cohort session with a mandated analysis}, on real repository work, measuring cross-item consistency next to cost and per-item correctness, executed twice.
+
+We call the arms \G{} and \I. In \G{} (cohort execution), one session read the five items and the tool's planner explanation of the cohort, wrote and committed a cross-item analysis before changing code, then implemented the items in the same session. In \I{} (per-item execution), five fresh sessions ran serially on one branch, each prompted with its own item only. % CLAIM: C01
+The arms differ in retained context and in the instructed analysis; every difference we report is a difference between these two bundles. % CLAIM: C02
+Two further facts bound the comparison. First, the repository every session worked in contained the study's hypothesis, its protocol and item texts labelled as an experiment cohort (Section~\ref{sec:design-leak}). Second, the original study (A021) followed a protocol frozen before the arms, but the second execution (R2) was not preregistered, and our architecture rubric and analysis plan were written after both studies were unblinded. % CLAIM: C52 C58
+
+Contributions: (i) a two-arm comparison of cohort and per-item execution of one coupled five-item cohort from a common baseline, with its confounds stated; (ii) a post hoc but code-cited and probe-supported measurement of cross-item consistency that keeps consistency, conformance to the acceptance criteria and correctness apart; (iii) worker-only resource figures with their single-run limits; (iv) a second execution and a direction-only recurrence matrix; and (v) a full account of deviations, contamination and corrections, with an anonymous artifact. The study is a hypothesis-generating case study.
+
+% ======================================================================
+\section{Background and Related Work}\label{sec:related}
+
+\textbf{Task units.} Repository-level benchmarks evaluate one issue or feature per instance~\cite{jimenez2024swebench,li2025feabench,deng2025swebenchpro}. Long-horizon variants evolve one codebase over many steps~\cite{le2025sweevo} or carry state across rounds; carried-over state can propagate earlier errors~\cite{shen2026evocode}, so retained state need not help.
+
+\textbf{Partitioning coupled work.} CooperBench is the closest prior work: one agent implementing two features outperformed two communicating agents implementing one each~\cite{khatua2026cooperbench}. MSEval varies collaboration topology~\cite{ren2026coordination}; CAID finds that isolated workspaces with a manager and test-verified merging can beat a single agent~\cite{geng2026caid}. Multi-agent failure taxonomies include inter-agent misalignment~\cite{cemri2025why}, and role pipelines reduce inconsistencies of naive chaining~\cite{hong2024metagpt,qian2024chatdev}. Agents solving tasks independently repeat mistakes that experience reuse avoids~\cite{qian2024experiential}. Practitioners argue that sub-agents that cannot see each other's decisions produce inconsistent work~\cite{yan2025dontbuild,hadfield2025multiagent}. Our split sessions differ: they run one after another, do not communicate, and see earlier work only through the branch.
+
+\textbf{Grouping inside one context.} Batch prompting and multi-task inference cut cost by placing several tasks in one call~\cite{cheng2023batch,son2024multitask}. Plan-then-execute prompting~\cite{wang2023plan} resembles \G's mandated analysis, one reason the treatment is a bundle. Fresh sessions rebuild shared state by retrieval~\cite{zhang2023repocoder}, and missing coupled facts lead agents to guess~\cite{mohammadi2026coherence}. Context management within a session is itself a cost lever~\cite{rajasekaran2025context}, and review in a fresh session can find errors that same-session review misses~\cite{song2026crosscontext}.
+
+\textbf{Cost and variance.} Agent evaluations should report cost with accuracy~\cite{kapoor2025agents}. Token use in agentic coding is dominated by input and varies widely between runs of the same task~\cite{bai2026tokens}, which limits what one execution per arm can show.
+
+\textbf{Architecture and method.} Our consistency outcome relates to architectural erosion and drift~\cite{perry1992foundations,li2022understanding}, and to decomposition along design decisions~\cite{parnas1972criteria}. We follow case-study guidance~\cite{runeson2009guidelines}, experiment terminology~\cite{wohlin2012experimentation}, the replication taxonomy of G\'omez et al.~\cite{gomez2014understanding} and reporting guidance for LLM-based SE studies~\cite{wagner2025towards,baltes2025guidelines,sallou2024breaking}, whose call for human validation we do not meet. Model judges show self-enhancement and position biases~\cite{zheng2023judging}, relevant because the original evaluators shared the implementers' model family.
+
+\textbf{Novelty and its limits.} In the sources we examined, no study measured whether separate agent sessions converged on the same cross-cutting decisions (one store, one admission rule, one error contract) together with cost and per-item correctness on one real cohort. Most of those sources (41 of the 57 we considered) were checked only through search-engine records of their authoritative pages, not against full text, and coverage of recent preprints is incomplete. % CLAIM: C45
+
+% ======================================================================
+\section{Research Questions}\label{sec:rq}
+
+\textbf{RQ1} (resources): How do platform cost, session time, tokens and repeated context acquisition differ between \G{} and \I?
+\textbf{RQ2} (cross-item consistency): On which shared concerns does one arm's set of verbs behave more consistently, and how does that relate to the acceptance criteria and to correctness?
+\textbf{RQ3} (local correctness): What differences appear in per-item acceptance fidelity, tests and defects?
+\textbf{RQ4} (recurrence): Did the direction of the RQ1--RQ3 observations recur in a second execution?
+\textbf{RQ5} (boundary): Which observations remain after the confounds, contamination, deviations and stale checkouts are taken into account?
+The outcome families are reported separately; we form no composite score and no dimension tally, because neither the dimensions nor a weighting were defined in advance.
+
+% ======================================================================
+\section{Subject System and Cohort}\label{sec:subject}
+
+The subject system is an F\#/.NET command-line tool that governs repository work items (lifecycle, checkpoints, attribution) and includes a read-only planner. The planner rates the \emph{affinity} of items from explicit shared signals such as declared paths, tags and dependencies; it rated the cohort high affinity, every item pair as conflicting, and safe concurrency as one, so \I's sessions ran serially. % CLAIM: C05
+The five items add a \texttt{work group} command family: \emph{create} (item 1), \emph{show} (2), \emph{add} (3), \emph{remove} (4), \emph{checkpoint} (5). Their acceptance criteria were in the item descriptions before the arms started. Every item cites a shared requirements document, which requires the execution-repository invariant (one repository per group unless explicitly cross-repository) for every group; item 3's criteria repeat it for add. % CLAIM: C53
+The items were authored by AI agents of the same product that designed and ran the study (Claude Code sessions), and they extend the planner's own grouping feature. % CLAIM: C41
+
+% ======================================================================
+\section{Experimental Design}\label{sec:design}
+
+\begin{figure}[t]
+\centering
+\input{figures/design-flow.tex}
+\caption{Design of both studies. All four arms branch from one baseline commit; one execution per arm per study. In A021 the arm labels were visible to the evaluators; R2 was not preregistered and its prompts were not archived.}
+\label{fig:design}
+\end{figure}
+
+All four arms branch from one baseline commit, implement the same five items, and were not merged before evaluation (Fig.~\ref{fig:design}). % CLAIM: C03
+All implementation sessions ran a Claude Opus-family model through the Claude Code remote runtime, each in its own container; the exact identifier is recorded per session in the artifact, and the runtime version only for R2. % CLAIM: C10
+Every prompt carried an instrumentation note (toolchain setup, timestamps, a metrics script, no pull requests). No .NET toolchain was preinstalled, so every session installed one.
+
+\subsection{Treatments}\label{sec:design-treatments}
+\textbf{\G.} One session receives all five items. Its prompt requires it to read every item and the planner's group explanation and, \emph{before changing code}, to write and commit an analysis of common architecture, shared invariants, conflicting requirements, order, reusable abstractions, common tests and the risks of solving each item separately; then to implement each item under its own lifecycle, label shared changes as group infrastructure and checkpoint after milestones. \textbf{\I.} Five fresh sessions run in the planner's order on one branch. Each sees earlier items' pushed commits but none of the earlier reasoning. Each prompt names one item, does not frame the items as a cohort, shows no planner output and requests no cross-item analysis or consistency; it does name \G's branch as one not to read. % CLAIM: C01 C52
+Only \G{} received the group framing, the planner explanation, the design step, the infrastructure labelling and milestone checkpoints. The \G{} prompt asked for ``shared invariants'' and ``reusable abstractions'', which are close to what RQ2 measures, so the consistency outcome partly measures compliance with an instruction only \G{} received. % CLAIM: C02 C59
+Separating retained context from the analysis step needs a third arm (shared analysis, per-item sessions).
+
+\subsection{Contamination and demand characteristics}\label{sec:design-leak}
+The baseline tree that every session checked out contained the hypothesis under test, the full A021 protocol (arms, measures, consistency outcomes) and the planner outputs. Every item description read by every session said the item was part of a ``proposed cohort'' of the named experiment, cited a shared requirements document, and listed dependencies on item 1 (and item 2 for item 5). Sessions of both arms therefore could know they were arms of an experiment and what it hypothesized. Transcripts were not retained, so we cannot show which session read what. We rate this a major threat for both arms. R2's prompts were not archived and cannot be checked. % CLAIM: C52
+
+\subsection{A021: original study and its preregistered elements}
+The protocol, prompts, hypothesis and planner predictions were committed before the arms branched; server-side push times confirm no later edits. % CLAIM: C04
+\I{} needed seven sessions for five items: the first item-4 attempt stalled with nothing pushed; the second implemented and pushed item 4, then blocked on a permission prompt before its bookkeeping and was abandoned; a third session did the bookkeeping only. Owner approval for the prompt carried into later \I{} sessions, so \I's permission environment changed mid-arm. % CLAIM: C37
+The preregistered hypothesis said that grouping reduces repeated work, improves consistency, or both, and is \emph{weakened if the grouped arm loses quality}. Local quality was mixed (Section~\ref{sec:a021-rq3}), so by its own rule the hypothesis is at best weakly supported. The original results record nonetheless placed A021 in the protocol's most favorable outcome class for grouping; we do not adopt that classification. The planner's frozen predictions of order, critical path, conflict rating and safe concurrency held; its duration prediction failed (both arms exceeded its upper bound). Several preregistered measures (retries, failed approaches, design revisions, rework, forgotten requirements) were not collected systematically, and three protocol controls were not followed: patch-series input to the evaluator, an isolation audit from session event logs, and retention of those logs. % CLAIM: C55 C56
+
+\subsection{R2: internal re-execution}
+R2 reused the baseline, cohort, criteria, organization and implementing model with new executions of both arms. It is an internal, non-preregistered re-execution: an operational replication in the sense of G\'omez et al.~\cite{gomez2014understanding}, with deviations. It changed the evaluator, the prompts (fuller owner-written versions, not archived), the harness note, the orchestration (\I{} had its own orchestrator session, \G{} none) and the metric definitions (fixed after unblinding). Its designer knew interim A021 results, and R2's grouped analysis had headings for the dimensions later scored. % CLAIM: C08 C09 C38
+
+\subsection{Evaluation and unblinding}\label{sec:design-eval}
+\textbf{A021.} Two evaluations used neutral arm labels, but neither was effectively blind: the first evaluator received full branches whose commit subjects named the arm and reported reading them; the second reported knowing the mapping before reading code. The first evaluator ran on the implementers' model family and its brief asked whether each arm had ``one model of a declared group''; the second evaluator's model was not recorded. One \I{} implementing session (item 2) later did work on the second evaluation's kit. We use the A021 evaluations only for structural facts re-verified in code. % CLAIM: C06 C40 C57
+\textbf{R2.} An OpenAI GPT-family model in ChatGPT evaluated squashed, neutrally named patches with pre-recorded checksums; the evaluation was pushed before the unblinding. Blindness rests on its self-report: it could reach the arm branches and the main branch, which held the A021 conclusions and an implementation derived from A021's \G{} arm. The mapping was recovered from source-tree identity because the salt of the mapping commitment was lost. The same evaluator unblinded, computed the ratios and updated the hypothesis record. % CLAIM: C07 C39 C57
+
+% ======================================================================
+\section{Measures}\label{sec:measures}
+
+\textbf{Resources.} Platform cost and token counts are the runtime's whole-session usage records. \emph{Workers} are all sessions that worked on an arm's items (in A021 \I{} including both extra item-4 sessions), excluding orchestrators and evaluators; worker-only figures are our primary definition in both studies. % CLAIM: C11 C13
+We use five time definitions and never mix them: \emph{session span} (creation to end; a blocked session ends at the block); \emph{summed active session time} (sum of an arm's worker spans; primary); \emph{wall-clock span} (first start to last end, including gaps); the R2 record's \emph{elapsed} (a wall-clock span from the common start to \I's orchestrator's last update); and \emph{blocked time}. Because a blocked session ends at the block, the permission block inflates only wall-clock spans, not worker-only time or cost. % CLAIM: C12 C16
+\textbf{Repeated context.} Each session ran a transcript script (model requests, file reads, searches, instruction and governance reads) before its final steps. Both arms' counts are therefore lower bounds, and A021 \I's counts miss the session that implemented item 4. We report directions, not ratios, for them; the direction assumes the uncounted final steps were smaller than the observed gaps. % CLAIM: C18
+\textbf{Cross-item consistency and correctness.} Eight dimensions (Table~\ref{tab:architecture}): six cross-item consistency dimensions (store, admission, classification, error contract, mutation path, duplicate definitions) and two per-verb correctness or reuse dimensions (checkpoint ownership validation; shared abstractions and baseline-rule reuse). Separately: acceptance verdicts, confirmed defects, design risks and net tests added; test counts are not test quality.
+
+% ======================================================================
+\section{Analysis Method}\label{sec:analysis}
+
+\textbf{Descriptive comparison.} For each measure we give raw values; for complete measures also the ratio I/G (one decimal) or the reduction $(I-G)/I$ (whole percent) in tables. With one execution per arm per study and dependent items within an execution, we compute no inferential statistics and do not average across studies; a ratio is an observation, not an effect estimate.
+
+\textbf{Post hoc rubric.} The analysis plan, its rubric and our sensitivity analyses were written after both studies had run and been unblinded. The plan's first version had six dimensions; shared abstractions and baseline-rule reuse (D7) and duplicate definitions (D8) were added later. The rubric was applied by one AI auditor from the same organization that knew the arm identities and the earlier evaluations; there was no second coder, no human coder and no reliability estimate. All architecture results are exploratory. % CLAIM: C58 C29
+Each arm gets one category per dimension: \emph{unified} (one rule serves every verb that needs the concern, with the same behavior on the same input), \emph{duplicated-compatible}, \emph{divergent} (code or runtime evidence of different behavior for the same input; organization alone never qualifies), \emph{missing}, or \emph{not assessable}. Unified means the verbs agree, not that they are correct, and a divergence can follow the specification. Every finding cites commit, path, line range and symbol; a script checks that each symbol occurs in its range. The audit coded \ArchFindings{} findings with \ArchCitations{} citations, built all four heads, ran runtime probes against each arm's binary (admission, error contract, concurrent creates) and tested \ArchFalsificationAttempts{} statements from the original records against the code. % CLAIM: C29
+
+\textbf{Sensitivity analyses (post hoc).} \emph{S1}: A021 without the stalled item-4 attempt (primary), and, as an extreme, also without the bookkeeping-only session. \emph{S2}: summed active time instead of wall-clock spans. \emph{S3}: findings that depend on a stale-start item are flagged and the contrast is restated without them. \emph{S4}: defects and verdicts without test counts. \emph{S5}: whether cost alone could explain the architecture result (it cannot; the architecture evidence is code-based). We could not remove per-session toolchain setup from the resource figures, because transcripts were not retained.
+
+% ======================================================================
+\section{Results: Original Study (A021)}\label{sec:results}
+
+\input{tables/resources-a021.tex}
+
+\subsection{RQ1: Resources}
+Worker-only platform cost was \$\AcostGrouped{} for \G{} and \$\AcostIndep{} for \I{} (about \AcostRatio$\times$), and summed active session time \AactiveMinGrouped{} versus \AactiveMinIndep{} minutes (about \AactiveRatio$\times$). This is one observation per arm; we have no estimate of run-to-run variation in this setup, and the cited literature reports wide variation between identical runs~\cite{bai2026tokens}. % CLAIM: C11 C12 C61
+Part of the gap is per-session overhead of this environment, which a cohort session pays once: every \I{} session installed the toolchain and read the repository instructions by instruction. % CLAIM: C60 C19
+\G{} also used fewer output and cache-read tokens, though its end-of-session context was larger (Table~\ref{tab:resources-a021}). % CLAIM: C15
+\textbf{Work volume.} \I{} inserted \AinsLinesIndep{} lines against \AinsLinesGrouped{} for \G{} (about \AinsLinesRatio$\times$; src, tests and docs), of which \AinsTestLinesIndep{} and \AinsTestLinesGrouped{} in tests, and changed \AfilesChangedIndep{} files against \AfilesChangedGrouped. Normalized by inserted lines, worker cost was \$\AcostPerKLineIndep{} versus \$\AcostPerKLineGrouped{} per thousand lines (about \AcostPerLineRatio$\times$). This normalization is not a quality measure: part of \I's extra code is the duplication RQ2 counts against it, and part is its extra tests and checkpoint validation. Much of the cost gap may simply track how much code each arm wrote. % CLAIM: C62
+\emph{S1:} without the stalled attempt, \I{} used about \AcostExclStalledRatio$\times$ the cost and \AactiveExclStalledRatio$\times$ the active time of \G; also without the bookkeeping-only session, about \AcostExclNoCodeRatio$\times$ and \AactiveExclNoCodeRatio$\times$. The direction is unchanged; the size depends on the inclusion rule. % CLAIM: C17
+\emph{S2:} \I's wall-clock span (\AspanHmIndep{}, h:mm) includes orchestration gaps and \AblockedMinIndep{} minutes of permission block; it describes run conditions, and we compute no contrast from it. % CLAIM: C16
+The repeated-context lower bounds were smaller for \G{} (Table~\ref{tab:resources-a021}); part of this is design-entailed, since each fresh session is told to read the repository instructions. No session compacted its context. % CLAIM: C18 C19 C20
+
+\input{tables/architecture-matrix.tex}
+
+\subsection{RQ2: Cross-item consistency}
+\textbf{Where \G{} was more consistent.} Admission (D2): \G{} applied the group-level repository invariant, which the cited requirements document demands for every group, at both create and add through one rule. \I{} checked the repository only at add, so a group created for another repository accepted local members at create and refused them at add (probes); in R2 the blind evaluator counted this missing create-time check as a confirmed acceptance defect. \G's shared rule is still weaker than the planner's: it ignores the planner's external-repository inference, so \G{} added an item the planner treats as external (probe P2, which tests add), while \I{} refused it. At create, every arm of both studies accepted such an item (probe P3). % CLAIM: C21 C24 C53
+Error contract (D5): \G{} used one coded contract with consistent exit codes; \I{} had two envelope families and inconsistent exit codes (probes). Mutation (D6): \I's create, add and remove used unlocked read-modify-write, and in a concurrent-create probe every \I{} process reported success while only one group was stored. \G{} serialized group writes, but some of its concurrent creates failed with an operational error under lock contention, and its lock did not serialize with the separate work-checkpoint command (in R2, \G{} read member facts before taking its lock). % CLAIM: C21 C25 C54
+Classification (D3): \G's show and checkpoint share one member classification, \I's do not; this is from code reading, no probe tested it. Store (D1) and duplicate definitions (D8) differ only in organization (one store versus two new files; a second, compatible ID grammar in \I). % CLAIM: C21
+\textbf{Where \I{} was better.} Checkpoint ownership validation (D4): \I's checkpoint required an active member and the caller's own execution, rejected blank decisions and re-validated stored checkpoints, as item 5's criteria require (``the same durable-checkpoint verification as work checkpoint''). \G{} shared only the durability rule and stored a blank decision verbatim. Shared abstractions and baseline-rule reuse (D7) was coded \ArchDSevenA: \I{} reused more existing baseline rules (the declaration reader, the planner's location rule, the effective-status rule), while \G{} re-derived the location rule (hence P2) but had more shared helpers inside the feature. % CLAIM: C23 C24 C33
+The audit also corrected earlier evaluator counts: \I's ``three stores'' are two new files plus the reused event log, its ``two ID grammars'' are nested, and the ``three classifications'' overstate a difference that remains only between show and checkpoint. % CLAIM: C28
+\emph{S3:} \I's item 5 started from the baseline instead of the branch head. The D3 and D8 differences and the \emph{whole} \I{} advantage on D4 come from that item. Without it, D1, D2, D5 and D6 still differ and D3, D4 and D8 cannot be assessed. % CLAIM: C26
+
+\input{tables/quality-counts.tex}
+
+\subsection{RQ3: Local correctness}\label{sec:a021-rq3}
+\I{} added \AtestsAddedIndep{} net tests and \G{} \AtestsAddedGrouped{} (final \AtestsIndep{} and \AtestsGrouped{} from a baseline of \BaselineTests{}); this is a count, not evidence of better testing. % CLAIM: C30
+The first evaluation judged \I{} more faithful on several individual criteria and gave no defect tally; the second labelled \AkitDefectsIndep{} findings in \I{} and \AkitDefectsGrouped{} in \G{} as defects. Neither was blind. % CLAIM: C32
+Confirmed problems exist on both sides: \G{} misses part of item 5's verification, admits an external item and stores blank decisions; \I{} loses concurrent updates. We cannot rank the arms on local correctness: their defects differ in kind and no weighting was agreed. \emph{S4:} without test counts the conclusion is the same. % CLAIM: C34
+
+% ======================================================================
+\section{Re-Execution (R2)}\label{sec:replication}
+
+\input{tables/resources-r2.tex}
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\caption{Deviations, contamination and design threats}
+\label{tab:deviations}
+\begin{tabular}{@{}p{0.55\textwidth}p{0.42\textwidth}@{}}
+\hline
+Deviation or threat & Effect and handling \\
+\hline
+Baseline contained the hypothesis, protocol and planner outputs; item texts named the experiment cohort and dependencies; \I{} prompts named \G's branch & Demand characteristics in both arms; transcripts absent, so exposure unknown \\
+Same instrumentation note in every prompt; no preinstalled toolchain, so every session set it up; R2's note was weaker & Per-session overhead inside all resource figures; not separable \\
+A021 \I{} item 4: attempt 1 stalled (nothing pushed); attempt 2 implemented and pushed the item, then blocked on a permission prompt (\AblockedMinIndep{} min) and was abandoned; a third session did bookkeeping; owner approval carried into later sessions & Included in worker-only figures; \emph{S1}; the block affects only wall-clock spans \\
+Stale checkouts, all in \I{} sessions: A021 item 2 (stale clone, state reconciled by hand, unrecorded at the time) and item 5 (started from the baseline); R2 items 2 and 3 & Cause unknown; flagged in Table~\ref{tab:architecture}; \emph{S3} \\
+A021 item 3 started late (orchestration cadence) & Wall-clock spans only \\
+Transcript metrics captured before final steps; none for item-4 attempts 1--2; R2 worker schemas differ; platform usage supplements them & Counts are lower bounds; directions only \\
+A021 evaluators saw arm labels in branch history; kit scrubber missed strings and was not validated beforehand; an \I{} implementer later worked on the kit & A021 evaluations not blind; only re-verified code facts used \\
+Isolation not audited from event logs; logs not retained; no step telemetry in A021 \I & Cross-arm reading cannot be excluded \\
+Record-format issues (renamed files, a tip not re-validated, a renumbered record) & Bookkeeping only \\
+\G{} committed a live group whose note points to a missing file & Reported as a quality finding \\
+A021 label draw recorded after the blind branches were created; R2 commitment salt lost & Mappings verified by source-tree identity \\
+Reserved pull-request tag on R2 sessions; orchestration commits without a work item & No effect on the arms \\
+R2 prompts differ and were not archived; no frozen R2 protocol; metrics defined after unblinding; designer knew interim A021 results & R2 is a non-preregistered re-execution \\
+R2 \I{} had its own orchestrator, counted in R2's reported cost & Worker-only primary; orchestrator-inclusive secondary \\
+R2 evaluator had no local build, used exact-commit CI without the toolchain override, ran no probe; could reach the main branch & Audit built all heads and ran probes; blindness by self-report \\
+A021 evaluators on the implementers' model family; AI agents of one product authored the cohort, designed, orchestrated, evaluated (A021) and audited; R2 evaluator also unblinded & Role overlap disclosed; no claim rests on evaluator judgment alone \\
+Two A021 workers restarted by the platform; arms ran concurrently; R2 overlapped A021 & Cause and effect unknown \\
+\hline
+\end{tabular}
+\end{table*}
+
+\textbf{RQ1.} Worker-only platform cost was \$\RtwoCostGrouped{} for \G{} and \$\RtwoCostIndep{} for \I{} (about \RtwoCostRatio$\times$), and summed active session time \RtwoActiveMinGrouped{} versus \RtwoActiveMinIndep{} minutes (about \RtwoActiveRatio$\times$), again single observations that include per-session overhead. % CLAIM: C13 C14 C60 C61
+Output and cache-read tokens were lower for \G{} (Table~\ref{tab:resources-r2}). % CLAIM: C15
+\I{} inserted \RtwoInsLinesIndep{} lines against \RtwoInsLinesGrouped{} (about \RtwoInsLinesRatio$\times$; \RtwoInsTestLinesIndep{} and \RtwoInsTestLinesGrouped{} in tests), so per thousand inserted lines worker cost was \$\RtwoCostPerKLineIndep{} versus \$\RtwoCostPerKLineGrouped{} (about \RtwoCostPerLineRatio$\times$). % CLAIM: C62
+The R2 records also give two figures with other definitions: including \I's own orchestrator, the cost reduction is about \RtwoCostInclOrchReduction\%; their ``elapsed'' reduction, about \RtwoElapsedReduction\%, is a wall-clock span including the gaps between workers. We do not use either for comparison (\emph{S2}). % CLAIM: C16
+The repeated-context lower bounds were again smaller for \G{}, and no session compacted. % CLAIM: C18 C20
+
+\textbf{RQ2.} In both studies, \G{} applied one rule where \I{} behaved inconsistently on admission (D2, the create-time check missing in \I{} and \G's rule again weaker than the planner's), the error and exit-code contract (D5) and write locking (D6, with the same lost update in \I{} and lock-contention failures in \G); store layout (D1) again differed in organization only. Member classification (D3) and duplicate definitions (D8) did not differ in R2: both arms' show and checkpoint disagree on abandoned members, and each arm has one ID grammar. % CLAIM: C22 C25 C54
+\I{} was again better on checkpoint ownership validation (D4), and D7 was coded \ArchDSevenRtwo: R2's \G{} repeated A021's location-rule gap (probe P2), which the R2 evaluator missed. % CLAIM: C23 C24
+\emph{S3:} \I's items 2 and 3 started from stale checkouts. The D6 divergence comes from correctly started items. D2's add-only check was written by item 3, which started stale but merged the earlier items before implementing, so staleness is an implausible cause. D5 still diverges without item 2, though item 2 plausibly caused the show-specific contract gaps. % CLAIM: C27
+The R2 differences are therefore narrower than A021's: more consistent cross-item invariants and write path, not a more unified architecture overall.
+
+\textbf{RQ3.} The blind evaluator confirmed \RtwoDefectsGrouped{} acceptance defects in \G{} and \RtwoDefectsIndep{} in \I{}, each arm's in one item: checkpoint in \G{} (blank shared decision silently dropped; ownership not validated) and create in \I{} (no default execution repository; no repository check at create). % CLAIM: C31 C33
+\I{} added \RtwoTestsAddedIndep{} net tests and \G{} \RtwoTestsAddedGrouped{} (final \RtwoTestsIndep{} vs.\ \RtwoTestsGrouped{}). The arms cannot be ranked on local correctness. % CLAIM: C30 C34
+
+\input{tables/replication-matrix.tex}
+
+\textbf{RQ4: what recurred.} Table~\ref{tab:replication} lists directions only. The direction recurred for the worker-only resource figures and for more tests and more inserted lines in \I. Among the architecture dimensions, the admission, error-contract and write-locking differences, store organization and \I's stronger checkpoint validation recurred, \G's blank-decision handling failed in both (stored verbatim in A021, silently dropped in R2), and D7 was coded \ArchDSevenRtwo{} in R2; classification and duplicate definitions did not recur. Because R2's analysis anticipated these dimensions, the architecture recurrences carry little independent weight. Repeated-context counts point the same way but are lower bounds only; defect counts are not comparable. % CLAIM: C35
+Both studies share baseline, cohort, organization and model, R2's designer knew A021's results, and its analysis anticipated the scored dimensions, which bears more on the architecture rows than on cost. A recurred direction in two correlated single executions is evidence of stability under re-execution of one setup, not of an effect size or of generality. % CLAIM: C48
+
+% ======================================================================
+\section{Discussion}\label{sec:discussion}
+
+\textbf{What the observations mean.} In each of two single executions, \G{} had lower worker-only platform cost, output and cache-read tokens and summed session time (but a larger end-of-session context), wrote less code, and settled the admission rule, error contract and write path once. \I{} kept stronger checkpoint ownership validation (in A021 only through a stale-start item), reused more baseline rules, and wrote more code and more tests, counts we do not read as quality. Each arm had confirmed defects of different kinds. We see differences in both directions, not a winner. % CLAIM: C34
+
+\textbf{RQ5: boundary.} The resource direction survives \emph{S1} and \emph{S2}, but its size depends on inclusion rules, includes per-session overhead, shrinks to about \AcostPerLineRatio$\times$ and \RtwoCostPerLineRatio$\times$ per inserted line, and lies within the range that single-run variation could produce. The consistency differences survive \emph{S3} on admission, error contract and write path in both studies, but they are consistency, not full correctness: \I{} missed the required create-time check, while \G's shared rule is wrong for an external item. Because \G{} was instructed to look for shared invariants and was then scored on them, because the rubric is post hoc and singly coded, and because every session could read the hypothesis, none of these observations is attributable to retained context, and none extends beyond this repository, cohort and model. % CLAIM: C02 C17 C26 C27 C52 C59
+
+\textbf{Mechanism candidates (inferred, not tested).} (a) \emph{Decisions made once:} \G{} wrote its shared decisions down before coding. (b) \emph{Retained context:} context is acquired once, consistent with the lower repeated-context bounds, partly by design. (c) \emph{Per-item reading:} each fresh session works mainly from its own item's criteria; a group-level rule stated in the shared requirements document was applied at add, whose criteria repeat it, but not at create (D2). (d) \emph{Stale starts} magnified A021's differences. Conversely, a fresh session concentrates on one item's criteria, and fresh-context review can detect errors that same-context review misses~\cite{song2026crosscontext}; long contexts can bury details~\cite{liu2024lost}. These may explain \I's stronger checkpoint verification. All of these were formulated after A021 data were seen. % CLAIM: C44 C46
+
+\textbf{Practical implications (inferred).} A cohort session should receive an explicit \emph{reuse inventory} of existing domain rules to call rather than re-derive (both \G{} arms re-derived the location rule), and should end with a \emph{per-criterion verification pass}, possibly in a fresh session (both \G{} arms had checkpoint defects). Per-item sessions should receive the \emph{shared invariants} as a committed decision record, and specifications should state cross-verb rules explicitly. A shared analysis followed by per-item sessions is the design to test next. % CLAIM: C47
+
+% ======================================================================
+\section{Threats to Validity}\label{sec:threats}
+
+\textbf{Construct.} The treatment is a bundle (retained context, mandated analysis, group framing, labelling, milestone checkpoints), and its analysis instruction overlaps the consistency outcome; we rate this overlap a major threat. The rubric was written after unblinding, extended from six to eight dimensions, and coded by one AI auditor without a second or human coder; it mixes cross-item consistency with per-verb correctness (D4) and reuse (D7), which we therefore report separately. ``Unified'' does not mean correct. The cost of \G's analysis is inside \G's totals, but the analysis document was not evaluated. Test counts are not quality; platform cost is provider-specific. % CLAIM: C02 C58 C59
+
+\textbf{Internal.} Every session could read the hypothesis, protocol and cohort labels (demand characteristics, both arms, major). All four stale-checkout events affected \I{} sessions; their cause is unknown. The stalled item-4 attempt inflates A021's \I{} worker figures (\emph{S1}); the permission block inflates only the wall-clock span. Per-session toolchain setup and mandated instruction reads scale with the number of sessions. We cannot subtract them, nor the resources of the stale-start sessions, because no transcripts or per-step timings were retained: only whole-session usage exists, and dropping a stale session would also drop an item's implementation. The A021 evaluations were not blind; R2's blindness rests on self-report while the evaluator could reach the main branch with A021's conclusions. One \I{} implementer later worked on the A021 evaluation kit. The R2 designer knew interim results. AI agents of one product authored the cohort, designed, orchestrated, evaluated (A021) and audited. Two workers restarted, and isolation was never audited. % CLAIM: C52 C36 C17 C37 C60 C06 C07 C57 C09 C41 C42
+
+\textbf{External.} One repository built by the authors' organization, one feature family, one high-affinity five-item cohort, one implementing model and runtime. The preregistered follow-up that crosses affinity (high vs.\ low) with execution mode is blocked at its target-repository gate: no inspected repository offered both a matched high-affinity and a low-affinity cohort of genuine ready work. It has not run, so nothing is known about low-affinity work. % CLAIM: C43
+
+\textbf{Conclusion.} One execution per arm per study; the five items within an execution are dependent; R2 resamples the same setup, and the two \G{} arms changed the same files. Token use varies widely between identical agent runs~\cite{bai2026tokens}; within A021's \I{} arm, single-session cost already varied several-fold across items. A two-fold difference from one pair of executions, or two correlated pairs, may lie within run-to-run variation; neither its size nor, strictly, its sign is established. % CLAIM: C48 C61
+
+% ======================================================================
+\section{Reproducibility}\label{sec:repro}
+
+Every number in this paper is generated. A metric-extraction script reads session records, transcript-metric files, evaluation reports and the arms' Git history at pinned commits into one dataset; a verification script compares it with the figures in the original records and lists every known discrepancy; table and macro generators produce all tables and in-text numbers; a manuscript checker rejects stale tables, undefined macros, unindexed claims and hand-typed result numbers. % CLAIM: C49
+The audit corrected errors in the original records: A021 platform cost had been called unavailable; A021 transcript token totals had been quoted as platform totals; R2's headline reductions lacked definitions; evaluator counts were inflated. Two A021 sessions ran on after their experiment work (one did evaluation-kit work) and now report higher platform usage; we use the usage committed at the time. % CLAIM: C50 C57
+The anonymous artifact contains the baseline snapshot, criteria, protocol, the A021 prompts (without the text of an extra harness line given to the last two per-item sessions), the blinded patches, evaluator briefs and outputs, per-session metrics, mappings, datasets and scripts with checksums. It lacks the transcripts and the R2 prompts, which were never archived. The table and macro generators run from the bundle's datasets and regenerate every table byte-identically; the metric-extraction and verification scripts read pinned commits and need the full repository history. % CLAIM: C51
+
+% ======================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+For one coupled five-item cohort, executed once per arm in each of two studies, cohort execution with a mandated up-front cross-item analysis used less platform cost and summed session time than per-item execution, and applied one rule for admission, error contract and write locking where per-item sessions diverged; per-item sessions had stronger checkpoint validation, reused more baseline rules and wrote more code and tests; both had defects. % CLAIM: C11 C13 C22 C23 C34
+These observations are confounded by the instructed analysis, by workspace contamination and by a post hoc rubric. They motivate a preregistered three-arm study with several executions per arm, a human second coder, pre-provisioned environments and a repository the authors did not build.
+
+% ======================================================================
+\section*{Data Availability}
+An anonymous artifact (link withheld for review) contains the materials listed in Section~\ref{sec:repro}, including the scripts that regenerate every table and in-text number (the extraction step needs the full repository history). A public link will be provided in the camera-ready version.
+
+\section*{Acknowledgment of AI-Generated Content}
+Claude Code (Anthropic) was used in every stage of this work: authoring the work items, designing and orchestrating the experiment, implementing the arms (the study's subjects), evaluating the original study, extracting the data, auditing the records and the code, searching and summarizing related work, and drafting this manuscript and its analysis scripts. The R2 evaluation used OpenAI ChatGPT. The human authors directed the work, reviewed the content and are responsible for it. References were checked against search-engine records of their authoritative pages and, for a minority, against abstracts or project pages; most were not checked against full text.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
