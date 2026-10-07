@@ -33,6 +33,7 @@
     <Compile Include="Foundations.fs" />
     <Compile Include="WorkRiskArguments.fs" />
     <Compile Include="ProvenanceCommands.fs" />
+    <Compile Include="ProvenanceAcknowledgeCommands.fs" />
     <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
     <Compile Include="EnvelopeReconciliationCommands.fs" />

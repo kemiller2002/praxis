@@ -753,6 +753,7 @@ wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`
 | `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
+| `provenance acknowledge-unrecorded --path PATH --reason T [--execution EXE] [--occurred-at TS] [--json]` | acknowledge that no Praxis execution recorded the artifact's creation (DF-ROS-2026-A055): records an `origin-unrecorded` contribution under the acknowledging actor, naming no creator; refused when `created` exists; `validate` reports it as a `NOTE` |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
 | `step plan --name NAME --occurred-at TS [--description TEXT] [--classification TYPE]* [--parent STEP] [--execution EXE] [--json]` | add a planned step to the current execution |
 | `step begin --name NAME --occurred-at TS [...]` | create and activate a step; use `--parent` for a nested child |

@@ -146,6 +146,7 @@
     <Compile Include="FormaPresentationTests.fs" />
     <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="IdentityTests.fs" />
+    <Compile Include="ProvenanceAcknowledgementTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

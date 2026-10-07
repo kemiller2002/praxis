@@ -288,6 +288,24 @@
     ],
     "outputs": [],
     "path": "research/experiments/EX-ROS-2026-A024--context-continuity-and-externalized-handoff.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:03.632Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
+        }
+      }
+    },
     "related_documents": [
       "EX-ROS-2026-A021",
       "HY-ROS-2026-A028",

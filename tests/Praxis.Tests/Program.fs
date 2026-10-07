@@ -132,4 +132,5 @@ let main _ =
     @ AegisBoundaryTests.tests
     @ IdentityTests.tests
     @ CompletionObligationsTests.tests
+    @ ProvenanceAcknowledgementTests.tests
     |> TestRunner.run

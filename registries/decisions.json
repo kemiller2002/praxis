@@ -1774,5 +1774,60 @@
     "title": "Python automation is prohibited by the F#/.NET-only invariant; frozen research instruments, the runtime-free bootstrap and the pinned remote adapter are approved exceptions",
     "updated": "2026-10-06",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-07",
+    "decision_type": "governance",
+    "derived_from": [
+      "RQ-ROS-2026-A007"
+    ],
+    "id": "DF-ROS-2026-A055",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A055--origin-unrecorded-provenance-acknowledgement.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:01:58.401Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-HYG-03: define the owner-approved origin-unrecorded acknowledgement"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A007",
+      "DF-ROS-2026-A054",
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "EV-ROS-2026-A063",
+      "EV-ROS-2026-A067"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A007"
+    ],
+    "tags": [
+      "governance",
+      "provenance",
+      "validation",
+      "decision"
+    ],
+    "title": "An \"origin unrecorded\" provenance acknowledgement satisfies the creation rule for records whose creating process left no Praxis execution, without naming or inferring a creator",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
   }
 ]

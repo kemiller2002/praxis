@@ -27,6 +27,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:05.523Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Written by a blinded evaluator session that had no Praxis execution (originally EV-ROS-2026-A062, commit f3bad01c); its creation was never recorded (DF-ROS-2026-A055)"
 ---
 
 # EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)

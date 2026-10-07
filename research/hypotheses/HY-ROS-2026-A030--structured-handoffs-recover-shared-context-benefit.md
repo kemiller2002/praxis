@@ -19,6 +19,18 @@ related_documents:
 supersedes: []
 superseded_by: []
 tags: [claude, agents, context, handoff, continuity, experiment, planning]
+provenance:
+  contributions:
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:04.245Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
 ---
 
 # Hypothesis

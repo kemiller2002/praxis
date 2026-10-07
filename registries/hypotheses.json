@@ -438,6 +438,24 @@
     "created": "2026-10-07",
     "id": "HY-ROS-2026-A030",
     "path": "research/hypotheses/HY-ROS-2026-A030--structured-handoffs-recover-shared-context-benefit.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:04.245Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
+        }
+      }
+    },
     "related_documents": [
       "HY-ROS-2026-A028",
       "HY-ROS-2026-A029",

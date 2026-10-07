@@ -29,6 +29,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PLAN-07: authored by the repository owner in commit 3aef2bd without a provenance entry; this agent records the migration only and did not create or change the content"
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:04.870Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Authored outside a Praxis execution (commit 3aef2bd); its creation was never recorded (DF-ROS-2026-A055)"
 derived_from: [3aef2bd]
 ---
 

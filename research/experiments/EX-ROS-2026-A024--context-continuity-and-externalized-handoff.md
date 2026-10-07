@@ -22,6 +22,18 @@ related_documents:
   - prompts/CLAUDE-EX-ROS-2026-A024.md
 tags: [claude, agents, context, continuity, handoff, mechanism, experiment]
 derived_from: [EX-ROS-2026-A021, EV-ROS-2026-A064, EV-ROS-2026-A070]
+provenance:
+  contributions:
+    EXE-20261007T185521101Z-d60238bc:
+      operations: [origin-unrecorded]
+      at: 2026-10-07T19:02:03.632Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
 ---
 
 # Experiment
