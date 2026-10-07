@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 74,
+  "nextSeq": 75,
   "items": [
     {
       "id": "WI-0001",
@@ -5342,6 +5342,27 @@
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.753Z",
       "updatedAt": "2026-10-07T05:05:03.598Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0074",
+      "title": "PRAXIS-PUB-A021: A021 grouped-execution publication package (evidence audit, manuscript, anonymous artifact, readiness decision)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-07T14:06:50.827Z",
+      "updatedAt": "2026-10-07T14:07:01.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
