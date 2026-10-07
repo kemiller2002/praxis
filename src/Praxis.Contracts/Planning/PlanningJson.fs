@@ -1100,7 +1100,22 @@ module PlanningJson =
                     value.GroupedExecution.IndependentMembers
                     |> List.map (fun (memberId, reason) -> record [ "workItem", text memberId; "reason", text reason ])
                     |> array
-                    "statement", text value.GroupedExecution.Statement ] ]
+                    "statement", text value.GroupedExecution.Statement ]
+              "pricing",
+              (let arm (price: ArmPrice) =
+                  record
+                      [ "samples", integer price.Samples
+                        "costSamples", integer price.CostSamples
+                        "costPerMember", (price.CostPerMember |> Option.map (fun amount -> JsonValue.Create amount :> JsonNode) |> Option.toObj)
+                        "costRange",
+                        (price.CostRange
+                         |> Option.map (fun (low, high) -> array [ JsonValue.Create low :> JsonNode; JsonValue.Create high :> JsonNode ])
+                         |> Option.toObj)
+                        "currency", (price.Currency |> Option.map text |> Option.toObj)
+                        "activeMsPerMember", (price.ActiveMsPerMember |> Option.map (fun ms -> JsonValue.Create ms :> JsonNode) |> Option.toObj)
+                        "coverage", text price.Coverage ]
+
+               record [ "grouped", arm value.Pricing.Grouped; "independent", arm value.Pricing.Independent; "statement", text value.Pricing.Statement ]) ]
 
     let private endpoint (value: GroupEndpoint) =
         record [ "kind", text (GroupEndpoint.kindCode value); "value", text (GroupEndpoint.value value) ]
@@ -1340,7 +1355,38 @@ module PlanningJson =
                   ExecuteGroupDefault = readText grouped "executeGroupDefault"
                   OptOut = readOptionalText grouped "optOut"
                   IndependentMembers = objects grouped "independentMembers" |> List.map (fun entry -> readText entry "workItem", readText entry "reason")
-                  Statement = readText grouped "statement" } }
+                  Statement = readText grouped "statement" }
+          Pricing =
+            let unknownArm =
+                { Samples = 0
+                  CostSamples = 0
+                  CostPerMember = None
+                  CostRange = None
+                  Currency = None
+                  ActiveMsPerMember = None
+                  Coverage = "not recorded" }
+
+            match optionalObj node "pricing" with
+            | None -> { Grouped = unknownArm; Independent = unknownArm; Statement = "pricing: not recorded" }
+            | Some pricing ->
+                let arm name =
+                    match optionalObj pricing name with
+                    | None -> unknownArm
+                    | Some entry ->
+                        { Samples = readNumber<int> entry "samples" |> Option.defaultValue 0
+                          CostSamples = readNumber<int> entry "costSamples" |> Option.defaultValue 0
+                          CostPerMember = readNumber<decimal> entry "costPerMember"
+                          CostRange =
+                            if isNull (field entry "costRange") then None
+                            else
+                                match items entry "costRange" |> List.map (fun item -> item.GetValue<decimal>()) with
+                                | [ low; high ] -> Some(low, high)
+                                | _ -> None
+                          Currency = readOptionalText entry "currency"
+                          ActiveMsPerMember = readNumber<int64> entry "activeMsPerMember"
+                          Coverage = readText entry "coverage" }
+
+                { Grouped = arm "grouped"; Independent = arm "independent"; Statement = readText pricing "statement" } }
 
     /// Reads a document written by `groups`; refuses another schema or kind.
     let parseGroups (json: string) : Result<PlanSnapshot * GroupingReport, string> =

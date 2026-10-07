@@ -1458,8 +1458,8 @@ module FileTelemetryFinalizationRepository =
     /// The raw snapshot is the content-free summary, never the transcript.
     /// The snapshot ID is the session ID, so one session is ingested into an
     /// execution once and its session totals are never summed twice.
-    let private adaptClaudeSession (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
-        let summary = ClaudeSessionTranscriptReader.entries input |> SessionTranscript.summarize
+    let private adaptClaudeSession (isProductive: string -> bool) (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
+        let summary = ClaudeSessionTranscriptReader.entries input |> SessionTranscript.summarizeWith isProductive
         let node (value: 'T) : JsonNode = JsonValue.Create value
         let optional (value: 'T option) : JsonNode = value |> Option.map node |> Option.toObj
 
@@ -1532,6 +1532,8 @@ module FileTelemetryFinalizationRepository =
                   "idleGapMs", node SessionTranscript.idleGapMs
                   "idleGapsExcluded", node summary.IdleGapsExcluded
                   "msToFirstCodeChange", optional summary.MsToFirstCodeChange
+                  "msToFirstProductiveChange", optional summary.MsToFirstProductiveChange
+                  "peakContextTokens", optional summary.PeakContextTokens
                   "distinctFilesRead", node summary.DistinctFilesRead
                   "repeatedReads", counted "path" (repositoryPaths summary.RepeatedReads)
                   "governanceReads", counted "path" (repositoryPaths summary.GovernanceReads)
@@ -1545,8 +1547,20 @@ module FileTelemetryFinalizationRepository =
                   "model", optional (summary.Models |> List.tryExactlyOne)
                   "sessionId", optional summary.SessionId ]
 
+        // PRX-GRP-150: what this adapter declares it cannot observe.
+        let unsupported =
+            ContextMetrics.ids
+            |> List.filter (fun metricId -> ContextMetrics.declaration SessionTranscript.adapterName metricId = ContextMetricSupport.Unsupported)
+            |> List.map (fun metricId ->
+                record
+                    [ "metricId", node metricId
+                      "status", node "unsupported"
+                      "reason", node "a Claude Code session transcript does not expose this metric"
+                      "source", source ()
+                      "discoveredAt", node collectedAt ])
+
         { Identity = identity
-          Capabilities = measurements |> List.map capability
+          Capabilities = (measurements |> List.map capability) @ unsupported
           Metrics = measurements |> List.choose (fun measurement -> measurement.Value |> Option.map (metric measurement))
           Events = []
           Classification = None
@@ -1556,7 +1570,7 @@ module FileTelemetryFinalizationRepository =
           Raw = raw
           MappedFields =
             [ "schema"; "sessionId"; "runtimeVersion"; "models[]"; "startedAt"; "endedAt"; "spanMs"; "activeMs"
-              "idleGapMs"; "idleGapsExcluded"; "msToFirstCodeChange"; "distinctFilesRead"
+              "idleGapMs"; "idleGapsExcluded"; "msToFirstCodeChange"; "msToFirstProductiveChange"; "peakContextTokens"; "distinctFilesRead"
               "repeatedReads[].path"; "repeatedReads[].count"; "governanceReads[].path"; "governanceReads[].count"
               "toolCalls[].name"; "toolCalls[].count" ]
           SchemaVersion = null
@@ -2727,7 +2741,9 @@ module FileTelemetryFinalizationRepository =
     /// this dispatch carried through MIG-08's earlier adapter increments is
     /// retired as dead code now that none of `TelemetryAdapters.all`'s
     /// names can reach it.
-    let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
+    /// Adapts one input with a named adapter and fixes its snapshot ID, as
+    /// production's `ingestTelemetry` does before any target is resolved.
+    let private adaptInput (root: string) (adapter: string) (inputText: string) : Result<AdaptedSnapshot, string> =
         if not (Praxis.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
         else
@@ -2740,7 +2756,9 @@ module FileTelemetryFinalizationRepository =
                     match adapter with
                     | "openai-codex" -> adaptOpenAICodex inputNode collectedAt
                     | "anthropic-claude-statusline" -> adaptClaudeStatusline inputNode collectedAt
-                    | "anthropic-claude-session" -> adaptClaudeSession inputNode collectedAt
+                    | "anthropic-claude-session" ->
+                        let paths = FileWorkConfigRepository.readPathFilterConfig root
+                        adaptClaudeSession (Praxis.Domain.Work.PathFilter.isMeaningful paths) inputNode collectedAt
                     | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
                     | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
                     | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"
@@ -2751,21 +2769,60 @@ module FileTelemetryFinalizationRepository =
                     | _ -> adaptGeneric inputNode collectedAt
 
                 // Mirrors production `ingestTelemetry`'s own `adapted.snapshotId
-                // ??= \`SNAP-${digest({ adapter, input })}\``, computed here
-                // (using the ORIGINAL, un-adapted input) before `ingestAdapted`
-                // ever runs -- the adapter's own fallback formula (`{adapter,
-                // raw: adapted.raw}`) is unreachable through this call path,
-                // since `snapshotId` is always already set by the time
-                // `ingestAdapted` would consult it.
-                let adapted =
-                    match adapted.SnapshotId with
-                    | Some _ -> adapted
-                    | None ->
-                        let seed = JsonObject()
-                        seed["adapter"] <- JsonValue.Create adapter
-                        seed["input"] <- inputNode.DeepClone()
-                        { adapted with SnapshotId = Some("SNAP-" + CanonicalJson.contentDigest 24 seed) }
+                // ??= \`SNAP-${digest({ adapter, input })}\``, computed from the
+                // ORIGINAL, un-adapted input.
+                match adapted.SnapshotId with
+                | Some _ -> Ok adapted
+                | None ->
+                    let seed = JsonObject()
+                    seed["adapter"] <- JsonValue.Create adapter
+                    seed["input"] <- inputNode.DeepClone()
+                    Ok { adapted with SnapshotId = Some("SNAP-" + CanonicalJson.contentDigest 24 seed) }
 
+    /// One adapted input reduced to content-free metric values (id, value,
+    /// unit, currency, quality), for a group execution's shared session
+    /// (PRX-GRP-153, PRX-GRP-157): no raw payload is kept.
+    let adaptToMetrics (root: string) (adapter: string) (inputText: string) : Result<string * (string * decimal * string option * string option * string) list, string> =
+        adaptInput root adapter inputText
+        |> Result.map (fun adapted ->
+            let metrics =
+                adapted.Metrics
+                |> List.choose (fun metric ->
+                    match stringField metric "id", metric["value"] with
+                    | Some id, (:? JsonValue as value) ->
+                        Some(id, value.GetValue<decimal>(), stringField metric "unit", stringField metric "currency", stringField metric "quality" |> Option.defaultValue "observed")
+                    | _ -> None)
+
+            adapted.SnapshotId.Value, metrics)
+
+    /// Whether any execution record already counted a snapshot.
+    let snapshotIngested (root: string) (snapshotId: string) : string option =
+        FileTelemetryQueryRepository.readAll root
+        |> List.tryPick (fun record -> if alreadyIngested record snapshotId then stringField record "executionId" else None)
+
+    /// The group execution that already counted a snapshot (PRX-GRP-153).
+    let private ingestedByGroupExecution (root: string) (snapshotId: string) : string option =
+        let path = Path.Combine(root, ".ros", "work", "groups.json")
+
+        if not (File.Exists path) then
+            None
+        else
+            match Praxis.Contracts.Work.WorkGroupJson.readStore (File.ReadAllText path) with
+            | Ok(groups: Praxis.Domain.Work.StoredWorkGroup list) ->
+                groups
+                |> List.collect (fun group -> group.Executions)
+                |> List.tryPick (fun (execution: Praxis.Domain.Work.GroupExecutionRecord) ->
+                    if execution.Telemetry |> List.exists (fun snapshot -> snapshot.SnapshotId = snapshotId) then Some execution.Id else None)
+            | Error _ -> None
+
+    let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
+        match adaptInput root adapter inputText with
+        | Error message -> Error message
+        | Ok adapted ->
+            match ingestedByGroupExecution root adapted.SnapshotId.Value with
+            | Some groupExecution ->
+                Error $"telemetry snapshot '{adapted.SnapshotId.Value}' was already ingested into group execution {groupExecution}; a shared session is counted once (PRX-GRP-153)"
+            | None ->
                 match resolveExecutionTarget root target true with
                 | Error message -> Error message
                 | Ok executionId ->

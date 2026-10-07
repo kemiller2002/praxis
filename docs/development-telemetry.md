@@ -196,12 +196,16 @@ Lines, `~/.claude/projects/*/SESSION.jsonl`). Derivation is deterministic
 | `context.compactions` | observed | compaction system entries and compact summaries |
 | `context.repeated_file_reads` (new) | derived | reads beyond the first of each file: context re-acquired in the session |
 | `context.governance_reads` (new) | derived | reads of `AGENTS.md`, `CLAUDE.md`, `docs/00-governance/`, the work-protocol, planning, CLI, telemetry and provenance guides and `requirements/PLANNING-WORK-GROUPS.md` |
+| `context.repeated_file_reads_distinct` | derived | distinct files read more than once (PRX-GRP-151) |
+| `context.peak_tokens` | observed | the largest context one request carried: its input plus cache-read and cache-creation tokens (PRX-GRP-151) |
 | `time.first_code_change_ms` (new) | derived | first transcript entry to the first change under `src/` or `tests/`: the session's cold start |
+| `time.first_productive_change_ms` | derived | first transcript entry to the first change under the repository's configured meaningful paths (`workProtocol.meaningfulPaths`/`ignoredPaths`) (PRX-GRP-151) |
 | `time.active_ms` | derived | sum of gaps between consecutive entries, leaving out gaps over 15 minutes (idle: waiting on a person, a permission prompt or an orchestrator) |
 | `cost.session_cumulative` | estimated | the runtime's own `cost-state` estimate, USD, confidence `medium` |
 
 A metric the transcript does not carry is `supported-unavailable`, never
-zero. The raw snapshot is a content-free summary (session ID, models, span,
+zero; `context.window_tokens` (the model's context window) is not in a
+transcript, so this adapter declares it `unsupported`. The raw snapshot is a content-free summary (session ID, models, span,
 per-file repeated and governance read counts, per-tool call counts), never
 the transcript: prompts, messages, tool input and output, commands and the
 working directory are not stored. Because a transcript is far larger than a
@@ -211,8 +215,36 @@ adapter keeps the configured raw-payload budget.
 The snapshot ID is `claude-session-SESSION_ID`, so a session is ingested into
 an execution once and its sums are never counted twice: ingest it when the
 session's work on the item is done, before `work complete`. A session that
-worked on several items should be ingested into one of their executions, not
-all of them. Platform-reported cost is not in the transcript: record it with
+worked on several items of one **group execution** (`plan execute-group`) is
+ingested once into the group execution: `telemetry ingest GEX-ID --input FILE
+--adapter NAME` (PRX-GRP-153). It keeps only content-free metric values there,
+never a raw payload; a snapshot a member execution already holds is refused,
+and a snapshot a group execution holds is refused by member ingestion, so it
+is never counted twice. `work group cost GROUP-ID [--json]` apportions each
+group execution's shared total (PRX-GRP-154): each member's own
+`cost.execution_total` is its direct usage, the remainder is `group-shared`,
+and per-member totals add an `equal-share` of it, labelled `allocated` and
+never reported as observed; allocations plus the rounding residue (kept on the
+group-shared line) sum exactly to the total, and an unknown total leaves every
+allocation unknown. Completing a member of a group execution without
+`cost.execution_total` and without a capability state explaining why prints a
+warning (PRX-GRP-152). A session that worked on several unrelated items
+should be ingested into one of their executions, not all of them.
+
+**Context metric capabilities** (PRX-GRP-150). The context-overhead metric
+IDs are provider-neutral; every adapter declares, for each, whether it can
+observe it (`Praxis.Domain.Telemetry.ContextMetrics`):
+
+| Adapter | Observes |
+| --- | --- |
+| `anthropic-claude-session` | every context metric except `context.window_tokens` |
+| `generic` | any registry metric its input names |
+| `anthropic-claude-otel`, `google-gemini-otel`, `github-copilot-otel`, `otel-json` | `tokens.cache_read`, `tokens.cache_write`, `model.requests`, `context.compactions`, `tool.file_reads`, `tool.searches` |
+| `anthropic-claude-hook`, `google-gemini-hook`, `github-copilot-hook` | `context.compactions` |
+| `openai-codex`, `anthropic-claude-statusline` | none of them (unsupported) |
+
+A metric an adapter cannot observe is `unsupported`, one it could observe but
+did not see is `supported-unavailable`; neither is ever `0`. Platform-reported cost is not in the transcript: record it with
 `telemetry record --metric cost.execution_total --quality observed` (above).
 `./praxis plan` reads these metrics: `time.active_ms` corrects productive time,
 `time.first_code_change_ms` and the read counts price the cold starts

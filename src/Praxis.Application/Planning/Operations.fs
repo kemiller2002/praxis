@@ -23,7 +23,9 @@ type PlanningReadPort =
       /// Provider capacity (PRX-QUAL-009), provider-neutral. Empty when no
       /// capacity was observed: unknown, never zero.
       Capacity: unit -> Result<ProviderCapacity list, string>
-      Configuration: unit -> Result<PlannerConfiguration, string> }
+      Configuration: unit -> Result<PlannerConfiguration, string>
+      /// Ended group executions, for grouped-versus-independent pricing.
+      GroupSamples: unit -> GroupedSample list }
 
 [<RequireQualifiedAccess>]
 module PlanningOperations =
@@ -53,7 +55,8 @@ module PlanningOperations =
                           Executions = port.Executions()
                           Observations = port.RepositoryObservations live @ supplied
                           Capacity = capacity
-                          Configuration = configuration })))))
+                          Configuration = configuration
+                          GroupSamples = port.GroupSamples() })))))
 
     let analyze port plannedAt plannerVersion =
         gather port plannedAt plannerVersion |> Result.map (fun input -> input, Planner.analyze input)

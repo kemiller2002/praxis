@@ -770,6 +770,18 @@ module PlannerConfiguration =
           Areas = []
           Grouping = GroupingConfiguration.defaults }
 
+/// One ended group execution, as the planner prices grouped work
+/// (PRX-GRP-155): its mode, how many members it began, the executions it
+/// covers, and its shared session total when recorded.
+type GroupedSample =
+    { GroupExecutionId: string
+      Mode: string
+      Members: int
+      ExecutionIds: string list
+      CostTotal: decimal option
+      Currency: string option
+      ActiveMs: int64 option }
+
 /// Everything a plan is computed from. Identical inputs produce identical
 /// plans (PRX-PLAN-002).
 /// Provider capacity as planning evidence (PRX-QUAL-009). Provider-neutral:
@@ -837,7 +849,9 @@ type PlanningInput =
       /// Provider capacity read through the planning port; empty when none
       /// was observed (unknown, not zero).
       Capacity: ProviderCapacity list
-      Configuration: PlannerConfiguration }
+      Configuration: PlannerConfiguration
+      /// Ended group executions (PRX-GRP-155); empty when none.
+      GroupSamples: GroupedSample list }
 
 [<RequireQualifiedAccess>]
 type FindingCode =

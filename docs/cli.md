@@ -444,6 +444,8 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ### `work group`
 
 ```
+ros work group cost GROUP-ID [--json]
+ros telemetry ingest GEX-ID --input FILE [--adapter NAME] [--json]
 ros work group list [--status STATUS] [--member ID] [--repository NAME] [--config FILE] [--json]
 ros work group show GROUP-ID [--config FILE] [--json]
 ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]

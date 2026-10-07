@@ -153,6 +153,32 @@ module WorkGroupJson =
               "location", locationNode checkpoint.Location
               "verification", (record [ "status", text "verified"; "mechanism", text "git-remote-observation" ] :> JsonNode) ]
 
+    let private decimalNode (value: decimal option) : JsonNode = value |> Option.map (fun amount -> JsonValue.Create amount :> JsonNode) |> Option.toObj
+
+    let private rangeNode (range: PredictedRange) : JsonNode =
+        record [ "lower", decimalNode range.Lower; "upper", decimalNode range.Upper; "basis", text range.Basis ]
+
+    let predictionNode (prediction: GroupPrediction) : JsonNode =
+        record
+            [ "mode", text (ExecutionMode.code prediction.Mode)
+              "members", texts prediction.Members
+              "cost", rangeNode prediction.Cost
+              "currency", optionalText prediction.Currency
+              "durationMs", rangeNode prediction.DurationMs ]
+
+    let outcomeNode (outcome: GroupOutcome) : JsonNode =
+        let flagNode (value: bool option) : JsonNode = value |> Option.map boolean |> Option.toObj
+
+        record
+            [ "endedAt", text outcome.EndedAt
+              "membersBegun", integer outcome.MembersBegun
+              "cost", decimalNode outcome.Cost
+              "currency", optionalText outcome.Currency
+              "durationMs", (outcome.DurationMs |> Option.map (fun ms -> JsonValue.Create ms :> JsonNode) |> Option.toObj)
+              "costWithinPrediction", flagNode outcome.CostWithinPrediction
+              "durationWithinPrediction", flagNode outcome.DurationWithinPrediction
+              "statement", text outcome.Statement ]
+
     let executionNode (execution: GroupExecutionRecord) : JsonNode =
         record
             [ "id", text execution.Id
@@ -189,7 +215,29 @@ module WorkGroupJson =
                | None -> null)
               "endedAt", optionalText execution.EndedAt
               "successors",
-              execution.Successors |> List.map (fun (memberId, successor) -> record [ "workItemId", text memberId; "executionId", text successor ] :> JsonNode) |> array ]
+              execution.Successors |> List.map (fun (memberId, successor) -> record [ "workItemId", text memberId; "executionId", text successor ] :> JsonNode) |> array
+              "telemetry",
+              execution.Telemetry
+              |> List.map (fun snapshot ->
+                  record
+                      [ "snapshotId", text snapshot.SnapshotId
+                        "adapter", text snapshot.Adapter
+                        "collectedAt", text snapshot.CollectedAt
+                        "metrics",
+                        snapshot.Metrics
+                        |> List.map (fun metric ->
+                            record
+                                [ "id", text metric.MetricId
+                                  "value", (JsonValue.Create metric.Value :> JsonNode)
+                                  "unit", optionalText metric.Unit
+                                  "currency", optionalText metric.Currency
+                                  "quality", text metric.Quality ]
+                            :> JsonNode)
+                        |> array ]
+                  :> JsonNode)
+              |> array
+              "prediction", (execution.Prediction |> Option.map predictionNode |> Option.toObj)
+              "outcome", (execution.Outcome |> Option.map outcomeNode |> Option.toObj) ]
 
     let groupNode (group: StoredWorkGroup) : JsonObject =
         record
@@ -482,11 +530,80 @@ module WorkGroupJson =
                 | Ok memberId, Ok successor -> Ok(memberId, successor)
                 | a, b -> Error(errorsOf [ boxed a; boxed b ]))
 
+        let number (entry: JsonObject) (name: string) : decimal option =
+            match field entry name with
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.Number -> Some(value.GetValue<decimal>())
+            | _ -> None
+
+        let flagOf (entry: JsonObject) (name: string) : bool option =
+            match field entry name with
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.True -> Some true
+            | Some(:? JsonValue as value) when value.GetValueKind() = JsonValueKind.False -> Some false
+            | _ -> None
+
+        let telemetry =
+            listOf node "telemetry" (fun entry ->
+                let metrics =
+                    listOf entry "metrics" (fun metric ->
+                        match requiredText metric "id", number metric "value", requiredText metric "quality" with
+                        | Ok id, Some amount, Ok quality ->
+                            Ok
+                                { MetricId = id
+                                  Value = amount
+                                  Unit = optionalString metric "unit" |> Result.defaultValue None
+                                  Currency = optionalString metric "currency" |> Result.defaultValue None
+                                  Quality = quality }
+                        | _ -> Error [ "telemetry metrics need id, value and quality" ])
+
+                match requiredText entry "snapshotId", requiredText entry "adapter", requiredText entry "collectedAt", metrics with
+                | Ok snapshotId, Ok adapter, Ok collectedAt, Ok metrics -> Ok { SnapshotId = snapshotId; Adapter = adapter; CollectedAt = collectedAt; Metrics = metrics }
+                | _ -> Error [ "telemetry snapshots need snapshotId, adapter, collectedAt and metrics" ])
+
+        let range (entry: JsonObject) : PredictedRange =
+            { Lower = number entry "lower"
+              Upper = number entry "upper"
+              Basis = requiredText entry "basis" |> Result.defaultValue "" }
+
+        let prediction =
+            match field node "prediction" with
+            | Some(:? JsonObject as entry) ->
+                match requiredText entry "mode" |> Result.bind (fun raw -> parsedWith "mode" ExecutionMode.tryParse (Some raw)), child entry "cost", child entry "durationMs" with
+                | Ok(Some mode), Ok cost, Ok duration ->
+                    Ok(
+                        Some
+                            { Mode = mode
+                              Members = stringList entry "members" |> Result.defaultValue []
+                              Cost = range cost
+                              Currency = optionalString entry "currency" |> Result.defaultValue None
+                              DurationMs = range duration }
+                    )
+                | _ -> Error "prediction needs mode, cost and durationMs"
+            | _ -> Ok None
+
+        let outcome =
+            match field node "outcome" with
+            | Some(:? JsonObject as entry) ->
+                match requiredText entry "endedAt", requiredText entry "statement" with
+                | Ok endedAt, Ok statement ->
+                    Ok(
+                        Some
+                            { EndedAt = endedAt
+                              MembersBegun = number entry "membersBegun" |> Option.map int |> Option.defaultValue 0
+                              Cost = number entry "cost"
+                              Currency = optionalString entry "currency" |> Result.defaultValue None
+                              DurationMs = number entry "durationMs" |> Option.map int64
+                              CostWithinPrediction = flagOf entry "costWithinPrediction"
+                              DurationWithinPrediction = flagOf entry "durationWithinPrediction"
+                              Statement = statement }
+                    )
+                | _ -> Error "outcome needs endedAt and statement"
+            | _ -> Ok None
+
         let lists =
-            [ optOuts |> Result.map box; members |> Result.map box; successors |> Result.map box ]
+            [ optOuts |> Result.map box; members |> Result.map box; successors |> Result.map box; telemetry |> Result.map box ]
             |> List.collect (function Error problems -> problems | Ok _ -> [])
 
-        match errorsOf [ boxed id; boxed groupId; boxed who; boxed startedAt; boxed repository; boxed order; boxed mode; boxed basis; boxed fallback; boxed endedAt ] @ lists with
+        match errorsOf [ boxed id; boxed groupId; boxed who; boxed startedAt; boxed repository; boxed order; boxed mode; boxed basis; boxed fallback; boxed endedAt; boxed prediction; boxed outcome ] @ lists with
         | [] ->
             Ok
                 { Id = value id
@@ -501,7 +618,10 @@ module WorkGroupJson =
                   Members = Result.defaultValue [] members
                   Fallback = value fallback
                   EndedAt = value endedAt
-                  Successors = Result.defaultValue [] successors }
+                  Successors = Result.defaultValue [] successors
+                  Telemetry = Result.defaultValue [] telemetry
+                  Prediction = value prediction
+                  Outcome = value outcome }
         | errors -> Error errors
 
     let readCheckpoint (node: JsonObject) : Result<GroupCheckpoint, string list> =

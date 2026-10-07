@@ -224,7 +224,7 @@ module ExecuteGroupTests =
                   { Id = "GEX-1"; GroupId = groupId; Actor = actor; StartedAt = "2026-10-07T00:00:00.000Z"; Repository = "r"; Order = [ "ITEM-1" ]
                     Mode = ExecutionMode.Grouped; Basis = []; OptOuts = []
                     Members = [ { WorkItemId = "ITEM-1"; ExecutionId = "EXE-1"; BegunAt = "2026-10-07T00:00:00.000Z"; Mode = ExecutionMode.Grouped } ]
-                    Fallback = None; EndedAt = None; Successors = [] }
+                    Fallback = None; EndedAt = None; Successors = []; Telemetry = []; Prediction = None; Outcome = None }
 
               let settings = GroupedExecutionConfiguration.defaults
               let signal metrics elapsed pressure = GroupExecutions.fallbackSignal settings execution metrics elapsed pressure "2026-10-07T01:00:00.000Z"

@@ -116,6 +116,7 @@ let main _ =
     @ WorkGroupTests.tests
     @ GroupGateTests.tests
     @ ExecuteGroupTests.tests
+    @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests
     @ InternalNamingTests.tests
     @ TelemetryCostUnitTests.tests

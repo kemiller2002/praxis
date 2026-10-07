@@ -352,7 +352,52 @@ type GroupFallback =
       Evidence: string list
       At: string }
 
-/// One run of `plan execute-group` over a group (PRX-GRP-117): a
+/// One metric value a group execution's shared session carried
+/// (PRX-GRP-153): content-free (PRX-GRP-157).
+type GroupMetric =
+    { MetricId: string
+      Value: decimal
+      Unit: string option
+      Currency: string option
+      Quality: string }
+
+/// A shared session ingested once into a group execution (PRX-GRP-153).
+type GroupSnapshot =
+    { SnapshotId: string
+      Adapter: string
+      CollectedAt: string
+      Metrics: GroupMetric list }
+
+/// A frozen range: `None` bounds are unknown (PRX-GRP-156).
+type PredictedRange =
+    { Lower: decimal option
+      Upper: decimal option
+      Basis: string }
+
+/// The planner's prediction frozen when a group execution starts
+/// (PRX-GRP-158); never changed afterwards.
+type GroupPrediction =
+    { Mode: ExecutionMode
+      Members: string list
+      /// Total cost range, in `Currency`.
+      Cost: PredictedRange
+      Currency: string option
+      /// Total duration range in milliseconds.
+      DurationMs: PredictedRange }
+
+/// What the group execution turned out to be, compared with its frozen
+/// prediction when it ended (PRX-GRP-158).
+type GroupOutcome =
+    { EndedAt: string
+      MembersBegun: int
+      Cost: decimal option
+      Currency: string option
+      DurationMs: int64 option
+      CostWithinPrediction: bool option
+      DurationWithinPrediction: bool option
+      Statement: string }
+
+/// One run of `plan execute-group` over a group (PRX-GRP-117): a/// One run of `plan execute-group` over a group (PRX-GRP-117): a
 /// `GEX-<timestamp>-<suffix>` record in the group record. It never holds a
 /// member's lifecycle state.
 type GroupExecutionRecord =
@@ -371,7 +416,11 @@ type GroupExecutionRecord =
       Fallback: GroupFallback option
       EndedAt: string option
       /// Successor executions recorded by takeover (`work continue`).
-      Successors: (string * string) list }
+      Successors: (string * string) list
+      /// Shared sessions ingested into this execution, once each.
+      Telemetry: GroupSnapshot list
+      Prediction: GroupPrediction option
+      Outcome: GroupOutcome option }
 
 /// A declared group as Praxis state records it.
 type StoredWorkGroup =

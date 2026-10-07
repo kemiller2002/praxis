@@ -20,6 +20,9 @@
     {"id":"context.repeated_file_reads","category":"context","unit":"count","aggregation":"sum","collection":"runtime","description":"File reads beyond the first read of the same file in one session: context re-acquired within the session."},
     {"id":"context.governance_reads","category":"context","unit":"count","aggregation":"sum","collection":"runtime","description":"Reads of startup and governance documents (AGENTS.md, CLAUDE.md, governance, work-protocol, planning, CLI and telemetry guides): per-session context overhead."},
     {"id":"context.compactions","category":"context","unit":"count","aggregation":"sum","collection":"runtime","description":"Context compression or compaction operations."},
+    {"id":"context.repeated_file_reads_distinct","category":"context","unit":"count","aggregation":"sum","collection":"runtime","description":"Distinct files read more than once in one session, alongside context.repeated_file_reads (PRX-GRP-151)."},
+    {"id":"context.peak_tokens","category":"context","unit":"tokens","aggregation":"maximum","collection":"runtime","description":"The largest context one model request carried in the execution (input plus cache-read and cache-creation tokens), when the runtime exposes it (PRX-GRP-151)."},
+    {"id":"context.window_tokens","category":"context","unit":"tokens","aggregation":"none","collection":"runtime","description":"The context window available to the execution's model, when the runtime exposes it (PRX-GRP-151)."},
     {"id":"session.tokens.cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative tokens for a provider session. Aggregation keeps one latest value per session."},
     {"id":"session.tokens.input_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative input tokens for a provider session; suitable for explicit checkpoint deltas."},
     {"id":"session.tokens.output_cumulative","category":"tokens","unit":"tokens","aggregation":"latest-per-session","collection":"runtime","description":"Cumulative output tokens for a provider session; suitable for explicit checkpoint deltas."},
@@ -45,6 +48,7 @@
     {"id":"time.human_interruption_ms","category":"time","unit":"milliseconds","aggregation":"sum","collection":"runtime","description":"Human-interruption time when distinguishable."},
     {"id":"time.retry_ms","category":"time","unit":"milliseconds","aggregation":"sum","collection":"runtime","description":"Time spent in retries."},
     {"id":"time.first_code_change_ms","category":"time","unit":"milliseconds","aggregation":"none","collection":"runtime","description":"Time from a session's first transcript entry to its first change under src/ or tests/: the session's cold-start cost. Preserve per-session values."},
+    {"id":"time.first_productive_change_ms","category":"time","unit":"milliseconds","aggregation":"none","collection":"runtime","description":"Time from a session's first transcript entry to its first change under the repository's configured meaningful paths: the cold-start cost (PRX-GRP-151). time.first_code_change_ms is kept for src/ and tests/. Preserve per-session values."},
     {"id":"time.first_token_ms","category":"time","unit":"milliseconds","aggregation":"sum","collection":"runtime","description":"Model time to first token."},
 
     {"id":"agent.turns","category":"agent-behavior","unit":"count","aggregation":"sum","collection":"runtime","description":"Agent or model turns."},
