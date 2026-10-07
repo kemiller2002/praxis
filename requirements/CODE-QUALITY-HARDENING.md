@@ -63,6 +63,13 @@ Acceptance:
 - weekly holds also record reset identity so a new quota window cannot inherit
   the prior window's hysteresis latch accidentally.
 
+Status (2026-10-06, PRAXIS-QUAL-01): implemented. Hard and weekly holds
+persist their creation evidence (`evidence: {observedAt, reference}` in
+`hold.json`, additive within schema 2 so older readers ignore it); holds
+written without it read as unrecorded, never invented. Tests:
+PacingHardeningTests "a hard hold records the reading that created it" and
+the evidence round-trip/migration cases.
+
 ### PRX-QUAL-004 — Model observation completeness explicitly
 Priority: critical
 Depends on: PRX-QUAL-001
@@ -80,6 +87,13 @@ Acceptance:
 - partial responses preserve only the evidence justified by each window.
 - provider response-shape drift produces explicit diagnostics.
 
+Status (2026-10-06, PRAXIS-QUAL-01): implemented. `WindowStatus` is
+Observed, Missing, Invalid, Stale (carried from the cache, or reported after
+its reset) or Unsupported (a window kind the adapter rules do not map); every
+non-observed status makes the reading incomplete and is named in the
+diagnostic and in status `coverage`. Tests: PacingHardeningTests coverage
+cases.
+
 ### PRX-QUAL-005 — Introduce typed provider and quota identities
 Priority: high
 Depends on: PRX-QUAL-001
@@ -95,6 +109,14 @@ Acceptance:
 - unknown models have a declared conservative behavior rather than accidental
   substring behavior.
 - adapter capability/version information is observable.
+
+Status (2026-10-06, PRAXIS-QUAL-02): implemented. `ProviderId`,
+`ModelFamily`/`ModelIdentity`, `QuotaBucket` and `QuotaScope` are typed;
+model matching is whole-token equality against known families, with
+unspecified, unrecognized or ambiguous models conservative. Codex bucket
+selection and Claude window/scope mapping are versioned rule tables
+(`PacingAdapterRules`, `codex-rules/1`, `claude-rules/1`) reported by `pacing
+status`. A guard test refuses substring model matching in pacing code.
 
 ### PRX-QUAL-006 — Make pacing gate orchestration deterministic and testable
 Priority: high
@@ -136,6 +158,12 @@ Acceptance:
   payloads.
 - repeated polling does not spam duplicate transition events.
 
+Status (2026-10-06, PRAXIS-QUAL-03): implemented. Typed
+`praxis.pacing-event/1` events with the stable codes above (plus
+`state-fault`) in `events.jsonl`; `pace.log` is their rendering. Hold
+transitions are derived from persisted state; the gate deduplicates against
+the last recorded event. Diagnostics are redacted and bounded.
+
 ### PRX-QUAL-009 — Integrate provider capacity into planning/work groups
 Priority: medium
 Depends on: PRX-QUAL-001, PRX-QUAL-008
@@ -149,6 +177,14 @@ Acceptance:
 - capacity uncertainty is distinct from zero capacity.
 - scheduling decisions explain whether pacing affected ordering.
 - provider switching never occurs without capability/model compatibility.
+
+Status (2026-10-07, PRAXIS-QUAL-05): implemented. The planner reads
+provider-neutral `ProviderCapacity` (available, constrained, exhausted,
+unknown) through `PlanningReadPort.Capacity`: supplied in the observations
+file, or mapped from usage-pacing state by `FilePacingCapacity` when
+`PRAXIS_PACING_DIR` is set. Unknown is distinct from zero; limited capacity
+orders `provider-free` items first with explaining reasons and a finding;
+the planner never switches provider (PlanningCapacityTests, docs/planning.md).
 
 ### PRX-QUAL-010 — Replace release-version equality with compatibility authority
 Priority: high
@@ -204,6 +240,15 @@ Required cases:
 - live hook contract fixtures for both providers.
 
 ## Praxis process hardening
+
+Status (2026-10-06, PRAXIS-QUAL-04): every listed case is covered.
+PacingSafetyTests holds the state, window, reset, hold, lock and override
+cases; PacingHardeningTests adds Keychain unavailable/missing/expired/
+malformed credentials, HTTP redirect/error/transport failure (injected
+handler), provider process timeout/EOF/error reply/malformed JSON (scripted
+protocol channel), unknown model/scope behaviour, and hook contract fixtures
+for both providers (`tests/fixtures/pacing/hooks`, written to the runtimes'
+documented hook input shapes, not captured live).
 
 ### PRX-QUAL-020 — Add engineering-risk metadata to work planning
 Priority: high

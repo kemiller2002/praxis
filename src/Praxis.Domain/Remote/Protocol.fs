@@ -192,7 +192,12 @@ module ProtocolVersion =
     [<Literal>]
     let Protocol = "praxis.remote"
 
-    let current = { Major = 1; Minor = 3 }
+    let current = { Major = 1; Minor = 4 }
+
+    /// The minor version that introduced structured, repository-qualified
+    /// work-item references (PRX-REMOTE-047).
+    [<Literal>]
+    let StructuredReferences = 4
 
     let code version = $"{version.Major}.{version.Minor}"
 
@@ -317,6 +322,31 @@ module Arguments =
         | Operation.WorkContinue, Arguments.WorkContinue _ -> true
         | _ -> false
 
+    /// The local work-item IDs a request's arguments name, in order.
+    let rec workItemIds (arguments: Arguments) =
+        match arguments with
+        | Arguments.WorkContext id
+        | Arguments.WorkContinue id -> [ id ]
+        | Arguments.WorkStart start -> start.WorkItemIds
+        | Arguments.WorkResume ids
+        | Arguments.WorkBlock(ids, _, _) -> ids
+        | Arguments.WorkComplete complete -> complete.WorkItemIds
+        | Arguments.TelemetryRecord record -> record.WorkItemId |> Option.toList
+        | Arguments.WorkReconcile reconcile -> [ reconcile.WorkItemId ]
+        | Arguments.WorkCheckpoint checkpoint -> [ checkpoint.WorkItemId ]
+        | Arguments.Batch items -> items |> List.collect (fun item -> workItemIds item.Arguments) |> List.distinct
+        | Arguments.NoArguments
+        | Arguments.RequestStatus _
+        | Arguments.Step _ -> []
+
+/// A structured work-item reference (protocol 1.4, PRX-REMOTE-047) names
+/// its repository; the request carries where it did, so the executor can
+/// check it against the repository it governs before anything runs. The
+/// argument itself then holds the local ID.
+type WorkItemScope =
+    { Field: string
+      Repository: Praxis.Domain.Identity.RepositoryIdentity }
+
 type Request =
     { ProtocolVersion: ProtocolVersion
       RequestId: string
@@ -325,7 +355,10 @@ type Request =
       Actor: RequestActor option
       ExecutionId: string option
       Arguments: Arguments
-      RequestedAt: DateTimeOffset option }
+      RequestedAt: DateTimeOffset option
+      /// The repositories structured references named (protocol 1.4); empty
+      /// for bare IDs and for every 1.0-1.3 request.
+      WorkItemScopes: WorkItemScope list }
 
 /// Constituents of a batch become ordinary requests that share the batch's
 /// protocol version, repository binding, and actor; each keeps its own
@@ -944,6 +977,18 @@ module RequestFingerprint =
             + optionalField "actor.runtime" value.Actor.Runtime
             + optionalField "actor.sessionId" value.SessionId
 
+    /// Structured references (1.4) add their repositories; a request without
+    /// any encodes exactly as in 1.0-1.3, so every journalled request still
+    /// replays.
+    let private scopesEncoding (scopes: WorkItemScope list) =
+        scopes
+        |> List.map (fun scope ->
+            field "scope.field" scope.Field
+            + optionalField "scope.repositoryId" (Praxis.Domain.Identity.RepositoryIdentity.repositoryId scope.Repository)
+            + optionalField "scope.repository" (scope.Repository.Locator |> Option.map Praxis.Domain.Identity.RepositoryLocator.value)
+            + field "scope.provider" (Praxis.Domain.Identity.RepositoryProvider.value scope.Repository.Provider))
+        |> String.concat ""
+
     /// The canonical, unambiguous (length-prefixed) encoding the
     /// fingerprint hashes. Exposed so tests and auditors can inspect it.
     let canonical (request: Request) =
@@ -954,6 +999,7 @@ module RequestFingerprint =
         + actorEncoding request.Actor
         + optionalField "execution" request.ExecutionId
         + argumentsEncoding request.Arguments
+        + scopesEncoding request.WorkItemScopes
 
     let compute (request: Request) =
         let digest = SHA256.HashData(Encoding.UTF8.GetBytes(canonical request))
@@ -966,7 +1012,41 @@ type TrustedContext =
     { Principal: string
       Grants: Set<Capability>
       ObservedRef: string option
-      ObservedSha: string option }
+      ObservedSha: string option
+      /// The repository this executor governs, when established. Structured
+      /// references are checked against it (PRX-REMOTE-047).
+      Repository: Praxis.Domain.Identity.RepositoryIdentity option }
+
+/// Structured references must name the repository the executor governs:
+/// a reference to another repository, or one that cannot be verified, is
+/// refused before anything runs. Remote requests never act across
+/// repositories (PRX-REMOTE-047, 048).
+[<RequireQualifiedAccess>]
+module RequestScope =
+    open Praxis.Domain.Identity
+
+    let problems (governed: RepositoryIdentity option) (request: Request) : Problem list =
+        request.WorkItemScopes
+        |> List.choose (fun scope ->
+            let named = RepositoryIdentity.display scope.Repository
+
+            match governed with
+            | None ->
+                Some
+                    { Field = scope.Field
+                      Message = $"names repository {named}, but this executor's repository identity is not established, so it cannot be verified" }
+            | Some repository ->
+                match RepositoryIdentity.compare scope.Repository repository with
+                | RepositoryMatch.Same
+                | RepositoryMatch.UnverifiedSameLocator -> None
+                | RepositoryMatch.Different ->
+                    Some
+                        { Field = scope.Field
+                          Message = $"names repository {named}, but this executor governs {RepositoryIdentity.display repository}; remote requests never act on another repository" }
+                | RepositoryMatch.Undetermined ->
+                    Some
+                        { Field = scope.Field
+                          Message = $"names repository {named} without a stable ID that matches {RepositoryIdentity.display repository}; it cannot be verified" })
 
 /// What the request journal already holds for this request ID.
 [<RequireQualifiedAccess>]
@@ -1008,6 +1088,11 @@ module RequestDecision =
                 "the request contains what looks like credential material; it was refused and not recorded"
                 (fields |> List.map (fun field -> { Field = field; Message = "looks like credential material" }))
         | [], (_ :: _ as problems) -> reject FailureCode.InvalidRequest "the request is invalid" problems
+        | [], [] when not (RequestScope.problems context.Repository request).IsEmpty ->
+            reject
+                FailureCode.InvalidRequest
+                "a structured work-item reference names a repository this executor does not govern"
+                (RequestScope.problems context.Repository request)
         | [], [] ->
             match mutating, request.Repository.Ref, request.Repository.ExpectedSha with
             | true, None, _
@@ -1073,7 +1158,12 @@ type Response =
       PraxisVersion: string
       Executor: ExecutorFacts option
       Persistence: string list
-      Result: string option }
+      Result: string option
+      /// The repository the executor governs (rendered from protocol 1.4).
+      RepositoryIdentity: Praxis.Domain.Identity.RepositoryIdentity option
+      /// The local work-item IDs the request named; with the repository
+      /// identity they are the canonical identities acted on (1.4).
+      WorkItemIds: string list }
 
 [<RequireQualifiedAccess>]
 module Response =
@@ -1089,7 +1179,9 @@ module Response =
           PraxisVersion = praxisVersion
           Executor = None
           Persistence = []
-          Result = None }
+          Result = None
+          RepositoryIdentity = None
+          WorkItemIds = [] }
 
     let succeeded praxisVersion (request: Request) observedSha result =
         { ProtocolVersion = request.ProtocolVersion
@@ -1103,7 +1195,9 @@ module Response =
           PraxisVersion = praxisVersion
           Executor = None
           Persistence = []
-          Result = result }
+          Result = result
+          RepositoryIdentity = None
+          WorkItemIds = Arguments.workItemIds request.Arguments }
 
     /// A replay returns the recorded response unchanged except for the
     /// flag that tells the caller it did not execute again.

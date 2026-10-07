@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.3)
+# Praxis remote protocol (`praxis.remote` 1.4)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -183,6 +183,35 @@ start-ups without weakening any guarantee.
 - **Reading state.** `work.context` returns the `continuity` block. A remote
   reader sees the historical checkpoint and its current recoverability
   separately.
+
+**Structured work-item references (version 1.4, PRX-REMOTE-047).**
+
+- Wherever a request takes `workItemId` or `workItemIds` (including inside
+  batch constituents), a 1.4 request may send the canonical reference
+  `{"repositoryId": "github:1309152643", "repository": "kemiller2002/praxis", "localId": "WI-0042"}`
+  instead of a bare ID. A reference without `repositoryId` must name its
+  `provider` and is a legacy, locator-only reference. See
+  [`identity.md`](identity.md).
+- A bare ID still means the executing repository, so 1.0-1.3 requests behave
+  exactly as before and fingerprint byte-for-byte as before: every journalled
+  request still replays. A structured reference adds its repository to the
+  fingerprint.
+- The reference must name the repository the executor governs (its
+  `ros.json` `repository.identity`, verified against `GITHUB_REPOSITORY_ID`).
+  Another repository, an unverifiable legacy locator, or an executor whose
+  repository identity is not established, is refused with `invalid-request`
+  before anything runs. Remote requests never act across repositories.
+- A display string such as `owner/repo:WI-0042` is not a reference; it fails
+  the work-item ID rule.
+- **Old peers.** A structured reference in a 1.0-1.3 request is
+  `invalid-request` and names 1.4. A 1.4 request to a 1.3 executor is
+  `unsupported-protocol` under the version rule below, so it never
+  half-runs.
+- **Responses** to 1.4 requests add `repository.identity` and a top-level
+  `workItems` array with the canonical reference of every work item the
+  request named. Responses to earlier versions keep their exact shape.
+- **Discovery.** `praxis.describe` publishes `repositoryIdentity` and
+  `workItemReference` (shape, fields, rule, `introducedIn`).
 
 The `admin` capability is reserved.
 

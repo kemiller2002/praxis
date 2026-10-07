@@ -14,12 +14,13 @@ module PacingStatusProjection =
     let create
         (now: DateTimeOffset)
         (stateDirectory: string)
-        (provider: string)
-        (model: string option)
+        (provider: ProviderId)
+        (model: ModelIdentity)
         (overridden: bool)
         (snapshot: ProviderSnapshot)
         (integrity: StateIntegrity)
         (decision: PacingDecision)
+        (lastEvent: PacingEvent option)
         : PacingStatusView =
         let freshnessState, freshnessReason = freshnessParts snapshot.Freshness
 
@@ -61,15 +62,12 @@ module PacingStatusProjection =
             |> List.map (fun observation ->
                 { Key = observation.Key
                   Status = WindowObservation.statusCode observation
-                  Reason =
-                    match observation.Status with
-                    | WindowStatus.Invalid reason -> Some reason
-                    | WindowStatus.Observed
-                    | WindowStatus.Missing -> None })
+                  Reason = WindowObservation.reason observation })
 
         { SchemaVersion = 1
           Provider = provider
           Model = model
+          Adapter = snapshot.Adapter
           StateDirectory = stateDirectory
           ObservedAt = snapshot.ObservedAt
           FreshnessState = freshnessState
@@ -81,4 +79,5 @@ module PacingStatusProjection =
           Windows = windows
           Coverage = coverage
           StateIntegrity = integrity
-          Hold = hold }
+          Hold = hold
+          LastEvent = lastEvent }

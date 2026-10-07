@@ -8,7 +8,7 @@ Use this path only when the repository's Praxis executable cannot run. The JSON 
 2. Record the full 40-character base commit observed before the proposed work.
 3. Use a globally unique, stable `transactionId`. Reuse it for every retry.
 4. Record ordered timeline/request pairs. Supported request types are `work.start` (or `work.begin`), `work.block`, `work.resume`, and `work.complete`.
-5. Include `praxisInstanceId` only when it is actually available. Do not invent provider, model, runtime, session, token, or cost data.
+5. Include `praxisInstanceId` only when it is actually available: it is the `instanceId` in the repository's committed `.praxis/instance.json`. A claimed ID that differs from that file, names an instance the repository does not have, or cannot be verified because the local record is foreign or unreadable is rejected (`instance-identity-mismatch`, `instance-identity-unestablished`, `instance-identity-unverifiable`). When you omit it, accepted history is stamped with the local instance. See [`identity.md`](identity.md). Do not invent provider, model, runtime, session, token, or cost data.
 6. Put the envelope under `.praxis/outbox/events/` for CI discovery, or pass its path directly to `./praxis reconcile --envelope FILE` once Praxis is available.
 
 Minimal start envelope:

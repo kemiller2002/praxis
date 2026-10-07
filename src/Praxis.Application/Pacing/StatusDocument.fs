@@ -1,14 +1,16 @@
-namespace Praxis.Cli
+namespace Praxis.Application.Pacing
 
 open System
 open System.Globalization
 open System.Text.Json
 open System.Text.Json.Nodes
-open Praxis.Application.Pacing
 open Praxis.Domain.Pacing
 
+/// The two projections of the typed status model (`pacing status --json`
+/// and text), and the hook contract the gate answers agent runtimes with.
+/// Both are pure renderings of typed values; the CLI only writes them.
 [<RequireQualifiedAccess>]
-module PacingStatus =
+module PacingStatusDocument =
     let private freshnessText state reason =
         match state, reason with
         | PacingFreshnessState.Fresh, _ -> "fresh"
@@ -20,8 +22,22 @@ module PacingStatus =
     let renderJson (status: PacingStatusView) =
         let root = JsonObject()
         root["schemaVersion"] <- JsonValue.Create(status.SchemaVersion)
-        root["provider"] <- JsonValue.Create(status.Provider)
-        status.Model |> Option.iter (fun value -> root["model"] <- JsonValue.Create(value))
+        root["provider"] <- JsonValue.Create(ProviderId.code status.Provider)
+        ModelIdentity.model status.Model |> Option.iter (fun value -> root["model"] <- JsonValue.Create(value))
+        root["modelIdentity"] <- JsonValue.Create(ModelIdentity.code status.Model)
+        ModelIdentity.family status.Model |> Option.iter (fun family -> root["modelFamily"] <- JsonValue.Create(ModelFamily.value family))
+
+        let adapter = JsonObject()
+        adapter["id"] <- JsonValue.Create(status.Adapter.AdapterId)
+        adapter["rulesVersion"] <- JsonValue.Create(status.Adapter.RulesVersion)
+        let capabilities = JsonArray()
+        status.Adapter.Capabilities |> List.iter (fun value -> capabilities.Add(JsonValue.Create value))
+        adapter["capabilities"] <- capabilities
+        let families = JsonArray()
+        status.Adapter.ModelFamilies |> List.iter (fun value -> families.Add(JsonValue.Create(ModelFamily.value value)))
+        adapter["modelFamilies"] <- families
+        status.Adapter.Bucket |> Option.iter (fun bucket -> adapter["quotaBucket"] <- JsonValue.Create(QuotaBucket.value bucket))
+        root["adapter"] <- adapter
         root["stateDirectory"] <- JsonValue.Create(status.StateDirectory)
         root["observedAt"] <- JsonValue.Create(status.ObservedAt.ToString("O"))
         root["freshness"] <- JsonValue.Create(freshnessText status.FreshnessState status.FreshnessReason)
@@ -72,6 +88,15 @@ module PacingStatus =
             hold["resumeAt"] <- JsonValue.Create(reason.ResumeAt.ToString("O"))
             root["hold"] <- hold)
 
+        status.LastEvent
+        |> Option.iter (fun event ->
+            let node = JsonObject()
+            node["code"] <- JsonValue.Create(PacingEvents.code event.Code)
+            node["occurredAt"] <- JsonValue.Create(event.OccurredAt.ToString("O"))
+            event.WindowKey |> Option.iter (fun key -> node["window"] <- JsonValue.Create(key))
+            node["detail"] <- JsonValue.Create(event.Detail)
+            root["lastEvent"] <- node)
+
         root.ToJsonString(JsonSerializerOptions(WriteIndented = true))
 
     let renderText (status: PacingStatusView) =
@@ -80,11 +105,23 @@ module PacingStatus =
         lines.Add("override: " + (if status.Override then "on" else "off"))
 
         let model =
-            status.Model
+            ModelIdentity.model status.Model
             |> Option.map (fun value -> $" ({value})")
             |> Option.defaultValue ""
 
-        lines.Add($"pacing {status.Provider}{model}: {freshnessText status.FreshnessState status.FreshnessReason}")
+        lines.Add($"pacing {ProviderId.code status.Provider}{model}: {freshnessText status.FreshnessState status.FreshnessReason}")
+
+        let bucket =
+            status.Adapter.Bucket
+            |> Option.map (fun value -> $", bucket {QuotaBucket.value value}")
+            |> Option.defaultValue ""
+
+        let family =
+            ModelIdentity.family status.Model
+            |> Option.map (fun value -> $", model family {ModelFamily.value value}")
+            |> Option.defaultValue $", model {ModelIdentity.code status.Model}"
+
+        lines.Add($"adapter: {status.Adapter.AdapterId} {status.Adapter.RulesVersion}{bucket}{family}")
 
         match status.StateIntegrity with
         | StateIntegrity.Intact -> ()
@@ -126,4 +163,39 @@ module PacingStatus =
             let resume = reason.ResumeAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
             lines.Add($"gate: hold ({reason.Kind}); {reason.Detail}; recheck/resume estimate {resume}")
 
+        status.LastEvent
+        |> Option.iter (fun event ->
+            let at = event.OccurredAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            lines.Add($"last event: {PacingEvents.render event} at {at}"))
+
         String.Join(Environment.NewLine, lines) + Environment.NewLine
+
+[<RequireQualifiedAccess>]
+module PacingHookContract =
+    /// The documented hook denial shape for a provider and hook event:
+    /// Claude Code and Codex `PreToolUse` use `hookSpecificOutput`
+    /// (`permissionDecision: deny`); other Codex events stop with
+    /// `continue: false`; other Claude events block with `decision: block`.
+    let denyOutput (provider: ProviderId) (event: string) (detail: string) : string =
+        let reason =
+            $"Praxis usage pacing hold remains active: {detail}. Retry after quota refresh/reset."
+
+        let root = JsonObject()
+
+        if event = "PreToolUse" then
+            let output = JsonObject()
+            output["hookEventName"] <- JsonValue.Create(event)
+            output["permissionDecision"] <- JsonValue.Create("deny")
+            output["permissionDecisionReason"] <- JsonValue.Create(reason)
+            root["hookSpecificOutput"] <- output
+        else
+            match provider with
+            | ProviderId.Codex ->
+                root["continue"] <- JsonValue.Create(false)
+                root["stopReason"] <- JsonValue.Create(reason)
+            | ProviderId.Claude ->
+                root["decision"] <- JsonValue.Create("block")
+                root["reason"] <- JsonValue.Create(reason)
+
+        root.ToJsonString()
+

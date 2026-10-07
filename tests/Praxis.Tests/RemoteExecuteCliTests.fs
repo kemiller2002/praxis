@@ -131,7 +131,7 @@ module RemoteExecuteCliTests =
 
     let private volatileFields =
         HashSet<string>(
-            [ "executionId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
+            [ "executionId"; "instanceId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
               "commit"; "branch"; "dirtyPaths"; "dirty"; "commits"; "occurredAt"; "eventId"; "updatedAt"; "completedAt"
               "telemetryExecutionIds"; "telemetryExecutions"; "repository" ]
         )
@@ -503,7 +503,7 @@ module RemoteExecuteCliTests =
                       let described = (response["result"])
                       Assert.equal "praxis.describe" (text (described["schema"]))
                       Assert.equal true (CliPort.boolean (described["available"]))
-                      Assert.equal [ "1.0"; "1.1"; "1.2"; "1.3" ] (strings (described["protocolVersions"]))
+                      Assert.equal [ "1.0"; "1.1"; "1.2"; "1.3"; "1.4" ] (strings (described["protocolVersions"]))
                       Assert.equal "docs/remote-agent-contract.md" (text (described["contract"]))
                       Assert.equal [ "read"; "mutate" ] (strings (described["repository"]["capabilities"]))
                       // The transport grant is narrowed by the repository.

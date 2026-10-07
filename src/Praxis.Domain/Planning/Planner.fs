@@ -75,6 +75,7 @@ module Planner =
             |> List.map (fun item -> item.Id)
 
         let staleIds = stale |> List.map (fun item -> item.Id)
+        let capacity = Capacity.assess input.Capacity schedulable
 
         let globalFindings =
             [ for cycle in cycles do
@@ -149,6 +150,26 @@ module Planner =
                           (Some "serialize Praxis state commits, or resolve PRAXIS-STATE-MERGE-01")
                           EvidenceConfidence.High
                           (CollisionSignal.praxisStateFiles |> List.map (Provenance.create EvidenceSource.PlannerAssumption))
+              if capacity.Limited then
+                  yield
+                      finding
+                          FindingCode.ProviderCapacityLimited
+                          FindingSeverity.Advisory
+                          capacity.ProviderFreeItems
+                          capacity.Statement
+                          (Some "run provider-free work, checkpoint active provider work, or wait for the reset; switching provider needs a runtime with compatible capabilities and model, which the planner does not choose")
+                          EvidenceConfidence.Medium
+                          (capacity.Providers |> List.map _.Provenance)
+              for provider in input.Capacity |> List.filter (fun provider -> match provider.State with CapacityState.Unknown _ -> true | _ -> false) do
+                  yield
+                      finding
+                          FindingCode.ProviderCapacityUnknown
+                          FindingSeverity.Info
+                          []
+                          $"capacity of {provider.Provider} is {CapacityState.describe provider.State}; it is treated as unknown, not as zero, and does not change ordering"
+                          (Some "refresh the provider's capacity reading (praxis pacing status)")
+                          EvidenceConfidence.Unknown
+                          [ provider.Provenance ]
               if not stale.IsEmpty then
                   let names = String.concat ", " staleIds
 
@@ -215,7 +236,8 @@ module Planner =
           History = history
           Confidence = confidence
           ConfidenceStatement = statement
-          EvidenceRecommendations = recommendations }
+          EvidenceRecommendations = recommendations
+          Capacity = capacity }
 
     let plan (analysis: PlanningAnalysis) (configuration: PlannerConfiguration) (objective: OptimizationObjective) (maxConcurrency: int option) : PlanDocument =
         let executionPlan = Scheduling.simulate analysis configuration objective maxConcurrency

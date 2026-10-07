@@ -1,0 +1,12 @@
+{
+  "schema": "praxis.instance/1",
+  "instanceId": "pxi-979d1acb7720455e9a50fa3b4e7b9259",
+  "createdAt": "2026-10-06T21:42:53.287Z",
+  "createdWith": "3.7.2",
+  "repository": {
+    "provider": "github",
+    "repositoryId": "github:1309152643",
+    "repository": "kemiller2002/praxis"
+  },
+  "predecessors": []
+}

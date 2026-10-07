@@ -1,6 +1,11 @@
 {
   "schemaVersion": "1.0.0",
   "workItemId": "WI-A",
+  "workItem": {
+    "repositoryId": null,
+    "repository": null,
+    "localId": "WI-A"
+  },
   "status": "active",
   "identity": {
     "provider": "unknown",

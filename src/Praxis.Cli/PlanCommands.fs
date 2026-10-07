@@ -477,8 +477,8 @@ module PlanCommands =
           yield ""
           yield comparison.Statement ]
 
-    let private emit (options: Options) (json: unit -> Text.Json.Nodes.JsonNode) (lines: unit -> string list) =
-        if options.Json then printf "%s" (PlanningJson.render (json ()))
+    let private emit (root: string) (options: Options) (json: unit -> Text.Json.Nodes.JsonNode) (lines: unit -> string list) =
+        if options.Json then printf "%s" (PlanningJson.render (PlanningJson.withRepository (Praxis.Infrastructure.Identity.FileRepositoryIdentityRepository.current Praxis.Infrastructure.Identity.RepositoryObserver.environmentVariable root) (json ())))
         else lines () |> List.iter (printfn "%s")
 
         0
@@ -491,7 +491,7 @@ module PlanCommands =
             let options = parse empty rest
 
             withAnalysis root version options (fun _ analysis ->
-                emit options (fun () -> PlanningJson.analysis analysis) (fun () -> analysisText analysis))
+                emit root options (fun () -> PlanningJson.analysis analysis) (fun () -> analysisText analysis))
         | "simulate" :: rest ->
             let options = parse empty rest
 
@@ -503,13 +503,13 @@ module PlanCommands =
                     let schedule = Grouping.schedule input.Configuration analysis (Grouping.recommend input analysis) limit
 
                     emit
-                        options
+                        root options
                         (fun () -> PlanningJson.groupSimulation analysis.Snapshot schedule)
                         (fun () -> snapshotLines analysis.Snapshot @ [ ""; Grouping.advisoryStatement; "" ] @ scheduleLines schedule))
             | Ok objective, Ok limit ->
                 withAnalysis root version options (fun input analysis ->
                     let document = Planner.plan analysis input.Configuration objective limit
-                    emit options (fun () -> PlanningJson.plan document) (fun () -> planText options.Details document))
+                    emit root options (fun () -> PlanningJson.plan document) (fun () -> planText options.Details document))
         | "compare" :: rest ->
             let options = parse empty rest
 
@@ -519,11 +519,11 @@ module PlanCommands =
                 withAnalysis root version options (fun input analysis ->
                     let speed = Scheduling.simulate analysis input.Configuration OptimizationObjective.MinimumDuration limit
                     let comparison = Grouping.compare input.Configuration analysis (Grouping.recommend input analysis) speed limit
-                    emit options (fun () -> PlanningJson.groupComparison analysis.Snapshot comparison) (fun () -> groupComparisonText analysis.Snapshot comparison))
+                    emit root options (fun () -> PlanningJson.groupComparison analysis.Snapshot comparison) (fun () -> groupComparisonText analysis.Snapshot comparison))
             | Ok limit ->
                 withAnalysis root version options (fun input analysis ->
                     let comparison = Planner.compare analysis input.Configuration limit
-                    emit options (fun () -> PlanningJson.comparison analysis.Snapshot comparison) (fun () -> comparisonText analysis.Snapshot comparison))
+                    emit root options (fun () -> PlanningJson.comparison analysis.Snapshot comparison) (fun () -> comparisonText analysis.Snapshot comparison))
         | "explain" :: rest ->
             let options = parse empty rest
 
@@ -534,14 +534,14 @@ module PlanCommands =
                     match Planner.explain analysis input.Configuration limit id with
                     | Error message -> fail 1 message
                     | Ok explanation ->
-                        emit options (fun () -> PlanningJson.explanation analysis.Snapshot explanation) (fun () -> explanationText analysis.Snapshot explanation))
+                        emit root options (fun () -> PlanningJson.explanation analysis.Snapshot explanation) (fun () -> explanationText analysis.Snapshot explanation))
             | _ -> fail 2 "plan explain requires exactly one work-item ID"
         | "groups" :: rest ->
             let options = parse empty rest
 
             withAnalysis root version options (fun input analysis ->
                 let report = Grouping.recommend input analysis
-                emit options (fun () -> PlanningJson.groups analysis.Snapshot report) (fun () -> groupsText analysis.Snapshot report))
+                emit root options (fun () -> PlanningJson.groups analysis.Snapshot report) (fun () -> groupsText analysis.Snapshot report))
         | "explain-group" :: rest ->
             let options = parse empty rest
 
@@ -553,14 +553,14 @@ module PlanCommands =
                     match Grouping.explain input analysis report id with
                     | Error message -> fail 1 message
                     | Ok explanation ->
-                        emit options (fun () -> PlanningJson.groupExplanation analysis.Snapshot explanation) (fun () -> groupExplanationText analysis.Snapshot explanation))
+                        emit root options (fun () -> PlanningJson.groupExplanation analysis.Snapshot explanation) (fun () -> groupExplanationText analysis.Snapshot explanation))
             | _ -> fail 2 "plan explain-group requires exactly one group ID (see 'plan groups')"
         | "replay" :: rest ->
             let options = parse empty rest
 
             withAnalysis root version options (fun input _ ->
                 let report = Replay.replay input.Configuration input.Queue input.Executions
-                emit options (fun () -> PlanningJson.replay report) (fun () -> replayText options.Details report))
+                emit root options (fun () -> PlanningJson.replay report) (fun () -> replayText options.Details report))
         | "freshness" :: rest ->
             let options = parse empty rest
 
@@ -577,6 +577,6 @@ module PlanCommands =
                     | Ok previous ->
                         withAnalysis root version options (fun _ analysis ->
                             let review = Comparison.review previous analysis.Snapshot
-                            emit options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> reviewText review) |> ignore
+                            emit root options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> reviewText review) |> ignore
                             if review.Freshness.Stale then 3 else 0)
         | _ -> fail 2 $"usage: {usage}"

@@ -315,6 +315,7 @@ module Scheduling =
         let wave = placement[item.Id]
 
         [ yield! strategy.OrderingReason item |> Option.toList
+          yield! Capacity.reason context.Analysis.Capacity item |> Option.toList
           match context.Unlocks.TryFind item.Id with
           | Some unlock when not unlock.TransitiveDependents.IsEmpty ->
               yield PlanningReason.create ReasonCode.PrerequisiteFor $"prerequisite for {unlock.TransitiveDependents.Length} item(s): {unlock.Explanation}" unlock.TransitiveDependents
@@ -526,7 +527,9 @@ module Scheduling =
         let candidates =
             schedulable |> List.filter (fun item -> (gatingDependencies item).IsEmpty && not (inCycle.Contains item.Id))
 
-        let strategy = strategyFor context objective maxConcurrency candidates
+        let strategy =
+            strategyFor context objective maxConcurrency candidates
+            |> fun chosen -> { chosen with Order = Capacity.prioritize analysis.Capacity chosen.Order }
         let costRequired = match objective with | OptimizationObjective.MinimumCost | OptimizationObjective.BudgetConstrained _ -> true | _ -> false
 
         let availability =

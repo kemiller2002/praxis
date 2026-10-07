@@ -100,8 +100,8 @@ notice or the exact error. **No authentication, localhost by default** --
 this server can create work items and run commands in every registered
 repository, which is a larger blast radius than the single-repo web
 interface. Do not bind it to a non-loopback host without your own
-authentication in front of it. `web-hub/styles.css` in the hub repository
-styles the page (a built-in copy is used when it is absent).
+authentication in front of it. The hub is presented by the same pinned Forma release (see `docs/web-interface.md`); `web-hub/styles.css` in the hub repository is an optional
+project override loaded after Forma and ships empty.
 
 The pages and the JSON API below call the same functions as `praxis hub`
 (`Praxis.Cli.Hub`); uploaded files touch disk only as short-lived temp files
