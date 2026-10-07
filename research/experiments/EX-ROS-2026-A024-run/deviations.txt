@@ -125,3 +125,16 @@ treatments, thresholds, blinding or stop rules.
   recorded deviation with a sensitivity note. It does not invalidate. The
   model (claude-opus-5-5) and the effort binding are unaffected and are
   checked per request from telemetry.
+
+## D7 — arm-3-04 ran `git branch -a` (ref-name exposure; classified as a deviation)
+
+- At 21:20:38Z `arm-3-04` (session_01M2vjRWoZiRq8t9yEUTNa5n) ran a combined
+  command that ended in `git branch -a`. It listed local and remote-tracking
+  branch names in its checkout, possibly including other arm and A021 branch
+  names.
+- The isolation audit recorded no other event: no fetch, show, log, diff or
+  checkout of any forbidden ref, and no read of another arm's or an older
+  handoff's content.
+- Frozen classification: "ref-name exposure without content inspection ... is
+  a deviation (recorded, not invalidating)". The session is valid, and this is
+  noted as a threat to validity.

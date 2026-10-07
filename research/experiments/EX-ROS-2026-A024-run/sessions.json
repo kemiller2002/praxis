@@ -451,7 +451,22 @@
         "START_SHA": "0d00a8614b90046af2f8412cc440bc872e3ec7fa"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071",
+      "terminalAt": "2026-10-07T21:32:42.774098Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.2679928,
+        "input_tokens": 72,
+        "output_tokens": 26611,
+        "cache_read_tokens": 4112024,
+        "cache_write_tokens": 114135,
+        "context_used_tokens": 152645,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "handoff PRAXIS-GROUP-04 valid (sha256 9c36cef0...); audit 1 event: git branch -a (ref-name exposure, deviation D7, not invalidating)"
     }
   ],
   "status": "active: resumed under owner amendment A1"
