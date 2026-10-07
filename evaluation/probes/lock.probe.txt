@@ -1,0 +1,18 @@
+== K
+$ ros work group create --id GROUP-LOCK-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T11:00:00Z (work-protocol lock held by another live process)
+Stack overflow.
+   at Interop.ThrowExceptionForIoErrno(ErrorInfo, System.String, Boolean)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(System.String, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, System.IO.FileOptions, Int64, System.IO.UnixFileMode, Int64 ByRef, System.IO.UnixFileMode ByRef, Boolean, Boolean ByRef, System.Func`4<ErrorInfo,OpenFlags,System.String,System.Exception>)
+rc=1 elapsed=5s; GROUP-LOCK-001 in groups.json: 0
+== P
+$ ros work group create --id GROUP-LOCK-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T11:00:00Z (work-protocol lock held by another live process)
+Stack overflow.
+   at Interop.ThrowExceptionForIoErrno(ErrorInfo, System.String, Boolean)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(System.String, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, System.IO.FileOptions, Int64, System.IO.UnixFileMode, Int64 ByRef, System.IO.UnixFileMode ByRef, Boolean, Boolean ByRef, System.Func`4<ErrorInfo,OpenFlags,System.String,System.Exception>)
+rc=1 elapsed=6s; GROUP-LOCK-001 in groups.json: 0
+== W
+$ ros work group create --id GROUP-LOCK-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T11:00:00Z (work-protocol lock held by another live process)
+recorded group GROUP-LOCK-001 (human-declared, kind unspecified) with 2 member(s)
+  WI-0002  captured
+  PRAXIS-REMOTE-12  ready
+rc=0 elapsed=0s; GROUP-LOCK-001 in groups.json: 1

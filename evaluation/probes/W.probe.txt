@@ -1,0 +1,109 @@
+$ ros work group show GROUP-NOPE-001 --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "group-not-found",
+  "id": "GROUP-NOPE-001",
+  "errors": [
+    "no declared group GROUP-NOPE-001; see 'plan groups' or .ros/work/groups.json"
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member NOPE-1 --member WI-0001 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "group-rejected",
+  "id": "GROUP-PROBE-001",
+  "recorded": false,
+  "errors": [
+    "NOPE-1 is not a work item in this repository's backlog or live context",
+    "WI-0001 is abandoned; a terminal item cannot join a new group"
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "group-created",
+  "dryRun": false,
+  "recorded": true,
+  "group": {
+    "id": "GROUP-PROBE-001",
+    "members": [
+      "WI-0002",
+      "PRAXIS-REMOTE-12"
+    ],
+    "kind": null,
+    "origin": "human-declared",
+    "sharedContext": [],
+    "executionRepository": null,
+    "crossRepository": false,
+    "architectureNotes": [],
+    "declaredAt": "2026-10-07T10:00:00Z",
+    "declaredBy": {
+      "kind": "agent",
+      "id": "anthropic/claude-code",
+      "provider": "anthropic",
+      "model": "unknown",
+      "runtime": "claude-code"
+    },
+    "membership": [],
+    "checkpoints": []
+  },
+  "members": [
+    {
+      "id": "WI-0002",
+      "
+stderr: 
+rc=0
+
+$ ros work group add --id GROUP-PROBE-001 --member NOPE-1 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "member-rejected",
+  "id": "GROUP-PROBE-001",
+  "member": "NOPE-1",
+  "recorded": false,
+  "errors": [
+    "NOPE-1 is not a work item in this repository's backlog or live context"
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group remove --id GROUP-PROBE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "member-removal-rejected",
+  "id": "GROUP-PROBE-001",
+  "member": "WI-0005",
+  "recorded": false,
+  "errors": [
+    "WI-0005 is not a member of GROUP-PROBE-001"
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group add --id GROUP-NOPE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-groups/1.0.0",
+  "kind": "member-rejected",
+  "id": "GROUP-NOPE-001",
+  "member": "WI-0005",
+  "recorded": false,
+  "errors": [
+    "no declared group GROUP-NOPE-001; see 'plan groups' or .ros/work/groups.json"
+  ]
+}
+
+stderr: 
+rc=1
+

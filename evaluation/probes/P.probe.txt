@@ -1,0 +1,108 @@
+$ ros work group show GROUP-NOPE-001 --json
+
+
+stderr: ERROR no group 'GROUP-NOPE-001' is declared
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member NOPE-1 --member WI-0001 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "command": "work group create",
+  "schemaVersion": 1,
+  "groupId": "GROUP-PROBE-001",
+  "status": "rejected",
+  "rejections": [
+    {
+      "code": "unknown-member",
+      "message": "work item 'NOPE-1' is not tracked by this repository (neither in the backlog nor in work context)"
+    },
+    {
+      "code": "terminal-member",
+      "message": "work item 'WI-0001' is abandoned; a terminal item cannot join a group"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "command": "work group create",
+  "schemaVersion": 1,
+  "groupId": "GROUP-PROBE-001",
+  "status": "recorded",
+  "group": {
+    "id": "GROUP-PROBE-001",
+    "kind": null,
+    "origin": "human-declared",
+    "executionRepository": "repository-operating-system",
+    "crossRepository": false,
+    "sharedContext": [],
+    "architectureNotes": [],
+    "createdAt": "2026-10-07T10:00:00Z",
+    "createdBy": {
+      "kind": "agent",
+      "id": "anthropic/claude-code",
+      "provider": "anthropic",
+      "model": "unknown",
+      "runtime": "claude-code"
+    },
+    "members": [
+      {
+        "workItemId": "WI-0002",
+        "executionRepository": "repository-operating-system",
+        "addedAt"
+stderr: 
+rc=0
+
+$ ros work group add --id GROUP-PROBE-001 --member NOPE-1 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "command": "work group add",
+  "schemaVersion": 1,
+  "groupId": "GROUP-PROBE-001",
+  "status": "rejected",
+  "rejections": [
+    {
+      "code": "unknown-member",
+      "message": "work item 'NOPE-1' is not tracked by this repository (neither in the backlog nor in work context)"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group remove --id GROUP-PROBE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "command": "work group remove",
+  "schemaVersion": 1,
+  "groupId": "GROUP-PROBE-001",
+  "status": "rejected",
+  "rejections": [
+    {
+      "code": "not-member",
+      "message": "work item 'WI-0005' is not a member of GROUP-PROBE-001"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group add --id GROUP-NOPE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "command": "work group add",
+  "schemaVersion": 1,
+  "groupId": "GROUP-NOPE-001",
+  "status": "rejected",
+  "rejections": [
+    {
+      "code": "group-not-found",
+      "message": "no group 'GROUP-NOPE-001' is declared"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+

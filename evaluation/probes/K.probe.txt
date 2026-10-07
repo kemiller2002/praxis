@@ -1,0 +1,112 @@
+$ ros work group show GROUP-NOPE-001 --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-show",
+  "ok": false,
+  "error": "group GROUP-NOPE-001 is not declared (see .ros/work/groups.json or 'work group create')"
+}
+
+stderr: 
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member NOPE-1 --member WI-0001 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-create",
+  "dryRun": false,
+  "ok": false,
+  "rejections": [
+    {
+      "code": "unknown-member",
+      "message": "NOPE-1 is not a recorded work item (backlog or live context)"
+    },
+    {
+      "code": "terminal-member",
+      "message": "WI-0001 is abandoned; terminal work cannot join a group"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group create --id GROUP-PROBE-001 --member WI-0002 --member PRAXIS-REMOTE-12 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-create",
+  "dryRun": false,
+  "ok": true,
+  "group": {
+    "id": "GROUP-PROBE-001",
+    "members": [
+      "WI-0002",
+      "PRAXIS-REMOTE-12"
+    ],
+    "kind": null,
+    "origin": "human-declared",
+    "sharedContext": [],
+    "executionRepository": null,
+    "crossRepository": false,
+    "architectureNotes": [],
+    "declaredAt": "2026-10-07T10:00:00Z",
+    "declaredBy": "anthropic/claude-code",
+    "additions": [],
+    "removals": [],
+    "checkpoints": []
+  }
+}
+
+stderr: 
+rc=0
+
+$ ros work group add --id GROUP-PROBE-001 --member NOPE-1 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-add",
+  "dryRun": false,
+  "ok": false,
+  "rejections": [
+    {
+      "code": "unknown-member",
+      "message": "NOPE-1 is not a recorded work item (backlog or live context)"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group remove --id GROUP-PROBE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-remove",
+  "dryRun": false,
+  "ok": false,
+  "rejections": [
+    {
+      "code": "not-member",
+      "message": "WI-0005 is not a member of GROUP-PROBE-001"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
+$ ros work group add --id GROUP-NOPE-001 --member WI-0005 --occurred-at 2026-10-07T10:00:00Z --json
+{
+  "schema": "praxis.work-group/1.0.0",
+  "kind": "work-group-add",
+  "dryRun": false,
+  "ok": false,
+  "rejections": [
+    {
+      "code": "unknown-group",
+      "message": "group GROUP-NOPE-001 is not declared (see .ros/work/groups.json or 'work group create')"
+    }
+  ]
+}
+
+stderr: 
+rc=1
+
