@@ -1,0 +1,4 @@
+# Generated anonymous artifact (rebuild with scripts/build_anonymous_artifact.py)
+build/
+# Python bytecode from running the scripts
+scripts/__pycache__/

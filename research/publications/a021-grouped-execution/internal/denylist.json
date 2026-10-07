@@ -1,0 +1,25 @@
+{
+  "schema": "a021-anonymous-artifact.denylist/1",
+  "literals": [
+    "claude.ai/code",
+    "github.com/kemiller2002",
+    "kemiller2002",
+    "kemiller2002.github.io",
+    "kemiller2002@gmail.com",
+    "kemiller2002@users.noreply.github.com",
+    "kevin miller",
+    "session_01"
+  ],
+  "words": [
+    "kevin",
+    "miller"
+  ],
+  "regexes": [
+    "\\bsession_[0-9A-Za-z]{20,40}\\b",
+    "https?://claude\\.ai/code[^\\s)\\]>\\\"'`]*"
+  ],
+  "advisory": [
+    "echelon",
+    "praxis"
+  ]
+}

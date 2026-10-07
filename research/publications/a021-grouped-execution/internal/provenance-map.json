@@ -1,0 +1,704 @@
+{
+  "schema": "a021-anonymous-artifact.provenance/1",
+  "PRIVATE": "Never copy this file into the anonymous bundle. It maps every alias back to real identifiers.",
+  "aliases": {
+    "accounts": {
+      "kemiller2002": "anonymous-owner"
+    },
+    "names": {
+      "Kevin Miller": "Anonymous Owner",
+      "Kevin": "owner",
+      "Miller": "owner"
+    },
+    "emails": {
+      "kemiller2002@gmail.com": "anonymous@example.invalid",
+      "kemiller2002@users.noreply.github.com": "anonymous@example.invalid"
+    },
+    "agent_sessions": {
+      "agent-session-001": "session_016DRgw1FNx9124i193wbciS",
+      "agent-session-002": "session_0186wu2wQu7VnhTJQnVPeQuc",
+      "agent-session-003": "session_019PbeHJSP9f4A8L9QXKyQRX",
+      "agent-session-004": "session_01Am6kL4FMXPviX7x1UJhbx9",
+      "agent-session-005": "session_01CMeWM1tj4PBwoRA9tJYiSc",
+      "agent-session-006": "session_01E8aLYDesB49uhTD6Mpg4yo",
+      "agent-session-007": "session_01FjbtwyN1sUhmDHcgyBNNnn",
+      "agent-session-008": "session_01FtMsxoVE5eL6Zkz2gsLNgD",
+      "agent-session-009": "session_01GoH1a4gYaRBSSTwNBpmLrH",
+      "agent-session-010": "session_01HySizJjio1tGqfvPAXp3WV",
+      "agent-session-011": "session_01KfJswoaJGxqcviM6kiTr2i",
+      "agent-session-012": "session_01M75ZaHmVcX1YYzxg2UP4gD",
+      "agent-session-013": "session_01NprWNWjMYoEj4NpDRf9Ui6",
+      "agent-session-014": "session_01T6C9t1bNaqfAXEckAxu7Zz",
+      "agent-session-015": "session_01TBSowZ5EdWBAfJky3MEpP2",
+      "agent-session-016": "session_01TwUBFD2ZouxsbsYcrFrcrJ",
+      "agent-session-017": "session_01UTrWKh68vzLeWn5wdDZAXD",
+      "agent-session-018": "session_01YGBK32KQyTahKaVAyZUdGQ"
+    },
+    "agent_session_urls": {},
+    "uuids": {
+      "uuid-001": "087ca60b-1624-5d4c-a77e-734334b417f9",
+      "uuid-002": "0edcb98b-f02f-5763-819d-c4483d786301",
+      "uuid-003": "272cb45c-8469-5697-a0cd-38010c1069e2",
+      "uuid-004": "2ae4d92e-60c5-55aa-b916-2485d9d725de",
+      "uuid-005": "50e6a549-8ff4-52ce-a491-9f2092ad78a1",
+      "uuid-006": "6aad1f9c-850c-5887-8b05-412265942056",
+      "uuid-007": "78e0626f-90c9-53ea-9ea6-2cacafc00a50",
+      "uuid-008": "ad84e627-57ce-582c-bb6c-33f15722b48d",
+      "uuid-009": "cbc574bc-9b5b-5174-8676-1bd6b047707d",
+      "uuid-010": "eede250b-9acb-5f58-b559-de18e20598eb",
+      "uuid-011": "f0229505-1ba3-56f4-aeb0-ece6c197e167",
+      "uuid-012": "ffb6c420-61c6-5d2b-bb9c-45cb15cbfcde"
+    },
+    "blind_arms": {
+      "a021/arm-x": {
+        "mode": "grouped",
+        "blind_branch": "experiment/a021-arm-x",
+        "blind_head": "9c978cdb68e13ffbdf87c27b891f0e261c1e0517",
+        "original_branch": "experiment/a021-grouped"
+      },
+      "a021/arm-y": {
+        "mode": "control",
+        "blind_branch": "experiment/a021-arm-y",
+        "blind_head": "5d100ed1b986ba5df7ff5999d265ca4c000c2e25",
+        "original_branch": "experiment/a021-control"
+      },
+      "r2/arm-M": {
+        "mode": "control",
+        "blind_branch": "blind/a021-r2/arm-M",
+        "original_branch": "experiment/a021-r2-control"
+      },
+      "r2/arm-N": {
+        "mode": "grouped",
+        "blind_branch": "blind/a021-r2/arm-N",
+        "original_branch": "experiment/a021-r2-grouped"
+      }
+    }
+  },
+  "repository": {
+    "remote": "https://github.com/kemiller2002/praxis"
+  },
+  "bundle_sources": {
+    "a021/arm-x.patch": {
+      "kind": "git-diff",
+      "base": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "head": "9c978cdb68e13ffbdf87c27b891f0e261c1e0517",
+      "pathspec": [
+        ".",
+        ":(exclude).ros",
+        ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+      ],
+      "role": "A021 blinded arm x, squashed diff against the baseline (Praxis state and the arm's own experiment records excluded, as in the original blind kit)"
+    },
+    "a021/arm-y.patch": {
+      "kind": "git-diff",
+      "base": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "head": "5d100ed1b986ba5df7ff5999d265ca4c000c2e25",
+      "pathspec": [
+        ".",
+        ":(exclude).ros",
+        ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+      ],
+      "role": "A021 blinded arm y, squashed diff against the baseline (same exclusions)"
+    },
+    "a021/blind-mapping.json": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/blind-mapping.json",
+      "role": "A021 arm-x/arm-y mapping, drawn and unsealed after evaluation"
+    },
+    "a021/evaluation/evaluation.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt",
+      "role": "A021 blind evaluation 1 report"
+    },
+    "a021/evaluation/evaluator-prompt.txt": {
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "role": "A021 evaluation-kit evaluator brief"
+    },
+    "a021/evaluation/findings.json": {
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json",
+      "role": "A021 blind evaluation 2 (evaluation kit) findings"
+    },
+    "a021/evaluation/prepare-blind-bundle.sh": {
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh",
+      "role": "A021 evaluation-kit blinding script (randomised arm naming and scrubbing)"
+    },
+    "a021/harness/harness-note.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/harness-note.txt",
+      "role": "harness note given identically to every implementing session"
+    },
+    "a021/harness/prompts/control-01.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-01.txt",
+      "role": "independent-arm implementation prompt, item 01"
+    },
+    "a021/harness/prompts/control-02.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-02.txt",
+      "role": "independent-arm implementation prompt, item 02"
+    },
+    "a021/harness/prompts/control-03.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-03.txt",
+      "role": "independent-arm implementation prompt, item 03"
+    },
+    "a021/harness/prompts/control-04.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-04.txt",
+      "role": "independent-arm implementation prompt, item 04"
+    },
+    "a021/harness/prompts/control-05.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-05.txt",
+      "role": "independent-arm implementation prompt, item 05"
+    },
+    "a021/harness/prompts/evaluator.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/evaluator.txt",
+      "role": "A021 evaluation 1 evaluator prompt"
+    },
+    "a021/harness/prompts/grouped.txt": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt",
+      "role": "grouped-arm implementation prompt"
+    },
+    "a021/harness/session_metrics.py": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+      "role": "per-session metrics capture script used by every arm session"
+    },
+    "a021/harness/sessions.json": {
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/sessions.json",
+      "role": "A021 session ledger with platform usage; session identifiers pseudonymised"
+    },
+    "a021/metrics-raw/control-01.json": {
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-01.json",
+      "role": "A021 independent-arm session metrics, item 01"
+    },
+    "a021/metrics-raw/control-02.json": {
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-02.json",
+      "role": "A021 independent-arm session metrics, item 02"
+    },
+    "a021/metrics-raw/control-03.json": {
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-03.json",
+      "role": "A021 independent-arm session metrics, item 03"
+    },
+    "a021/metrics-raw/control-04.json": {
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-04.json",
+      "role": "A021 independent-arm session metrics, item 04"
+    },
+    "a021/metrics-raw/control-05.json": {
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-05.json",
+      "role": "A021 independent-arm session metrics, item 05"
+    },
+    "a021/metrics-raw/group-analysis.md": {
+      "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+      "path": "research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md",
+      "role": "A021 grouped-arm group analysis note"
+    },
+    "a021/metrics-raw/grouped.json": {
+      "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+      "path": "research/experiments/EX-ROS-2026-A021-grouped/metrics/grouped.json",
+      "role": "A021 grouped-arm session metrics as captured in-session"
+    },
+    "acceptance-criteria.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+      "role": "the five work items and acceptance criteria, verbatim from the baseline backlog (shared by both studies)"
+    },
+    "analysis/anonymize.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/anonymize.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/build_anonymous_artifact.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/build_anonymous_artifact.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/extract_metrics.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/extract_metrics.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/verify_artifact.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/verify_artifact.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/verify_metrics.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/verify_metrics.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "baseline/work-items-PRAXIS-GROUP-01..05.json": {
+      "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "path": ".ros/work/queue.json",
+      "filter": "items whose id starts with PRAXIS-GROUP-"
+    },
+    "data/metrics.csv": {
+      "worktree": "research/publications/a021-grouped-execution/data/metrics.csv",
+      "role": "paper metric table dataset (produced by the metrics agent)"
+    },
+    "data/metrics.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/metrics.json",
+      "role": "paper metric dataset, JSON form"
+    },
+    "data/threats.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/threats.json",
+      "role": "threats to validity and protocol deviations"
+    },
+    "evaluation-protocol-with-results.txt": {
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+      "role": "the same protocol after results were appended (diff against the frozen text shows every post-freeze change)"
+    },
+    "evaluation-protocol.txt": {
+      "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+      "role": "frozen pre-execution protocol, as it stood at the baseline commit"
+    },
+    "r2/README.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/README.txt",
+      "role": "R2 blind bundle README as given to the R2 evaluator"
+    },
+    "r2/SHA256SUMS": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/SHA256SUMS",
+      "role": "pre-evaluation checksums of the R2 patches and criteria"
+    },
+    "r2/acceptance-criteria.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+      "role": "R2 copy of the acceptance criteria (covered by r2/SHA256SUMS)"
+    },
+    "r2/arm-M.patch": {
+      "kind": "blob",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-M.patch",
+      "role": "R2 blinded arm M patch exactly as the blind evaluator received it"
+    },
+    "r2/arm-N.patch": {
+      "kind": "blob",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-N.patch",
+      "role": "R2 blinded arm N patch exactly as the blind evaluator received it"
+    },
+    "r2/evaluation/EVALUATION.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt",
+      "role": "R2 blind evaluation report"
+    },
+    "r2/evaluation/EVIDENCE-PENDING-ID.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVIDENCE-PENDING-ID.txt",
+      "role": "R2 evaluator summary record (permitted inputs, blinding status, threats)"
+    },
+    "r2/evaluation/POST-UNBLINDING-METRICS.txt": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/POST-UNBLINDING-METRICS.txt",
+      "role": "R2 mapping reveal and resource comparison, written after the blind report"
+    },
+    "r2/evaluation/findings.json": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/findings.json",
+      "role": "R2 blind evaluator findings"
+    },
+    "r2/mapping-commitment.sha256": {
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/mapping-commitment.sha256",
+      "role": "R2 pre-evaluation mapping commitment"
+    },
+    "r2/metrics-raw/control-01.json": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-01.json",
+      "role": "R2 independent-arm session metrics, item 01"
+    },
+    "r2/metrics-raw/control-02.json": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-02.json",
+      "role": "R2 independent-arm session metrics, item 02"
+    },
+    "r2/metrics-raw/control-03.json": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-03.json",
+      "role": "R2 independent-arm session metrics, item 03"
+    },
+    "r2/metrics-raw/control-04.json": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-04.json",
+      "role": "R2 independent-arm session metrics, item 04"
+    },
+    "r2/metrics-raw/control-05.json": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-05.json",
+      "role": "R2 independent-arm session metrics, item 05"
+    },
+    "r2/metrics-raw/control-run-log.md": {
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/control-run-log.md",
+      "role": "R2 independent-arm orchestration run log"
+    },
+    "r2/metrics-raw/group-analysis.txt": {
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt",
+      "role": "R2 grouped-arm group analysis note"
+    },
+    "r2/metrics-raw/grouped.json": {
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/grouped.json",
+      "role": "R2 grouped-arm session metrics"
+    },
+    "r2/metrics-raw/plan-explain-group-at-start.txt": {
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/plan-explain-group-at-start.txt",
+      "role": "R2 planner explanation captured at grouped-arm start"
+    },
+    "r2/metrics-raw/session-metrics-raw.json": {
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/session-metrics-raw.json",
+      "role": "R2 grouped-arm raw transcript metrics"
+    }
+  },
+  "redacted_baseline_files": {
+    "PACKAGE-USAGE.md": {
+      "git_blob": "64d71f12605444a2b6c33d949a526e7516f1b917",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "201202675ad2c7ef0ba8675ffd7cdf61aff4673129a2ed86c6a62be07949eadb"
+    },
+    "README.md": {
+      "git_blob": "f1257a06d41ae1feb208365723a2f11bfc4a72b1",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "01a68fa3d77df993235f45fd51e1ddf38192dade400a1135751a6d866dbf837b"
+    },
+    "bin/echelon.ps1": {
+      "git_blob": "84a47b390e9acdd0c7649463c05b4d3f1017d9d4",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "715558c2ad2b609ef9874ef84e58b99418fd3678681d4bcfe7907bae67b88643"
+    },
+    "bin/echelon.sh": {
+      "git_blob": "d9f4289161465ee3457dd74987cb70aaae718fb4",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "33a116d59e961bed0e53f4eef440e97661326d4d07c794f2ae2346e8bd8a560b"
+    },
+    "docs/agent-provenance.md": {
+      "git_blob": "bb14c5bb71892458a1ce6619c0e8c802cf4331f2",
+      "rules": {
+        "name-token": 4
+      },
+      "shipped_sha256": "5296d3c79797cfefa35950c38e16b7f4c6926d57bf1db1f9decba856292a0889"
+    },
+    "docs/execution-runtime.md": {
+      "git_blob": "389ba9afcbcaf2e6c6c332d53590da71c0abf228",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "f9099963a7db9b6af88684199ec50cbfb9be30f0b5863ddba00e2bbd6b72ef09"
+    },
+    "docs/installation-registration.md": {
+      "git_blob": "003bda937db61469dba9e76ec5f0d260e92eb250",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "d110f3051c6a018b1048d99e2fdedb787f8ee2d1298a54db7a5afce0c0f6f8b6"
+    },
+    "docs/installation.md": {
+      "git_blob": "b40ed64271fef486181872683f2d2e790679e598",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "ea9763ef538cb898b53e773aa02df82eb7735c058398fb0f76b8bf5b6f99e194"
+    },
+    "docs/native-installation.md": {
+      "git_blob": "ab44d2512c77ef73a4ae54e2d09e01030b0609e0",
+      "rules": {
+        "account": 4
+      },
+      "shipped_sha256": "71a2801c30ede6ab081de7e506412959415181f2e23542c84420170b3d917e28"
+    },
+    "docs/site/site-deployment.md": {
+      "git_blob": "4e93d213e13c4e8810d3d2a7763eea8338a3919e",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "4b25115ae288f2ba07be9a7cf1377083554a50fafc3018a6eff72e6c260950d0"
+    },
+    "docs/upgrading.md": {
+      "git_blob": "e99adefdeeef174fd4d06209c6f38323093847ef",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "a46a26039de489b5ccf91940917131f749766549a8287b1e67ffaaa55727025b"
+    },
+    "docs/work-backlog-guide.md": {
+      "git_blob": "c5bba5e415996c6c672841588de698a0b2f86d27",
+      "rules": {
+        "name-token": 1
+      },
+      "shipped_sha256": "6b5cceb81b531d737074840a0cf763feec2c0635c70a6672ffe46a8af1055cfc"
+    },
+    "docs/work-protocol.md": {
+      "git_blob": "d216bc9870c7d3db3398696a97d2267da7c5aa8c",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "5eedeb6b0527f381ff6eff1d767f3d0ffb4045d729ea4ba8e42be49b9b2ea9ca"
+    },
+    "lib/ros-fs-launcher.mjs": {
+      "git_blob": "ac3fbc144e77c58c8962b0ffe549c5fad6b324d0",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "b6e92ca063e85ca91f0509d1285ee60f827c436d37438d6606d036bb08ce2377"
+    },
+    "package.json": {
+      "git_blob": "8103c3aa8dc7e88e575357d1496a82587fa30d4b",
+      "rules": {
+        "account": 3
+      },
+      "shipped_sha256": "38de2cf43cb7c4eecd6f86e349448a0ee7b0c8e8bb3403af06a53d8fa8545a06"
+    },
+    "registries/decisions.json": {
+      "git_blob": "1a577397b79f267ee6e2cc889ef09aacedc532e7",
+      "rules": {
+        "account": 3
+      },
+      "shipped_sha256": "a999c43a3e4d02b80103e8cae729d250e84d876c1bc1f0b76039b3620d9bf223"
+    },
+    "registries/evidence.json": {
+      "git_blob": "5b6aeed8fe0f90cc8b97477cb0f4647e5c4faa8a",
+      "rules": {
+        "account": 7
+      },
+      "shipped_sha256": "85bad3b698dc4b2a04686757a84bd362ec22e6f2d5076eee212773bbaafb0e30"
+    },
+    "registries/requirements.json": {
+      "git_blob": "ac196e0ef7f4938ca6263c9425573a758dd76d79",
+      "rules": {
+        "account": 5
+      },
+      "shipped_sha256": "a85272b848e79f902f31e97f4337d8a456e4acc0032f1ae03fb6ef5354afbe5f"
+    },
+    "registries/research-packages.json": {
+      "git_blob": "7fdd401385f123bfb7484ac35e57b10514ebcfe6",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "229be5b65e9a73c1832228d1ba566073e9ee4f1786826849b302b7c53f8c51f1"
+    },
+    "schemas/artifact-provenance.schema.json": {
+      "git_blob": "4265052b7794a2c00833dd8af89065ed97a2a0ac",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "99531057a2c7d59fd7672789706b55f7408d85566f49ca6ab494d104099e1717"
+    },
+    "schemas/praxis-remote-request.schema.json": {
+      "git_blob": "b987af62a3f4cc36bdcf7efba4f24c277a36130a",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "a4ddb346d22577d106262ddebcca88296c0c5c6123479a06fef40c0f821bbd53"
+    },
+    "schemas/praxis-remote-response.schema.json": {
+      "git_blob": "0c64549f27a37af106321d80679e82adff2a2995",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "2a2d99f5b8fed4daa927b388218170a4444fcd5e783a25a99220a65bb35175e8"
+    },
+    "schemas/provenance-actor.schema.json": {
+      "git_blob": "37b3c30421814220b16f032b03f86cfa38219542",
+      "rules": {
+        "account": 1,
+        "name-token": 1
+      },
+      "shipped_sha256": "960fb7a71850c3b79ce4bcd7c5e76ae79a2aa46a18b8c09e64229aba6c11192b"
+    },
+    "scripts/install-native.ps1": {
+      "git_blob": "f8a192ebcb0dd042a4726df10ed69ab7ef0a0e44",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "b765a94f1d262dfa880f6ba057576911819598a3824d836dc9cdaeacc793f5a5"
+    },
+    "scripts/install-native.sh": {
+      "git_blob": "f32b063591635cf212ed656fa812b93283974731",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "c308c3507efb5c9c7feb499defe2c825c9f8e7e182cfd3fad840d0abf43cb717"
+    },
+    "scripts/install-toolchain.ps1": {
+      "git_blob": "82d355f5322eb6e3d2377a2d97f7e6228fd0ed6a",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "0e79dc695edb40cbfbe2f4532b57d928f592601dddd455dbdd572d60f1708ed1"
+    },
+    "scripts/install-toolchain.sh": {
+      "git_blob": "ad914a4c0c84a52ce0e5499cf6211f43239b336a",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "36d2977d2073e4ece728f6cae850f204c2e41bdac0bbdd46634ffe54ac21ddf5"
+    },
+    "scripts/praxis-bootstrap.sh": {
+      "git_blob": "fd3bd89e8f4ba5d218ad4640ce11bf7c4a16092d",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "a204d02bc7f3058c47407fe86ec68e1307f66b3dec962b3c92e434f0dc600087"
+    },
+    "scripts/praxis-remote-enable.sh": {
+      "git_blob": "7ca02f078d38d6a5176581bad4f77020545594f1",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "5044d0f5ae85576c03259994c88502dc2ecf8b84b837a7602617f42fa2c0bad9"
+    },
+    "site-tools/evidence.mjs": {
+      "git_blob": "f35a98113f97b04a5c3faff589f4b6a3929b99f7",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "70045a9fbda9669faa90fa15d89637bd84e5e415fde8315980fa7aa3e35971bc"
+    },
+    "site/data/gh-84.json": {
+      "git_blob": "09aba04f52f7ffcf86389cefc78d188f1f96e6bb",
+      "rules": {
+        "account": 27
+      },
+      "shipped_sha256": "4fd78a7da32ee3bed96a980a6381cb51ee2011a2e766b5cf31b2a2bd622b6f81"
+    },
+    "site/index.html": {
+      "git_blob": "014acb564f5e97e73a001203d1dc03d9f40e256a",
+      "rules": {
+        "account": 19
+      },
+      "shipped_sha256": "51329a8a8b43e34c4772fb93c320d6cefeec9d1ecb9525020d3f9562c721a4d3"
+    },
+    "src/Ros.Cli/InstallationCommands.fs": {
+      "git_blob": "daad781440130929b2e8ab992416951a47ccbf94",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "aa95741bd34e68e21634621a4ed0c345cd585ef80b8411d340c9b08f52e5ef19"
+    },
+    "src/Ros.Cli/Ros.Cli.fsproj": {
+      "git_blob": "29889212f33817384c0f62cc0dcab4b7a225aca5",
+      "rules": {
+        "account": 2
+      },
+      "shipped_sha256": "7ffbe81aaf583615bd485549d0da49fc35f635a8c2c956d4e1a5913320df0ba5"
+    },
+    "starter/greenfield/tools/ros_fs_launcher.mjs": {
+      "git_blob": "3d4a67610a3b3b4bf676803da5afe24ab17d4335",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "5143fd49410423f55da7205e081d486959eded9b032c118ecbeb1988411885f0"
+    },
+    "tests/Ros.Tests/ProvenanceEffectTests.fs": {
+      "git_blob": "5dd6fe757e53045dd96d790e9dc3d1cde47fd0eb",
+      "rules": {
+        "name-token": 1
+      },
+      "shipped_sha256": "61b630a1c8451259db26d8ac02d003dd4e8516c103257a6e9f63d769a529198e"
+    },
+    "tests/Ros.Tests/ProvenanceTests.fs": {
+      "git_blob": "a78861bb5f8744066c4e5712218c8dc2e5e98a1f",
+      "rules": {
+        "name-token": 11
+      },
+      "shipped_sha256": "13ae87c24832946019655373c5d68e23f835a5a3c50e03b50159e37138623a44"
+    },
+    "tests/Ros.Tests/WorkReconciliationEffectTests.fs": {
+      "git_blob": "88e17db7458ed2fa9b68f4b37d1cd68b1d82649f",
+      "rules": {
+        "name-token": 4
+      },
+      "shipped_sha256": "3dd5fa2d8b9d9740debae0b95a4b71f9b1151bf506b6255d329f72416f97329b"
+    },
+    "tests/Ros.Tests/WorkReconciliationTests.fs": {
+      "git_blob": "9bc40b5d12db460f526904df947d0eb3d7e8b509",
+      "rules": {
+        "name-token": 2
+      },
+      "shipped_sha256": "4b20548e3f80addf1259700ae2d8223d315dc8bd14684515e23961cb5f4d713e"
+    },
+    "tests/npm-bootstrap.test.mjs": {
+      "git_blob": "7d5f46ae4a48c25fef56a37de70bfa8b8727f969",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "a344e9997f4bdf027a1e7ba161a5668c2e6c45519b6b5507c4ab7556bc7ff04e"
+    },
+    "tests/provenance-actor-fsharp-differential.test.mjs": {
+      "git_blob": "ebed1a11ab406c2bbc8efc08a07ce625b9321da5",
+      "rules": {
+        "name-token": 4
+      },
+      "shipped_sha256": "2d27a0cf29be07b5389be884d43b87614763f0e5b02bd575c99c8ba7854156c3"
+    },
+    "tests/site/content.test.mjs": {
+      "git_blob": "ca47f966cb2997bd69f1c94d3d1c63552ced11d4",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "081058fc02f9255d4a2c78d2f692251bac02d97ecf0d45e61425809e3e389451"
+    },
+    "tests/site/workflow.test.mjs": {
+      "git_blob": "b2d2c57e0ae8422db692f807e7d9d4290aba0605",
+      "rules": {
+        "account": 1
+      },
+      "shipped_sha256": "bd90f8864940ed3e6e589b8f5709ba8cdba98a83d972b661ce2a1edeeb6bc8aa"
+    }
+  },
+  "identities_seen": [
+    {
+      "name": "Claude",
+      "email": "noreply@anthropic.com",
+      "tool": true
+    },
+    {
+      "name": "ex-a021-blinding",
+      "email": "blinding@example.invalid",
+      "tool": true
+    },
+    {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "tool": true
+    },
+    {
+      "name": "github-actions[bot]",
+      "email": "41898282+github-actions[bot]@users.noreply.github.com",
+      "tool": true
+    },
+    {
+      "name": "Kevin Miller",
+      "email": "kemiller2002@gmail.com",
+      "tool": false
+    },
+    {
+      "name": "Kevin Miller",
+      "email": "kemiller2002@users.noreply.github.com",
+      "tool": false
+    }
+  ]
+}

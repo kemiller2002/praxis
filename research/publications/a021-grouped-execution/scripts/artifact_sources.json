@@ -1,0 +1,389 @@
+{
+  "schema": "a021-anonymous-artifact.sources/1",
+  "bundle_name": "anonymous-artifact",
+  "source_date_epoch": 1790726400,
+  "source_date_note": "2026-09-30T00:00:00Z, the A021 execution day; every tar entry carries this mtime",
+  "baseline": {
+    "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+    "bundle_dir": "baseline/source",
+    "exclude_prefixes": [
+      ".ros/",
+      ".github/workflows/",
+      ".github/actions/",
+      "research/",
+      "input-documents/"
+    ],
+    "exclude_reason": {
+      ".ros/": "operating state, event log, execution telemetry and remote-request records: dense with personal names, account names and agent session identifiers; not needed to read, apply or build the arm patches",
+      ".github/workflows/": "CI workflows bound to the owner's account and repository URLs; not part of the evaluated surface",
+      ".github/actions/": "CI composite actions used only by those workflows",
+      "research/": "the study records themselves (prior experiments, evidence, decisions) carry owner identity and session identifiers; the relevant ones are shipped separately, sanitized, under a021/ and r2/",
+      "input-documents/": "owner-supplied request documents; not part of the evaluated surface"
+    },
+    "work_items": {
+      "bundle_path": "baseline/work-items-PRAXIS-GROUP-01..05.json",
+      "path": ".ros/work/queue.json",
+      "id_prefix": "PRAXIS-GROUP-"
+    },
+    "exclude_note": ".github/copilot-instructions.md is kept: the infrastructure project embeds it as a resource, so the baseline does not build without it"
+  },
+  "patches": [
+    {
+      "bundle_path": "a021/arm-x.patch",
+      "study": "a021",
+      "blind_name": "arm-x",
+      "kind": "git-diff",
+      "base": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "head": "9c978cdb68e13ffbdf87c27b891f0e261c1e0517",
+      "fetch": "experiment/a021-arm-x",
+      "pathspec": [
+        ".",
+        ":(exclude).ros",
+        ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+      ],
+      "role": "A021 blinded arm x, squashed diff against the baseline (Praxis state and the arm's own experiment records excluded, as in the original blind kit)"
+    },
+    {
+      "bundle_path": "a021/arm-y.patch",
+      "study": "a021",
+      "blind_name": "arm-y",
+      "kind": "git-diff",
+      "base": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "head": "5d100ed1b986ba5df7ff5999d265ca4c000c2e25",
+      "fetch": "experiment/a021-arm-y",
+      "pathspec": [
+        ".",
+        ":(exclude).ros",
+        ":(exclude)research/experiments/EX-ROS-2026-A021-*"
+      ],
+      "role": "A021 blinded arm y, squashed diff against the baseline (same exclusions)"
+    },
+    {
+      "bundle_path": "r2/arm-M.patch",
+      "study": "r2",
+      "blind_name": "arm-M",
+      "kind": "blob",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-M.patch",
+      "role": "R2 blinded arm M patch exactly as the blind evaluator received it"
+    },
+    {
+      "bundle_path": "r2/arm-N.patch",
+      "study": "r2",
+      "blind_name": "arm-N",
+      "kind": "blob",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/arm-N.patch",
+      "role": "R2 blinded arm N patch exactly as the blind evaluator received it"
+    }
+  ],
+  "records": [
+    {
+      "bundle_path": "acceptance-criteria.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+      "role": "the five work items and acceptance criteria, verbatim from the baseline backlog (shared by both studies)"
+    },
+    {
+      "bundle_path": "evaluation-protocol.txt",
+      "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+      "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+      "role": "frozen pre-execution protocol, as it stood at the baseline commit"
+    },
+    {
+      "bundle_path": "evaluation-protocol-with-results.txt",
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021--grouped-versus-independent-execution.md",
+      "role": "the same protocol after results were appended (diff against the frozen text shows every post-freeze change)"
+    },
+    {
+      "bundle_path": "a021/blind-mapping.json",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/blind-mapping.json",
+      "role": "A021 arm-x/arm-y mapping, drawn and unsealed after evaluation"
+    },
+    {
+      "bundle_path": "a021/evaluation/evaluation.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation/evaluation.txt",
+      "role": "A021 blind evaluation 1 report"
+    },
+    {
+      "bundle_path": "a021/evaluation/findings.json",
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json",
+      "role": "A021 blind evaluation 2 (evaluation kit) findings"
+    },
+    {
+      "bundle_path": "a021/evaluation/evaluator-prompt.txt",
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "role": "A021 evaluation-kit evaluator brief"
+    },
+    {
+      "bundle_path": "a021/evaluation/prepare-blind-bundle.sh",
+      "commit": "287693c82dad0208fcb51810c688469082242b39",
+      "path": "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh",
+      "role": "A021 evaluation-kit blinding script (randomised arm naming and scrubbing)"
+    },
+    {
+      "bundle_path": "a021/harness/harness-note.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/harness-note.txt",
+      "role": "harness note given identically to every implementing session"
+    },
+    {
+      "bundle_path": "a021/harness/session_metrics.py",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/session_metrics.py",
+      "role": "per-session metrics capture script used by every arm session"
+    },
+    {
+      "bundle_path": "a021/harness/sessions.json",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/sessions.json",
+      "role": "A021 session ledger with platform usage; session identifiers pseudonymised"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/evaluator.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/evaluator.txt",
+      "role": "A021 evaluation 1 evaluator prompt"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/grouped.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/grouped.txt",
+      "role": "grouped-arm implementation prompt"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/control-01.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-01.txt",
+      "role": "independent-arm implementation prompt, item 01"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/control-02.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-02.txt",
+      "role": "independent-arm implementation prompt, item 02"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/control-03.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-03.txt",
+      "role": "independent-arm implementation prompt, item 03"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/control-04.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-04.txt",
+      "role": "independent-arm implementation prompt, item 04"
+    },
+    {
+      "bundle_path": "a021/harness/prompts/control-05.txt",
+      "commit": "e06c7abe269b92051f2921382298a0385fb98a8b",
+      "path": "research/experiments/EX-ROS-2026-A021-harness/prompts/control-05.txt",
+      "role": "independent-arm implementation prompt, item 05"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/grouped.json",
+      "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+      "path": "research/experiments/EX-ROS-2026-A021-grouped/metrics/grouped.json",
+      "role": "A021 grouped-arm session metrics as captured in-session"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/group-analysis.md",
+      "commit": "5face886176839da30805c07fa893d2c18f3b5d2",
+      "path": "research/experiments/EX-ROS-2026-A021-grouped/group-analysis.md",
+      "role": "A021 grouped-arm group analysis note"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/control-01.json",
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-01.json",
+      "role": "A021 independent-arm session metrics, item 01"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/control-02.json",
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-02.json",
+      "role": "A021 independent-arm session metrics, item 02"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/control-03.json",
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-03.json",
+      "role": "A021 independent-arm session metrics, item 03"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/control-04.json",
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-04.json",
+      "role": "A021 independent-arm session metrics, item 04"
+    },
+    {
+      "bundle_path": "a021/metrics-raw/control-05.json",
+      "commit": "8ea9be22fe6f1f3a7cbadc88f516709c40045f55",
+      "path": "research/experiments/EX-ROS-2026-A021-control/metrics/control-05.json",
+      "role": "A021 independent-arm session metrics, item 05"
+    },
+    {
+      "bundle_path": "r2/README.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/README.txt",
+      "role": "R2 blind bundle README as given to the R2 evaluator"
+    },
+    {
+      "bundle_path": "r2/SHA256SUMS",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/SHA256SUMS",
+      "role": "pre-evaluation checksums of the R2 patches and criteria"
+    },
+    {
+      "bundle_path": "r2/acceptance-criteria.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt",
+      "role": "R2 copy of the acceptance criteria (covered by r2/SHA256SUMS)"
+    },
+    {
+      "bundle_path": "r2/mapping-commitment.sha256",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/mapping-commitment.sha256",
+      "role": "R2 pre-evaluation mapping commitment"
+    },
+    {
+      "bundle_path": "r2/evaluation/EVALUATION.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt",
+      "role": "R2 blind evaluation report"
+    },
+    {
+      "bundle_path": "r2/evaluation/findings.json",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/findings.json",
+      "role": "R2 blind evaluator findings"
+    },
+    {
+      "bundle_path": "r2/evaluation/POST-UNBLINDING-METRICS.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/POST-UNBLINDING-METRICS.txt",
+      "role": "R2 mapping reveal and resource comparison, written after the blind report"
+    },
+    {
+      "bundle_path": "r2/evaluation/EVIDENCE-PENDING-ID.txt",
+      "commit": "b335e1664a1a44141158b6dc224b54fec7a38d26",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVIDENCE-PENDING-ID.txt",
+      "role": "R2 evaluator summary record (permitted inputs, blinding status, threats)"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/grouped.json",
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/grouped.json",
+      "role": "R2 grouped-arm session metrics"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/session-metrics-raw.json",
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/session-metrics-raw.json",
+      "role": "R2 grouped-arm raw transcript metrics"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/group-analysis.txt",
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt",
+      "role": "R2 grouped-arm group analysis note"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/plan-explain-group-at-start.txt",
+      "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/plan-explain-group-at-start.txt",
+      "role": "R2 planner explanation captured at grouped-arm start"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-run-log.md",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/control-run-log.md",
+      "role": "R2 independent-arm orchestration run log"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-01.json",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-01.json",
+      "role": "R2 independent-arm session metrics, item 01"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-02.json",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-02.json",
+      "role": "R2 independent-arm session metrics, item 02"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-03.json",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-03.json",
+      "role": "R2 independent-arm session metrics, item 03"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-04.json",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-04.json",
+      "role": "R2 independent-arm session metrics, item 04"
+    },
+    {
+      "bundle_path": "r2/metrics-raw/control-05.json",
+      "commit": "8bb8f78adbaa67273ac507d1d14ad475e46fedd3",
+      "path": "research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-05.json",
+      "role": "R2 independent-arm session metrics, item 05"
+    }
+  ],
+  "optional_worktree": [
+    {
+      "bundle_path": "data/metrics.csv",
+      "path": "research/publications/a021-grouped-execution/data/metrics.csv",
+      "transform": "csv-strip-internal",
+      "role": "paper metric table dataset (produced by the metrics agent)"
+    },
+    {
+      "bundle_path": "data/metrics.json",
+      "path": "research/publications/a021-grouped-execution/data/metrics.json",
+      "transform": "json-strip-internal",
+      "role": "paper metric dataset, JSON form"
+    },
+    {
+      "bundle_path": "data/architecture-findings.json",
+      "path": "research/publications/a021-grouped-execution/data/architecture-findings.json",
+      "transform": "json-strip-internal",
+      "role": "qualitative architecture findings with source locations for both arms"
+    },
+    {
+      "bundle_path": "data/threats.json",
+      "path": "research/publications/a021-grouped-execution/data/threats.json",
+      "transform": "json-strip-internal",
+      "role": "threats to validity and protocol deviations"
+    }
+  ],
+  "analysis_glob": {
+    "dir": "research/publications/a021-grouped-execution/scripts",
+    "suffixes": [
+      ".py"
+    ],
+    "bundle_dir": "analysis",
+    "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+  },
+  "authored": {
+    "readme": "research/publications/a021-grouped-execution/artifact/README.md"
+  },
+  "mapping": {
+    "a021": {
+      "arm-x": "grouped",
+      "arm-y": "independent (control)",
+      "evidence": "a021/blind-mapping.json (drawn with secrets.randbelow(2), unsealed after evaluation; arm-x parent is the grouped head, arm-y parent the control head)"
+    },
+    "r2": {
+      "arm-N": "grouped",
+      "arm-M": "independent (control)",
+      "evidence": "r2/evaluation/POST-UNBLINDING-METRICS.txt (established after the blind report by exact file-blob identity with the original arm trees; the salted commitment in r2/mapping-commitment.sha256 could not be recomputed because the salt was not retained)"
+    }
+  }
+}
