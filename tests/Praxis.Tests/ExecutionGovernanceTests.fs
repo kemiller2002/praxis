@@ -199,6 +199,61 @@ module ExecutionGovernanceTests =
         let node = JsonNode.Parse out
         textAt node [ "executionId" ], node
 
+    let private contractJson =
+        """{ "schema": "ordo.execution-contract/1", "role": "verification",
+  "boundary": { "scopes": ["feature:a"], "projections": [{ "scope": "feature:a", "patterns": ["src/**"] }], "evaluatorReferences": [] },
+  "evaluator": [{ "kind": "gate-code", "reference": "tests/gate.sh" }],
+  "humanOnly": ["execution.complete"] }"""
+
+    let private records root id kind =
+        File.ReadAllLines(Path.Combine(root, ".ros", "executions", id, "events.jsonl"))
+        |> Array.map JsonNode.Parse
+        |> Array.filter (fun n -> n["entry"].GetValue<string>() = kind)
+        |> List.ofArray
+
+    /// PRAXIS-FND-02 (PRX-BND-001, PRX-SEQ-003, PRX-VER-010).
+    let contract =
+        [ { Name = "execution contract: a contract file supplies role, boundary, evaluator and human-only transitions"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  File.WriteAllText(Path.Combine(root, "contract.json"), contractJson)
+                  let code, out = capture (fun () -> ExecutionCommands.run root agent [ "start"; "--work-item"; "WI-9"; "--contract"; "contract.json"; "--json" ])
+                  Assert.equal 0 code
+                  let node = JsonNode.Parse out
+                  Assert.equal "verification" (textAt node [ "role" ])
+                  Assert.equal "feature:a" (textAt node [ "mutationBoundary"; "scopes"; "#0" ])
+                  Assert.equal "execution.complete" (textAt node [ "humanOnlyTransitions"; "#0" ])
+                  // PRX-VER-010: the evaluator Ordo's contract names is resolved and recorded at start.
+                  Assert.isTrue ((textAt node [ "evaluator"; "fingerprint" ]).StartsWith "sha256:") "evaluator identity recorded"
+                  let id = textAt node [ "executionId" ]
+                  let record = records root id "contract" |> List.exactlyOne
+                  Assert.equal "contract-file:contract.json" (record["source"].GetValue<string>())
+                  let digest = "sha256:" + Convert.ToHexString(Security.Cryptography.SHA256.HashData(Text.Encoding.UTF8.GetBytes contractJson)).ToLowerInvariant()
+                  Assert.equal digest (record["sha256"].GetValue<string>()) }
+          { Name = "execution contract: flags that contradict a contract are refused, and invalid contracts are Ordo's refusals"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  File.WriteAllText(Path.Combine(root, "contract.json"), contractJson)
+                  let run args = capture (fun () -> ExecutionCommands.run root agent ([ "start"; "--work-item"; "WI-9" ] @ args)) |> fst
+                  Assert.equal 2 (run [ "--contract"; "contract.json"; "--role"; "implementation" ])
+                  Assert.equal 2 (run [ "--contract"; "contract.json"; "--scope"; "feature:b" ])
+                  File.WriteAllText(Path.Combine(root, "bad.json"), contractJson.Replace("\"patterns\": [\"src/**\"] }", "\"patterns\": [] }").Replace("\"scope\": \"feature:a\"", "\"scope\": \"feature:z\""))
+                  Assert.equal 2 (run [ "--contract"; "bad.json" ])
+                  Assert.equal 2 (run [ "--contract"; "missing.json" ])
+                  Assert.isTrue (not (Directory.Exists(Path.Combine(root, ".ros", "executions")))) "a refused start records nothing" }
+          { Name = "execution contract: operator flags are assembled into the Ordo contract and recorded as such"
+            Run =
+              fun () ->
+                  let root = repository ()
+                  let id, _ = start root []
+                  let record = records root id "contract" |> List.exactlyOne
+                  Assert.equal "operator-flags" (record["source"].GetValue<string>())
+                  Assert.isTrue ((record["sha256"].GetValue<string>()).StartsWith "sha256:") "digest recorded"
+                  let code, _ = capture (fun () -> ExecutionCommands.run root agent [ "start"; "--work-item"; "WI-1"; "--role"; "implementation"; "--scope"; "a" ])
+                  Assert.equal 2 code } ]
+
     let cli =
         [ { Name = "execution: worktree-per-execution with repository-qualified work identity"
             Run =
@@ -364,4 +419,4 @@ module ExecutionGovernanceTests =
                   Assert.isTrue (governance.Contains "Ordo.Core.ExecutionRole.RoleAuthority.defaultFor") "role authority comes from Ordo.Core"
                   Assert.isTrue (not (governance.Contains "ORDO-CORE-PACKAGE).") || governance.Contains "consumes it from the released") "header names the consumed package" } ]
 
-    let tests = domain @ ordoPackage @ cli
+    let tests = domain @ ordoPackage @ cli @ contract
