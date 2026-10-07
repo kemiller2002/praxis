@@ -27,7 +27,8 @@ module FileWorkListRepository =
     let private queuePath (root: string) = Path.Combine(root, ".ros", "work", "queue.json")
     let private detailPath (root: string) (id: string) = Path.Combine(root, ".ros", "work", "items", $"{id}.md")
 
-    let private readContextItems (root: string) : Result<LiveWorkItem list, string> =
+    /// The live context's work items; empty when no context exists yet.
+    let readContextItems (root: string) : Result<LiveWorkItem list, string> =
         let path = contextPath root
 
         if not (File.Exists path) then

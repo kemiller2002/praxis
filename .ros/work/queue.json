@@ -775,13 +775,14 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-10T20:34:39.993Z",
-      "updatedAt": "2026-09-10T20:34:40.063Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "createdBy": "unknown",
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-ACTIVE",
@@ -789,13 +790,14 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-10T20:34:40.288Z",
-      "updatedAt": "2026-09-10T20:34:40.361Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "createdBy": "unknown",
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-0040",
@@ -2310,7 +2312,7 @@
       "sourceReference": "RQ-ROS-2026-A021"
     },
     {
-      "id": "WI-0061",
+      "id": "WI-0061-REUSED",
       "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
       "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
       "tags": [
@@ -2321,7 +2323,7 @@
       "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-09-28T20:03:07.959Z",
-      "updatedAt": "2026-09-29T01:12:39.000Z",
+      "updatedAt": "2026-10-06T21:15:24.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -2332,7 +2334,9 @@
       },
       "source": "manual",
       "sourceReference": null,
-      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION."
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION.",
+      "reidentifiedFrom": "WI-0061",
+      "reidentifiedReason": "ros add allocated WI-0061 on 2026-09-28 for a new obligation although WI-0061 was already a completed live work item; this row is that other obligation (abandoned, re-captured as PRAXIS-REMOTE-14), not the completed WI-0061 (PRAXIS-HYG-02)"
     },
     {
       "id": "PRAXIS-REMOTE-14",
@@ -2367,10 +2371,10 @@
         "backlog"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-29T01:12:52.000Z",
-      "updatedAt": "2026-09-29T01:12:52.000Z",
+      "updatedAt": "2026-10-07T05:07:06.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5367,6 +5371,102 @@
       "attachments": [],
       "createdAt": "2026-10-06T20:59:34.000Z",
       "updatedAt": "2026-10-06T20:59:34.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-01",
+      "title": "Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state",
+      "description": "Covers: canonical state hygiene (audit, docs-vs-code), work protocol (RQ-ROS-2026-A003 event attribution integrity). Root cause: commit 71be41f6 (PR #33) committed .ros state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands (add/ready/start/block WI-READY, WI-ACTIVE) in the canonical repository instead of a scratch root. Acceptance: (1) WI-READY and WI-ACTIVE leave live work via praxis work abandon with a stated reason (no hand edits); planner no longer reports them as active or blocked. (2) CI fails when the F# test suite changes any tracked file or leaves untracked files in the checkout (tests must use isolated state). (3) docs/work-protocol.md says smoke tests of mutating commands run against a scratch root, never the canonical repository. Decision: no validate rule for fixture-shaped IDs: WorkItemId admits any shape and test literals legitimately name real IDs (GH-84, WI-0003...), so such a rule is unsound. Group: GROUP-PRAXIS-HYG (state hygiene).",
+      "tags": [
+        "state-hygiene",
+        "work-protocol"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.033Z",
+      "updatedAt": "2026-10-07T05:06:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-02",
+      "title": "validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification",
+      "description": "Covers: canonical state hygiene (queue/context disagreement, audit), WORK-CAPTURE-ID-COLLISION (validation half; the allocator half is already fixed in WorkCapture.nextId). Cause: on 2026-09-28 ros add allocated WI-0061 for a new obligation although WI-0061 was a completed live work item; the backlog row was abandoned (obligation re-captured as PRAXIS-REMOTE-14) but keeps the colliding ID, so queue says abandoned while context says complete. Acceptance: (1) a pure domain rule reports every backlog row whose status is terminal (complete or abandoned) while the live context holds the same ID in a different state, as an error in praxis validate and work validate-queue output; tests cover agreement, both disagreement directions and non-terminal rows. (2) a typed command praxis work reidentify --id OLD --new-id NEW --reason TEXT --occurred-at T renames only a backlog row whose ID collides with a live work item, refuses invalid or already-used new IDs and missing reasons, records reidentifiedFrom/reidentifiedReason, under the work-protocol lock and backlog journal; tests cover each rejection and the effect. (3) WI-0061's backlog row is repaired with that command and praxis validate passes. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "state-hygiene",
+        "backlog"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.506Z",
+      "updatedAt": "2026-10-07T05:06:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-HYG-03",
+      "title": "Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully",
+      "description": "Covers: RQ-ROS-2026-A004 contribution history, RQ-ROS-2026-A007 provenance validation (validate warns that neither records a created contribution). A063 was authored by the repository owner in commit 3aef2bd with no provenance; A067 (originally EV-ROS-2026-A062, commit f3bad01c) was written by a blinded evaluator session that had no Praxis execution. An agent cannot record either creation: provenance resolves identity only from the current process, Praxis never infers authorship from Git metadata, and a created contribution cannot follow the existing migrated ones. Acceptance: the true originator records the creation (the owner for A063 with a human CTB contribution at its creation time), or an accepted decision defines an explicit origin-unrecorded acknowledgement that validate honours; praxis validate then reports no originator warning for either. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "provenance"
+      ],
+      "priority": "medium",
+      "status": "blocked",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:54.880Z",
+      "updatedAt": "2026-10-07T04:59:14.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "blockedReason": "Needs the true originators: the repository owner must record EV-ROS-2026-A063's creation himself, and EV-ROS-2026-A067's blinded evaluator left no execution; an agent recording either would fabricate provenance"
+    },
+    {
+      "id": "PRAXIS-HYG-04",
+      "title": "Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations",
+      "description": "Covers: PRX-GRP-080..088 status row (docs/planning.md says replication pending although EV-ROS-2026-A070 records the R2 replication). Acceptance: (1) the GRP-080..088 row cites EV-ROS-2026-A070 and no longer says replication is pending. (2) a repository test fails when a row of a status table (a Markdown table under a heading containing 'status') in docs/ or requirements/ cites, in backticks, a research record ID that does not exist, a tests/ or src/ path that does not exist, or a work-item ID absent from the backlog and live context. Decision: semantic checks (e.g. 'not implemented' while the cited item is complete) are not added; rows legitimately mix complete and open items, so such a rule is unsound. Group: GROUP-PRAXIS-HYG.",
+      "tags": [
+        "docs",
+        "state-hygiene"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:33:55.254Z",
+      "updatedAt": "2026-10-07T05:06:55.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -1570,25 +1570,29 @@
     {
       "id": "WI-READY",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.136Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440154Z-b25c0cf1"
-      ]
+      ],
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-ACTIVE",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
+      "state": "abandoned",
+      "semanticState": "abandoned",
       "evidence": [],
-      "updatedAt": "2026-09-10T20:34:40.579Z",
+      "updatedAt": "2026-10-06T20:35:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20260910T203440452Z-5ea56a27"
       ],
-      "blockReason": "waiting"
+      "blockReason": "waiting",
+      "abandonedAt": "2026-10-06T20:35:43.000Z",
+      "abandonedReason": "Test fixtures, not repository work: commit 71be41f6 (PR #33) committed state from a manual smoke test that replayed tests/work-context-fsharp-differential.test.mjs's fixture commands in the canonical repository instead of a scratch root (PRAXIS-HYG-01)"
     },
     {
       "id": "WI-0040",
@@ -6872,6 +6876,178 @@
         }
       },
       "completedAt": "2026-10-07T04:55:35.635Z"
+    },
+    {
+      "id": "PRAXIS-HYG-01",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "implementation",
+          "path": "docs/work-protocol.md"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:50.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203536205Z-a7af8db1"
+      ],
+      "latestCheckpoint": {
+        "id": "6b286ab56e71931cff615774",
+        "recordedAt": "2026-10-07T05:06:41.000Z",
+        "executionId": "EXE-20261006T203536205Z-a7af8db1",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:50.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-02",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/QueueValidation.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/BacklogQueueCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileBacklogQueueRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/BacklogReidentificationTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T205839560Z-e7a65579"
+      ],
+      "latestCheckpoint": {
+        "id": "e8c6f27241fac696b25a5132",
+        "recordedAt": "2026-10-07T05:06:44.000Z",
+        "executionId": "EXE-20261006T205839560Z-e7a65579",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:52.000Z"
+    },
+    {
+      "id": "PRAXIS-HYG-04",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/StatusTableCitationTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/GROUP-PRAXIS-HYG.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:06:55.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T211552346Z-3bb743d9"
+      ],
+      "latestCheckpoint": {
+        "id": "3ff050251968dc98c0740b53",
+        "recordedAt": "2026-10-07T05:06:47.000Z",
+        "executionId": "EXE-20261006T211552346Z-3bb743d9",
+        "repository": "repository-operating-system",
+        "branch": "hygiene/state-docs",
+        "commit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "hygiene/state-docs",
+        "remoteCommit": "8b56b0e893c02cc155a239ad6df9f005b56827dd",
+        "summary": "Implemented, verified per criterion (docs/groups/GROUP-PRAXIS-HYG.md section 5) and pushed on hygiene/state-docs (PR #194)",
+        "nextAction": "Complete the work item, then merge PR #194 when CI is green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:06:55.000Z"
+    },
+    {
+      "id": "WORK-CAPTURE-ID-COLLISION",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/Capture.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/QueueValidation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/BacklogReidentificationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:07:06.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T050706463Z-79216408"
+      ],
+      "completedAt": "2026-10-07T05:07:06.000Z"
     },
     {
       "id": "PRAXIS-EXEC-04",

@@ -24,6 +24,17 @@ jobs:
       - run: dotnet build Praxis.slnx --configuration Release --no-restore
       - name: F# tests
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+      # Tests use isolated scratch roots. A test that writes into the checkout
+      # (for example fixture work items in canonical `.ros/` state, as
+      # WI-READY/WI-ACTIVE once were: PRAXIS-HYG-01) fails here.
+      - name: F# tests leave the checkout unchanged
+        run: |
+          changes="$(git status --porcelain --untracked-files=all)"
+          if [ -n "$changes" ]; then
+            echo "The F# test suite changed the checkout; tests must use isolated state:"
+            echo "$changes"
+            exit 1
+          fi
       - name: F#/.NET-only repository invariant
         run: ./praxis architecture check
       - run: ./praxis registry check

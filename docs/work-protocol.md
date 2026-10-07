@@ -707,6 +707,38 @@ authority (that boundary belongs to the external system; see below). For a
 worked, example-heavy walkthrough of every command, see
 [`work-backlog-guide.md`](https://github.com/kemiller2002/repository-operating-system/blob/main/docs/work-backlog-guide.md).
 
+### Backlog and live status must agree
+
+A backlog row and a live work item with the same ID are one obligation. A
+row that is still `captured`, `ready` or `blocked` is the pre-promotion
+record and never conflicts. A row whose status is terminal (`complete` or
+`abandoned`) must match the live item's state; otherwise `./praxis validate`
+and `./praxis work backlog-validate` fail with a `status_agreement` finding,
+because the merged view (where the live state wins) would hide the
+contradiction. When the row is a different obligation that reused the ID,
+give the row alone a new, never-used ID:
+
+```bash
+./praxis work reidentify --id WI-0061 --new-id WI-0061-REUSED \
+  --reason "a different obligation reused the ID" --occurred-at TIMESTAMP
+```
+
+The row records `reidentifiedFrom` and `reidentifiedReason`; the live item,
+its events and its telemetry are untouched. The command refuses any row that
+validation does not report, a used or invalid new ID, and a missing reason.
+Otherwise bring both records to the same state with the lifecycle commands.
+
+### Fixtures stay out of canonical state
+
+Tests and manual smoke tests of mutating commands (`add`, `work begin`,
+`work block`, ...) run against a scratch root (`praxis init` in a temporary
+directory, or `--root DIR`), never against a repository whose `.ros/` state
+is canonical: fixture items committed there become live work that the
+planner and `status` report to everyone. A CI step that fails when the test
+suite changes the checkout (`git status --porcelain --untracked-files=all`
+is not empty after the tests) catches a test that writes into the
+repository.
+
 ## Adapter contract
 
 The stable executable interface is `getWorkItem`, `transitionWorkItem`, and `publishRepositoryEvent`. Protocol 1.0 implements a file-backed adapter for conformance tests:

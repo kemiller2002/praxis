@@ -68,6 +68,8 @@ let main _ =
     @ WorkGitPathsCliTests.tests
     @ WorkValidateCliTests.tests
     @ WorkBacklogCliTests.tests
+    @ BacklogReidentificationTests.tests
+    @ StatusTableCitationTests.tests
     @ WorkLifecycleCliTests.tests
     @ WorkViewCliTests.tests
     @ StatusValidateCliTests.tests

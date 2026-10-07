@@ -52,6 +52,7 @@
     <Compile Include="PlanCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />
     <Compile Include="WorkGroupCheckpointCommands.fs" />
+    <Compile Include="BacklogQueueCommands.fs" />
     <Compile Include="WorkGroupListCommands.fs" />
     <Compile Include="WorkGroupShowCommands.fs" />
     <Compile Include="WorkGroupLinkCommands.fs" />
