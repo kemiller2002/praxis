@@ -321,6 +321,18 @@ or terminal members and duplicate IDs; never changes a member's lifecycle
 state; `validate` checks stored groups. See
 [`planning.md`](planning.md#declaring-a-group).
 
+### `work group show`
+
+```
+ros work group show GROUP-ID [--json]
+```
+
+Read-only view of one stored group: each member's own recorded and planning
+state, partial-completion progress, blocked members and the members they gate,
+the execution repository (declared or derived) and architecture notes. An
+undeclared ID exits `1`; it never writes. See
+[`planning.md`](planning.md#showing-a-group).
+
 ### `work reconcile`
 
 ```

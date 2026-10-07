@@ -323,6 +323,33 @@ an invalid ID, fewer than two members, repeated or unknown members, and empty
 values are findings. A member that became terminal after the declaration is
 partial completion (PRX-GRP-042), not a finding.
 
+### Showing a group
+
+```
+ros work group show GROUP-ID [--json]
+```
+
+A read-only view of one stored declaration (`PRAXIS-GROUP-02`). For every
+declared member it reports the member's own recorded lifecycle state (live
+context outranks the backlog) and its planning state and status from the
+planner's read-only analysis; it reports partial-completion progress (`k of n
+complete`, with in-progress, runnable, blocked, not-runnable and unknown
+counts; PRX-GRP-042), each blocked member and the members that wait on it
+directly or transitively, the execution repository and whether it is
+`declared` or `derived` by the planner, shared context, architecture notes and
+the planner's group notes. A value that cannot be known (a member no longer
+recorded, or a planner that could not run) is shown as unknown and named under
+`unavailable`; it is never defaulted.
+
+An undeclared ID exits `1`; a missing or extra argument exits `2`. The command
+never writes: it reads the group store, the backlog, the live context and the
+planner's read port, which has no write operation. `--json` emits a
+`praxis.work-group/1.0.0` document of kind `work-group-show` with `ok` and
+either `view` (`group`, `executionRepository` `{name, basis}`, `members`
+`{workItem, recordedState, planningState, status, gatedBy, gates}`,
+`progress`, `blocked` `{workItem, gates}`, `architectureNotes`,
+`plannerNotes`, `unavailable`) or `error`. Unknown values are `null`.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
@@ -386,7 +413,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"). `show`, `add`, `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-02..05`, deferred. |
+| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), and viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"). `add`, `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-03..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

@@ -9,9 +9,10 @@ open Ros.Domain.Planning
 open Ros.Domain.Work
 open PlanningFixtures
 
-/// `work group create` (PRAXIS-GROUP-01; PRX-GRP-073 phase two): the pure
-/// declaration decision, the stored contract, the planner merge, and the
-/// command through the real binary.
+/// `work group create` (PRAXIS-GROUP-01) and `work group show`
+/// (PRAXIS-GROUP-02; PRX-GRP-073 phase two): the pure declaration decision and
+/// view, the stored contract, the planner merge, and the commands through the
+/// real binary.
 module WorkGroupTests =
     let private t name run = { Name = $"work group: {name}"; Run = run }
 
@@ -138,6 +139,93 @@ module WorkGroupTests =
                       Grouping = { PlannerConfiguration.defaults.Grouping with Groups = [ configured ] } }
 
               Assert.equal [ configured ] (GroupDeclaration.mergeInto [ stored ] configuration).Grouping.Groups) ]
+
+
+    // ---- show: the pure view ---------------------------------------------------
+
+    let private viewQueue =
+        [ queued "V-1" "ready" "2026-09-01T00:00:00Z"
+          { queued "V-2" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "V-3" ] }
+          queued "V-3" "blocked" "2026-09-03T00:00:00Z"
+          queued "V-4" "ready" "2026-09-04T00:00:00Z" ]
+
+    let private viewLive = [ live "V-4" LiveWorkState.Complete ]
+
+    let private viewStatuses = GroupDeclaration.memberStatuses viewQueue viewLive
+
+    let private viewStored =
+        { Group =
+            { Id = "GROUP-VIEW-001"
+              Members = [ "V-1"; "V-2"; "V-3"; "V-4" ]
+              Kind = Some GroupKind.SharedArea
+              Origin = GroupOrigin.HumanDeclared
+              SharedContext = [ "src/view" ]
+              ExecutionRepository = None
+              CrossRepository = false
+              ArchitectureNotes = [ "one renderer" ] }
+          DeclaredAt = "2026-10-07T00:00:00.000Z"
+          DeclaredBy = "tester" }
+
+    let private plannedView (stored: StoredGroup) =
+        let configuration = GroupDeclaration.mergeInto [ stored ] PlannerConfiguration.defaults
+        let planningInput = input viewQueue viewLive history [] configuration
+        GroupView.planned (Grouping.recommend planningInput (Planner.analyze planningInput)) stored.Group.Id
+
+    let private memberOf (view: GroupView) id = view.Members |> List.find (fun entry -> entry.WorkItemId = id)
+
+    let private viewTests =
+        [ t "show: each member reports its own recorded and planning state" (fun () ->
+              let view = GroupView.build viewStored viewStatuses (plannedView viewStored)
+              Assert.equal [ "V-1"; "V-2"; "V-3"; "V-4" ] (view.Members |> List.map (fun entry -> entry.WorkItemId))
+              Assert.equal (Some "ready") (memberOf view "V-1").RecordedState
+              Assert.equal (Some MemberStatus.Runnable) (memberOf view "V-1").Status
+              Assert.equal (Some "blocked") (memberOf view "V-3").RecordedState
+              Assert.equal (Some PlanningWorkState.Blocked) (memberOf view "V-3").PlanningState
+              Assert.equal (Some "complete") (memberOf view "V-4").RecordedState
+              Assert.equal (Some MemberStatus.Complete) (memberOf view "V-4").Status
+              Assert.empty view.Unavailable)
+
+          t "show: partial-completion progress counts every member" (fun () ->
+              let progress = (GroupView.build viewStored viewStatuses (plannedView viewStored)).Progress
+              Assert.equal 4 progress.Total
+              Assert.equal 1 progress.Complete
+              Assert.equal 1 progress.Blocked
+              Assert.equal 0 progress.Unknown
+              Assert.isTrue (progress.Statement.StartsWith "1 of 4 complete; blocked: V-3") progress.Statement)
+
+          t "show: a blocked member names the members it gates" (fun () ->
+              let view = GroupView.build viewStored viewStatuses (plannedView viewStored)
+              Assert.equal [ ({ WorkItemId = "V-3"; Gates = [ "V-2" ] }: BlockedMember) ] view.Blocked
+              Assert.equal [ "V-3" ] (memberOf view "V-2").GatedBy
+              Assert.empty (memberOf view "V-1").GatedBy)
+
+          t "show: the execution repository is declared or derived, and says which" (fun () ->
+              let derived = GroupView.build viewStored viewStatuses (plannedView viewStored)
+              Assert.equal RepositoryBasis.Derived derived.RepositoryBasis
+              Assert.isTrue derived.ExecutionRepository.IsSome "derived repository named"
+              let declaredStored = { viewStored with Group = { viewStored.Group with ExecutionRepository = Some "praxis" } }
+              let declared = GroupView.build declaredStored viewStatuses (plannedView declaredStored)
+              Assert.equal (Some "praxis") declared.ExecutionRepository
+              Assert.equal RepositoryBasis.Declared declared.RepositoryBasis)
+
+          t "show: without the planner, planning state is unavailable, not guessed" (fun () ->
+              let view = GroupView.build viewStored viewStatuses (Error "no analysis")
+              Assert.isTrue (view.Members |> List.forall (fun entry -> entry.PlanningState.IsNone && entry.Status.IsNone)) "no planning state"
+              Assert.equal (Some "blocked") (memberOf view "V-3").RecordedState
+              Assert.equal 4 view.Progress.Unknown
+              Assert.equal RepositoryBasis.Unknown view.RepositoryBasis
+              Assert.isTrue (view.Unavailable |> List.exists (fun line -> line.Contains "no analysis")) "reason reported")
+
+          t "show: a member that is no longer recorded is reported unknown" (fun () ->
+              let stored = { viewStored with Group = { viewStored.Group with Members = [ "V-1"; "GONE-9" ] } }
+              let view = GroupView.build stored viewStatuses (plannedView stored)
+              Assert.equal None (memberOf view "GONE-9").RecordedState
+              Assert.equal None (memberOf view "GONE-9").Status
+              Assert.isTrue (view.Unavailable |> List.exists (fun line -> line.Contains "GONE-9")) "unknown member reported")
+
+          t "show: an undeclared ID is not found" (fun () ->
+              Assert.equal None (GroupView.tryFind [ viewStored ] "GROUP-VIEW-002")
+              Assert.equal (Some viewStored) (GroupView.tryFind [ viewStored ] "GROUP-VIEW-001")) ]
 
     // ---- the command through the real binary -----------------------------------
 
@@ -280,6 +368,59 @@ module WorkGroupTests =
               let findings = validateFindings root
               Assert.isTrue (findings |> List.exists (fun finding -> (PraxisCli.text (finding["message"])).Contains "TASK-Z")) "unknown member flagged"
               File.WriteAllText(storePath root, "{ not json")
-              Assert.isTrue (not (validateFindings root).IsEmpty) "malformed store flagged") ]
+              Assert.isTrue (not (validateFindings root).IsEmpty) "malformed store flagged")
 
-    let tests = domain @ cli
+          t "show: text and JSON views of a declared group" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--architecture-note"; "one parser" ] |> PraxisCli.ok |> ignore
+              let text = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ]
+              Assert.equal 0 text.ExitCode
+              Assert.isTrue (text.Output.Contains "GROUP-FIXTURE-001 (human-declared") text.Output
+              Assert.isTrue (text.Output.Contains "TASK-A: recorded ready; planning ready (runnable)") text.Output
+              Assert.isTrue (text.Output.Contains "Progress: 0 of 2 complete") text.Output
+              Assert.isTrue (text.Output.Contains "one parser") text.Output
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> PraxisCli.ok
+              Assert.equal "work-group-show" (PraxisCli.text (shown.Json["kind"]))
+              let view = shown.Json["view"]
+              Assert.equal "GROUP-FIXTURE-001" (PraxisCli.text (view["group"]["id"]))
+              let total = (view["progress"]["total"]).GetValue<int>()
+              Assert.equal 2 total
+              let members = view["members"].AsArray() |> Seq.map (fun entry -> (PraxisCli.text (entry["workItem"]), PraxisCli.text (entry["recordedState"]))) |> Seq.toList
+              Assert.equal [ "TASK-A", "ready"; "TASK-B", "captured" ] members
+              Assert.equal "derived" (PraxisCli.text (view["executionRepository"]["basis"])))
+
+          t "show: blocked members and who they gate" (fun () ->
+              let root = fixture ()
+              write root ".ros/work/queue.json" (queueDocument.Replace("\"description\":\"Second.\"", "\"description\":\"Second.\",\"dependsOn\":[\"TASK-E\"]").Replace("]}", ",\n  {\"id\":\"TASK-E\",\"title\":\"Task E\",\"tags\":[],\"priority\":\"low\",\"status\":\"blocked\",\"createdAt\":\"2026-09-05T00:00:00.000Z\",\"updatedAt\":\"2026-09-05T00:00:00.000Z\",\"createdBy\":\"unknown\",\"source\":\"manual\",\"sourceReference\":null}\n]}"))
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--member"; "TASK-E" ] |> PraxisCli.ok |> ignore
+              let view = (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> PraxisCli.ok).Json["view"]
+              let blocked = view["blocked"].AsArray() |> Seq.map (fun entry -> (PraxisCli.text (entry["workItem"]), entry["gates"].AsArray() |> Seq.map PraxisCli.text |> Seq.toList)) |> Seq.toList
+              Assert.equal [ "TASK-E", [ "TASK-B" ] ] blocked)
+
+          t "show: an unknown group exits 1 and usage errors exit 2" (fun () ->
+              let root = fixture ()
+              let missing = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404"; "--json" ]
+              Assert.equal 1 missing.ExitCode
+              Assert.isTrue (not (missing.Json["ok"].GetValue<bool>())) "ok is false"
+              Assert.equal 1 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "GROUP-FIXTURE-002" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "--bogus" ]).ExitCode)
+
+          t "show never writes" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let snapshot () =
+                  Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+                  |> Array.filter (fun path -> not (path.Contains(Path.DirectorySeparatorChar.ToString() + ".git" + Path.DirectorySeparatorChar.ToString())))
+                  |> Array.sort
+                  |> Array.map (fun path -> path, File.ReadAllText path, File.GetLastWriteTimeUtc path)
+                  |> Array.toList
+
+              let before = snapshot ()
+              PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ignore
+              PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ignore
+              PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404" ] |> ignore
+              Assert.equal before (snapshot ())) ]
+
+    let tests = domain @ viewTests @ cli

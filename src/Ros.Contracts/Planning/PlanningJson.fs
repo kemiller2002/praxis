@@ -1247,6 +1247,44 @@ module PlanningJson =
               "declaredAt", text value.DeclaredAt
               "declaredBy", text value.DeclaredBy ]
 
+    /// `work group show`: one declaration with its members' own states and
+    /// partial-completion progress. Unavailable values are null, never zero.
+    let groupView (value: GroupView) : JsonNode =
+        record
+            [ "group", storedGroup value.Declaration
+              "executionRepository",
+              record
+                  [ "name", optionalText value.ExecutionRepository
+                    "basis", text (RepositoryBasis.code value.RepositoryBasis) ]
+              "members",
+              value.Members
+              |> List.map (fun entry ->
+                  record
+                      [ "workItem", text entry.WorkItemId
+                        "recordedState", optionalText entry.RecordedState
+                        "planningState", entry.PlanningState |> Option.map PlanningWorkState.code |> optionalText
+                        "status", entry.Status |> Option.map MemberStatus.code |> optionalText
+                        "gatedBy", texts entry.GatedBy
+                        "gates", texts entry.Gates ])
+              |> array
+              "progress",
+              record
+                  [ "total", integer value.Progress.Total
+                    "complete", integer value.Progress.Complete
+                    "inProgress", integer value.Progress.InProgress
+                    "runnable", integer value.Progress.Runnable
+                    "blocked", integer value.Progress.Blocked
+                    "notRunnable", integer value.Progress.NotRunnable
+                    "unknown", integer value.Progress.Unknown
+                    "statement", text value.Progress.Statement ]
+              "blocked",
+              value.Blocked
+              |> List.map (fun entry -> record [ "workItem", text entry.WorkItemId; "gates", texts entry.Gates ])
+              |> array
+              "architectureNotes", texts value.Declaration.Group.ArchitectureNotes
+              "plannerNotes", value.PlannerNotes |> List.map groupNote |> array
+              "unavailable", texts value.Unavailable ]
+
     /// The whole store, ordered by group ID so it renders deterministically.
     let renderGroupStore (groups: StoredGroup list) : string =
         record

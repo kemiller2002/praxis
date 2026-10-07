@@ -3,6 +3,7 @@ namespace Ros.Cli
 open System
 open System.Globalization
 open System.Text.Json.Nodes
+open Ros.Application.Planning
 open Ros.Contracts.Planning
 open Ros.Domain.Planning
 open Ros.Domain.Provenance
@@ -11,10 +12,15 @@ open Ros.Infrastructure.Planning
 /// `praxis work group create`: records a human-declared execution group in
 /// Praxis state (`.ros/work/groups.json`; PRX-GRP-073 phase two). It writes
 /// the group store only; members keep their own lifecycle state.
+/// `praxis work group show`: a read-only view of one stored group.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
-    let usage =
+    let showUsage = "work group show GROUP-ID [--json]"
+
+    let createUsage =
         "work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--dry-run] [--json]"
+
+    let usage = createUsage + " | " + showUsage
 
     let private valued =
         [ "--id"; "--member"; "--occurred-at"; "--kind"; "--execution-repository"; "--shared-context"; "--architecture-note" ]
@@ -56,13 +62,15 @@ module WorkGroupCommands =
                   DeclaredAt = timestamp
                   DeclaredBy = actor.Id }
 
-    let private document (dryRun: bool) (fields: (string * JsonNode) list) : string =
+    let private envelope (kind: string) (fields: (string * JsonNode) list) : string =
         let root = JsonObject()
         root["schema"] <- JsonValue.Create "praxis.work-group/1.0.0"
-        root["kind"] <- JsonValue.Create "work-group-create"
-        root["dryRun"] <- JsonValue.Create dryRun
+        root["kind"] <- JsonValue.Create kind
         fields |> List.iter (fun (name, node) -> root[name] <- node)
         PlanningJson.render root
+
+    let private document (dryRun: bool) (fields: (string * JsonNode) list) : string =
+        envelope "work-group-create" (("dryRun", JsonValue.Create dryRun :> JsonNode) :: fields)
 
     let private rejectionsNode (rejections: GroupRejection list) : JsonNode =
         let array = JsonArray()
@@ -115,6 +123,97 @@ module WorkGroupCommands =
         match request actor arguments with
         | Error message ->
             eprintfn "ERROR %s" message
-            eprintfn "Usage: %s" usage
+            eprintfn "Usage: %s" createUsage
             2
         | Ok parsed -> FileWorkGroupRepository.create root dryRun parsed |> emit json dryRun
+
+    // ---- show ---------------------------------------------------------------------
+
+    let private orUnknown (value: string option) = value |> Option.defaultValue "unknown"
+
+    let private memberLine (entry: GroupViewMember) =
+        let planning =
+            match entry.PlanningState, entry.Status with
+            | Some state, Some status -> $"{PlanningWorkState.code state} ({MemberStatus.code status})"
+            | _ -> "unknown"
+
+        let waits = if entry.GatedBy.IsEmpty then "" else $"""; waits on blocked {String.concat ", " entry.GatedBy}"""
+        let gates = if entry.Gates.IsEmpty then "" else $"""; gates {String.concat ", " entry.Gates}"""
+        $"  {entry.WorkItemId}: recorded {orUnknown entry.RecordedState}; planning {planning}{waits}{gates}"
+
+    let private section (title: string) (lines: string list) =
+        match lines with
+        | [] -> [ $"{title}: none" ]
+        | _ -> $"{title}:" :: (lines |> List.map (sprintf "  %s"))
+
+    let private showText (view: GroupView) =
+        let group = view.Declaration.Group
+        let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified"
+
+        [ $"{group.Id} ({GroupOrigin.code group.Origin}, kind {kind}); declared by {view.Declaration.DeclaredBy} at {view.Declaration.DeclaredAt}"
+          $"Execution repository: {orUnknown view.ExecutionRepository} ({RepositoryBasis.code view.RepositoryBasis}); cross-repository: {group.CrossRepository}"
+          $"Progress: {view.Progress.Statement}"
+          "Members:"
+          yield! view.Members |> List.map memberLine
+          yield!
+              view.Blocked
+              |> List.map (fun entry ->
+                  match entry.Gates with
+                  | [] -> $"{entry.WorkItemId} gates no other member"
+                  | gated -> $"""{entry.WorkItemId} gates {String.concat ", " gated}""")
+              |> section "Blocked members"
+          yield! section "Shared context" group.SharedContext
+          yield! section "Architecture notes" group.ArchitectureNotes
+          yield!
+              view.PlannerNotes
+              |> List.map (fun note -> $"{Ros.Domain.Planning.FindingSeverity.code note.Severity} {GroupNoteCode.code note.Code}: {note.Message}")
+              |> section "Planner notes"
+          yield! view.Unavailable |> List.map (sprintf "Unavailable: %s")
+          "Read-only: nothing was written; members keep their own lifecycle state." ]
+        |> String.concat "\n"
+
+    let private plannedAt () =
+        DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+
+    /// The planner's view of the group, read through the planning port, which
+    /// has no write operation.
+    let private planned (root: string) (version: string) (id: string) =
+        PlanningOperations.analyze (FilePlanningRepository.create root None None) (plannedAt ()) version
+        |> Result.map (fun (input, analysis) -> Grouping.recommend input analysis)
+        |> Result.bind (fun report -> GroupView.planned report id)
+
+    let private view (root: string) (version: string) (id: string) : Result<GroupView, string> =
+        FilePlanningRepository.readStoredGroups root
+        |> Result.bind (fun stored ->
+            GroupView.tryFind stored id
+            |> Option.map Ok
+            |> Option.defaultValue (Error $"group {id} is not declared (see .ros/work/groups.json or 'work group create')"))
+        |> Result.bind (fun stored ->
+            FileWorkGroupRepository.memberStatuses root
+            |> Result.map (fun statuses -> GroupView.build stored statuses (planned root version id)))
+
+    /// Never writes: it reads the group store, the backlog, the live context
+    /// and the planner's read-only analysis. Exit 0 shown, 1 unknown or
+    /// unreadable group, 2 usage.
+    let show (root: string) (version: string) (arguments: string list) : int =
+        let json = List.contains "--json" arguments
+
+        match arguments |> List.filter ((<>) "--json") with
+        | [ id ] when not (id.StartsWith "-") ->
+            match view root version id, json with
+            | Ok shown, true ->
+                printf "%s" (envelope "work-group-show" [ "ok", JsonValue.Create true; "view", PlanningJson.groupView shown ])
+                0
+            | Ok shown, false ->
+                printfn "%s" (showText shown)
+                0
+            | Error message, true ->
+                printf "%s" (envelope "work-group-show" [ "ok", JsonValue.Create false; "error", JsonValue.Create message ])
+                1
+            | Error message, false ->
+                eprintfn "ERROR %s" message
+                1
+        | _ ->
+            eprintfn "ERROR work group show requires exactly one GROUP-ID"
+            eprintfn "Usage: %s" showUsage
+            2

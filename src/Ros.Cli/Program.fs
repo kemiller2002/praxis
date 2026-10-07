@@ -2991,6 +2991,7 @@ let private repositoryDispatch root packageRoot arguments =
             2
     | "work" :: "show" :: rest -> runWorkShow root rest
     | "work" :: "group" :: "create" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> WorkGroupCommands.create root actor rest)
+    | "work" :: "group" :: "show" :: rest -> WorkGroupCommands.show root Version rest
     | "work" :: "capture" :: rest -> ProvenanceCommands.withResolvedActor rest (runWorkCapture root rest)
     | "add" :: rest -> runAdd root rest
     | "work" :: "update" :: rest -> runWorkUpdate root rest
