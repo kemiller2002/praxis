@@ -24,6 +24,7 @@
     <Compile Include="Work/EnvelopeReconciliationReceipt.fs" />
     <Compile Include="Work/Model.fs" />
     <Compile Include="Work/Plan.fs" />
+    <Compile Include="Work/WorkRisk.fs" />
     <Compile Include="Work/CompletionReadiness.fs" />
     <Compile Include="Work/EnvelopeReconciliation.fs" />
     <Compile Include="Work/ContextPlan.fs" />
@@ -62,6 +63,7 @@
     <Compile Include="Provenance/ArtifactProvenance.fs" />
     <Compile Include="Provenance/ProvenancePolicy.fs" />
     <Compile Include="Remote/Protocol.fs" />
+    <Compile Include="Remote/StateCompatibility.fs" />
     <Compile Include="Remote/Identity.fs" />
     <Compile Include="Remote/Execution.fs" />
     <Compile Include="Work/Reconciliation.fs" />

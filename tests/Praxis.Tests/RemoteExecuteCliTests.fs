@@ -306,6 +306,30 @@ module RemoteExecuteCliTests =
                       // Only the pre-existing change remains.
                       Assert.equal "M notes.txt" (status root)) }
 
+          { Name = "remote execute: state this executor does not read is refused before any mutation (PRX-QUAL-010)"
+            Run =
+              fun () ->
+                  withTemporaries (fun temporary ->
+                      let root = optedIn temporary "incompatible"
+                      let queue = CliPort.readJson root ".ros/work/queue.json"
+                      queue["schemaVersion"] <- JsonValue.Create "9.0.0"
+                      CliPort.writeJson root ".ros/work/queue.json" queue
+                      commit root "a newer Praxis wrote the queue"
+                      let before = git root [ "rev-parse"; "HEAD" ]
+
+                      let refused = remote root (request root "work.start" """{"workItemIds":["WI-0100"]}""")
+                      Assert.equal 1 refused.Exit
+                      Assert.equal "incompatible-state" (code refused.Response)
+                      Assert.equal "rejected" (outcome refused.Response)
+                      Assert.equal "never" (text (refused.Response["failure"]["retry"]))
+                      Assert.isTrue ((text (refused.Response["failure"]["message"])).Contains "work-queue schema 9.0.0") "the message names the document and version"
+                      Assert.equal "" (status root)
+                      Assert.equal before (git root [ "rev-parse"; "HEAD" ])
+
+                      // Reads never mutate, so they are not gated.
+                      let read = remote root (request root "praxis.describe" "{}")
+                      Assert.equal 0 read.Exit) }
+
           { Name = "remote execute: remote mutation is opt-in per repository and read never implies write"
             Run =
               fun () ->

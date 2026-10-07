@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "description": "State compatibility of published Praxis releases (PRX-QUAL-010). The self-hosting pin in .echelon/toolchain.json must name a release listed here whose `reads` cover every state-schema version the repository's committed state declares, or the gap must be an owned, unexpired exception. Releases from 3.8.0 on declare the same table in their release.json; earlier entries were recorded from the source at their tag (the versions their readers accept and their state wrote). praxis-remote-enable.sh adds a release here when it pins it, after verifying the release's checksums and build-provenance attestation. Enforced by tests/Praxis.Tests/PremergeReleaseTests.fs.",
+  "releases": {
+    "3.7.2": {
+      "remoteProtocol": "1.3",
+      "reads": {
+        "work-queue": ["1.0.0"],
+        "work-context": ["1.0.0"],
+        "work-groups": ["1"],
+        "work-events": ["1.0.0"]
+      },
+      "recordedFrom": "tag v3.7.2 source (WorkGroupJson schemaVersion 1; state written at the tag)"
+    }
+  },
+  "exceptions": [
+    {
+      "id": "QX-COMPAT-1",
+      "release": "3.7.2",
+      "document": "work-groups",
+      "version": "2",
+      "rationale": "PRAXIS-GROUP-08 moved .ros/work/groups.json to schema 2, which the pinned 3.7.2 executor refuses. No release that reads it is published yet; the next release declares work-groups 1 and 2, and its pin advance (scripts/praxis-remote-enable.sh --skip-release) retires this exception. Until then remote mutations that read the group store fail closed on the 3.7.2 executor.",
+      "owner": "praxis-maintainers",
+      "created": "2026-10-07",
+      "expires": "2026-10-21",
+      "evidence": "PRAXIS-QUAL-06"
+    }
+  ]
+}

@@ -640,8 +640,8 @@ let private handle (context: Context) (request: Request) : Response * string opt
         | Error lockFailure -> rejectedFor context request (failure FailureCode.ConcurrencyConflict lockFailure.Message []), None
         | Ok lease ->
             try
-                match FileRemoteRepository.lookup context.Root request.RequestId with
-                | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []), None
+                match FileRemoteRepository.preflight context.Root request.RequestId with
+                | Error value -> rejectedFor context request { value with Message = diagnostic value.Message }, None
                 | Ok(lookup, recorded) -> decideAndRun lookup recorded
             finally
                 lease.Release() |> ignore

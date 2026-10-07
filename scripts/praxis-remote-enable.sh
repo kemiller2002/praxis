@@ -171,18 +171,26 @@ PY
     [ -n "$RUN_ID" ] || die "no native-release run started for $RELEASE_SHA"
     gh run watch "$RUN_ID" --repo "$REPOSITORY_SLUG" --exit-status || die "the native release workflow failed (run $RUN_ID)"
   fi
+fi
 
-  step "Verify the published release"
-  if ! $DRY_RUN; then
-    VERIFY="$(mktemp -d)"
-    trap 'rm -rf "$VERIFY"' EXIT
-    gh release download "v$VERSION" --repo "$REPOSITORY_SLUG" --dir "$VERIFY" --pattern 'praxis-linux-x64.tar.gz' --pattern 'native-checksums.txt'
-    (cd "$VERIFY" && grep ' praxis-linux-x64.tar.gz$' native-checksums.txt | sha256sum -c -) || die "checksum verification failed"
-    gh attestation verify "$VERIFY/praxis-linux-x64.tar.gz" --repo "$REPOSITORY_SLUG" || die "attestation verification failed"
-    tar -xzf "$VERIFY/praxis-linux-x64.tar.gz" -C "$VERIFY"
-    "$VERIFY/praxis-linux-x64/praxis" --help 2>&1 | grep -q 'remote execute' || die "v$VERSION does not contain 'remote execute'"
-    echo "v$VERSION: checksum, attestation and remote commands verified"
-  fi
+# --- verify -----------------------------------------------------------------
+# The pin only ever advances to a release whose immutable assets exist and
+# whose checksum and build-provenance attestation verify (PRX-QUAL-010),
+# whether it was released above or already published (--skip-release).
+
+step "Verify the published release v$VERSION"
+if ! $DRY_RUN; then
+  VERIFY="$(mktemp -d)"
+  trap 'rm -rf "$VERIFY"' EXIT
+  gh release download "v$VERSION" --repo "$REPOSITORY_SLUG" --dir "$VERIFY" --pattern 'praxis-linux-x64.tar.gz' --pattern 'native-checksums.txt'
+  (cd "$VERIFY" && grep ' praxis-linux-x64.tar.gz$' native-checksums.txt | sha256sum -c -) || die "checksum verification failed"
+  gh attestation verify "$VERIFY/praxis-linux-x64.tar.gz" --repo "$REPOSITORY_SLUG" || die "attestation verification failed"
+  tar -xzf "$VERIFY/praxis-linux-x64.tar.gz" -C "$VERIFY"
+  "$VERIFY/praxis-linux-x64/praxis" --help 2>&1 | grep -q 'remote execute' || die "v$VERSION does not contain 'remote execute'"
+  # The release's declared state compatibility, as published at its tag.
+  gh api "repos/$REPOSITORY_SLUG/contents/release.json?ref=v$VERSION" -H 'Accept: application/vnd.github.raw' > "$VERIFY/release.json" \
+    || die "release.json of v$VERSION could not be read"
+  echo "v$VERSION: checksum, attestation and remote commands verified"
 fi
 
 # --- 2. enable ---------------------------------------------------------------
@@ -206,6 +214,26 @@ if ".ros/remote/**" not in ignored:
     ignored.append(".ros/remote/**")  # the request journal is Praxis bookkeeping
 json.dump(config, open("ros.json", "w"), indent=2); open("ros.json", "a").write("\n")
 PY
+  # The self-hosting repository records the pinned release's declared state
+  # compatibility; the premerge fence checks the pin against it.
+  if [ -f quality/release-compatibility.json ]; then
+    python3 - "$VERSION" "$VERIFY/release.json" <<'PY' || die "v$VERSION declares no state compatibility; it cannot be pinned here"
+import json, sys
+version, published = sys.argv[1], json.load(open(sys.argv[2]))
+declared = published.get("compatibility")
+if not declared:
+    sys.exit(1)
+path = "quality/release-compatibility.json"
+record = json.load(open(path))
+record["releases"][version] = {
+    "remoteProtocol": declared["remoteProtocol"],
+    "reads": {name: entry["reads"] for name, entry in declared["stateSchemas"].items()},
+    "recordedFrom": f"release.json at tag v{version}",
+}
+record["exceptions"] = [entry for entry in record["exceptions"] if entry["release"] != version]
+json.dump(record, open(path, "w"), indent=2); open(path, "a").write("\n")
+PY
+  fi
 else
   echo "  [dry-run] set .echelon/toolchain.json praxis=$VERSION and ros.json remote.capabilities=[$CAPABILITIES]"
 fi
