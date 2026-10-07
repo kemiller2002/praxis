@@ -5263,7 +5263,7 @@
     {
       "id": "PRAXIS-ID-03",
       "title": "Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182)",
-      "description": "Carry the canonical work-item identity structurally in execution telemetry and planner documents and correct the documentation that overstates identity. Acceptance criteria: (1) new execution telemetry records carry workItem {repositoryId, repository, localId} next to the legacy workItemId, and records without it stay valid (legacy rule documented); (2) every praxis.plan document carries the repository identity it was computed in and each work item carries its structured canonical reference, with no competing identity scheme (PRX-PLAN-182); parsers read documents without them; (3) docs/planning.md no longer reports PRX-PLAN-182 as met on the grounds that no identity scheme exists; (4) RQ-ROS-2026-A021 names PRX-REMOTE-001..050, no longer defers the npm bin to the abandoned PRAXIS-NPM-BIN and no longer cites deleted Node test files; (5) tests cover the round-trips. Depends on PRAXIS-ID-01.",
+      "description": "Carry the canonical work-item identity structurally in execution telemetry and planner documents and correct the documentation that overstates identity. Acceptance criteria: (1) new execution telemetry records carry workItem {repositoryId, repository, localId} next to the legacy workItemId, and records without it stay valid (legacy rule documented); (2) every praxis.plan document carries the repository identity it was computed in, so each work-item ID in it is the local ID of a canonical identity in that repository, with no competing identity scheme (PRX-PLAN-182); parsers read documents without it (per-item references were not added: the document-level identity qualifies every local ID and keeps the plan schema the grouped-work track is extending stable); (3) docs/planning.md no longer reports PRX-PLAN-182 as met on the grounds that no identity scheme exists; (4) RQ-ROS-2026-A021 names PRX-REMOTE-001..050, no longer defers the npm bin to the abandoned PRAXIS-NPM-BIN and no longer cites deleted Node test files; (5) tests cover the round-trips. Depends on PRAXIS-ID-01.",
       "tags": [
         "identity",
         "planning"
@@ -5272,7 +5272,7 @@
       "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:27.755Z",
-      "updatedAt": "2026-10-06T20:38:51.558Z",
+      "updatedAt": "2026-10-07T05:54:32.958Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
