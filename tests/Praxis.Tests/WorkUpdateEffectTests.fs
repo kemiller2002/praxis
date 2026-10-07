@@ -27,6 +27,7 @@ module WorkUpdateEffectTests =
           Description = WorkDescriptionChange.Keep
           Tags = WorkTagsChange.Keep
           Priority = WorkPriorityChange.Keep
+          Risk = WorkRiskChange.Keep
           UpdatedAt = "2026-09-09T18:00:00.000Z" }
 
     let tests =

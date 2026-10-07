@@ -4911,10 +4911,10 @@
         "completion"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T23:55:41.447Z",
-      "updatedAt": "2026-10-06T23:55:56.381Z",
+      "updatedAt": "2026-10-07T05:19:46.274Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4935,10 +4935,10 @@
         "completion"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T23:55:42.069Z",
-      "updatedAt": "2026-10-06T23:55:56.880Z",
+      "updatedAt": "2026-10-07T05:19:48.593Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4959,10 +4959,10 @@
         "completion"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T23:55:42.753Z",
-      "updatedAt": "2026-10-06T23:55:57.491Z",
+      "updatedAt": "2026-10-07T05:19:51.004Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4983,10 +4983,10 @@
         "completion"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T23:55:43.349Z",
-      "updatedAt": "2026-10-06T23:55:57.981Z",
+      "updatedAt": "2026-10-07T05:19:53.422Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

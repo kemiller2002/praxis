@@ -264,6 +264,14 @@ Meaningful work SHALL declare, when applicable:
 
 Praxis should derive completion obligations from this metadata.
 
+Status (2026-10-06, PRAXIS-QUAL-07): implemented. Work items declare
+`praxis.work-risk/1` metadata through `work update` (change classes, risk
+level, state/protocol/security impact, failure posture, tier ownership, live
+proof); invalid declarations are refused. `WorkRisk.obligations` derives the
+design-debt and verification-matrix obligations, shown by `work context` and
+enforced at completion (DF-ROS-2026-A052 amendment). Tests:
+CompletionObligationsTests.
+
 ### PRX-QUAL-021 — Add explicit design-debt capture to completion
 Priority: high
 
@@ -276,6 +284,12 @@ Acceptance:
 - untracked known debt is a completion failure for high-risk work.
 - follow-up debt records rationale, risk, and the boundary that was compromised.
 - prototypes cannot become canonical silently.
+
+Status (2026-10-06, PRAXIS-QUAL-08): implemented as the
+`design-debt-declared` facet (`--evidence design-debt=PATH`,
+`praxis.design-debt/1`). High-risk work without a declaration, debt not
+tracked by a recorded open work item, and a prototype without a debt entry
+refuse completion (exit 3, no state change).
 
 ### PRX-QUAL-022 — Add verification matrices for high-risk work
 Priority: high
@@ -291,6 +305,13 @@ execution work, Praxis SHALL require evidence across:
 - representative live effect.
 
 Green compilation/unit tests alone SHALL not satisfy completion.
+
+Status (2026-10-06, PRAXIS-QUAL-09): implemented as the
+`verification-matrix-satisfied` facet (`--evidence verification-matrix=PATH`,
+`praxis.verification-matrix/1`), required for the listed change classes and
+impacts. Compilation or unit tests alone, a not-met row, a missing required
+dimension, a live effect without live evidence, or a missing location
+reference refuse completion.
 
 ### PRX-QUAL-023 — Integrate Dokimos quality evidence into Praxis completion
 Priority: medium
@@ -322,11 +343,15 @@ Status (2026-10-05, branch `quality/prx-qual-023-quality-evidence`,
 
 Tracked debt (migration bridge): the policy is off by default so existing
 repositories keep their behaviour. Retire it, defaulting new repositories to
-`dokimos: required`, once Conditor installs Dokimos by default. Not yet done:
-a digest of each consumed evidence file in the record, and a consumable
-release-readiness contract (`release-ready` is always unavailable when
-required). PRX-QUAL-020, 021 and 022 remain open; readiness facets are the
-hook their obligations will feed.
+`dokimos: required`, once Conditor installs Dokimos by default.
+
+Update (2026-10-06, PRAXIS-QUAL-10, `DF-ROS-2026-A052` amendment): every
+consumed evidence file is recorded in `consumedEvidence` with the SHA-256
+digest of the bytes decoded, and `release-ready` is established by a
+consumable `praxis.release-readiness/1` document (`--evidence
+release-readiness=PATH`). PRX-QUAL-020, 021 and 022 feed the readiness facets
+(see their status notes). The branch named above was merged; the work is
+tracked by PRAXIS-QUAL-07..10.
 
 ## Tracking
 

@@ -7612,6 +7612,186 @@
         }
       },
       "completedAt": "2026-10-07T05:34:49.943Z"
+    },
+    {
+      "id": "PRAXIS-QUAL-07",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/WorkRisk.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/CompletionObligationsTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-COMPLETION-001/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:19:46.274Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T001204420Z-905b1f14"
+      ],
+      "latestCheckpoint": {
+        "id": "3a9fca4bc359b0438b906ef0",
+        "recordedAt": "2026-10-07T05:19:37.143Z",
+        "executionId": "EXE-20261007T001204420Z-905b1f14",
+        "repository": "repository-operating-system",
+        "branch": "qual/completion-obligations",
+        "commit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "qual/completion-obligations",
+        "remoteCommit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "summary": "Completion obligations implemented, verified per criterion and pushed (PR #186)",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:19:46.274Z"
+    },
+    {
+      "id": "PRAXIS-QUAL-08",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/WorkRisk.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/CompletionObligationsTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-COMPLETION-001/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:19:48.593Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T001207499Z-5dda573d"
+      ],
+      "latestCheckpoint": {
+        "id": "ba8a702350e47e7d828cfbc8",
+        "recordedAt": "2026-10-07T05:19:39.437Z",
+        "executionId": "EXE-20261007T001207499Z-5dda573d",
+        "repository": "repository-operating-system",
+        "branch": "qual/completion-obligations",
+        "commit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "qual/completion-obligations",
+        "remoteCommit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "summary": "Completion obligations implemented, verified per criterion and pushed (PR #186)",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:19:48.593Z"
+    },
+    {
+      "id": "PRAXIS-QUAL-09",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/WorkRisk.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/CompletionObligationsTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-COMPLETION-001/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:19:51.004Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T001210003Z-368163bb"
+      ],
+      "latestCheckpoint": {
+        "id": "fea719849b50dfc0b3c58a19",
+        "recordedAt": "2026-10-07T05:19:41.718Z",
+        "executionId": "EXE-20261007T001210003Z-368163bb",
+        "repository": "repository-operating-system",
+        "branch": "qual/completion-obligations",
+        "commit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "qual/completion-obligations",
+        "remoteCommit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "summary": "Completion obligations implemented, verified per criterion and pushed (PR #186)",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:19:51.004Z"
+    },
+    {
+      "id": "PRAXIS-QUAL-10",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/WorkRisk.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/CompletionObligationsTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-COMPLETION-001/group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:19:53.422Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T001212751Z-17f1cf28"
+      ],
+      "latestCheckpoint": {
+        "id": "b1c553ee3db587f06fabcf97",
+        "recordedAt": "2026-10-07T05:19:43.938Z",
+        "executionId": "EXE-20261007T001212751Z-17f1cf28",
+        "repository": "repository-operating-system",
+        "branch": "qual/completion-obligations",
+        "commit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "qual/completion-obligations",
+        "remoteCommit": "47e64d91af8a465870da78b216e97a005f39bf30",
+        "summary": "Completion obligations implemented, verified per criterion and pushed (PR #186)",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:19:53.422Z"
     }
   ],
   "protocolVersion": "1.0.0",

@@ -81,6 +81,7 @@
     <Compile Include="WorkBacklogCliTests.fs" />
     <Compile Include="WorkLifecycleCliTests.fs" />
     <Compile Include="QualityEvidenceTests.fs" />
+    <Compile Include="CompletionObligationsTests.fs" />
     <Compile Include="WorkViewCliTests.fs" />
     <Compile Include="StatusValidateCliTests.fs" />
     <Compile Include="GitArtifactCliTests.fs" />

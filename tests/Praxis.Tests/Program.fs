@@ -121,4 +121,5 @@ let main _ =
     @ FormaPresentationTests.tests
     @ AegisBoundaryTests.tests
     @ IdentityTests.tests
+    @ CompletionObligationsTests.tests
     |> TestRunner.run

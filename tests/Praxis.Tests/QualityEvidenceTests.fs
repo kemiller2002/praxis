@@ -90,8 +90,17 @@ module QualityEvidenceTests =
     let private architecture (readiness: ItemReadiness) =
         readiness.Facets |> List.find (fun facet -> facet.Facet = CompletionFacet.ArchitectureVerified)
 
+    let private noObligationEvidence: ObligationObservations =
+        { DesignDebt = SourceObservation.NotSupplied
+          VerificationMatrix = SourceObservation.NotSupplied
+          ReleaseReadiness = SourceObservation.NotSupplied }
+
+    /// The policy-only assessment: no risk metadata, no obligation evidence.
+    let private assessItem p item provided dokimosObservation ordoObservation =
+        CompletionReadinessOperations.assess p CompletionFacts.none (fun _ -> true) item provided dokimosObservation ordoObservation noObligationEvidence []
+
     let private assess p dokimosObservation ordoObservation =
-        CompletionReadinessOperations.assess p ("WI-1", "task") [] dokimosObservation ordoObservation
+        assessItem p ("WI-1", "task") [] dokimosObservation ordoObservation
 
     let private isSatisfied =
         function
@@ -246,7 +255,7 @@ module QualityEvidenceTests =
                       RequiredFacets = set [ CompletionFacet.ImplementationComplete; CompletionFacet.BehaviorVerified; CompletionFacet.ReleaseReady ] }
 
               let readiness =
-                  CompletionReadinessOperations.assess p ("WI-1", "task") [ { Type = "implementation"; Path = "src/a.fs" } ] SourceObservation.NotSupplied SourceObservation.NotSupplied
+                  assessItem p ("WI-1", "task") [ { Type = "implementation"; Path = "src/a.fs" } ] SourceObservation.NotSupplied SourceObservation.NotSupplied
 
               let status facet = (readiness.Facets |> List.find (fun entry -> entry.Facet = facet)).Status
               Assert.isTrue (isSatisfied (status CompletionFacet.ImplementationComplete)) "implementation"
@@ -259,7 +268,12 @@ module QualityEvidenceTests =
 
     let private failingSources: QualityEvidenceSources =
         { ReadDokimos = fun _ -> failwith "the legacy default must not read evidence"
-          ReadOrdo = fun _ -> failwith "the legacy default must not read evidence" }
+          ReadOrdo = fun _ -> failwith "the legacy default must not read evidence"
+          ReadDesignDebt = fun _ -> failwith "the legacy default must not read evidence"
+          ReadVerificationMatrix = fun _ -> failwith "the legacy default must not read evidence"
+          ReadReleaseReadiness = fun _ -> failwith "the legacy default must not read evidence"
+          Digest = fun _ -> failwith "the legacy default must not read evidence"
+          LocationExists = fun _ -> failwith "the legacy default must not read evidence" }
 
     let private policyTests =
         [ t "the default policy leaves existing completion behaviour unchanged" (fun () ->
@@ -268,6 +282,7 @@ module QualityEvidenceTests =
               let outcome =
                   CompletionReadinessOperations.gate
                       failingSources
+                      CompletionFacts.none
                       (Ok QualityEvidencePolicies.legacyDefault)
                       [ "WI-1", "task" ]
                       [ { Type = "dokimos-ratchet"; Path = "x.json" } ]
@@ -279,19 +294,20 @@ module QualityEvidenceTests =
                   { policy EvidenceRequirement.Required EvidenceRequirement.Off with
                       WorkTypes = Some(set [ "feature" ]) }
 
-              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources (Ok p) [ "WI-1", "mechanical" ] []))
+              Assert.equal CompletionGateOutcome.NotApplicable (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Ok p) [ "WI-1", "mechanical" ] []))
 
           t "an invalid policy fails closed" (fun () ->
-              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources (Error "bad") [ "WI-1", "task" ] []))
+              Assert.equal (CompletionGateOutcome.PolicyInvalid "bad") (CompletionReadinessOperations.gate failingSources CompletionFacts.none (Error "bad") [ "WI-1", "task" ] []))
 
           t "more than one report of a type is ambiguous" (fun () ->
               let sources =
-                  { ReadDokimos = fun _ -> EvidenceReading.Parsed(report DokimosVerdict.Pass)
-                    ReadOrdo = fun _ -> failwith "unused" }
+                  { failingSources with
+                        ReadDokimos = fun _ -> EvidenceReading.Parsed(report DokimosVerdict.Pass)
+                        Digest = fun _ -> Some "sha256:0" }
 
               let provided = [ { Type = "dokimos-ratchet"; Path = "a.json" }; { Type = "dokimos-ratchet"; Path = "b.json" } ]
 
-              match CompletionReadinessOperations.gate sources (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided with
+              match CompletionReadinessOperations.gate sources CompletionFacts.none (Ok(policy EvidenceRequirement.Required EvidenceRequirement.Off)) [ "WI-1", "task" ] provided with
               | CompletionGateOutcome.Refused [ readiness ] -> Assert.equal (SourceObservation.Ambiguous [ "a.json"; "b.json" ]) readiness.Dokimos
               | other -> failwith $"{other}")
 
@@ -345,7 +361,7 @@ module QualityEvidenceTests =
 
           t "real reports drive the expected decisions" (fun () ->
               let required = policy EvidenceRequirement.Required EvidenceRequirement.Required
-              let decide item dok ord = CompletionReadinessOperations.assess required (item, "task") [] (supplied dok) (supplied ord) |> CompletionReadiness.isReady
+              let decide item dok ord = assessItem required (item, "task") [] (supplied dok) (supplied ord) |> CompletionReadiness.isReady
               Assert.isTrue (decide "WI-QUALITY" (dokimos "pass") (ordo "low-no-action")) "pass + no-action"
               Assert.isTrue (decide "PRX-CORRELATION-ID" (dokimos "excepted-pass") (ordo "full-coverage")) "excepted pass + approved"
               Assert.isTrue (not (decide "WI-QUALITY" (dokimos "regression") (ordo "low-no-action"))) "regression"

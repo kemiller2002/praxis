@@ -17,6 +17,9 @@ module QualityEvidenceJson =
     let dokimosSchemaVersion = "1.0.0"
     let ordoSchema = "ordo.boundary-amplification/1"
     let readinessSchema = "praxis.completion-readiness/1"
+    let designDebtSchema = "praxis.design-debt/1"
+    let verificationMatrixSchema = "praxis.verification-matrix/1"
+    let releaseReadinessSchema = "praxis.release-readiness/1"
 
     type private Decoder<'T> = JsonElement -> Result<'T, string>
 
@@ -85,6 +88,7 @@ module QualityEvidenceJson =
     type private ResultBuilder() =
         member _.Bind(value, next) = Result.bind next value
         member _.Return value = Ok value
+        member _.ReturnFrom(value: Result<'T, string>) = value
 
     let private result = ResultBuilder()
 
@@ -232,6 +236,222 @@ module QualityEvidenceJson =
                 match decodeOrdoBody root with
                 | Ok assessment -> EvidenceReading.Parsed assessment
                 | Error reason -> EvidenceReading.Malformed reason)
+
+    let private nonEmpty name element =
+        str name element
+        |> Result.bind (fun value -> if String.IsNullOrWhiteSpace value then Error $"member '{name}' must not be empty" else Ok value)
+
+    let private optionalBool (name: string) (element: JsonElement) =
+        match element.TryGetProperty name with
+        | false, _ -> Ok false
+        | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+        | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+        | _ -> Error $"member '{name}' must be a boolean"
+
+    /// Decodes a document that names its contract in `schema`.
+    let private decodeSchema (schema: string) (decodeBody: JsonElement -> Result<'T, string>) (text: string) : EvidenceReading<'T> =
+        parse text (fun root ->
+            match str "schema" root with
+            | Ok named when named <> schema -> EvidenceReading.Unsupported $"schema '{named}' is not '{schema}'"
+            | Error reason -> EvidenceReading.Malformed $"not a {schema} document: {reason}"
+            | Ok _ ->
+                match decodeBody root with
+                | Ok value -> EvidenceReading.Parsed value
+                | Error reason -> EvidenceReading.Malformed reason)
+
+    let private debtEntry: Decoder<DesignDebtEntry> =
+        fun entry ->
+            result {
+                let! workItem = nonEmpty "workItem" entry
+                let! rationale = nonEmpty "rationale" entry
+                let! risk = nonEmpty "risk" entry
+                let! boundary = nonEmpty "compromisedBoundary" entry
+
+                return
+                    { WorkItem = workItem
+                      Rationale = rationale
+                      Risk = risk
+                      CompromisedBoundary = boundary }
+            }
+
+    let private decodeDesignDebtBody (root: JsonElement) =
+        result {
+            let! workItem = nonEmpty "workItem" root
+            let! knownDebt = enumOf "knownDebt" [ "none", false; "declared", true ] root
+            let! prototype = optionalBool "prototype" root
+            let! entries = array "entries" debtEntry root
+
+            let! () =
+                match knownDebt, entries with
+                | false, [] -> Ok()
+                | false, _ -> Error "knownDebt 'none' cannot list entries"
+                | true, [] -> Error "knownDebt 'declared' needs at least one entry"
+                | true, _ -> Ok()
+
+            return
+                { WorkItem = workItem
+                  Prototype = prototype
+                  Entries = entries }
+        }
+
+    /// Decodes a `praxis.design-debt/1` declaration (PRX-QUAL-021).
+    let decodeDesignDebt (text: string) : EvidenceReading<DesignDebtDeclaration> =
+        decodeSchema designDebtSchema decodeDesignDebtBody text
+
+    let private evidenceKinds =
+        [ "build", VerificationEvidenceKind.Build
+          "unit-test", VerificationEvidenceKind.UnitTest
+          "integration-test", VerificationEvidenceKind.IntegrationTest
+          "command", VerificationEvidenceKind.Command
+          "location", VerificationEvidenceKind.Location
+          "live", VerificationEvidenceKind.Live ]
+
+    let private verificationEvidence: Decoder<VerificationEvidenceItem> =
+        fun entry ->
+            result {
+                let! kind = enumOf "kind" evidenceKinds entry
+                let! reference = nonEmpty "reference" entry
+                let! outcome = nonEmpty "result" entry
+
+                return
+                    { Kind = kind
+                      Reference = reference
+                      Result = outcome }
+            }
+
+    let private dimensions =
+        WorkRisk.allDimensions |> List.map (fun dimension -> WorkRisk.dimensionCode dimension, dimension)
+
+    let private verificationRow: Decoder<VerificationRow> =
+        fun row ->
+            result {
+                let! dimension = enumOf "dimension" dimensions row
+                let! status = enumOf "status" [ "met", 0; "not-met", 1; "not-applicable", 2 ] row
+                let! evidence = array "evidence" verificationEvidence row
+
+                let! status =
+                    match status with
+                    | 0 -> Ok MatrixRowStatus.Met
+                    | 1 -> Ok MatrixRowStatus.NotMet
+                    | _ -> nonEmpty "reason" row |> Result.map MatrixRowStatus.NotApplicable
+
+                return
+                    { Dimension = dimension
+                      Status = status
+                      Evidence = evidence }
+            }
+
+    let private decodeMatrixBody (root: JsonElement) =
+        result {
+            let! workItem = nonEmpty "workItem" root
+            let! rows = array "rows" verificationRow root
+
+            let! () =
+                match rows |> List.countBy _.Dimension |> List.filter (fun (_, count) -> count > 1) with
+                | [] -> Ok()
+                | (dimension, _) :: _ -> Error $"dimension '{WorkRisk.dimensionCode dimension}' has more than one row"
+
+            return { WorkItem = workItem; Rows = rows }
+        }
+
+    /// Decodes a `praxis.verification-matrix/1` document (PRX-QUAL-022).
+    let decodeVerificationMatrix (text: string) : EvidenceReading<VerificationMatrix> =
+        decodeSchema verificationMatrixSchema decodeMatrixBody text
+
+    let private releaseCheck: Decoder<ReleaseCheck> =
+        fun check ->
+            result {
+                let! name = nonEmpty "name" check
+                let! status = enumOf "status" [ "passed", ReleaseCheckStatus.Passed; "failed", ReleaseCheckStatus.Failed; "skipped", ReleaseCheckStatus.Skipped ] check
+                let! evidence = nonEmpty "evidence" check
+                return { Name = name; Status = status; Evidence = evidence }
+            }
+
+    let private decodeReleaseBody (root: JsonElement) =
+        result {
+            let! release = obj "release" root
+            let! name = nonEmpty "name" release
+            let! version = nonEmpty "version" release
+            let! commit = nonEmpty "commit" release
+            let! checkedAt = nonEmpty "checkedAt" root
+            let! verdict = enumOf "verdict" [ "ready", ReleaseVerdict.Ready; "not-ready", ReleaseVerdict.NotReady ] root
+            let! checks = array "checks" releaseCheck root
+
+            return
+                { ReleaseName = name
+                  Version = version
+                  Commit = commit
+                  CheckedAt = checkedAt
+                  Verdict = verdict
+                  Checks = checks }
+        }
+
+    /// Decodes a `praxis.release-readiness/1` document (PRX-QUAL-023).
+    let decodeReleaseReadiness (text: string) : EvidenceReading<ReleaseReadinessEvidence> =
+        decodeSchema releaseReadinessSchema decodeReleaseBody text
+
+    /// Decodes a work item's `risk` member (`praxis.work-risk/1`). A present
+    /// but invalid declaration is an error, never silently "no risk".
+    let decodeRisk (element: JsonElement) : Result<WorkRisk, string> =
+        let parsedList (name: string) (parse: string -> 'T option) (label: string) =
+            match element.TryGetProperty name with
+            | false, _ -> Ok []
+            | true, value when value.ValueKind = JsonValueKind.Array ->
+                value.EnumerateArray()
+                |> Seq.fold
+                    (fun acc entry ->
+                        acc
+                        |> Result.bind (fun items ->
+                            match (if entry.ValueKind = JsonValueKind.String then parse (entry.GetString()) else None) with
+                            | Some item -> Ok(item :: items)
+                            | None -> Error $"'{name}' has an unknown {label} '{entry.GetRawText()}'"))
+                    (Ok [])
+                |> Result.map List.rev
+            | _ -> Error $"'{name}' must be an array"
+
+        let flag (name: string) =
+            match element.TryGetProperty name with
+            | false, _ -> Ok false
+            | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+            | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+            | _ -> Error $"'{name}' must be a boolean"
+
+        if element.ValueKind <> JsonValueKind.Object then
+            Error "risk must be an object"
+        else
+            result {
+                let! () =
+                    match str "schema" element with
+                    | Ok schema when schema = WorkRisk.Schema -> Ok()
+                    | Ok schema -> Error $"risk schema '{schema}' is not '{WorkRisk.Schema}'"
+                    | Error reason -> Error reason
+
+                let! classes = parsedList "changeClasses" WorkRisk.tryParseChangeClass "change class"
+                let! level = str "level" element |> Result.bind (fun code -> WorkRisk.tryParseLevel code |> Option.map Ok |> Option.defaultValue (Error $"unknown risk level '{code}'"))
+                let! state = flag "persistentStateImpact"
+                let! protocol = flag "externalProtocolImpact"
+                let! security = flag "securityImpact"
+                let! posture = optionalStr "failurePosture" element
+
+                let! posture =
+                    match posture with
+                    | None -> Ok None
+                    | Some code -> WorkRisk.tryParsePosture code |> Option.map (Some >> Ok) |> Option.defaultValue (Error $"unknown failure posture '{code}'")
+
+                let! tiers = parsedList "tierOwnership" WorkRisk.tryParseTier "tier"
+                let! liveProof = optionalStr "liveProof" element
+
+                return!
+                    WorkRisk.validate
+                        { ChangeClasses = classes
+                          Level = level
+                          PersistentStateImpact = state
+                          ExternalProtocolImpact = protocol
+                          SecurityImpact = security
+                          FailurePosture = posture
+                          Tiers = tiers
+                          LiveProof = liveProof }
+            }
 
     let private requirementMember (name: string) (element: JsonElement) =
         match element.TryGetProperty name with
@@ -421,6 +641,29 @@ module QualityEvidenceJson =
         node["blocking"] <- JsonValue.Create facet.Blocking
         node
 
+    /// The `praxis.work-risk/1` node stored on a work item and shown by `work context`.
+    let riskNode (risk: WorkRisk) =
+        let node = JsonObject()
+        node["schema"] <- JsonValue.Create WorkRisk.Schema
+        node["changeClasses"] <- strings (risk.ChangeClasses |> List.map WorkRisk.changeClassCode)
+        node["level"] <- JsonValue.Create(WorkRisk.levelCode risk.Level)
+        node["persistentStateImpact"] <- JsonValue.Create risk.PersistentStateImpact
+        node["externalProtocolImpact"] <- JsonValue.Create risk.ExternalProtocolImpact
+        node["securityImpact"] <- JsonValue.Create risk.SecurityImpact
+        risk.FailurePosture |> Option.iter (fun posture -> node["failurePosture"] <- JsonValue.Create(WorkRisk.postureCode posture))
+        node["tierOwnership"] <- strings (risk.Tiers |> List.map WorkRisk.tierCode)
+        risk.LiveProof |> Option.iter (fun proof -> node["liveProof"] <- JsonValue.Create proof)
+        node
+
+    let obligationsNode (obligations: CompletionObligations) =
+        let node = JsonObject()
+        node["designDebtDeclaration"] <- JsonValue.Create obligations.DesignDebtDeclaration
+
+        node["verificationDimensions"] <-
+            strings (WorkRisk.allDimensions |> List.filter obligations.VerificationDimensions.Contains |> List.map WorkRisk.dimensionCode)
+
+        node
+
     let private camel (code: string) =
         let parts = code.Split '-'
         parts[0] + (parts[1..] |> Array.map (fun part -> string (Char.ToUpperInvariant part[0]) + part.Substring 1) |> String.concat "")
@@ -447,7 +690,45 @@ module QualityEvidenceJson =
         sources["ordoBoundary"] <-
             sourceNode QualityEvidenceTypes.ordoBoundary readiness.Policy.OrdoBoundary readiness.Ordo readiness.OrdoJudgement ordoDetails
 
+        // Obligation sources appear only when they were judged.
+        let obligationSource (name: string) (evidenceType: string) (facet: CompletionFacet) (observation: SourceObservation<'T>) (judgement: SourceJudgement) =
+            let requirement =
+                if readiness.Facets |> List.exists (fun assessed -> assessed.Facet = facet && assessed.Required) then EvidenceRequirement.Required
+                else EvidenceRequirement.Optional
+
+            match judgement with
+            | SourceJudgement.Ignored -> ()
+            | _ -> sources[name] <- sourceNode evidenceType requirement observation judgement (fun _ _ -> ())
+
+        obligationSource "designDebt" QualityEvidenceTypes.designDebt CompletionFacet.DesignDebtDeclared readiness.Observations.DesignDebt readiness.DesignDebtJudgement
+
+        obligationSource
+            "verificationMatrix"
+            QualityEvidenceTypes.verificationMatrix
+            CompletionFacet.VerificationMatrixSatisfied
+            readiness.Observations.VerificationMatrix
+            readiness.VerificationMatrixJudgement
+
+        obligationSource "releaseReadiness" QualityEvidenceTypes.releaseReadiness CompletionFacet.ReleaseReady readiness.Observations.ReleaseReadiness readiness.ReleaseJudgement
         node["sources"] <- sources
+
+        readiness.Risk |> Option.iter (fun risk -> node["risk"] <- riskNode risk)
+        node["obligations"] <- obligationsNode readiness.Obligations
+
+        let consumed = JsonArray()
+
+        for evidence in readiness.ConsumedEvidence do
+            let entry = JsonObject()
+            entry["type"] <- JsonValue.Create evidence.Type
+            entry["path"] <- JsonValue.Create evidence.Path
+
+            match evidence.Sha256 with
+            | Some digest -> entry["sha256"] <- JsonValue.Create digest
+            | None -> entry["sha256"] <- null
+
+            consumed.Add(entry: JsonNode)
+
+        node["consumedEvidence"] <- consumed
         node["blockingReasons"] <- strings (CompletionReadiness.blockingReasons readiness)
         node
 
