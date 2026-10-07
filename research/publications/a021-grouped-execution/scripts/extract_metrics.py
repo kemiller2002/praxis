@@ -654,7 +654,8 @@ def git_rows(git: Mapping[tuple[str, str], Mapping[str, int]]) -> tuple[Row, ...
              ("merge_commits", "commits", "git rev-list --merges --count BASE..HEAD"),
              ("diff_files_changed", "files", "git diff --shortstat BASE HEAD -- src tests docs"),
              ("diff_insertions", "lines", "git diff --shortstat BASE HEAD -- src tests docs"),
-             ("diff_deletions", "lines", "git diff --shortstat BASE HEAD -- src tests docs"))
+             ("diff_deletions", "lines", "git diff --shortstat BASE HEAD -- src tests docs"),
+             ("diff_insertions_tests", "lines", "git diff --shortstat BASE HEAD -- tests"))
     return tuple(
         row(study=study, arm=arm, unit="agg:arm", metric=metric, value=git[(study, arm)][metric],
             unit_of_measure=uom, completeness="complete", session_role="implementation+failed_attempt+orchestration",
@@ -1033,6 +1034,7 @@ def load_inputs(root: Path) -> Inputs:
         "commits": int(git_out(root, "rev-list", "--count", f"{BASELINE}..{sha}")),
         "merge_commits": int(git_out(root, "rev-list", "--merges", "--count", f"{BASELINE}..{sha}")),
         **parse_shortstat(git_out(root, "diff", "--shortstat", BASELINE, sha, "--", *DIFF_PATHS)),
+        "diff_insertions_tests": parse_shortstat(git_out(root, "diff", "--shortstat", BASELINE, sha, "--", "tests"))["diff_insertions"],
     }) for key, sha in GIT_ARMS.items()}
     return Inputs(MappingProxyType(blobs), MappingProxyType(git))
 

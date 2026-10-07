@@ -152,7 +152,7 @@
         "attributing control item-05 (A021) and GROUP-02 (R2) divergence to independent reasoning"
       ],
       "mitigation_present": "partial: EV-A064 argues the A021 consistency finding holds without item 05 (item 03 alone added a second store); no equivalent sensitivity analysis for R2; cause unknown",
-      "required_disclosure": "Report all four stale starts (including A021 control-02, missing from sessions.json), state that the hazard is structural to multi-session execution on this platform and inflates control-side drift, and give the A021 finding excluding item 05 and an R2 assessment excluding GROUP-02.",
+      "required_disclosure": "Report all four stale starts (including A021 control-02, missing from sessions.json), state that the cause is unknown, that only per-item arms are exposed to it, and that it can inflate control-side drift, and give the A021 finding excluding item 05 and an R2 assessment excluding GROUP-02.",
       "severity": "major-manageable",
       "study": "both",
       "title": "Stale-checkout hazard struck only control sessions (4 of 10), inflating control inconsistency, cost and time"
@@ -367,7 +367,7 @@
       "evidence": [
         "sessions.json control-04-attempt-1 ($1.85, 10.25 min, stalled) and attempt-2 ($1.99, 12.8 min to block)",
         "control-04 attempt 3 and control-05 ran with extraAllowedTools Bash(./ros work:*) and harness line 5; earlier sessions did not",
-        "recomputed without attempts 1-2: cost reduction 46.4%, session-time reduction 30.7%"
+        "recomputed without the stalled attempt 1 only (attempt 2 implemented the item): cost reduction about 52%, session-time reduction about 39% (build_tables.py macros); the earlier 46.4%/30.7% wrongly excluded attempt 2"
       ],
       "id": "T13",
       "invalidates": [],

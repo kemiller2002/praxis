@@ -64,11 +64,11 @@ The primary evaluator received full branches rather than the "patch series expor
 | T21 | major | both | Post hoc mechanism | PGEI was formed from A021 data during the arms (`7385838b`, `3aef2bd5`); HY-A029 was created after R2 unblinding. |
 | T10 | moderate | R2 | Evaluator = unblinder = analyst = hypothesis updater | GPT-5.6 Sol evaluated, unblinded, computed ratios and updated HY-A028. |
 | T11 | moderate | both | Isolation never audited | The protocol's event-log check was not done in either study. Text overlap is low (0.18), but reading the other arm cannot be excluded. |
-| T13 | moderate | A021 | Failed attempts in control cost and time | Excluding item-04 attempts 1-2, cost falls by 46.4% (not 56%) and session time by 30.7% (not 45%). Permissions changed mid-arm. |
+| T13 | moderate | A021 | Failed attempts in control cost and time | [Lead correction 2026-10-07: attempt 2 implemented and pushed item 04 before blocking, so excluding it was wrong. The corrected S1 excludes only the stalled attempt 1: cost reduction about 52% and summed session time about 39% (macros `\AcostExclStalledReduction`, `\AactiveExclStalledReduction`, computed by `build_tables.py`). The superseded figures were 46.4% / 30.7%.] Permissions changed mid-arm. |
 | T14 | moderate | both | Toolchain setup scales with sessions | Each R2 worker re-derived the .NET workaround. R2's harness note was weaker than A021's. |
 | T15 | moderate | both | Design-entailed metrics | Prompts say "following AGENTS.md", so reading it once per session is expected. Transcript metrics are lower bounds and miss the control-04 implementation. |
 | T17 | moderate | both | Acceptance-verification asymmetry | R2 ran no evaluator fixture or local build and relied on the arms' own tests. Test counts are not quality. |
-| T18 | moderate | A021 | Same-family evaluator; rubric foregrounds the target | The A021 evaluators ran on claude-opus-5-5, the implementers' model. Rubric item 3 asks for "one model of a declared group". |
+| T18 | moderate | A021 | Same-family evaluator; rubric foregrounds the target | The first A021 evaluator ran on the implementers' model (sessions.json). [Lead correction: the second (kit) evaluator's model is not recorded; only the first is known to share the implementers' model.] Rubric item 3 asks for "one model of a declared group". |
 | T19 | moderate | both | Role overlap | The cohort author, designer, orchestrator and analyst are one lineage. The owner authored PGEI mid-experiment. |
 | T20 | moderate | both | External validity | One repository, feature family, model and platform. A022 is blocked (EV-A072). |
 | T24 | moderate | A021 | Unrecorded deviations | Control-02 stale clone, branch-instead-of-patch evaluation input, no isolation audit, no step telemetry in the control arm. |
@@ -90,8 +90,8 @@ The primary evaluator received full branches rather than the "patch series expor
 | R2 cost reduction | 58.72% (includes control orchestrator C) | 52.33% (implementing workers only) |
 | R2 time reduction | 61.08% (C start to C last update, 143.55 min) | 44.42% (sum of C1-C5, 100.55 min; 43.0 min of gaps) |
 | R2 output-token ratio | 1.978x | 1.781x (workers only) |
-| A021 cost reduction | 55.95% | 46.39% (excluding control-04 attempts 1-2) |
-| A021 session-time reduction | 45.07% (61.18 vs 111.37 min) | 30.71% (excluding attempts 1-2) |
+| A021 cost reduction | 55.95% | about 52% excluding only the stalled attempt 1 (corrected; the earlier 46.39% wrongly excluded the implementing attempt 2) |
+| A021 session-time reduction | 45.07% (61.18 vs 111.37 min) | about 39% excluding only the stalled attempt 1 (corrected; earlier 30.71%) |
 | A021 first-start to last-finish | 79.06% | includes a 2 h permission block |
 
 Neither study counts the top-level orchestrator: A021 `session_01E8aLYDesB49uhTD6Mpg4yo`, R2 `session_0186wu2wQu7VnhTJQnVPeQuc`. The control arm needed more orchestration in both studies: seven session creations and a permission approval in A021, five worker hand-offs in R2. The direction (grouped cheaper and faster) survives every sensitivity row. The magnitudes do not survive as stated.
@@ -103,7 +103,7 @@ Neither study counts the top-level orchestrator: A021 `session_01E8aLYDesB49uhTD
 - R2 C2: `962b1f4`, then merge `fa821cc`;
 - R2 C3: `b05fd8b`, then merge `5a03452`.
 
-The hazard is structural to multi-session execution on this platform. Grouped arms are immune to it. EV-A064 shows that the A021 consistency finding survives without item 05, because item 03 alone added a second store. R2 has no equivalent analysis excluding GROUP-02.
+[Lead correction: the cause of the stale starts is unknown; calling the hazard "structural" is not supported.] A single grouped session cannot start stale between items, so the hazard, whatever its cause, can affect only the per-item arms. EV-A064 shows that the A021 consistency finding survives without item 05, because item 03 alone added a second store. R2 has no equivalent analysis excluding GROUP-02.
 
 **T08 and T07: R2 independence.**
 
