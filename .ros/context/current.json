@@ -4821,11 +4821,22 @@
       },
       "completedAt": "2026-10-07T17:21:05.000Z",
       "conclusion": "work group create records durable declared groups in .ros/work/groups.json; the planner reads them as grouping.groups; validate checks them. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 804 test(s), 804 passed, 0 failed; ./ros validate: validation passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T17:21:24.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T172124798Z-093c4d7b"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:21:05.000Z",
+  "updatedAt": "2026-10-07T17:21:24.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

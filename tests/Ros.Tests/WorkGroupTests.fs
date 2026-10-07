@@ -144,6 +144,37 @@ module WorkGroupTests =
               let mixed = { group with Members = group.Members |> List.map (fun entry -> { entry with ExecutionRepository = "other-repo" }) }
               Assert.isTrue (WorkGroups.validate standard [ mixed ] |> List.exists (fun finding -> finding.Message.Contains "repository-local")) "mixed repositories")
 
+          t "show reports each member's own state, partial progress, and who a blocked member gates" (fun () ->
+              let queue =
+                  [ queued "W-1" "ready" "2026-09-01T00:00:00Z"
+                    { queued "W-2" "ready" "2026-09-02T00:00:00Z" with DependsOn = [ "W-1" ] }
+                    queued "W-3" "ready" "2026-09-03T00:00:00Z"
+                    queued "W-4" "ready" "2026-09-04T00:00:00Z" ]
+
+              let liveItems = [ { live "W-1" LiveWorkState.Blocked with BlockReason = Some "waiting on the API" }; live "W-3" LiveWorkState.Complete; live "W-4" LiveWorkState.Active ]
+              let analysis = analyze queue liveItems history [] stateSafe
+              let known = catalog [ blocked "W-1"; ready "W-2"; complete "W-3"; active "W-4" ]
+              let group = { created (catalog [ ready "W-1"; ready "W-3"; ready "W-4" ]) "GROUP-FIXTURE-001" [ "W-1"; "W-3"; "W-4" ] with Checkpoints = [] }
+              let view = GroupView.build known (Some analysis) group
+              Assert.equal { Members = 3; Complete = 1; Abandoned = 0; Active = 1; Blocked = 1; Remaining = 2; Unknown = 0 } view.Progress
+              Assert.equal "1 of 3 complete, 1 active, 1 blocked, 2 remaining" (GroupView.describeProgress view.Progress)
+              let blockedMember = Assert.single (GroupView.blocked view)
+              Assert.equal "W-1" blockedMember.Membership.WorkItemId
+              Assert.equal [ "W-2" ] blockedMember.Gates
+              Assert.equal (Some "waiting on the API") blockedMember.BlockReason
+              Assert.equal (Some PlanningWorkState.Complete) (view.Members |> List.find (fun entry -> entry.Membership.WorkItemId = "W-3")).PlanningState
+              let json = WorkGroupJson.render (WorkGroupJson.view view) |> JsonNode.Parse
+              Assert.equal "W-2" (json["blocked"].[0].["gates"].[0].GetValue<string>())
+              Assert.equal 1 (json["progress"].["complete"].GetValue<int>()))
+
+          t "show without the planner keeps planning states unknown and counts untracked members" (fun () ->
+              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
+              let view = GroupView.build (catalog [ ready "W-1" ]) None group
+              Assert.isTrue (not view.PlanningAvailable) "the planner was not consulted"
+              Assert.isTrue (view.Members |> List.forall (fun entry -> entry.PlanningState.IsNone)) "planning states are unknown, not guessed"
+              Assert.equal 1 view.Progress.Unknown
+              Assert.equal 2 view.Progress.Remaining)
+
           t "the stored document round-trips" (fun () ->
               let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
               let json = WorkGroupJson.render (WorkGroupJson.document [ group ])
@@ -189,6 +220,8 @@ module WorkGroupCliTests =
 
     let groupsFile clone = Path.Combine(clone, ".ros", "work", "groups.json")
 
+    let repositoryName clone = Ros.Infrastructure.Planning.FileWorkGroupRepository.repositoryName clone
+
     let tests =
         [ t "create records the group, leaves members' records byte-identical, and the planner reads it" (fun () ->
               withRepository (fun clone ->
@@ -231,6 +264,32 @@ module WorkGroupCliTests =
                   File.WriteAllText(Path.Combine(clone, "planner.json"), """{"grouping":{"groups":[{"id":"GROUP-FIXTURE-001","members":["FEAT-1"]}]}}""")
                   let refused = createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [ "--config"; "planner.json" ]
                   Assert.equal [ "duplicate-group" ] (rejectionCodes refused)))
+
+          t "show prints members, progress and blocked members in text and JSON, exits 1 for an unknown group, and never writes" (fun () ->
+              withRepository (fun clone ->
+                  capture clone "FEAT-1"
+                  start clone "FEAT-2"
+                  start clone "FEAT-3"
+                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2"; "FEAT-3" ] [ "--architecture-note"; "one store" ] |> ok |> ignore
+                  run clone (Some agentA) [ "work"; "block"; "--id"; "FEAT-3"; "--reason"; "waiting on review"; "--unrecoverable-reason"; "fixture"; "--occurred-at"; now () ] |> ok |> ignore
+                  let before = workState clone @ [ File.ReadAllText(groupsFile clone) ]
+                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok
+                  let document = shown.Json
+                  Assert.equal "work group show" (text document["command"])
+                  Assert.equal 3 (document["progress"].["members"].GetValue<int>())
+                  Assert.equal 1 (document["progress"].["blocked"].GetValue<int>())
+                  Assert.equal "FEAT-3" (text document["blocked"].[0].["workItemId"])
+                  Assert.equal "captured" (text document["members"].[0].["recordedState"])
+                  Assert.equal "active" (text document["members"].[1].["recordedState"])
+                  Assert.equal "one store" (text document["architectureNotes"].[0])
+                  Assert.equal (repositoryName clone) (text document["executionRepository"])
+                  let textView = run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ] |> ok
+                  Assert.isTrue (textView.Output.Contains "Progress: 0 of 3 complete") textView.Output
+                  Assert.isTrue (textView.Output.Contains "FEAT-3 (waiting on review)") textView.Output
+                  let missing = run clone None [ "work"; "group"; "show"; "GROUP-MISSING-001" ]
+                  Assert.equal 1 missing.ExitCode
+                  Assert.isTrue (missing.Error.Contains "GROUP-MISSING-001") missing.Error
+                  Assert.equal before (workState clone @ [ File.ReadAllText(groupsFile clone) ])))
 
           t "validate checks stored groups" (fun () ->
               withRepository (fun clone ->

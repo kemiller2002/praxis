@@ -270,3 +270,53 @@ module WorkGroupJson =
         node
 
     let rejections (values: GroupRejection list) = values |> List.map rejection |> array
+
+    let progress (value: StoredGroupProgress) =
+        record
+            [ "members", integer value.Members
+              "complete", integer value.Complete
+              "abandoned", integer value.Abandoned
+              "active", integer value.Active
+              "blocked", integer value.Blocked
+              "remaining", integer value.Remaining
+              "noLongerTracked", integer value.Unknown
+              "statement", text (GroupView.describeProgress value) ]
+
+    let private memberView (value: GroupMemberView) =
+        record
+            [ "workItemId", text value.Membership.WorkItemId
+              "recordedState", optionalText (value.RecordedState |> Option.map RecordedWorkState.code)
+              "planningState", optionalText (value.PlanningState |> Option.map PlanningWorkState.code)
+              "blockReason", optionalText value.BlockReason
+              "latestCheckpointId", optionalText value.LatestCheckpointId
+              "gates", texts value.Gates
+              "executionRepository", text value.Membership.ExecutionRepository
+              "addedAt", text value.Membership.AddedAt
+              "addedBy", actor value.Membership.AddedBy
+              "reason", optionalText value.Membership.Reason ]
+
+    /// `work group show --json`.
+    let view (value: GroupView) =
+        let group = value.Group
+
+        record
+            [ "command", text "work group show"
+              "schemaVersion", integer 1
+              "groupId", text group.Id
+              "kind", optionalText (group.Kind |> Option.map GroupKind.code)
+              "origin", text (GroupOrigin.code group.Origin)
+              "executionRepository", text group.ExecutionRepository
+              "crossRepository", boolean group.CrossRepository
+              "sharedContext", texts group.SharedContext
+              "architectureNotes", texts group.ArchitectureNotes
+              "createdAt", text group.CreatedAt
+              "createdBy", actor group.CreatedBy
+              "planningAvailable", boolean value.PlanningAvailable
+              "progress", progress value.Progress
+              "members", value.Members |> List.map memberView |> array
+              "blocked",
+              GroupView.blocked value
+              |> List.map (fun blocked -> record [ "workItemId", text blocked.Membership.WorkItemId; "blockReason", optionalText blocked.BlockReason; "gates", texts blocked.Gates ])
+              |> array
+              "latestCheckpoint", value.LatestCheckpoint |> Option.map checkpoint |> Option.toObj
+              "history", group.History |> List.map historyEntry |> array ]

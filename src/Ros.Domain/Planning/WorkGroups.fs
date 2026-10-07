@@ -381,3 +381,93 @@ module WorkGroups =
                             finding group "checkpoints" $"checkpoint {checkpoint.Id} commit and remote commit differ; a group checkpoint is accepted only when they are equal" ]) ]
 
         duplicates @ (groups |> List.collect perGroup)
+
+/// One member as `work group show` reports it: its own recorded state, the
+/// planner's view of it, and the work it holds up when blocked.
+type GroupMemberView =
+    { Membership: GroupMembership
+      /// `None` when the item is no longer tracked (`validate` reports it).
+      RecordedState: RecordedWorkState option
+      /// `None` when the planner could not be consulted.
+      PlanningState: PlanningWorkState option
+      BlockReason: string option
+      LatestCheckpointId: string option
+      /// Open items that wait directly on this member (PRX-PLAN-046).
+      Gates: string list }
+
+/// PRX-GRP-042: partial completion, counted per member, never rounded up.
+type StoredGroupProgress =
+    { Members: int
+      Complete: int
+      Abandoned: int
+      Active: int
+      Blocked: int
+      Remaining: int
+      Unknown: int }
+
+type GroupView =
+    { Group: StoredWorkGroup
+      Members: GroupMemberView list
+      Progress: StoredGroupProgress
+      PlanningAvailable: bool
+      LatestCheckpoint: GroupCheckpoint option }
+
+[<RequireQualifiedAccess>]
+module GroupView =
+    let private isBlocked (view: GroupMemberView) =
+        view.RecordedState = Some(RecordedWorkState.Live LiveWorkState.Blocked)
+        || view.PlanningState = Some PlanningWorkState.Blocked
+
+    let blocked (view: GroupView) = view.Members |> List.filter isBlocked
+
+    let private progress (members: GroupMemberView list) =
+        let count predicate = members |> List.filter predicate |> List.length
+        let recorded code (view: GroupMemberView) = view.RecordedState |> Option.map RecordedWorkState.code = Some code
+
+        let complete = count (recorded "complete")
+        let abandoned = count (recorded "abandoned")
+
+        { Members = members.Length
+          Complete = complete
+          Abandoned = abandoned
+          Active = count (fun view -> recorded "active" view && not (isBlocked view))
+          Blocked = count isBlocked
+          Remaining = members.Length - complete - abandoned
+          Unknown = count (fun view -> view.RecordedState.IsNone) }
+
+    /// The read model of one stored group. `analysis` is the planner's view
+    /// of the repository when it could be computed.
+    let build (catalog: WorkCatalog) (analysis: PlanningAnalysis option) (group: StoredWorkGroup) : GroupView =
+        let items = analysis |> Option.map (fun value -> value.Items |> List.map (fun item -> item.Id, item) |> Map.ofList) |> Option.defaultValue Map.empty
+        let unlocks = analysis |> Option.map (fun value -> value.Unlocks |> List.map (fun unlock -> unlock.WorkItem, unlock.DirectlyUnlocks) |> Map.ofList) |> Option.defaultValue Map.empty
+
+        let members =
+            group.Members
+            |> List.map (fun entry ->
+                let known = catalog.Items.TryFind entry.WorkItemId
+                let planned = items.TryFind entry.WorkItemId
+
+                { Membership = entry
+                  RecordedState = known |> Option.map (fun item -> item.State)
+                  PlanningState = planned |> Option.map (fun item -> item.PlanningState)
+                  BlockReason = planned |> Option.bind (fun item -> item.BlockReason)
+                  LatestCheckpointId = known |> Option.bind (fun item -> item.LatestCheckpointId)
+                  Gates = unlocks.TryFind entry.WorkItemId |> Option.defaultValue [] })
+
+        { Group = group
+          Members = members
+          Progress = progress members
+          PlanningAvailable = analysis.IsSome
+          LatestCheckpoint = group.Checkpoints |> List.tryLast }
+
+    /// "2 of 5 complete, ...": never implies every member succeeded.
+    let describeProgress (progress: StoredGroupProgress) =
+        let parts =
+            [ $"{progress.Complete} of {progress.Members} complete"
+              if progress.Abandoned > 0 then $"{progress.Abandoned} abandoned"
+              if progress.Active > 0 then $"{progress.Active} active"
+              if progress.Blocked > 0 then $"{progress.Blocked} blocked"
+              $"{progress.Remaining} remaining"
+              if progress.Unknown > 0 then $"{progress.Unknown} no longer tracked" ]
+
+        String.concat ", " parts

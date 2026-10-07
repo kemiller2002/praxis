@@ -309,6 +309,7 @@ group exists and what would change it (`DF-ROS-2026-A047`). See
 ### `work group`
 
 ```
+ros work group show GROUP-ID [--json] [--config FILE]
 ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository]
                       [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
@@ -317,7 +318,9 @@ ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIM
 
 Durable, human-declared execution groups (phase two of the work-group
 requirements, PRX-GRP-073), stored in `.ros/work/groups.json` with provenance.
-A group command never changes a member's lifecycle state, evidence or
+`show` is read-only: members with their own recorded and planning states,
+partial-completion progress, blocked members and what they gate; an unknown
+group exits `1`. A group command never changes a member's lifecycle state, evidence or
 attribution, and the planner reads a stored group exactly as a
 `grouping.groups` declaration. `validate` checks stored groups. See
 [`planning.md`](planning.md) ("Declared work groups").

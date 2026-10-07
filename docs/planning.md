@@ -348,6 +348,20 @@ this repository; a member executing elsewhere (its
 group is `--cross-repository` (PRX-GRP-051). `--origin` defaults to
 `human-declared`.
 
+```
+praxis work group show GROUP-ID [--json] [--config FILE]
+```
+
+`show` is read-only (it never writes). It prints the group's kind, origin,
+execution repository, shared context and architecture notes; every member
+with its own recorded state (live state, else backlog status) and its
+planning state (`unknown` when the planner cannot read the repository), its
+latest own checkpoint and who added it; partial-completion progress (`k of n
+complete`, abandoned, active, blocked, remaining: the group never implies every
+member succeeded, PRX-GRP-042); each blocked member with its block reason and
+the open items that wait directly on it; and the latest group checkpoint. An
+unknown group exits `1`.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,

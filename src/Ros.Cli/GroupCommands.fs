@@ -19,7 +19,7 @@ open Ros.Infrastructure.Planning
 [<RequireQualifiedAccess>]
 module GroupCommands =
     let usage =
-        "work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -238,7 +238,94 @@ module GroupCommands =
                         @ [ "Members' lifecycle states, evidence and attribution are unchanged." ]
                       Fields = [] }))
 
+    // ---- work group show ----
+
+    let private showLines (view: GroupView) =
+        let group = view.Group
+        let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified"
+        let scope = if group.CrossRepository then " (cross-repository)" else ""
+        let state (value: RecordedWorkState option) = value |> Option.map RecordedWorkState.code |> Option.defaultValue "no longer tracked"
+        let planning (value: PlanningWorkState option) = value |> Option.map PlanningWorkState.code |> Option.defaultValue "unknown"
+
+        let memberLine (entry: GroupMemberView) =
+            let checkpoint = entry.LatestCheckpointId |> Option.map (fun id -> $"; latest checkpoint {id}") |> Option.defaultValue ""
+            $"  {entry.Membership.WorkItemId}  recorded {state entry.RecordedState}; planning {planning entry.PlanningState}{checkpoint}"
+
+        let blockedLines =
+            match GroupView.blocked view with
+            | [] -> [ "  none" ]
+            | blocked ->
+                blocked
+                |> List.map (fun entry ->
+                    let reason = entry.BlockReason |> Option.map (fun text -> $" ({text})") |> Option.defaultValue ""
+                    let gates = if entry.Gates.IsEmpty then "gates nothing open" else $"""gates {String.concat ", " entry.Gates}"""
+                    $"  {entry.Membership.WorkItemId}{reason}: {gates}")
+
+        let listed (title: string) (values: string list) =
+            match values with
+            | [] -> [ $"{title}: none" ]
+            | values -> $"{title}:" :: (values |> List.map (fun value -> $"  - {value}"))
+
+        let checkpointLines =
+            match view.LatestCheckpoint with
+            | None -> [ "Latest group checkpoint: none" ]
+            | Some checkpoint ->
+                [ $"Latest group checkpoint: {checkpoint.Id} at {checkpoint.Location.LocalCommit.Value} on {checkpoint.Location.Branch} ({checkpoint.RecordedAt})"
+                  $"  completed: {checkpoint.Summary}"
+                  $"  next action: {checkpoint.NextAction}" ]
+
+        [ $"GROUP {group.Id} ({kind}, {GroupOrigin.code group.Origin})"
+          $"Execution repository: {group.ExecutionRepository}{scope}"
+          $"Declared {group.CreatedAt} by {Actor.describe group.CreatedBy}"
+          $"Progress: {GroupView.describeProgress view.Progress} (each member completes on its own evidence; the group never implies every member succeeded)"
+          "Members:" ]
+        @ (view.Members |> List.map memberLine)
+        @ [ if not view.PlanningAvailable then "  (planning states unknown: the planner could not read this repository)"
+            "Blocked members:" ]
+        @ blockedLines
+        @ listed "Shared context" group.SharedContext
+        @ listed "Architecture notes" group.ArchitectureNotes
+        @ checkpointLines
+
+    /// `work group show GROUP-ID`: read-only; it never writes.
+    let show (root: string) (arguments: string list) =
+        let configFile = optionValue "--config" arguments
+
+        match arguments with
+        | [] -> reportUsage [ "work group show requires a GROUP-ID" ]
+        | groupId :: _ when groupId.StartsWith "--" -> reportUsage [ "work group show requires a GROUP-ID first" ]
+        | groupId :: rest ->
+            match unexpected (Set.ofList [ "--config" ]) (Set.ofList [ "--json" ]) rest with
+            | _ :: _ as errors -> reportUsage errors
+            | [] ->
+            match gather root arguments with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok context ->
+                match WorkGroups.tryFind context.Stored groupId with
+                | None ->
+                    eprintfn "ERROR %s" (GroupRejection.message (GroupRejection.GroupNotFound groupId))
+                    1
+                | Some group ->
+                    let analysis =
+                        let port = FilePlanningRepository.create root None (configFile |> Option.map (resolve root))
+
+                        match Ros.Application.Planning.PlanningOperations.analyze port (DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) Lifecycle.Version with
+                        | Ok(_, value) -> Some value
+                        | Error _ -> None
+
+                    let view = GroupView.build context.Catalog analysis group
+
+                    if List.contains "--json" arguments then
+                        printf "%s" (WorkGroupJson.render (WorkGroupJson.view view))
+                    else
+                        showLines view |> List.iter (printfn "%s")
+
+                    0
+
     let run (root: string) (arguments: string list) =
         match arguments with
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
+        | "show" :: rest -> show root rest
         | _ -> reportUsage [ "unknown work group command" ]
