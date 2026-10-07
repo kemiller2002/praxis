@@ -552,6 +552,22 @@ rewritten only by a mutation, its history intact. Every group command prints
 exactly one `{command, schemaVersion, status, ...}` document with `--json`;
 unknown values are `null`, never `0`.
 
+### `tutela ingest`, `tutela metrics`
+
+```
+praxis tutela ingest --input FILE [--collected-at TIMESTAMP] [--json]
+praxis tutela metrics [--repository NAME] [--json]
+```
+
+`tutela ingest` records a Tutela security assessment (`schemaVersion` 1) as
+an append-only observation in `.ros/telemetry/tutela/observations.jsonl`,
+with its repository, ref (resolved to a commit when this repository has it),
+collection time and source sha256. Re-ingesting the same document is a no-op.
+`tutela metrics` derives security metrics per observation and over time
+(`praxis.tutela-metrics/1`). Missing measurements are `unknown` with a reason,
+never zero, and there is no single score. See
+[`tutela-security-metrics.md`](tutela-security-metrics.md).
+
 ### `remote execute`
 
 ```

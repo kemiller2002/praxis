@@ -42,6 +42,7 @@
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Tutela.fs" />
     <Compile Include="Telemetry/TutelaTrend.fs" />
+    <Compile Include="Telemetry/TutelaHistory.fs" />
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
     <Compile Include="Telemetry/Steps.fs" />
