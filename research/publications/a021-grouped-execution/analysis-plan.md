@@ -1,5 +1,7 @@
 # Analysis plan
 
+> **Status note (2026-10-07).** This plan was first committed after both A021 and R2 were unblinded, so it is not a preregistration. Its six-dimension rubric was later extended to eight dimensions (D7 baseline reuse, D8 duplicate definitions) in `architecture-findings.md`. Sensitivity analysis S1 was corrected to exclude only the stalled item-04 attempt 1 (`adjudication-log.md` AD-12). The manuscript reports these facts. The text below is kept as written.
+
 ## Principle
 
 The sample is too small for conventional inferential statistics. The paper should use transparent descriptive comparisons, structured qualitative coding, and replication of direction rather than p-values.

@@ -55,7 +55,7 @@ A 4-page early-results variant exists and is honest. The final reviewer rated it
 | Blocker | Gate | Work item |
 | --- | --- | --- |
 | No independent human coding of the consistency rubric. Its main exhibit (D2) was reclassified twice during this review (AD-10). | 2 / 9 | WI-0075 |
-| 24 of the 39 cited references, including the key comparators, were verified only from search-engine extracts. The network policy blocked arXiv, DOI, ACM, IEEE, DBLP, OpenReview and ACL. | 6 | WI-0076 |
+| 21 of the 36 references cited in the full paper (6 of 11 in the short paper), including key comparators, were verified only from search-engine extracts. The network policy blocked arXiv, DOI, ACM, IEEE, DBLP, OpenReview and ACL. | 6 | WI-0076 |
 | Venue facts come from search extracts. The official pages were egress-blocked. The IEEE AI-disclosure rule conflicts with SANER's no-acknowledgments rule. | — | WI-0077 |
 | At least three executions per arm are needed to bound run-to-run variance. Both final reviewers name this as the main path to B. | 1 / 4 | WI-0078 (with EX-ROS-2026-A024) |
 
