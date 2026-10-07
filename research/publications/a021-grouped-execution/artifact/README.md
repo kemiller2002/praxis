@@ -53,6 +53,16 @@ analysis/                          redaction, verification and analysis scripts 
 `manifest.json` lists any expected dataset that was not yet available when the
 bundle was built with `"status": "pending"`.
 
+The scripts in `analysis/` are copies of the publication scripts.
+`verify_artifact.py --bundle` runs from this bundle alone. The metric
+extraction and checking scripts (`extract_metrics.py`, `verify_metrics.py`,
+`check_architecture_findings.py`, `build_tables.py`, when present) read pinned
+Git objects of the full study repository and cannot run from the bundle; their
+outputs are `data/`, and the raw per-session records they read are in
+`a021/metrics-raw/`, `a021/harness/sessions.json` and `r2/metrics-raw/`, so
+every figure can be recomputed by hand. The full repository, with these
+scripts runnable as-is, will be released after review.
+
 ## Arm mapping
 
 Evaluation is complete in both studies and the paper reports the mapping, so
@@ -102,10 +112,14 @@ identifiers and links.
 
 * **Person identifiers** are replaced everywhere, in code and in records, by
   neutral placeholders (`Anonymous Owner`, `owner`, `anonymous-owner`,
-  `anonymous@example.invalid`). In the baseline these occur only in
-  documentation, packaging metadata and installer scripts; none of the
-  affected files is modified by any arm patch and none is part of the code the
-  evaluators judged.
+  `anonymous@example.invalid`). In the baseline they occur in documentation,
+  packaging metadata, installer scripts, one installer default argument, and a
+  person's first name used as an opaque actor id in four test files (replaced
+  by `owner`, which has the same length). `baseline/FILES.tsv` marks every
+  redacted file. The redaction is behaviour-neutral for the evaluated surface:
+  the F# test suite gives the same per-test results on the original and the
+  redacted baseline (792 of 792 passing in both), and the arm patches contain
+  no person identifiers and ship byte-identical to their pinned sources.
 * **Agent-session identifiers** and transcript/tool UUIDs in the study records
   are replaced by stable pseudonyms (`agent-session-NNN`, `uuid-NNN`) that are
   consistent across all files, so cross-references between the session

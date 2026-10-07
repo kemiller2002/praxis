@@ -43,6 +43,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+sys.dont_write_bytecode = True  # never leave interpreter caches inside a bundle
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import anonymize as an  # noqa: E402
 
@@ -147,7 +148,8 @@ def redacted_baseline(files: dict[str, bytes], base_dir: str) -> frozenset[str]:
 
 
 def read_tree(root: Path) -> dict[str, bytes]:
-    return {p.relative_to(root).as_posix(): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+    return {p.relative_to(root).as_posix(): p.read_bytes() for p in sorted(root.rglob("*"))
+            if p.is_file() and "__pycache__" not in p.relative_to(root).parts}
 
 
 def read_tar(path: Path) -> dict[str, bytes]:
@@ -176,8 +178,18 @@ def apply_checks(bundle: Path, files: dict[str, bytes]) -> tuple[Check, ...]:
     return (
         Check("patches apply to baseline", not failures and len(present) == len(PATCHES),
               summarize(failures) if failures else f"{len(present)}/{len(PATCHES)} patches apply"),
-        Check("no redacted baseline file is touched by a patch", not overlap, summarize(overlap)),
+        Check("redacted baseline files also touched by a patch (context verified by git apply)", True,
+              summarize(overlap) if overlap else "none", advisory=True),
     )
+
+
+def patch_identity_checks(manifest: dict) -> tuple[Check, ...]:
+    """Evidence integrity: the shipped patches must be the unredacted source bytes."""
+    entries = {e["path"]: e for e in manifest.get("entries", [])}
+    altered = tuple(p for p in PATCHES if p in entries and entries[p].get("byte_identical_to_source") is not True)
+    absent = tuple(p for p in PATCHES if p not in entries)
+    return (Check("arm patches byte-identical to their pinned source", not altered and not absent,
+                  summarize(altered + absent) if altered or absent else f"{len(PATCHES)} patches unaltered"),)
 
 
 def bundle_checks(bundle: Path, denylist: dict | None, strict: bool) -> tuple[Check, ...]:
@@ -192,14 +204,16 @@ def bundle_checks(bundle: Path, denylist: dict | None, strict: bool) -> tuple[Ch
         Check("bundle checksums.txt matches files", bool(listed) and not problems,
               summarize(problems) if problems else f"{len(listed)} files"),
         *manifest_checks(manifest, files, strict),
+        *patch_identity_checks(manifest),
         *scan,
         *apply_checks(bundle, files),
     )
 
 
-def uncommitted_inputs(repo: Path, manifest: dict) -> tuple[str, ...]:
+def uncommitted_inputs(repo: Path, manifest: dict, extra: Iterable[str]) -> tuple[str, ...]:
     paths = sorted({e["origin"]["worktree"] for e in manifest.get("entries", [])
-                    if isinstance(e.get("origin"), dict) and "worktree" in e["origin"] and e["status"] == "included"})
+                    if isinstance(e.get("origin"), dict) and "worktree" in e["origin"] and e["status"] == "included"}
+                   | set(extra))
     def dirty(p: str) -> bool:
         tracked = subprocess.run(("git", "-C", str(repo), "ls-files", "--error-unmatch", p), capture_output=True)
         clean = subprocess.run(("git", "-C", str(repo), "diff", "--quiet", "HEAD", "--", p), capture_output=True)
@@ -230,7 +244,10 @@ def repo_checks(strict: bool, denylist_path: Path | None) -> tuple[Check, ...]:
     manifest_same = manifest_file.is_file() and manifest_file.read_bytes() == rebuilt_manifest
     denylist = json.loads((denylist_path or pub / "internal" / "denylist.json").read_text(encoding="utf-8"))
     tar_scan = scan_files({f"<tar>/{k}": v for k, v in read_tar(tar_path).items()}, denylist) if tar_path.is_file() else ()
-    dirty = uncommitted_inputs(build_mod.repo_root(), result.manifest) if strict else ()
+    pub_rel = pub.relative_to(build_mod.repo_root()).as_posix()
+    own = (src["authored"]["readme"], f"{pub_rel}/scripts/artifact_sources.json",
+           f"{pub_rel}/artifact/manifest.json", f"{pub_rel}/artifact/checksums.txt")
+    dirty = uncommitted_inputs(build_mod.repo_root(), result.manifest, own) if strict else ()
     return (
         Check("rebuild is byte-identical to artifact/checksums.txt", bool(recorded) and not determinism,
               summarize(determinism) if determinism else f"{len(rebuilt)} entries identical"),

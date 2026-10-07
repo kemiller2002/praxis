@@ -42,6 +42,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable, Mapping
 
+sys.dont_write_bytecode = True  # never leave interpreter caches inside a bundle
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import anonymize as an  # noqa: E402
 

@@ -339,6 +339,18 @@
   ],
   "optional_worktree": [
     {
+      "bundle_path": "data/architecture-findings.json",
+      "path": "research/publications/a021-grouped-execution/data/architecture-findings.json",
+      "transform": "json-strip-internal",
+      "role": "qualitative architecture findings with source locations for both arms"
+    },
+    {
+      "bundle_path": "data/metric-conflicts.json",
+      "path": "research/publications/a021-grouped-execution/data/metric-conflicts.json",
+      "transform": "json-strip-internal",
+      "role": "every known discrepancy between a reported figure and the extracted data"
+    },
+    {
       "bundle_path": "data/metrics.csv",
       "path": "research/publications/a021-grouped-execution/data/metrics.csv",
       "transform": "csv-strip-internal",
@@ -349,12 +361,6 @@
       "path": "research/publications/a021-grouped-execution/data/metrics.json",
       "transform": "json-strip-internal",
       "role": "paper metric dataset, JSON form"
-    },
-    {
-      "bundle_path": "data/architecture-findings.json",
-      "path": "research/publications/a021-grouped-execution/data/architecture-findings.json",
-      "transform": "json-strip-internal",
-      "role": "qualitative architecture findings with source locations for both arms"
     },
     {
       "bundle_path": "data/threats.json",
@@ -385,5 +391,6 @@
       "arm-M": "independent (control)",
       "evidence": "r2/evaluation/POST-UNBLINDING-METRICS.txt (established after the blind report by exact file-blob identity with the original arm trees; the salted commitment in r2/mapping-commitment.sha256 could not be recomputed because the salt was not retained)"
     }
-  }
+  },
+  "excluded_worktree_note": "data/metrics-sources.md is marked INTERNAL by its author (it names platform session identifiers) and is never bundled; data/venues.json and data/references-verification.json concern the manuscript, not the evidence"
 }

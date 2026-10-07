@@ -223,6 +223,14 @@
       "worktree": "research/publications/a021-grouped-execution/scripts/build_anonymous_artifact.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
     },
+    "analysis/build_tables.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/build_tables.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
+    "analysis/check_architecture_findings.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/check_architecture_findings.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
     "analysis/extract_metrics.py": {
       "worktree": "research/publications/a021-grouped-execution/scripts/extract_metrics.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
@@ -239,6 +247,14 @@
       "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
       "path": ".ros/work/queue.json",
       "filter": "items whose id starts with PRAXIS-GROUP-"
+    },
+    "data/architecture-findings.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/architecture-findings.json",
+      "role": "qualitative architecture findings with source locations for both arms"
+    },
+    "data/metric-conflicts.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/metric-conflicts.json",
+      "role": "every known discrepancy between a reported figure and the extracted data"
     },
     "data/metrics.csv": {
       "worktree": "research/publications/a021-grouped-execution/data/metrics.csv",
