@@ -57,3 +57,32 @@ treatments, thresholds, blinding or stop rules.
   recorded overhead to the affected sessions' requests and tokens. Analysis
   reports it, and a sensitivity check can exclude the pre-resync turn using
   per-request timestamps.
+
+## D3 — root cause established; the arm-C item-02 slot cannot be retried again
+
+- `arm-3-02r` declined the D2 resync note (session_013vdcLRvYsQEftregZxjGvF,
+  18:11Z). Its reason: a message from another session does not override the
+  frozen instruction to stop on a start mismatch. `arm-2-02r` accepted the same
+  note and proceeded. The resync channel therefore behaves asymmetrically and
+  is withdrawn: the D2 "uniform procedure" is cancelled and is not used again.
+- Root cause, reproduced on the throwaway branch
+  `experiment/a024-launch-probe` (probes P1-P3):
+  - P1 (session_01UeptLDvZNaGPEg4Sv2UA9d): branch at `ddda837`, `outcome_branch`
+    set, so the checkout is `ddda837` (correct at that time).
+  - The orchestrator then advanced the branch to `064611a` (no content change).
+  - P2 (session_01KpbkrwK5i3kdRkqaGmvmfA): `outcome_branch` set, so the
+    checkout is `ddda837`, and even `origin/experiment/a024-launch-probe`
+    reads `ddda837`. Stale: the platform pins an outcome branch to the first
+    head it saw.
+  - P3 (session_017qpfbwcQU4QoACkwxmyyRp): no `outcome_branch`, so the
+    checkout is `064611a` (correct, detached HEAD). `git checkout -B BRANCH`
+    plus `git push origin BRANCH` succeeded (`064611a..2720cda`).
+- Consequence: every serial B/C session after item 01 that is launched with
+  `outcome_branch` starts stale. Arm A and every item-01 session were
+  unaffected, because their branch had not moved since it was first seen.
+- The preregistered retry rule ("an orchestration-only failure may be retried
+  once") is spent for the arm-C item-02 slot (`arm-3-02`, then `arm-3-02r`).
+  A third session would go beyond the frozen protocol, so the orchestrator
+  stops arm execution here and asks the owner to decide (BLOCKER.md). No
+  further arm session is launched. `arm-2-02r`, already running after its
+  accepted resync, is allowed to finish and is recorded as it stands.

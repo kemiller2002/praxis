@@ -10,9 +10,38 @@
     "A"
   ],
   "preflight": [
-    "session_01LF9wTRatrsvBPSCz5tLK7G",
-    "session_01K2uq5tGob5heiRq38Eti7j",
-    "session_01Y6TTvXHcEs8e7eWAR88TsL"
+    {
+      "id": "session_01LF9wTRatrsvBPSCz5tLK7G",
+      "purpose": "executor configuration"
+    },
+    {
+      "id": "session_01K2uq5tGob5heiRq38Eti7j",
+      "purpose": "telemetry push (denied by auto-mode classifier)"
+    },
+    {
+      "id": "session_01Y6TTvXHcEs8e7eWAR88TsL",
+      "purpose": "telemetry print/decode"
+    },
+    {
+      "id": "session_01MVRn1vTzapPSsrmoQ6jYfH",
+      "purpose": "checkout probe, branch name, no outcome branch: c85eb3e (correct)"
+    },
+    {
+      "id": "session_01Job2qpbHJC8PMCFjZNi2LJ",
+      "purpose": "checkout probe, commit SHA"
+    },
+    {
+      "id": "session_01UeptLDvZNaGPEg4Sv2UA9d",
+      "purpose": "launch probe P1"
+    },
+    {
+      "id": "session_01KpbkrwK5i3kdRkqaGmvmfA",
+      "purpose": "launch probe P2: outcome branch pinned to first-seen head (stale)"
+    },
+    {
+      "id": "session_017qpfbwcQU4QoACkwxmyyRp",
+      "purpose": "launch probe P3: no outcome branch -> correct head; push works"
+    }
   ],
   "sessions": [
     {
@@ -204,7 +233,7 @@
         "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
       },
       "attempt": 2,
-      "status": "running",
+      "status": "failed-orchestration",
       "events": [
         {
           "at": "2026-10-07T18:07:48Z",
@@ -213,8 +242,26 @@
         {
           "at": "2026-10-07T18:10:30Z",
           "event": "orchestrator resync note sent (deviations.md D2)"
+        },
+        {
+          "at": "2026-10-07T18:11:12Z",
+          "event": "declined resync note (cross-session message does not override the frozen stop instruction)"
         }
-      ]
+      ],
+      "headAfter": "null",
+      "terminalAt": "2026-10-07T18:11:12.138471Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.42041,
+        "input_tokens": 520,
+        "output_tokens": 2256,
+        "cache_read_tokens": 446050,
+        "cache_write_tokens": 35500,
+        "context_used_tokens": 74291,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292"
+      },
+      "note": "stale checkout at ddda837 again (outcome_branch pinning, D3); stopped at the frozen start check; declined the D2 resync note as a cross-session message; changed nothing. Retry for the arm-C item-02 slot is exhausted."
     },
     {
       "label": "arm-2-02r",
@@ -242,8 +289,13 @@
         {
           "at": "2026-10-07T18:10:30Z",
           "event": "orchestrator resync note sent (deviations.md D2)"
+        },
+        {
+          "at": "2026-10-07T18:11:00Z",
+          "event": "accepted resync note; fetched own branch, reset to 3e535f3, started the task"
         }
       ]
     }
-  ]
+  ],
+  "status": "blocked: arm-C item-02 retry exhausted by a platform launcher defect (BLOCKER.md)"
 }
