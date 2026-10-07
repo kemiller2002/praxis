@@ -326,7 +326,7 @@ module IdentityTests =
                   Environment.SetEnvironmentVariable("PRAXIS_IDENTITY_TEST_SECRET", "sk-" + String('z', 30))
 
                   try
-                      match FileInstanceProjection.build root "3.7.2" with
+                      match FileInstanceProjection.buildWith localEnvironment root "3.7.2" with
                       | Error message -> failwith message
                       | Ok projection ->
                           let text = (IdentityJson.renderProjection projection).ToJsonString()

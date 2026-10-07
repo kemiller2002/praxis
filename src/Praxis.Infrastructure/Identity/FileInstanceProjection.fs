@@ -35,8 +35,9 @@ module FileInstanceProjection =
               yield "remote:" + Capability.code capability ]
 
     /// The projection of the local instance, or why there is none to project.
-    let build (root: string) (praxisVersion: string) : Result<InstanceProjection, string> =
-        match FileInstanceIdentityStore.local root with
+    /// `variable` reads the hosting environment the repository is observed in.
+    let buildWith (variable: string -> string option) (root: string) (praxisVersion: string) : Result<InstanceProjection, string> =
+        match FileInstanceIdentityStore.localWith variable root with
         | LocalInstance.Missing -> Error "this repository has no Praxis instance identity; run 'praxis instance init' first"
         | LocalInstance.Unreadable reason -> Error $".praxis/instance.json is unreadable: {reason}"
         | LocalInstance.Present(_, InstanceBinding.Foreign _) ->
@@ -45,10 +46,12 @@ module FileInstanceProjection =
             Ok(
                 InstanceProjection.create
                     record
-                    (FileRepositoryIdentityRepository.current RepositoryObserver.environmentVariable root)
+                    (FileRepositoryIdentityRepository.current variable root)
                     praxisVersion
                     ReconciliationProtocolVersion
                     (ProtocolVersion.code ProtocolVersion.current)
                     (capabilities root)
                     (integrations root)
             )
+
+    let build root praxisVersion = buildWith RepositoryObserver.environmentVariable root praxisVersion
