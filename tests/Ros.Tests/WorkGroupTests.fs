@@ -145,7 +145,8 @@ module WorkGroupTests =
             [ { Declaration = declared "GROUP-PRAXIS-SHOW-001" [ "S-1"; "S-2"; "S-3"; "S-4"; "S-5"; "GONE-1" ]
                 DeclaredAt = "2026-10-07T00:00:00.000Z"
                 DeclaredBy = Some actor
-                Membership = [] } ] }
+                Membership = []
+                Checkpoints = [] } ] }
 
     let private showPorts () =
         let writes = ref 0
@@ -501,7 +502,8 @@ module WorkGroupTests =
                   { Declaration = declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-4"; "GONE-1" ]
                     DeclaredAt = "2026-10-07T00:00:00.000Z"
                     DeclaredBy = None
-                    Membership = [] }
+                    Membership = []
+                    Checkpoints = [] }
 
               let store = { Groups = [ stored ] }
               Assert.isTrue (removeFrom store "GROUP-PRAXIS-A-001" "A-4" |> Result.isOk) "a member that became complete"
@@ -629,6 +631,320 @@ module WorkGroupTests =
               Assert.equal 2 (PraxisCli.run root executor [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B" ]).ExitCode
               Assert.equal before (fingerprint root)) ]
 
+    // ---- work group checkpoint (PRAXIS-GROUP-05) -------------------------------
+
+    let private sha (digit: char) =
+        Ros.Domain.Git.CommitId.tryParse (String(digit, 40)) |> Option.get
+
+    let private verifiedAt (commit: char) : GitDurableLocation =
+        { Repository = "praxis"
+          Branch = "feature/x"
+          LocalCommit = sha commit
+          Remote = { Name = "origin"; Url = Some "https://example.test/praxis.git" }
+          RemoteBranch = "feature/x"
+          RemoteCommit = sha commit }
+
+    /// A-1 ready, A-2 captured, L-1 active with its own checkpoint, A-4
+    /// complete, A-3 abandoned, GONE-1 unknown.
+    let private checkpointStore =
+        { Groups =
+            [ { Declaration = declared "GROUP-PRAXIS-CP-001" [ "L-1"; "A-1"; "A-4"; "A-3"; "GONE-1" ]
+                DeclaredAt = "2026-10-07T00:00:00.000Z"
+                DeclaredBy = Some actor
+                Membership = []
+                Checkpoints = [] } ] }
+
+    let private checkpointLive =
+        [ live "A-4" LiveWorkState.Complete
+          { live "L-1" LiveWorkState.Active with Checkpoint = Some(checkpoint "feature/x" (String('c', 40)) "write the next slice") } ]
+
+    let private ownCheckpoint: MemberCheckpointReference =
+        { CheckpointId = "cp-cccccc"
+          ExecutionId = "EXE-1"
+          Commit = String('c', 40)
+          RecordedAt = "2026-09-20T00:00:00.000Z" }
+
+    let private recordGroupCheckpoint store groupId =
+        GroupDeclaration.recordCheckpoint
+            store
+            (GroupDeclaration.memberStates queue checkpointLive)
+            (Map.ofList [ "L-1", ownCheckpoint ])
+            "2026-10-07T03:00:00.000Z"
+            (Some actor)
+            "  shared store contract settled  "
+            "implement A-1"
+            [ "one group store for all group commands" ]
+            (verifiedAt 'd')
+            groupId
+
+    let private checkpointPorts (store: GroupStore) =
+        let current = ref store
+        let writes = ref 0
+
+        let port: WorkGroupPort =
+            { ReadStore = fun () -> Ok current.Value
+              Queue = fun () -> Ok queue
+              Live = fun () -> Ok checkpointLive
+              WriteStore =
+                fun updated ->
+                    writes.Value <- writes.Value + 1
+                    current.Value <- updated
+                    Ok() }
+
+        port, current, writes
+
+    let private checkpointRequest groupId dryRun : GroupCheckpointRequest =
+        { GroupId = groupId
+          Repository = "praxis"
+          Summary = "shared store contract settled"
+          NextAction = "implement A-1"
+          Decisions = [ "one group store for all group commands" ]
+          OccurredAt = "2026-10-07T03:00:00.000Z"
+          Actor = Some actor
+          DryRun = dryRun }
+
+    let private checkpointTests =
+        [ t "checkpoint: partitions members, references their own checkpoints and appends to the group" (fun () ->
+              match recordGroupCheckpoint checkpointStore "GROUP-PRAXIS-CP-001" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, recorded) ->
+                  Assert.equal [ recorded ] group.Checkpoints
+                  Assert.equal (Some group) (GroupStore.tryFind "GROUP-PRAXIS-CP-001" store)
+                  Assert.equal "shared store contract settled" recorded.Summary
+                  Assert.equal (verifiedAt 'd') recorded.Location
+                  Assert.equal [ "L-1" ] (GroupDeclaration.partitionOf GroupMemberPartition.Active recorded)
+                  Assert.equal [ "A-4" ] (GroupDeclaration.partitionOf GroupMemberPartition.Completed recorded)
+                  Assert.equal [ "A-3" ] (GroupDeclaration.partitionOf GroupMemberPartition.Abandoned recorded)
+                  Assert.equal [ "A-1"; "GONE-1" ] (GroupDeclaration.partitionOf GroupMemberPartition.Remaining recorded)
+                  Assert.equal [ "active"; "ready"; "complete"; "abandoned"; "unknown" ] (recorded.Members |> List.map (fun entry -> entry.State))
+                  Assert.equal [ Some ownCheckpoint; None; None; None; None ] (recorded.Members |> List.map (fun entry -> entry.Checkpoint))
+                  // The declaration (what the planner reads) is untouched.
+                  Assert.equal (GroupStore.declarations checkpointStore) (GroupStore.declarations store))
+
+          t "checkpoint: an unknown group is refused; earlier group checkpoints are never rewritten" (fun () ->
+              match recordGroupCheckpoint checkpointStore "GROUP-PRAXIS-NONE-001" with
+              | Error rejections -> Assert.equal [ GroupRejection.UnknownGroup "GROUP-PRAXIS-NONE-001" ] rejections
+              | Ok _ -> failwith "expected a rejection"
+
+              match recordGroupCheckpoint checkpointStore "GROUP-PRAXIS-CP-001" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, _, first) ->
+                  match recordGroupCheckpoint store "GROUP-PRAXIS-CP-001" with
+                  | Error rejections -> failwith $"unexpected rejection: {rejections}"
+                  | Ok(_, group, second) -> Assert.equal [ first; second ] group.Checkpoints)
+
+          t "checkpoint: the store round-trips with group checkpoints and a store without them still parses" (fun () ->
+              match recordGroupCheckpoint checkpointStore "GROUP-PRAXIS-CP-001" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, _, _) ->
+                  let json = PlanningJson.renderGroupStore store
+                  Assert.equal (Ok store) (PlanningJson.parseGroupStore json)
+                  Assert.isTrue (json.Contains "\"remaining\"" && json.Contains "\"git-remote-observation\"") "derived partitions and verification are rendered"
+                  let withoutCheckpoints = (JsonNode.Parse json).AsObject()
+                  (withoutCheckpoints["groups"].[0].AsObject()).Remove "checkpoints" |> ignore
+                  Assert.equal (Ok checkpointStore) (PlanningJson.parseGroupStore (withoutCheckpoints.ToJsonString())))
+
+          t "checkpoint: validate accepts a recorded group checkpoint and reports a tampered one" (fun () ->
+              let states = GroupDeclaration.memberStates queue checkpointLive
+
+              match recordGroupCheckpoint checkpointStore "GROUP-PRAXIS-CP-001" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, recorded) ->
+                  let known = GroupDeclaration.findings store states |> List.filter (fun finding -> finding.Field.EndsWith "checkpoints")
+                  Assert.empty known
+
+                  let tampered =
+                      { recorded with
+                          Summary = " "
+                          Location = { recorded.Location with RemoteCommit = sha 'e' } }
+
+                  let broken = GroupStore.replace { group with Checkpoints = [ tampered ] } store
+                  let findings = GroupDeclaration.findings broken states |> List.filter (fun finding -> finding.Field = "groups[GROUP-PRAXIS-CP-001].checkpoints")
+                  Assert.equal 2 findings.Length
+                  Assert.isTrue (findings |> List.exists (fun finding -> finding.Message.Contains "blank summary")) "blank summary"
+                  Assert.isTrue (findings |> List.exists (fun finding -> finding.Message.Contains "remoteCommit")) "commit mismatch")
+
+          t "checkpoint: durability uses work checkpoint's own Git rules without a work item or execution" (fun () ->
+              let candidate: CheckpointCandidate =
+                  { WorkItemId = "GROUP-PRAXIS-CP-001"
+                    Repository = "praxis"
+                    Summary = "settled"
+                    NextAction = "next"
+                    StepId = None
+                    OccurredAt = "2026-10-07T03:00:00.000Z" }
+
+              let head = sha 'd'
+              let origin: Ros.Domain.Git.RemoteIdentity = { Name = "origin"; Url = None }
+
+              let observed: CheckpointObservations =
+                  { WorkItemState = None
+                    Execution = ExecutionObservation.NoneActive
+                    Head = Ros.Domain.Git.GitRead.Observed(Ros.Domain.Git.HeadState.OnBranch("feature/x", head))
+                    Upstream = Some(Ros.Domain.Git.GitRead.Observed(Ros.Domain.Git.UpstreamState.Tracking(origin, "feature/x")))
+                    RemoteBranch = Some(Ros.Domain.Git.RemoteBranchObservation.At head)
+                    LocalToRemote = None
+                    WorkingTree = Ros.Domain.Git.GitStatusObservation.Clean
+                    PathFilter = PathFilterConfig.defaultConfig
+                    BaselineDirtyPaths = [] }
+
+              match CheckpointVerification.durableLocation candidate observed with
+              | Ok location -> Assert.equal head location.RemoteCommit
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+
+              let codes observations candidate =
+                  match CheckpointVerification.durableLocation candidate observations with
+                  | Ok _ -> failwith "expected a rejection"
+                  | Error rejections -> rejections |> List.map CheckpointRejection.code
+
+              let ahead =
+                  { observed with
+                      RemoteBranch = Some(Ros.Domain.Git.RemoteBranchObservation.At(sha 'e'))
+                      LocalToRemote = Some(Ros.Domain.Git.CommitRelationObservation.Related(Ros.Domain.Git.CommitRelation.Ahead 1)) }
+
+              Assert.equal [ "local-ahead" ] (codes ahead candidate)
+              Assert.equal [ "blank-summary"; "blank-next-action" ] (codes observed { candidate with Summary = " "; NextAction = "" })
+              // work checkpoint itself would refuse the same Git state identically.
+              match CheckpointVerification.verify candidate { ahead with WorkItemState = Some LiveWorkState.Active; Execution = ExecutionObservation.Resolved("EXE-1", []) } with
+              | Error rejections -> Assert.equal [ "local-ahead" ] (rejections |> List.map CheckpointRejection.code)
+              | Ok _ -> failwith "expected a rejection")
+
+          t "checkpoint operation: unknown groups skip Git, refusals and dry runs write nothing" (fun () ->
+              let port, current, writes = checkpointPorts checkpointStore
+              let verified = ref 0
+
+              let verify (_: CheckpointCandidate) =
+                  verified.Value <- verified.Value + 1
+                  Ok(verifiedAt 'd')
+
+              let refuse (_: CheckpointCandidate) = Error [ CheckpointRejection.UncommittedChanges [ "src/x.fs" ] ]
+
+              let run verify request =
+                  match WorkGroupOperations.checkpoint port verify request with
+                  | Ok outcome -> outcome
+                  | Error message -> failwith message
+
+              match run verify (checkpointRequest "GROUP-PRAXIS-NONE-001" false) with
+              | GroupCheckpointOutcome.Rejected [ GroupRejection.UnknownGroup "GROUP-PRAXIS-NONE-001" ] -> ()
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 0 verified.Value
+
+              match run refuse (checkpointRequest "GROUP-PRAXIS-CP-001" false) with
+              | GroupCheckpointOutcome.NotDurable [ CheckpointRejection.UncommittedChanges _ ] -> ()
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              match run verify (checkpointRequest "GROUP-PRAXIS-CP-001" true) with
+              | GroupCheckpointOutcome.Planned(group, _) -> Assert.equal 1 group.Checkpoints.Length
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 0 writes.Value
+              Assert.equal checkpointStore current.Value
+
+              match run verify (checkpointRequest "GROUP-PRAXIS-CP-001" false) with
+              | GroupCheckpointOutcome.Recorded(group, recorded) ->
+                  Assert.equal [ recorded ] group.Checkpoints
+                  Assert.equal (Some ownCheckpoint) (recorded.Members |> List.find (fun entry -> entry.WorkItemId = "L-1")).Checkpoint
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 1 writes.Value
+              Assert.equal 2 verified.Value) ]
+
+    let private start clone (id: string) =
+        PraxisCli.run clone executor [ "work"; "start"; "--id"; id; "--type"; "feature"; "--occurred-at"; PraxisCli.now () ] |> PraxisCli.ok |> ignore
+
+    let private groupCheckpoint clone (extra: string list) =
+        PraxisCli.run
+            clone
+            executor
+            ([ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-CP-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "store settled"; "--next-action"; "implement FEAT-2" ]
+             @ extra)
+
+    let private withPushedRepository (test: string -> unit) =
+        let parent = GitFixture.temporaryDirectory "group-checkpoint"
+
+        try
+            let _, clone = PraxisCli.installedRepository parent "clone"
+            test clone
+        finally
+            GitFixture.cleanup parent
+
+    let private rejectionCodes (result: PraxisCli.Result) =
+        result.Json["rejections"].AsArray() |> Seq.map (fun node -> text node["code"]) |> List.ofSeq
+
+    let private checkpointCliTests =
+        [ t "cli: checkpoint records a verified group checkpoint that references members' own checkpoints" (fun () ->
+              withPushedRepository (fun clone ->
+                  start clone "FEAT-1"
+                  start clone "FEAT-2"
+                  GitFixture.write clone "src/one.txt" "one\n"
+                  PraxisCli.pushAll clone "FEAT-1 work" |> ignore
+
+                  let own =
+                      PraxisCli.run clone executor [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; PraxisCli.now (); "--summary"; "slice"; "--next-action"; "next"; "--json" ]
+                      |> PraxisCli.ok
+
+                  let ownId = text own.Json["checkpoint"].["id"]
+                  PraxisCli.run clone executor (createArguments "GROUP-FIXTURE-CP-001" [ "FEAT-1"; "FEAT-2" ] [ "--architecture-note"; "one store" ]) |> PraxisCli.ok |> ignore
+                  let head = PraxisCli.pushAll clone "Praxis state"
+                  let memberState = memberFiles clone
+                  let events = File.ReadAllBytes(Path.Combine(clone, ".ros", "events", "events.jsonl"))
+
+                  let result = groupCheckpoint clone [ "--decision"; "members keep their own checkpoints"; "--json" ] |> PraxisCli.ok
+                  Assert.equal "group-checkpointed" (text result.Json["kind"])
+                  Assert.isTrue (result.Json["recorded"].GetValue<bool>()) "recorded"
+                  let recorded = result.Json["checkpoint"]
+                  Assert.equal head (text recorded["commit"])
+                  Assert.equal head (text recorded["remoteCommit"])
+                  Assert.equal "feature/x" (text recorded["branch"])
+                  Assert.equal "verified" (text recorded["verification"].["status"])
+                  Assert.equal "test/agent" (text recorded["actor"].["id"])
+                  Assert.equal [ "members keep their own checkpoints" ] (recorded["decisions"].AsArray() |> Seq.map text |> List.ofSeq)
+                  Assert.equal [ "FEAT-1"; "FEAT-2" ] (recorded["active"].AsArray() |> Seq.map text |> List.ofSeq)
+                  Assert.equal ownId (text recorded["members"].[0].["checkpoint"].["checkpointId"])
+                  Assert.isTrue (isNull recorded["members"].[1].["checkpoint"]) "FEAT-2 has no checkpoint of its own"
+                  Assert.isTrue (isNull recorded["paths"]) "a group checkpoint claims no paths"
+
+                  // Members' own state, checkpoints and events are untouched.
+                  Assert.equal memberState (memberFiles clone)
+                  Assert.equal events (File.ReadAllBytes(Path.Combine(clone, ".ros", "events", "events.jsonl")))
+                  let context = PraxisCli.run clone None [ "work"; "context"; "FEAT-1" ] |> PraxisCli.ok
+                  Assert.equal ownId (text context.Json["continuity"].[0].["checkpoint"].["id"])
+
+                  let shown = PraxisCli.run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-CP-001" ] |> PraxisCli.ok
+                  Assert.isTrue (shown.Output.Contains "store settled" && shown.Output.Contains "decision: members keep their own checkpoints") shown.Output
+                  PraxisCli.run clone None [ "validate" ] |> PraxisCli.ok |> ignore))
+
+          t "cli: checkpoint refuses unknown groups, unpushed and dirty work; argument errors exit 2" (fun () ->
+              withPushedRepository (fun clone ->
+                  start clone "FEAT-1"
+                  PraxisCli.run clone executor (createArguments "GROUP-FIXTURE-CP-001" [ "FEAT-1" ] []) |> PraxisCli.ok |> ignore
+                  PraxisCli.pushAll clone "Praxis state" |> ignore
+                  let unknown = PraxisCli.run clone executor [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-NONE-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "s"; "--next-action"; "n"; "--json" ]
+                  Assert.equal 1 unknown.ExitCode
+                  Assert.equal "group-checkpoint-rejected" (text unknown.Json["kind"])
+                  GitFixture.write clone "src/one.txt" "one\n"
+                  GitFixture.commitAll clone "not pushed" |> ignore
+                  let ahead = groupCheckpoint clone [ "--json" ]
+                  Assert.equal 1 ahead.ExitCode
+                  Assert.equal [ "local-ahead" ] (rejectionCodes ahead)
+                  GitFixture.git clone [ "push"; "-q" ] |> ignore
+                  GitFixture.write clone "src/one.txt" "two\n"
+                  Assert.equal [ "uncommitted-changes" ] (rejectionCodes (groupCheckpoint clone [ "--json" ]))
+                  GitFixture.git clone [ "checkout"; "--"; "src/one.txt" ] |> ignore
+                  let before = File.ReadAllText(storePath clone)
+
+                  let blank =
+                      PraxisCli.run clone executor [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-CP-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "  "; "--next-action"; "n"; "--json" ]
+
+                  Assert.equal 2 blank.ExitCode
+                  Assert.equal [ "blank-summary" ] (rejectionCodes blank)
+                  Assert.equal 2 (PraxisCli.run clone executor [ "work"; "group"; "checkpoint"; "--id"; "GROUP-FIXTURE-CP-001"; "--occurred-at"; PraxisCli.now (); "--summary"; "s" ]).ExitCode
+                  Assert.equal 2 (groupCheckpoint clone [ "--decision"; " " ]).ExitCode
+                  Assert.equal 2 (groupCheckpoint clone [ "stray" ]).ExitCode
+                  let dryRun = groupCheckpoint clone [ "--dry-run"; "--json" ] |> PraxisCli.ok
+                  Assert.isTrue (not (dryRun.Json["recorded"].GetValue<bool>())) "not recorded"
+                  Assert.equal before (File.ReadAllText(storePath clone)))) ]
+
     let tests =
         [ t "create records a valid declaration and sorts the store by ID" (fun () ->
               let store = recorded (recorded GroupStore.empty (declared "GROUP-PRAXIS-B-001" [ "A-1" ])) (declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-2"; "L-1" ])
@@ -714,7 +1030,8 @@ module WorkGroupTests =
                   { Declaration = declared id members
                     DeclaredAt = "2026-10-07T00:00:00.000Z"
                     DeclaredBy = None
-                    Membership = [] }
+                    Membership = []
+                    Checkpoints = [] }
 
               let store = { Groups = [ stored "GROUP-PRAXIS-A-001" [ "A-1"; "A-4" ]; stored "GROUP-PRAXIS-A-001" [ "GONE-1" ] ] }
               let findings = GroupDeclaration.findings store states
@@ -793,3 +1110,5 @@ module WorkGroupTests =
         @ showTests
         @ addTests
         @ removeTests
+        @ checkpointTests
+        @ checkpointCliTests

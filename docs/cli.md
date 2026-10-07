@@ -370,6 +370,43 @@ argument error (missing or repeated `--id`/`--member`, a bad timestamp,
 (`group`, `member{id,state}`, `change`). `validate` reports a member whose latest
 membership change is `removed` but who is still listed in `members`.
 
+### `work group checkpoint`
+
+```
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT
+    --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
+```
+
+Records a durable group checkpoint (`PRAXIS-GROUP-05`, PRX-GRP-044) on a
+stored group: the group ID, its members partitioned into `active`,
+`completed`, `abandoned` and `remaining` (each member's own recorded state:
+`active` is active work, `completed` is complete, `abandoned` stays apart from
+completed, everything else, including blocked and unknown items, remains), the
+shared decisions (`--decision`, repeatable), the verified branch and commit, the
+summary and the next action. It requires exactly the same durable-checkpoint
+verification as `work checkpoint` (named branch, upstream, local HEAD equal to
+the remote branch head read from the remote itself, no meaningful uncommitted
+work, non-blank summary and next action) and refuses with the same rejection
+codes; only the work-item and execution checks do not apply, because the
+checkpoint belongs to the group. It runs under the same `work-protocol` lock.
+
+Members' own checkpoints are referenced, never replaced: each member entry
+carries the ID, execution, commit and time of that member's latest verified
+checkpoint (or `null`). The group checkpoint claims no paths and writes no
+event, live context or backlog entry, so no member claims another's changes
+(PRX-GRP-043); `work checkpoint` remains the only way to checkpoint a member.
+Group checkpoints are appended to the group's `checkpoints` array in
+`.ros/work/groups.json` and never rewritten; `work group show` reports the
+latest one. An unknown group (checked before Git) or a checkpoint that is not
+durable exits `1` (`--json` kind `group-checkpoint-rejected`, with `errors` and
+`rejections[{code,message,remedy}]`) and writes nothing; `--dry-run` verifies
+and writes nothing; an argument error (missing or repeated flags, a bad
+timestamp, a blank `--decision`, blank `--summary`/`--next-action`, stray
+tokens) exits `2`. `--json` kind is `group-checkpointed` (`group`,
+`checkpoint`). `validate` reports a group checkpoint with a blank summary,
+next action or `recordedAt`, differing `commit` and `remoteCommit`, no members,
+or a member listed twice.
+
 ### `work group show`
 
 ```

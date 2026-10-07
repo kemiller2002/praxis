@@ -210,6 +210,13 @@ module CheckpointOperations =
         CheckpointObservation.candidate git policy itemState execution
         |> CheckpointVerification.verify candidate
 
+    /// `verify`'s durability check alone, for a checkpoint that is not one
+    /// work item's (a group checkpoint): the same observations and the same
+    /// Git rules, with no work item and no execution.
+    let verifyDurableLocation (git: GitDurability) (policy: ContinuityPolicy) (candidate: CheckpointCandidate) =
+        CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
+        |> CheckpointVerification.durableLocation candidate
+
     let assess (git: GitDurability) (policy: ContinuityPolicy) (workItemId: string) (itemState: LiveWorkState) (checkpoint: RecordedCheckpoint option) =
         CheckpointObservation.recoverability (CheckpointOwnership.scope git policy workItemId) policy checkpoint
         |> CheckpointAssessment.assess workItemId itemState checkpoint

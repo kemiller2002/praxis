@@ -428,12 +428,10 @@ module CheckpointVerification =
         | WorkingTreeState.NotRepository
         | WorkingTreeState.Clean _ -> []
 
-    /// Decides whether a candidate is a durable checkpoint. Every problem
-    /// that can be known independently is reported, so the caller can fix
-    /// them together; nothing unknown is ever accepted.
-    let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
-        let text = textRejections candidate
-        let work = workRejections candidate observations
+    /// The durability half of a checkpoint: the verified Git location, and
+    /// every reason the candidate is not remotely recoverable with a clean
+    /// working tree.
+    let private durability (candidate: CheckpointCandidate) (observations: CheckpointObservations) =
         let location = gitLocation candidate observations
 
         let tree =
@@ -441,9 +439,30 @@ module CheckpointVerification =
             | Error CheckpointRejection.NotGitRepository -> []
             | _ -> treeRejections observations
 
-        let rejections =
-            text @ work @ (match location with Error rejection -> [ rejection ] | Ok _ -> []) @ tree
-            |> List.distinct
+        location, (match location with Error rejection -> [ rejection ] | Ok _ -> []) @ tree
+
+    /// The same durable-checkpoint verification as `verify` (non-blank text,
+    /// `local HEAD == remote branch head`, no meaningful uncommitted work),
+    /// for a checkpoint that belongs to no single work item or execution,
+    /// such as a group checkpoint (PRX-GRP-044). The work-item and execution
+    /// observations are not consulted.
+    let durableLocation (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<GitDurableLocation, CheckpointRejection list> =
+        let location, rejections = durability candidate observations
+
+        match textRejections candidate @ rejections |> List.distinct, location with
+        | [], Ok git -> Ok git
+        | [], Error _ -> Error [ CheckpointRejection.UnknownGitState "the checkpoint could not be verified" ]
+        | found, _ -> Error found
+
+    /// Decides whether a candidate is a durable checkpoint. Every problem
+    /// that can be known independently is reported, so the caller can fix
+    /// them together; nothing unknown is ever accepted.
+    let verify (candidate: CheckpointCandidate) (observations: CheckpointObservations) : Result<Checkpoint, CheckpointRejection list> =
+        let text = textRejections candidate
+        let work = workRejections candidate observations
+        let location, durable = durability candidate observations
+
+        let rejections = text @ work @ durable |> List.distinct
 
         match rejections, location, observations.Execution with
         | [], Ok git, ExecutionObservation.Resolved(executionId, _) ->

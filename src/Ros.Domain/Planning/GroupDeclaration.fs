@@ -2,6 +2,7 @@ namespace Ros.Domain.Planning
 
 open System
 open System.Text.RegularExpressions
+open Ros.Domain.Git
 open Ros.Domain.Provenance
 open Ros.Domain.Work
 
@@ -30,21 +31,6 @@ type MembershipChange =
       OccurredAt: string
       Actor: Actor option }
 
-/// A human-declared execution group recorded in Praxis state
-/// (`.ros/work/groups.json`, PRX-GRP-073 phase two). `Declaration` has
-/// exactly the shape of a `grouping.groups` entry, so the planner reads a
-/// stored group exactly as it reads a configured one. `DeclaredAt`,
-/// `DeclaredBy` and `Membership` (changes after declaration, oldest first)
-/// are store metadata the planner ignores.
-type StoredGroup =
-    { Declaration: DeclaredGroup
-      DeclaredAt: string
-      DeclaredBy: Actor option
-      Membership: MembershipChange list }
-
-/// Every stored group, in ordinal ID order.
-type GroupStore = { Groups: StoredGroup list }
-
 /// What a group operation knows about a prospective member: its own
 /// recorded state (live context first, else the backlog). Absent means the
 /// item is unknown to this repository.
@@ -52,6 +38,89 @@ type GroupStore = { Groups: StoredGroup list }
 type MemberState =
     | Open of state: string
     | Terminal of state: string
+
+/// Where a member stood when a group checkpoint was recorded (PRX-GRP-044).
+/// Abandoned is kept apart from completed: a group never implies that every
+/// member succeeded (PRX-GRP-042).
+[<RequireQualifiedAccess>]
+type GroupMemberPartition =
+    | Active
+    | Completed
+    | Abandoned
+    | Remaining
+
+[<RequireQualifiedAccess>]
+module GroupMemberPartition =
+    let code partition =
+        match partition with
+        | GroupMemberPartition.Active -> "active"
+        | GroupMemberPartition.Completed -> "completed"
+        | GroupMemberPartition.Abandoned -> "abandoned"
+        | GroupMemberPartition.Remaining -> "remaining"
+
+    let all =
+        [ GroupMemberPartition.Active
+          GroupMemberPartition.Completed
+          GroupMemberPartition.Abandoned
+          GroupMemberPartition.Remaining ]
+
+    let tryParse value = all |> List.tryFind (fun partition -> code partition = value)
+
+    /// Active work is active; complete work is completed; abandoned work is
+    /// abandoned; everything else (ready, captured, blocked, unknown) remains.
+    let ofState (state: MemberState option) =
+        match state with
+        | Some(MemberState.Open "active") -> GroupMemberPartition.Active
+        | Some(MemberState.Terminal "complete") -> GroupMemberPartition.Completed
+        | Some(MemberState.Terminal "abandoned") -> GroupMemberPartition.Abandoned
+        | _ -> GroupMemberPartition.Remaining
+
+/// A member's own latest verified durable checkpoint, referenced by ID. A
+/// group checkpoint points at it; it never copies, replaces or rewrites it.
+type MemberCheckpointReference =
+    { CheckpointId: string
+      ExecutionId: string
+      Commit: string
+      RecordedAt: string }
+
+/// One member as a group checkpoint saw it: its own recorded state, its
+/// partition, and a reference to its own latest checkpoint (if any).
+type GroupCheckpointMember =
+    { WorkItemId: string
+      State: string
+      Partition: GroupMemberPartition
+      Checkpoint: MemberCheckpointReference option }
+
+/// A durable group checkpoint (PRX-GRP-044): the group's members by
+/// partition, shared decisions, the verified branch and commit, and the
+/// next action. It is group-level evidence about recoverability. It claims
+/// no paths and no member's changes (PRX-GRP-043): attribution stays with
+/// each member's own checkpoints, which it only references.
+type GroupCheckpoint =
+    { RecordedAt: string
+      Actor: Actor option
+      Summary: string
+      NextAction: string
+      Decisions: string list
+      Location: GitDurableLocation
+      Members: GroupCheckpointMember list }
+
+/// A human-declared execution group recorded in Praxis state
+/// (`.ros/work/groups.json`, PRX-GRP-073 phase two). `Declaration` has
+/// exactly the shape of a `grouping.groups` entry, so the planner reads a
+/// stored group exactly as it reads a configured one. `DeclaredAt`,
+/// `DeclaredBy`, `Membership` (changes after declaration, oldest first) and
+/// `Checkpoints` (group checkpoints, oldest first) are store metadata the
+/// planner ignores.
+type StoredGroup =
+    { Declaration: DeclaredGroup
+      DeclaredAt: string
+      DeclaredBy: Actor option
+      Membership: MembershipChange list
+      Checkpoints: GroupCheckpoint list }
+
+/// Every stored group, in ordinal ID order.
+type GroupStore = { Groups: StoredGroup list }
 
 [<RequireQualifiedAccess>]
 type GroupRejection =
@@ -181,7 +250,8 @@ module GroupDeclaration =
                 { Declaration = declaration
                   DeclaredAt = declaredAt
                   DeclaredBy = declaredBy
-                  Membership = [] }
+                  Membership = []
+                  Checkpoints = [] }
 
             Ok(GroupStore.add stored store, stored)
         | found -> Error found
@@ -294,6 +364,64 @@ module GroupDeclaration =
         | [], None -> Error [ GroupRejection.UnknownGroup groupId ]
         | found, _ -> Error found
 
+    /// Each current member as a group checkpoint records it, in declaration
+    /// order: its own state (`unknown` when the item is in neither the
+    /// backlog nor the live context), its partition, and its own latest
+    /// checkpoint, by reference.
+    let checkpointMembers
+        (states: Map<string, MemberState>)
+        (memberCheckpoints: Map<string, MemberCheckpointReference>)
+        (group: DeclaredGroup)
+        : GroupCheckpointMember list =
+        group.Members
+        |> List.map (fun memberId ->
+            let state = states.TryFind memberId
+
+            { WorkItemId = memberId
+              State =
+                match state with
+                | Some(MemberState.Open code)
+                | Some(MemberState.Terminal code) -> code
+                | None -> "unknown"
+              Partition = GroupMemberPartition.ofState state
+              Checkpoint = memberCheckpoints.TryFind memberId })
+
+    /// The members of one partition, in declaration order.
+    let partitionOf (partition: GroupMemberPartition) (checkpoint: GroupCheckpoint) =
+        checkpoint.Members |> List.filter (fun entry -> entry.Partition = partition) |> List.map (fun entry -> entry.WorkItemId)
+
+    /// Appends a durable group checkpoint to group `groupId`. `location` must
+    /// already be verified (`CheckpointVerification.durableLocation`). Only
+    /// the store changes: no member's lifecycle state, checkpoints, evidence
+    /// or attribution is written (PRX-GRP-043); earlier group checkpoints are
+    /// never rewritten.
+    let recordCheckpoint
+        (store: GroupStore)
+        (states: Map<string, MemberState>)
+        (memberCheckpoints: Map<string, MemberCheckpointReference>)
+        (recordedAt: string)
+        (recordedBy: Actor option)
+        (summary: string)
+        (nextAction: string)
+        (decisions: string list)
+        (location: GitDurableLocation)
+        (groupId: string)
+        : Result<GroupStore * StoredGroup * GroupCheckpoint, GroupRejection list> =
+        match GroupStore.tryFind groupId store with
+        | None -> Error [ GroupRejection.UnknownGroup groupId ]
+        | Some stored ->
+            let checkpoint =
+                { RecordedAt = recordedAt
+                  Actor = recordedBy
+                  Summary = summary.Trim()
+                  NextAction = nextAction.Trim()
+                  Decisions = decisions |> List.map (fun decision -> decision.Trim())
+                  Location = location
+                  Members = checkpointMembers states memberCheckpoints stored.Declaration }
+
+            let updated = { stored with Checkpoints = stored.Checkpoints @ [ checkpoint ] }
+            Ok(GroupStore.replace updated store, updated, checkpoint)
+
     /// The planner's view: configured declarations first, then stored ones in
     /// ID order. A configured group with the same ID wins, since the
     /// configuration file is the narrower, per-invocation input.
@@ -341,6 +469,22 @@ module GroupDeclaration =
                           yield { Field = at "membership"; Message = $"{memberId} is recorded as added but is not a member" }
                       | MembershipOperation.Removed when isMember ->
                           yield { Field = at "membership"; Message = $"{memberId} is recorded as removed but is still a member" }
-                      | _ -> () ])
+                      | _ -> ()
+                  for checkpoint in stored.Checkpoints do
+                      let where = at "checkpoints"
+                      let label = if String.IsNullOrWhiteSpace checkpoint.RecordedAt then "a group checkpoint" else $"the group checkpoint of {checkpoint.RecordedAt}"
+
+                      if String.IsNullOrWhiteSpace checkpoint.RecordedAt then
+                          yield { Field = where; Message = "a group checkpoint has no recordedAt" }
+                      if String.IsNullOrWhiteSpace checkpoint.Summary then
+                          yield { Field = where; Message = $"{label} has a blank summary" }
+                      if String.IsNullOrWhiteSpace checkpoint.NextAction then
+                          yield { Field = where; Message = $"{label} has a blank nextAction" }
+                      if checkpoint.Location.LocalCommit <> checkpoint.Location.RemoteCommit then
+                          yield { Field = where; Message = $"{label} has differing commit and remoteCommit; a checkpoint is accepted only when they are equal" }
+                      if checkpoint.Members.IsEmpty then
+                          yield { Field = where; Message = $"{label} records no members" }
+                      for memberId in duplicates (checkpoint.Members |> List.map (fun entry -> entry.WorkItemId)) do
+                          yield { Field = where; Message = $"{label} lists {memberId} more than once" } ])
 
         duplicateIds @ perGroup

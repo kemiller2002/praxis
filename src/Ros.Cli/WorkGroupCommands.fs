@@ -8,7 +8,7 @@ open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
-/// `work group create|add|remove|show`: declared execution groups in Praxis state
+/// `work group create|add|remove|checkpoint|show`: declared execution groups in Praxis state
 /// (PRX-GRP-073 phase two). Parses, delegates to `WorkGroupOperations`, and
 /// renders; it holds no group policy.
 [<RequireQualifiedAccess>]
@@ -24,7 +24,10 @@ module WorkGroupCommands =
     let removeUsage =
         "work group remove --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]"
 
-    let usage = createUsage + " | " + addUsage + " | " + removeUsage + " | " + showUsage
+    let checkpointUsage =
+        "work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]"
+
+    let usage = createUsage + " | " + addUsage + " | " + removeUsage + " | " + checkpointUsage + " | " + showUsage
 
     let private identityFlags =
         [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
@@ -38,6 +41,8 @@ module WorkGroupCommands =
     let private addFlags = set ([ "--id"; "--member"; "--occurred-at"; "--config" ] @ identityFlags)
 
     let private removeFlags = set ([ "--id"; "--member"; "--occurred-at" ] @ identityFlags)
+
+    let private checkpointFlags = set ([ "--id"; "--occurred-at"; "--summary"; "--next-action"; "--decision" ] @ identityFlags)
 
     let private switches = set [ "--dry-run"; "--json"; "--cross-repository" ]
 
@@ -372,6 +377,167 @@ module WorkGroupCommands =
                 1
             | Ok outcome -> renderRemove (List.contains "--json" arguments) request outcome
 
+    /// The checkpoint request the arguments describe, or every argument
+    /// error. Blank text is left to `work checkpoint`'s own verification, so
+    /// both commands refuse it identically.
+    let private checkpointRequest (arguments: string list) (parsed: Parsed) : Result<GroupCheckpointRequest, string list> =
+        let one flag what =
+            match valuesOf flag parsed with
+            | [ value ] -> Ok value
+            | [] -> Error $"work group checkpoint requires {flag} {what}"
+            | _ -> Error $"work group checkpoint takes exactly one {flag}"
+
+        let groupId = one "--id" "GROUP-ID"
+        let summary = one "--summary" "TEXT describing the completed work"
+        let nextAction = one "--next-action" "TEXT naming the next intended step"
+
+        let occurredAt =
+            match valuesOf "--occurred-at" parsed with
+            | [ value ] when isTimestamp value -> Ok value
+            | [ value ] -> Error $"--occurred-at '{value}' is not a timestamp"
+            | _ -> Error "work group checkpoint requires exactly one --occurred-at TIMESTAMP (the real current time)"
+
+        let decisions = valuesOf "--decision" parsed
+
+        let errors =
+            [ for result in [ groupId; summary; nextAction; occurredAt ] do
+                  match result with
+                  | Error message -> yield message
+                  | Ok _ -> ()
+              if decisions |> List.exists String.IsNullOrWhiteSpace then
+                  yield "--decision must not be blank"
+              if List.contains "--cross-repository" arguments then
+                  yield "--cross-repository is part of a group's declaration; work group checkpoint does not change it"
+              for token in parsed.Unexpected do
+                  yield $"unexpected argument '{token}'" ]
+
+        match errors, groupId, summary, nextAction, occurredAt with
+        | [], Ok groupId, Ok summary, Ok nextAction, Ok occurredAt ->
+            Ok
+                { GroupId = groupId
+                  Repository = ""
+                  Summary = summary
+                  NextAction = nextAction
+                  Decisions = decisions
+                  OccurredAt = occurredAt
+                  Actor = None
+                  DryRun = List.contains "--dry-run" arguments }
+        | errors, _, _, _, _ -> Error errors
+
+    let private checkpointText (verb: string) (stored: StoredGroup) (checkpoint: GroupCheckpoint) =
+        let group = stored.Declaration
+        let location = checkpoint.Location
+        let by = checkpoint.Actor |> Option.map (fun actor -> actor.Id) |> Option.defaultValue "unknown"
+        let list (values: string list) = if values.IsEmpty then "-" else String.concat ", " values
+        let partition value = GroupDeclaration.partitionOf value checkpoint |> list
+
+        [ yield $"{verb} group checkpoint for {group.Id} at {location.LocalCommit.Value} on {location.Branch}"
+          yield $"  verified at:   {location.Remote.Name}/{location.RemoteBranch} == local HEAD (read from the remote itself)"
+          yield $"  recorded:      {checkpoint.RecordedAt} by {by}"
+          yield $"  completed:     {checkpoint.Summary}"
+          yield $"  next action:   {checkpoint.NextAction}"
+          for decision in checkpoint.Decisions do
+              yield $"  decision:      {decision}"
+          yield $"  members active:    {partition GroupMemberPartition.Active}"
+          yield $"  members completed: {partition GroupMemberPartition.Completed}"
+          yield $"  members abandoned: {partition GroupMemberPartition.Abandoned}"
+          yield $"  members remaining: {partition GroupMemberPartition.Remaining}"
+          yield "  member checkpoints (referenced, never replaced):"
+          for entry in checkpoint.Members do
+              let reference =
+                  entry.Checkpoint
+                  |> Option.map (fun own -> $"{own.CheckpointId} at {own.Commit.Substring(0, min 12 own.Commit.Length)}")
+                  |> Option.defaultValue "none recorded"
+
+              yield $"    {entry.WorkItemId} ({entry.State}): {reference}"
+          yield "the group checkpoint claims no paths: each member's attribution stays with its own checkpoints" ]
+        |> List.iter (printfn "%s")
+
+    let private renderCheckpoint asJson (request: GroupCheckpointRequest) (outcome: GroupCheckpointOutcome) =
+        let rejected (rejections: (string * string * string) list) =
+            if asJson then
+                printf "%s" (PlanningJson.renderGroupCheckpointRejected request.GroupId rejections)
+            else
+                for code, message, remedy in rejections do
+                    eprintfn "ERROR [%s] %s" code message
+
+                    if not (String.IsNullOrEmpty remedy) then
+                        eprintfn "  REMEDY %s" remedy
+
+                eprintfn "group checkpoint rejected; nothing was recorded"
+
+        match outcome with
+        | GroupCheckpointOutcome.Rejected rejections ->
+            rejections |> List.map (fun rejection -> "group-rejected", GroupRejection.message rejection, "") |> rejected
+            1
+        | GroupCheckpointOutcome.NotDurable rejections ->
+            rejections
+            |> List.map (fun rejection ->
+                Ros.Domain.Work.CheckpointRejection.code rejection,
+                Ros.Domain.Work.CheckpointRejection.message rejection,
+                Ros.Domain.Work.CheckpointRejection.remedy rejection)
+            |> rejected
+
+            if rejections |> List.forall Ros.Domain.Work.CheckpointRejection.isArgumentError then 2 else 1
+        | GroupCheckpointOutcome.Planned(stored, checkpoint) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderGroupCheckpointed true stored checkpoint)
+            else
+                checkpointText "dry run: would record" stored checkpoint
+                printfn "nothing was recorded"
+
+            0
+        | GroupCheckpointOutcome.Recorded(stored, checkpoint) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderGroupCheckpointed false stored checkpoint)
+            else
+                checkpointText "recorded" stored checkpoint
+                printfn "Praxis state changed under .ros/; commit and push it so another executor can find this group checkpoint."
+
+            0
+
+    /// `work group checkpoint` (PRX-GRP-044): exit 0 recorded (or dry run),
+    /// 1 unknown group, not durable, or IO error (nothing written), 2
+    /// argument error (including blank --summary/--next-action). Runs under
+    /// the same `work-protocol` lock as `work checkpoint`.
+    let checkpoint root (arguments: string list) (actor: Actor) =
+        match checkpointRequest arguments (parseWith checkpointFlags { Values = []; Unexpected = [] } arguments) with
+        | Error errors ->
+            for error in errors do
+                eprintfn "ERROR %s" error
+
+            eprintfn "Usage: ros %s" checkpointUsage
+            2
+        | Ok request ->
+            let request =
+                { request with
+                    Repository = Ros.Infrastructure.Work.FileWorkConfigRepository.readRepositoryId root
+                    Actor = Some actor }
+
+            let git = Ros.Infrastructure.Git.ProcessGitDurability.create root
+            let policy = Ros.Infrastructure.Work.FileCheckpointRepository.readPolicy root
+            let verify = Ros.Application.Work.CheckpointOperations.verifyDurableLocation git policy
+
+            let outcome =
+                match Ros.Infrastructure.Artifacts.RegistryLock.acquire root "work-protocol" Ros.Infrastructure.Artifacts.RegistryLock.defaultSettings with
+                | Error failure -> Error failure.Message
+                | Ok lease ->
+                    let result =
+                        try
+                            WorkGroupOperations.checkpoint (FileWorkGroupRepository.create root) verify request
+                        with error ->
+                            Error $"state persistence failed: {error.Message}"
+
+                    match lease.Release(), result with
+                    | Error failure, Ok _ -> Error failure.Message
+                    | _, value -> value
+
+            match outcome with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok outcome -> renderCheckpoint (List.contains "--json" arguments) request outcome
+
     let private showText (plan: PlanSnapshot) (view: GroupView) =
         let group = view.Group.Declaration
         let kind = group.Kind |> Option.map GroupKind.code |> Option.defaultValue "kind unspecified"
@@ -416,6 +582,14 @@ module WorkGroupCommands =
               yield $"Architecture note: {line}"
           for note in view.Notes do
               yield $"Note [{GroupNoteCode.code note.Code}] {note.Message}"
+          match List.tryLast view.Group.Checkpoints with
+          | None -> yield "Group checkpoints: none recorded"
+          | Some latest ->
+              yield $"Group checkpoints: {view.Group.Checkpoints.Length}; latest {latest.RecordedAt} at {latest.Location.LocalCommit.Value.Substring(0, 12)} on {latest.Location.Branch}"
+              yield $"  completed: {latest.Summary}"
+              yield $"  next action: {latest.NextAction}"
+              for decision in latest.Decisions do
+                  yield $"  decision: {decision}"
           let commit = plan.Commit |> Option.map (fun value -> value.Substring(0, min 12 value.Length)) |> Option.defaultValue "unknown"
           yield $"Planned {plan.PlannedAt} at {commit}"
           yield view.Statement ]

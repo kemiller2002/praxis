@@ -2,6 +2,7 @@ namespace Ros.Application.Planning
 
 open Ros.Domain.Planning
 open Ros.Domain.Provenance
+open Ros.Domain.Work
 
 /// What `work group` commands read and write. The only write is the group
 /// store: no member's queue entry, live context, events, evidence or
@@ -65,6 +66,26 @@ type GroupRemoveOutcome =
     /// Valid; nothing written (`--dry-run`).
     | Planned of group: StoredGroup * removed: RemovedMember
     | Recorded of group: StoredGroup * removed: RemovedMember
+
+type GroupCheckpointRequest =
+    { GroupId: string
+      /// The repository identity (`ros.json` `repository.id`).
+      Repository: string
+      Summary: string
+      NextAction: string
+      Decisions: string list
+      OccurredAt: string
+      Actor: Actor option
+      DryRun: bool }
+
+[<RequireQualifiedAccess>]
+type GroupCheckpointOutcome =
+    | Rejected of GroupRejection list
+    /// `work checkpoint`'s own durability verification refused it.
+    | NotDurable of CheckpointRejection list
+    /// Verified; nothing written (`--dry-run`).
+    | Planned of group: StoredGroup * checkpoint: GroupCheckpoint
+    | Recorded of group: StoredGroup * checkpoint: GroupCheckpoint
 
 [<RequireQualifiedAccess>]
 type GroupShowOutcome =
@@ -134,7 +155,7 @@ module WorkGroupOperations =
                 match GroupDeclaration.removeMember store request.OccurredAt request.Actor request.GroupId request.Member with
                 | Error rejections -> Ok(GroupRemoveOutcome.Rejected rejections)
                 | Ok(updated, stored, change) ->
-                    let removed =
+                    let removed: RemovedMember =
                         { Change = change
                           State = known |> Map.tryFind change.Member |> Option.map stateCode |> Option.defaultValue "unknown" }
 
@@ -142,6 +163,73 @@ module WorkGroupOperations =
                         Ok(GroupRemoveOutcome.Planned(stored, removed))
                     else
                         port.WriteStore updated |> Result.map (fun () -> GroupRemoveOutcome.Recorded(stored, removed))))
+
+    /// Each item's own latest verified checkpoint, as a reference.
+    let private reference (checkpoint: CheckpointSummary) : MemberCheckpointReference =
+        { CheckpointId = checkpoint.CheckpointId
+          ExecutionId = checkpoint.ExecutionId
+          Commit = checkpoint.Commit
+          RecordedAt = checkpoint.RecordedAt }
+
+    let private memberCheckpoints (live: PlanningLiveItem list) =
+        live
+        |> List.choose (fun item ->
+            item.Checkpoint
+            |> Option.filter (fun checkpoint -> checkpoint.Verified)
+            |> Option.map (fun checkpoint -> item.Id, reference checkpoint))
+        |> Map.ofList
+
+    /// `work group checkpoint` (PRX-GRP-044): verifies durability with
+    /// `verify` (`work checkpoint`'s own rules: `CheckpointOperations
+    /// .verifyDurableLocation`), then appends a group checkpoint that
+    /// references each member's own latest checkpoint. An unknown group is
+    /// refused before Git is consulted. The only write is the group store.
+    let checkpoint
+        (port: WorkGroupPort)
+        (verify: CheckpointCandidate -> Result<GitDurableLocation, CheckpointRejection list>)
+        (request: GroupCheckpointRequest)
+        : Result<GroupCheckpointOutcome, string> =
+        port.ReadStore()
+        |> Result.bind (fun store ->
+            match GroupStore.tryFind request.GroupId store with
+            | None -> Ok(GroupCheckpointOutcome.Rejected [ GroupRejection.UnknownGroup request.GroupId ])
+            | Some _ ->
+                let candidate: CheckpointCandidate =
+                    { WorkItemId = request.GroupId
+                      Repository = request.Repository
+                      Summary = request.Summary
+                      NextAction = request.NextAction
+                      StepId = None
+                      OccurredAt = request.OccurredAt }
+
+                match verify candidate with
+                | Error rejections -> Ok(GroupCheckpointOutcome.NotDurable rejections)
+                | Ok location ->
+                    port.Queue()
+                    |> Result.bind (fun queue ->
+                        port.Live()
+                        |> Result.bind (fun live ->
+                            let known = GroupDeclaration.memberStates queue live
+
+                            match
+                                GroupDeclaration.recordCheckpoint
+                                    store
+                                    known
+                                    (memberCheckpoints live)
+                                    request.OccurredAt
+                                    request.Actor
+                                    request.Summary
+                                    request.NextAction
+                                    request.Decisions
+                                    location
+                                    request.GroupId
+                            with
+                            | Error rejections -> Ok(GroupCheckpointOutcome.Rejected rejections)
+                            | Ok(updated, stored, recorded) ->
+                                if request.DryRun then
+                                    Ok(GroupCheckpointOutcome.Planned(stored, recorded))
+                                else
+                                    port.WriteStore updated |> Result.map (fun () -> GroupCheckpointOutcome.Recorded(stored, recorded)))))
 
     /// `work group show`: the stored group, each member's own recorded state
     /// and the planner's view of the same group. Reads only: neither port's

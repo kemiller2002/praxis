@@ -744,16 +744,99 @@ module PlanningJson =
           OccurredAt = readOptionalText node "occurredAt" |> Option.defaultValue ""
           Actor = readActor node "actor" }
 
+    let private memberCheckpointNode (reference: MemberCheckpointReference) : JsonNode =
+        record
+            [ "checkpointId", text reference.CheckpointId
+              "executionId", text reference.ExecutionId
+              "commit", text reference.Commit
+              "recordedAt", text reference.RecordedAt ]
+
+    /// One group checkpoint. The `active`, `completed`, `abandoned` and
+    /// `remaining` arrays are derived from `members` for readers; parsing
+    /// reads `members` only.
+    let private groupCheckpointNode (checkpoint: GroupCheckpoint) : JsonNode =
+        let location = checkpoint.Location
+
+        record (
+            [ "recordedAt", text checkpoint.RecordedAt
+              "actor", actorNode checkpoint.Actor
+              "summary", text checkpoint.Summary
+              "nextAction", text checkpoint.NextAction
+              "decisions", texts checkpoint.Decisions
+              "repository", text location.Repository
+              "branch", text location.Branch
+              "commit", text location.LocalCommit.Value
+              "remote", record [ "name", text location.Remote.Name; "url", optionalText location.Remote.Url ]
+              "remoteBranch", text location.RemoteBranch
+              "remoteCommit", text location.RemoteCommit.Value
+              "verification", record [ "status", text "verified"; "mechanism", text "git-remote-observation" ]
+              "members",
+              checkpoint.Members
+              |> List.map (fun entry ->
+                  record
+                      [ "id", text entry.WorkItemId
+                        "state", text entry.State
+                        "partition", text (GroupMemberPartition.code entry.Partition)
+                        "checkpoint", entry.Checkpoint |> Option.map memberCheckpointNode |> Option.toObj ])
+              |> array ]
+            @ (GroupMemberPartition.all
+               |> List.map (fun partition -> GroupMemberPartition.code partition, texts (GroupDeclaration.partitionOf partition checkpoint)))
+        )
+
+    let private readCommit (node: JsonObject) (name: string) =
+        readText node name
+        |> fun value -> Ros.Domain.Git.CommitId.tryParse value |> Option.defaultWith (fun () -> fail $"{name} '{value}' is not a full commit ID")
+
+    let private readGroupCheckpoint (node: JsonObject) : GroupCheckpoint =
+        let remote = obj node "remote"
+        let verification = obj node "verification"
+
+        if readText verification "status" <> "verified" then
+            fail "a group checkpoint's verification status must be 'verified'"
+
+        if readText verification "mechanism" <> "git-remote-observation" then
+            fail "a group checkpoint's verification mechanism must be 'git-remote-observation'"
+
+        let location: Ros.Domain.Work.GitDurableLocation =
+            { Repository = readText node "repository"
+              Branch = readText node "branch"
+              LocalCommit = readCommit node "commit"
+              Remote = { Name = readText remote "name"; Url = readOptionalText remote "url" }
+              RemoteBranch = readText node "remoteBranch"
+              RemoteCommit = readCommit node "remoteCommit" }
+
+        { RecordedAt = readOptionalText node "recordedAt" |> Option.defaultValue ""
+          Actor = readActor node "actor"
+          Summary = readText node "summary"
+          NextAction = readText node "nextAction"
+          Decisions = if isNull (field node "decisions") then [] else readTexts node "decisions"
+          Location = location
+          Members =
+            objects node "members"
+            |> List.map (fun entry ->
+                { WorkItemId = readText entry "id"
+                  State = readText entry "state"
+                  Partition = readText entry "partition" |> parsed "member partition" GroupMemberPartition.tryParse
+                  Checkpoint =
+                    optionalObj entry "checkpoint"
+                    |> Option.map (fun reference ->
+                        { CheckpointId = readText reference "checkpointId"
+                          ExecutionId = readText reference "executionId"
+                          Commit = readText reference "commit"
+                          RecordedAt = readText reference "recordedAt" }) }) }
+
     let private storedGroupNode (stored: StoredGroup) : JsonNode =
         record (
             declaredGroupFields stored.Declaration
             @ [ "declaredAt", text stored.DeclaredAt
                 "declaredBy", actorNode stored.DeclaredBy
-                "membership", stored.Membership |> List.map membershipChangeNode |> array ]
+                "membership", stored.Membership |> List.map membershipChangeNode |> array
+                "checkpoints", stored.Checkpoints |> List.map groupCheckpointNode |> array ]
         )
 
     /// `.ros/work/groups.json`: `{schema, groups: [entry + declaredAt,
-    /// declaredBy, membership]}`. `membership` is optional when read.
+    /// declaredBy, membership, checkpoints]}`. `membership` and `checkpoints`
+    /// are optional when read.
     let renderGroupStore (store: GroupStore) =
         record [ "schema", text GroupStore.Schema; "groups", store.Groups |> List.map storedGroupNode |> array ] |> render
 
@@ -770,7 +853,8 @@ module PlanningJson =
                     { Declaration = readDeclaredGroup node
                       DeclaredAt = readOptionalText node "declaredAt" |> Option.defaultValue ""
                       DeclaredBy = readActor node "declaredBy"
-                      Membership = if isNull (field node "membership") then [] else objects node "membership" |> List.map readMembershipChange })
+                      Membership = if isNull (field node "membership") then [] else objects node "membership" |> List.map readMembershipChange
+                      Checkpoints = if isNull (field node "checkpoints") then [] else objects node "checkpoints" |> List.map readGroupCheckpoint })
                 |> fun groups -> Ok { Groups = groups }
         with
         | Malformed message -> Error $"malformed group store: {message}"
@@ -827,6 +911,33 @@ module PlanningJson =
               "member", text memberId
               "recorded", boolean false
               "errors", texts messages ]
+        |> render
+
+    /// The `--json` result of `work group checkpoint`: the group as it is
+    /// (or, with `--dry-run`, would be) stored and the new group checkpoint.
+    let renderGroupCheckpointed (dryRun: bool) (stored: StoredGroup) (checkpoint: GroupCheckpoint) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "group-checkpointed"
+              "dryRun", boolean dryRun
+              "recorded", boolean (not dryRun)
+              "group", storedGroupNode stored
+              "checkpoint", groupCheckpointNode checkpoint ]
+        |> render
+
+    /// A refused group checkpoint: `rejections` carries `work checkpoint`'s
+    /// own rejection codes when durability verification refused it.
+    let renderGroupCheckpointRejected (id: string) (rejections: (string * string * string) list) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "group-checkpoint-rejected"
+              "id", text id
+              "recorded", boolean false
+              "errors", rejections |> List.map (fun (_, message, _) -> message) |> texts
+              "rejections",
+              rejections
+              |> List.map (fun (code, message, remedy) -> record [ "code", text code; "message", text message; "remedy", text remedy ])
+              |> array ]
         |> render
 
     let renderMemberRejected (id: string) (memberId: string) (messages: string list) =
