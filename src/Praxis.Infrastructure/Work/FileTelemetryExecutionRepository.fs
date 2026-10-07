@@ -427,6 +427,13 @@ module FileTelemetryExecutionRepository =
                                 record["schemaVersion"] <- JsonValue.Create "1.0.0"
                                 record["executionId"] <- JsonValue.Create executionId
                                 record["workItemId"] <- JsonValue.Create request.WorkItemId
+                                // The canonical identity, structurally (PRX-REMOTE-047, 049);
+                                // `repositoryId: null` when the repository identity is not
+                                // established (explicitly legacy, PRX-REMOTE-048).
+                                record["workItem"] <-
+                                    Praxis.Contracts.Identity.IdentityJson.renderLocalWorkItem
+                                        (Praxis.Infrastructure.Identity.FileRepositoryIdentityRepository.current Praxis.Infrastructure.Identity.RepositoryObserver.environmentVariable root)
+                                        request.WorkItemId
                                 match Praxis.Infrastructure.Identity.FileInstanceIdentityStore.authoritativeId root with
                                 | Some instanceId -> record["instanceId"] <- JsonValue.Create instanceId
                                 | None -> ()

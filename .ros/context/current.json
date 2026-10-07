@@ -7039,11 +7039,101 @@
         }
       },
       "completedAt": "2026-10-07T05:05:03.598Z"
+    },
+    {
+      "id": "PRAXIS-ID-02",
+      "type": "implementation",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Remote/Protocol.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/IdentityTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-IDENTITY-001/group-verification-2.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:54:46.469Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T053404088Z-0a5820be"
+      ],
+      "latestCheckpoint": {
+        "id": "d504f980a2b8b08db1aa5403",
+        "recordedAt": "2026-10-07T05:54:42.541Z",
+        "executionId": "EXE-20261007T053404088Z-0a5820be",
+        "repository": "repository-operating-system",
+        "branch": "id/remote-identity",
+        "commit": "c34a8960b4ca1d3a99663bca095ebacd2f6bb19d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "id/remote-identity",
+        "remoteCommit": "c34a8960b4ca1d3a99663bca095ebacd2f6bb19d",
+        "summary": "Implemented and verified per criterion (group-verification-2.md)",
+        "nextAction": "Complete; PR review and merge by the owner",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:54:46.469Z"
+    },
+    {
+      "id": "PRAXIS-ID-03",
+      "type": "implementation",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Contracts/Planning/PlanningJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/IdentityTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-IDENTITY-001/group-verification-2.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:54:48.741Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T053405002Z-37591719"
+      ],
+      "latestCheckpoint": {
+        "id": "77ee713fac37416e99aa7e51",
+        "recordedAt": "2026-10-07T05:54:44.460Z",
+        "executionId": "EXE-20261007T053405002Z-37591719",
+        "repository": "repository-operating-system",
+        "branch": "id/remote-identity",
+        "commit": "c34a8960b4ca1d3a99663bca095ebacd2f6bb19d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "id/remote-identity",
+        "remoteCommit": "c34a8960b4ca1d3a99663bca095ebacd2f6bb19d",
+        "summary": "Implemented and verified per criterion (group-verification-2.md)",
+        "nextAction": "Complete; PR review and merge by the owner",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:54:48.741Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T05:05:03.598Z",
+  "updatedAt": "2026-10-07T05:54:48.741Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
