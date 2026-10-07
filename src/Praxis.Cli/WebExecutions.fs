@@ -70,7 +70,7 @@ module WebExecutions =
         let available = str a "available" = "true"
         let state = if available then "<span class=\"status-pill status-ready\">legal</span>" else "<span class=\"status-pill status-blocked\">blocked</span>"
         let why = if available then "" else items a "reasons" |> List.map (fun r -> $"<li>{e (r.ToString())}</li>") |> String.concat "" |> sprintf "<ul class=\"reasons\">%s</ul>"
-        $"<tr><td><code>{e (str a "transition")}</code>{target}</td><td>{state}</td><td>{requirement a}</td><td>{why}</td></tr>"
+        $"""<tr><td><code>{e (str a "transition")}</code>{target}</td><td>{state}</td><td>{requirement a}</td><td>{why}</td></tr>"""
 
     let private form (id: string) (a: JsonNode) =
         let action = (str a "transition").Replace("execution.", "")
@@ -83,7 +83,7 @@ module WebExecutions =
             else
                 ""
 
-        $"<form method=\"post\" action=\"{target}\"><input type=\"hidden\" name=\"action\" value=\"{e action}\" /><input name=\"reason\" placeholder=\"reason\" />{identity}<button type=\"submit\">{e action}{(if human then " (human)" else "")}</button></form>"
+        $"""<form method="post" action="{target}"><input type="hidden" name="action" value="{e action}" /><input name="reason" placeholder="reason" />{identity}<button type="submit">{e action}{(if human then " (human)" else "")}</button></form>"""
 
     let private stepRow (s: JsonNode) =
         let status = str s "status"
@@ -95,7 +95,7 @@ module WebExecutions =
             | "match" -> "receipt matches"
             | other -> other
 
-        $"<tr><td>{e (str s "stepId")}</td><td><span class=\"status-pill status-{e status}\">{e label}</span></td><td>{e (str s "attempts")}</td></tr>"
+        $"""<tr><td>{e (str s "stepId")}</td><td><span class="status-pill status-{e status}">{e label}</span></td><td>{e (str s "attempts")}</td></tr>"""
 
     /// One execution: state, actor and host, evaluator, containment,
     /// receipts, obligations, unknowns and legal actions.
@@ -108,7 +108,7 @@ module WebExecutions =
         let divergence = items node "divergence"
         let unknown = steps |> List.filter (fun s -> str s "status" = "indeterminate")
         let actions = items node "legalActions"
-        let blocked = if str node "state" = "blocked" then $"<p><strong>Blocked:</strong> {e (str node "stateReason")}</p>" else ""
+        let blocked = if str node "state" = "blocked" then $"""<p><strong>Blocked:</strong> {e (str node "stateReason")}</p>""" else ""
         let list title (xs: string list) = match xs with [] -> $"<p class=\"muted\">No {title}.</p>" | _ -> xs |> List.map (fun x -> $"<li>{e x}</li>") |> String.concat "" |> sprintf "<ul>%s</ul>"
         let profile = node["containmentProfile"]
 

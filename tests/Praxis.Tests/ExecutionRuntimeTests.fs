@@ -366,6 +366,45 @@ module ExecutionRuntimeTests =
                   finally
                       Environment.SetEnvironmentVariable("PRAXIS_CONTAINMENT_EVIDENCE", previous) } ]
 
+    let fallback =
+        [ { Name = "binding: a reconciled fallback envelope binds its execution once, with its base commit, branch and actor, and applies its requests"
+            Run =
+              fun () ->
+                  let root = repository None
+                  let baseCommit = git root [ "rev-parse"; "HEAD" ]
+                  let at = DateTimeOffset(2026, 10, 6, 18, 0, 0, TimeSpan.Zero)
+
+                  let request kind : Praxis.Domain.Work.EnvelopeRequest =
+                      { RequestType = kind; OccurredAt = Some at; WorkType = Some "feature"; Reason = None; Conclusion = None; Evidence = [] }
+
+                  let input: Praxis.Domain.Work.EnvelopeReconciliationInput =
+                      { SchemaVersion = "1.0"
+                        TransactionId = "tx-WI-9-001"
+                        WorkItem = "WI-9"
+                        Branch = "WI-9"
+                        BaseCommit = baseCommit
+                        PraxisInstanceId = None
+                        Agent = { ActorKind = "agent"; ActorId = "provider/runtime"; Provider = Some "provider"; Model = Some "unknown"; Runtime = Some "runtime" }
+                        Execution = None
+                        Timeline = [ { Sequence = 1; Timestamp = at; Action = "start" }; { Sequence = 2; Timestamp = at; Action = "complete" } ]
+                        Requests = [ request "work.start"; request "work.complete" ] }
+
+                  let ports = Praxis.Infrastructure.Execution.FileExecutionPorts.create root
+                  Praxis.Application.Execution.ExecutionBinding.fallback ports input |> ok
+                  // A replay binds the same execution, never a second one.
+                  Praxis.Application.Execution.ExecutionBinding.fallback ports input |> ok
+                  let _, listed = run root [ "list"; "--json" ]
+                  let all = (JsonNode.Parse listed).AsArray()
+                  Assert.equal 1 all.Count
+                  let e = all[0]
+                  Assert.equal "fallback" (e["origin"].["kind"].GetValue<string>())
+                  Assert.equal "tx-WI-9-001" (e["origin"].["reference"].GetValue<string>())
+                  Assert.equal baseCommit (e["baselineRevision"].GetValue<string>())
+                  Assert.equal "WI-9" (e["workspaceBinding"].["branch"].GetValue<string>())
+                  Assert.equal "provider/runtime" (e["actor"].["id"].GetValue<string>())
+                  Assert.isTrue (isNull e["actor"].["model"]) "an unknown model stays unset"
+                  Assert.equal "completed" (e["state"].GetValue<string>()) } ]
+
     let rec private repositoryRoot (directory: DirectoryInfo) =
         if File.Exists(Path.Combine(directory.FullName, "requirements", "EXECUTION-ORCHESTRATION.md")) then directory.FullName
         elif isNull directory.Parent then failwith "Could not locate requirements/EXECUTION-ORCHESTRATION.md"
@@ -395,4 +434,4 @@ module ExecutionRuntimeTests =
                       if status = "Partial" || status = "Not implemented" then
                           Assert.isTrue (item <> "-" && item <> "") $"{id} is {status} but names no work item" } ]
 
-    let tests = domain @ cli @ documentation
+    let tests = domain @ cli @ fallback @ documentation
