@@ -1,0 +1,80 @@
+{
+  "schema": "ex-ros-2026-a024.sessions/1",
+  "experimentId": "EX-ROS-2026-A024",
+  "orchestrator": "session_017jqvmNzwivr7inMUUL6ku4",
+  "frozenManifestCommit": "91745d917e8d6722c027d7033a436271d1746504",
+  "sanitizedStartCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+  "launchOrder": [
+    "B",
+    "C",
+    "A"
+  ],
+  "preflight": [
+    "session_01LF9wTRatrsvBPSCz5tLK7G",
+    "session_01K2uq5tGob5heiRq38Eti7j",
+    "session_01Y6TTvXHcEs8e7eWAR88TsL"
+  ],
+  "sessions": [
+    {
+      "label": "arm-2-01",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01GcAFbQum7GhurR6v9EtK2H",
+      "createdAt": "2026-10-07T17:04:10.283938Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-2-01.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "running"
+    },
+    {
+      "label": "arm-3-01",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01MSYbrVDPUQtWNoua5dxT2S",
+      "createdAt": "2026-10-07T17:04:29.381472Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-3-01.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "running"
+    },
+    {
+      "label": "arm-1",
+      "arm": "A",
+      "condition": "continuous",
+      "items": [
+        "PRAXIS-GROUP-01",
+        "PRAXIS-GROUP-02",
+        "PRAXIS-GROUP-03",
+        "PRAXIS-GROUP-04",
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_012GwtUuexDiqGUuwVsGa4CF",
+      "createdAt": "2026-10-07T17:04:41.923598Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-1",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-1.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "running"
+    }
+  ]
+}
