@@ -30,7 +30,8 @@ module RemoteExecutionTests =
                   SessionId = None }
           ExecutionId = None
           Arguments = arguments
-          RequestedAt = None }
+          RequestedAt = None
+          WorkItemScopes = [] }
 
     let private command plan =
         match plan with

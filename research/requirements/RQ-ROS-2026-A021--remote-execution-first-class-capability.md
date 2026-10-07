@@ -2,11 +2,11 @@
 id: RQ-ROS-2026-A021
 title: Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability
 status: accepted
-version: 1.3.0
+version: 1.4.0
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-07
 research_area: repository-operating-system
 priority: high
 depends_on: [RQ-ROS-2026-A020]
@@ -57,6 +57,17 @@ provenance:
         runtime: claude-code
       reason: "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
       evidence: [EV-ROS-2026-A054]
+    EXE-20261007T053405002Z-37591719:
+      operations: [modified]
+      at: 2026-10-07T05:34:26.023Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Adopt PRX-REMOTE-045..050 and the order amendment; record their implementation (GROUP-PRAXIS-IDENTITY-001); correct the deleted Node test citations and the abandoned PRAXIS-NPM-BIN deferral"
+      evidence: [docs/identity.md]
 derived_from: [RQ-ROS-2026-A020]
 ---
 
@@ -74,7 +85,9 @@ request, persists only Praxis-owned state, and returns the structured
 result. Praxis remains the authority.
 
 The detailed, normative requirement list is issue #90, `PRX-REMOTE-001`
-through `PRX-REMOTE-044`, which this record adopts by reference rather than
+through `PRX-REMOTE-050` (045-050, global work-item identity, and the
+implementation-order amendment were added to the issue after this record
+was first written), which this record adopts by reference rather than
 copying. Their reconciliation against the implementation, with the gap for
 each, is `EV-ROS-2026-A053`; the design and decomposition is
 `DF-ROS-2026-A041`.
@@ -135,10 +148,14 @@ This section is a status snapshot. `EV-ROS-2026-A053` remains the baseline
 as of `59b4e03`. Each entry below is backed by the named work item's
 completion evidence and tests.
 
-**Local verification.** Everything below ran locally:
+**Local verification.** Everything below ran locally on 2026-09-28. The
+Node and Python suites it names have since been deleted with the npm
+distribution (`DF-ROS-2026-A044`); the same behaviour is covered by the F#
+suite (`RemoteProtocolTests`, `RemoteExecutionTests`, `RemoteExecuteCliTests`,
+`RemotePersistScriptTests`, `PremergeRemoteTests`, `PremergeRemoteScriptTests`):
 
-- `npm run test:all`: node 104 passed, python 7 passed, F# 579 passed, and
-  the F#/Node differential and remote suites 237 passed.
+- then: node 104 passed, python 7 passed, F# 579 passed, and the F#/Node
+  differential and remote suites 237 passed.
 - The site suite: 99 passed.
 - `praxis validate`: passed.
 
@@ -199,5 +216,19 @@ work" below.
   reports any other refused push or pull request as
   `repository-write-failed`, and a lost race as `concurrency-conflict`.
 - **039.** Remote execution is opt-in, and existing state stays readable.
-  The npm `praxis` bin is deferred to PRAXIS-NPM-BIN, because the public
-  site's audited copy must change with it.
+  The npm `praxis` bin clause is moot: npm is no longer a distribution
+  channel (`DF-ROS-2026-A044`), and PRAXIS-NPM-BIN was abandoned.
+- **045-050 and the implementation-order amendment (global work-item
+  identity).** Implemented by `GROUP-PRAXIS-IDENTITY-001`
+  ([`docs/identity.md`](../../docs/identity.md)):
+  - 045, 046, 048, 049, 050: typed repository and work-item identity,
+    `ros.json` `repository.identity`, the legacy migration rule and the
+    PRX-REMOTE-050 test matrix (PRAXIS-ID-01, PR #185).
+  - 047 and the amendment: protocol 1.4 carries structured
+    `{repositoryId, repository, localId}` references and refuses any other
+    repository; 1.0-1.3 requests keep their meaning and fingerprints
+    (PRAXIS-ID-02). Execution telemetry and planner documents carry the
+    canonical identity structurally (PRAXIS-ID-03).
+  - The protocol shipped (1.0-1.3) before the identity model existed, so the
+    amendment is met by making 1.4 consume the canonical model rather than by
+    re-freezing 1.0.

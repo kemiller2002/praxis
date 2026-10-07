@@ -83,6 +83,19 @@ Resolution rules (all fail closed, none guesses):
 - A reference with no stable ID whose locator differs from the context is **unverified** and refused: a rename cannot be told from another repository.
 - Duplicate canonical identities, one stable ID seen with two locators, or one locator claimed by two stable IDs, are **conflicts** and refused.
 
+### Where the canonical identity is carried (PRX-REMOTE-047)
+
+- **Remote protocol 1.4:** `workItemId`/`workItemIds` accept the structured
+  reference; responses add `repository.identity` and `workItems`
+  ([`remote-protocol.md`](remote-protocol.md)).
+- **Execution telemetry:** new execution records carry `workItem` next to the
+  legacy `workItemId`; records without it stay valid and are read as the local
+  ID in their repository.
+- **Planner documents:** every `praxis.plan` document carries `repository`
+  ([`planning.md`](planning.md#json-contract)).
+- **Cross-repository groups:** members use `owner/repo:ID` with the same
+  locator grammar (`RepositoryLocator`).
+
 ### Migration rule for legacy IDs (PRX-REMOTE-048)
 
 1. Existing local IDs, events, telemetry and evidence are not rewritten. Their

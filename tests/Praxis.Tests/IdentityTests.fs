@@ -433,6 +433,11 @@ module IdentityTests =
 
                   let native = start "WI-0101" []
                   Assert.equal localId (native["instanceId"].GetValue<string>())
+                  // The canonical work item, structurally (PRX-REMOTE-047): the
+                  // repository identity is not established here, so it is legacy.
+                  Assert.equal "echelon-foundry/praxis" (textAt [ "workItem"; "repository" ] native)
+                  Assert.equal "WI-0101" (textAt [ "workItem"; "localId" ] native)
+                  Assert.isTrue (isNull (native["workItem"].AsObject()["repositoryId"])) "a legacy reference has no repositoryId"
                   let copied = start "WI-0102" [ "GITHUB_ACTIONS", "true"; "GITHUB_REPOSITORY_ID", "555"; "GITHUB_REPOSITORY", "someone/copy" ]
                   Assert.isTrue (isNull copied["instanceId"]) "a foreign instance identity must not be stamped"))
 
@@ -498,4 +503,127 @@ module IdentityTests =
                   CliPort.exitCode 0 applied
                   CliPort.contains "APPLIED tx-match" applied.Out)) ]
 
-    let tests = repositoryMatrix @ instanceDomain @ store @ cli @ reconciliation
+
+    // ---- remote protocol 1.4 (PRAXIS-ID-02, PRX-REMOTE-047) ----
+
+    let private sha = "59b4e032818a4c765886e48c117595dc58019d43"
+
+    let private remoteRequest (version: string) (operation: string) (arguments: string) =
+        $"""{{"protocol":"praxis.remote","protocolVersion":"{version}","requestId":"req-identity-0001","operation":"{operation}","repository":{{"ref":"refs/heads/main","expectedSha":"{sha}"}},"actor":{{"kind":"agent","id":"example/agent"}},"arguments":{arguments}}}"""
+
+    let private parseRemote text =
+        Praxis.Contracts.Remote.RemoteJson.parseRequest Praxis.Domain.Remote.ProtocolVersion.current text
+
+    let private qualified = """{"repositoryId":"github:100","repository":"echelon-foundry/praxis","localId":"WI-0100"}"""
+
+    let private trusted repository : Praxis.Domain.Remote.TrustedContext =
+        { Principal = "principal:test"
+          Grants = set Praxis.Domain.Remote.Capability.all
+          ObservedRef = Some "refs/heads/main"
+          ObservedSha = Some sha
+          Repository = repository }
+
+    let private remote =
+        [ t "planner documents carry the repository their work-item IDs belong to (PRX-PLAN-182)" (fun () ->
+              withInstallation (Some "https://github.com/echelon-foundry/praxis.git") (fun root ->
+                  CliPort.exitCode 0 (ros root [ "repository"; "identity"; "set"; "--provider"; "github"; "--provider-id"; "100" ])
+                  let analysis = ros root [ "plan"; "analyze"; "--json" ]
+                  CliPort.exitCode 0 analysis
+                  let node = CliPort.parse analysis.Out
+                  Assert.equal "github:100" (textAt [ "repository"; "repositoryId" ] node)
+                  Assert.equal "echelon-foundry/praxis" (textAt [ "repository"; "repository" ] node)))
+
+          t "remote 1.4: praxis.describe advertises the governed repository and the reference shape" (fun () ->
+              withInstallation (Some "https://github.com/echelon-foundry/praxis.git") (fun root ->
+                  CliPort.exitCode 0 (ros root [ "repository"; "identity"; "set"; "--provider"; "github"; "--provider-id"; "100" ])
+                  let described = ros root [ "remote"; "describe" ]
+                  CliPort.exitCode 0 described
+                  let node = CliPort.parse described.Out
+                  Assert.equal "github:100" (textAt [ "repositoryIdentity"; "repositoryId" ] node)
+                  Assert.equal "1.4" (textAt [ "workItemReference"; "introducedIn" ] node)))
+
+          t "remote 1.4: a structured reference parses to its local ID and records its repository" (fun () ->
+              match parseRemote (remoteRequest "1.4" "work.start" $"""{{"workItemIds":[{qualified},"WI-0101"]}}""") with
+              | Ok request ->
+                  match request.Arguments with
+                  | Praxis.Domain.Remote.Arguments.WorkStart start -> Assert.equal [ "WI-0100"; "WI-0101" ] start.WorkItemIds
+                  | other -> failwith $"unexpected {other}"
+
+                  let scope = Assert.single request.WorkItemScopes
+                  Assert.equal "arguments.workItemIds[0]" scope.Field
+                  Assert.equal (Some "github:100") (RepositoryIdentity.repositoryId scope.Repository)
+              | Error failure -> failwith $"{failure.Failure.Problems}")
+
+          t "remote 1.4: structured references inside a batch are normalised too" (fun () ->
+              let batch = $"""{{"requests":[{{"requestId":"req-identity-0002","operation":"work.resume","arguments":{{"workItemIds":[{qualified}]}}}}]}}"""
+
+              match parseRemote (remoteRequest "1.4" "batch" batch) with
+              | Ok request -> Assert.equal "arguments.requests[0].arguments.workItemIds[0]" (Assert.single request.WorkItemScopes).Field
+              | Error failure -> failwith $"{failure.Failure.Problems}")
+
+          t "remote 1.4: a 1.3 request may not use a structured reference" (fun () ->
+              match parseRemote (remoteRequest "1.3" "work.start" $"""{{"workItemIds":[{qualified}]}}""") with
+              | Error failure ->
+                  Assert.equal Praxis.Domain.Remote.FailureCode.InvalidRequest failure.Failure.Code
+                  Assert.isTrue (failure.Failure.Problems |> List.exists (fun problem -> problem.Message.Contains "1.4")) "names the version"
+              | Ok _ -> failwith "a 1.3 request with a structured reference must be refused")
+
+          t "remote 1.4: a display string is not accepted as a qualified reference" (fun () ->
+              match parseRemote (remoteRequest "1.4" "work.context" "{\"workItemId\":\"echelon-foundry/praxis:WI-1\"}") with
+              | Error failure -> Assert.equal Praxis.Domain.Remote.FailureCode.InvalidRequest failure.Failure.Code
+              | Ok request ->
+                  Assert.empty request.WorkItemScopes
+
+                  match Praxis.Domain.Remote.RequestDecision.decide (trusted (Some praxis)) Praxis.Domain.Remote.JournalLookup.NotRecorded request with
+                  | Praxis.Domain.Remote.Decision.Reject failure -> Assert.equal Praxis.Domain.Remote.FailureCode.InvalidRequest failure.Code
+                  | other -> failwith $"a display string must not be parsed into identity: {other}")
+
+          t "remote 1.4: a reference to another or unverifiable repository is refused before anything runs" (fun () ->
+              let request =
+                  match parseRemote (remoteRequest "1.4" "work.start" $"""{{"workItemIds":[{qualified}]}}""") with
+                  | Ok request -> request
+                  | Error failure -> failwith $"{failure.Failure.Problems}"
+
+              let decide repository = Praxis.Domain.Remote.RequestDecision.decide (trusted repository) Praxis.Domain.Remote.JournalLookup.NotRecorded request
+
+              Assert.equal Praxis.Domain.Remote.Decision.Execute (decide (Some praxis))
+              Assert.equal Praxis.Domain.Remote.Decision.Execute (decide (Some(RepositoryIdentity.withLocator (locator "renamed/praxis") praxis)))
+
+              for repository in [ Some vigila; None; Some(RepositoryIdentity.legacy RepositoryProvider.github (locator "other/repo")) ] do
+                  match decide repository with
+                  | Praxis.Domain.Remote.Decision.Reject failure -> Assert.equal Praxis.Domain.Remote.FailureCode.InvalidRequest failure.Code
+                  | other -> failwith $"expected a refusal for {repository}, got {other}")
+
+          t "remote 1.4: bare-ID requests fingerprint exactly as before; structured ones add their repository" (fun () ->
+              let parsedOk text =
+                  match parseRemote text with
+                  | Ok request -> request
+                  | Error failure -> failwith $"{failure.Failure.Problems}"
+
+              let old = parsedOk (remoteRequest "1.3" "work.start" "{\"workItemIds\":[\"WI-0100\"]}")
+              let bare = parsedOk (remoteRequest "1.4" "work.start" "{\"workItemIds\":[\"WI-0100\"]}")
+              let structured = parsedOk (remoteRequest "1.4" "work.start" $"""{{"workItemIds":[{qualified}]}}""")
+              Assert.empty old.WorkItemScopes
+              Assert.isTrue (not ((Praxis.Domain.Remote.RequestFingerprint.canonical old).Contains "scope")) "a 1.3 encoding is unchanged"
+              Assert.equal (Praxis.Domain.Remote.RequestFingerprint.compute old) (Praxis.Domain.Remote.RequestFingerprint.compute bare)
+              Assert.isTrue (Praxis.Domain.Remote.RequestFingerprint.compute bare <> Praxis.Domain.Remote.RequestFingerprint.compute structured) "the repository is part of the intent")
+
+          t "remote 1.4: responses carry the governed repository and the canonical work items; 1.3 responses keep their shape" (fun () ->
+              let request version =
+                  match parseRemote (remoteRequest version "work.start" "{\"workItemIds\":[\"WI-0100\"]}") with
+                  | Ok request -> request
+                  | Error failure -> failwith $"{failure.Failure.Problems}"
+
+              let render version =
+                  let response = { Praxis.Domain.Remote.Response.succeeded "3.7.2" (request version) (Some sha) None with RepositoryIdentity = Some praxis }
+                  JsonNode.Parse(Praxis.Contracts.Remote.RemoteJson.renderResponse response)
+
+              let current = render "1.4"
+              Assert.equal "github:100" (textAt [ "repository"; "identity"; "repositoryId" ] current)
+              Assert.equal "github:100" (textAt [ "repositoryId" ] (current["workItems"].AsArray()[0]))
+              Assert.equal "WI-0100" (textAt [ "localId" ] (current["workItems"].AsArray()[0]))
+              let earlier = render "1.3"
+              Assert.isTrue (isNull earlier["workItems"]) "a 1.3 response has no workItems"
+              Assert.isTrue (isNull (earlier["repository"].AsObject()["identity"])) "a 1.3 response has no repository identity") ]
+
+    let tests = repositoryMatrix @ instanceDomain @ store @ cli @ reconciliation @ remote

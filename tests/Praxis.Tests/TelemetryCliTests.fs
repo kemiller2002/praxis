@@ -94,6 +94,7 @@ module TelemetryCliTests =
     let private researchRecord () =
         let record = CliPort.parse (taskRecord ())
         record["workItemId"] <- JsonValue.Create "WI-B"
+        record["workItem"]["localId"] <- JsonValue.Create "WI-B"
         record["classification"]["types"] <- JsonArray(JsonValue.Create "research")
         record["links"]["workItemId"] <- JsonValue.Create "WI-B"
         CliPort.compact record
