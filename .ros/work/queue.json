@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 74,
+  "nextSeq": 75,
   "items": [
     {
       "id": "WI-0001",
@@ -5518,6 +5518,48 @@
         "provider": "github",
         "model": "unknown",
         "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "REMOTE-ENABLE-3-8-0",
+      "title": "Pin Praxis 3.8.0 and enable remote execution (read,mutate,complete) (GH-90)",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-07T20:52:42.452Z",
+      "updatedAt": "2026-10-07T20:54:37.397Z",
+      "createdBy": "anthropic/claude-code",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/90"
+    },
+    {
+      "id": "WI-0074",
+      "title": "praxis-remote-enable.sh: land before completing, and retire the previous pin's exceptions",
+      "description": "Found while pinning 3.8.0 (REMOTE-ENABLE-3-8-0). (1) finish_item runs 'work complete' before the change is committed and pushed, so with workProtocol.continuity.requireDurableCheckpoint the completion is refused ('completion requires a durable final state'); the script must commit, push, run 'work checkpoint', then complete and push the Praxis state, as scripts/praxis-release-bump.sh does. (2) 'tooling record-compatibility' retires only exceptions naming the newly pinned release, so an exception for the previous pin (QX-COMPAT-1 for 3.7.2) survives the advance that its own rationale says retires it; retire exceptions that no longer name the pinned release. (3) --via-pr and the release phase use GraphQL-backed gh commands (repo view, release download, pr create/checks/merge), which fail where only the REST API is reachable; prefer gh api REST calls.",
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-07T20:54:22.203Z",
+      "updatedAt": "2026-10-07T20:54:22.203Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

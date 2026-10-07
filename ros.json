@@ -31,12 +31,32 @@
       "complete": "complete"
     },
     "completionEvidence": {
-      "default": ["implementation", "tests"],
-      "research": ["research-record"],
+      "default": [
+        "implementation",
+        "tests"
+      ],
+      "research": [
+        "research-record"
+      ],
       "mechanical": []
     },
-    "meaningfulPaths": ["**"],
-    "ignoredPaths": [".git/**", ".ros/context/**", ".ros/events/**", ".ros/work/**", ".ros/telemetry/**", ".ros/executions/**", ".ros/locks/**", ".ros/remote/**", ".ros/planning/**", ".praxis-inbox/**", "registries/**", ".echelon/**"],
+    "meaningfulPaths": [
+      "**"
+    ],
+    "ignoredPaths": [
+      ".git/**",
+      ".ros/context/**",
+      ".ros/events/**",
+      ".ros/work/**",
+      ".ros/telemetry/**",
+      ".ros/executions/**",
+      ".ros/locks/**",
+      ".ros/remote/**",
+      ".ros/planning/**",
+      ".praxis-inbox/**",
+      "registries/**",
+      ".echelon/**"
+    ],
     "continuity": {
       "requireDurableCheckpoint": true
     },
@@ -94,7 +114,9 @@
     "version": "1.0.0",
     "enforce": true,
     "requiredFrom": "2026-09-25",
-    "requireOriginator": ["RQ"]
+    "requireOriginator": [
+      "RQ"
+    ]
   },
   "telemetry": {
     "version": "1.0.0",
@@ -109,6 +131,10 @@
     "maxCapabilityHistoryEntries": 64
   },
   "remote": {
-    "capabilities": ["read", "mutate", "complete"]
+    "capabilities": [
+      "read",
+      "mutate",
+      "complete"
+    ]
   }
 }

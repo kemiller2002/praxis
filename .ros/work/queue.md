@@ -213,6 +213,7 @@
 | RELEASE-3-8-0 | Release Praxis 3.8.0 | complete |  | medium |
 | REMOTE-ENABLE-3-5-0 | Pin Praxis 3.5.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | REMOTE-ENABLE-3-6-0 | Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3) | complete |  | high |
+| REMOTE-ENABLE-3-8-0 | Pin Praxis 3.8.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
@@ -293,6 +294,7 @@
 | WI-0071 | Step commands record the caller's discovered identity instead of the owning execution's, so validate rejects the step | captured | telemetry, provenance | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-0073 | Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL | complete |  | high |
+| WI-0074 | praxis-remote-enable.sh: land before completing, and retire the previous pin's exceptions | captured |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
