@@ -154,4 +154,22 @@ module FileWorkGroupRepository =
                         |> List.map (fun checkpoint ->
                             relativePath, $"groups.{group.Id}.checkpoints", $"checkpoint {checkpoint.Id} does not match its content; a recorded group checkpoint is never rewritten"))
 
-                structural @ tampered
+                // A referenced member checkpoint must be that member's own
+                // recorded checkpoint: the group never invents or replaces one.
+                let dangling =
+                    groups
+                    |> List.collect (fun group ->
+                        group.Checkpoints
+                        |> List.collect (fun checkpoint ->
+                            checkpoint.MemberCheckpoints
+                            |> List.choose (fun reference ->
+                                match reference.CheckpointId with
+                                | Some id when not (FileCheckpointRepository.readHistory root reference.WorkItemId |> List.exists (fun event -> event.EventId = id)) ->
+                                    Some(
+                                        relativePath,
+                                        $"groups.{group.Id}.checkpoints",
+                                        $"checkpoint {checkpoint.Id} references {reference.WorkItemId} checkpoint {id}, which is not one of that item's recorded checkpoints"
+                                    )
+                                | _ -> None)))
+
+                structural @ tampered @ dangling

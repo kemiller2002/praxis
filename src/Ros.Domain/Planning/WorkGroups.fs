@@ -114,6 +114,8 @@ type GroupCheckpoint =
       SharedDecisions: string list
       Active: string list
       Completed: string list
+      Abandoned: string list
+      /// Every member not complete or abandoned, active and blocked included.
       Remaining: string list
       MemberCheckpoints: MemberCheckpointReference list }
 
@@ -147,6 +149,7 @@ type GroupRejection =
     | NotMember of groupId: string * workItemId: string
     | RepositoryMismatch of workItemId: string * itemRepository: string * groupRepository: string
     | LastMember of groupId: string * workItemId: string
+    | EmptyGroup of groupId: string
     | BlankText of field: string
     | Checkpoint of CheckpointRejection
 
@@ -166,6 +169,7 @@ module GroupRejection =
         | GroupRejection.NotMember _ -> "not-member"
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
         | GroupRejection.LastMember _ -> "last-member"
+        | GroupRejection.EmptyGroup _ -> "empty-group"
         | GroupRejection.BlankText _ -> "blank-text"
         | GroupRejection.Checkpoint inner -> CheckpointRejection.code inner
 
@@ -184,6 +188,7 @@ module GroupRejection =
         | GroupRejection.RepositoryMismatch(id, item, group) ->
             $"work item '{id}' executes in {item} but the group executes in {group}; declare the group --cross-repository or keep groups repository-local (PRX-GRP-051)"
         | GroupRejection.LastMember(group, id) -> $"'{id}' is the last member of {group}; pass --allow-empty to leave the group declared with no members"
+        | GroupRejection.EmptyGroup group -> $"{group} has no members, so there is nothing to checkpoint"
         | GroupRejection.BlankText field -> $"{field} must not be blank"
         | GroupRejection.Checkpoint inner -> CheckpointRejection.message inner
 
@@ -220,6 +225,15 @@ type MembershipRequest =
       OccurredAt: string
       Actor: Actor
       Reason: string option }
+
+/// What `work group checkpoint` asks for.
+type GroupCheckpointRequest =
+    { GroupId: string
+      Summary: string
+      NextAction: string
+      SharedDecisions: string list
+      OccurredAt: string
+      Actor: Actor }
 
 /// A structural problem in stored groups, reported by `validate`.
 type GroupFinding =
@@ -364,6 +378,67 @@ module WorkGroups =
                                   OccurredAt = request.OccurredAt
                                   Actor = request.Actor
                                   Reason = request.Reason } ] })
+
+    /// `work group checkpoint` (PRX-GRP-044): a group-level recovery point,
+    /// accepted only at a verified durable location (`location`, decided by
+    /// `CheckpointVerification.verifyDurableLocation`, the rule `work
+    /// checkpoint` applies). It partitions members by their own recorded
+    /// state and references each member's own latest checkpoint; it never
+    /// replaces one and attributes no path to any member (PRX-GRP-043).
+    /// `identify` names the checkpoint from its content.
+    let checkpoint
+        (catalog: WorkCatalog)
+        (groups: StoredWorkGroup list)
+        (location: Result<GitDurableLocation, CheckpointRejection list>)
+        (identify: GroupCheckpoint -> string)
+        (request: GroupCheckpointRequest)
+        : Result<StoredWorkGroup * GroupCheckpoint, GroupRejection list> =
+        existing groups request.GroupId
+        |> Result.bind (fun group ->
+            let text =
+                [ if String.IsNullOrWhiteSpace request.Summary then GroupRejection.Checkpoint CheckpointRejection.BlankSummary
+                  if String.IsNullOrWhiteSpace request.NextAction then GroupRejection.Checkpoint CheckpointRejection.BlankNextAction
+                  if group.Members.IsEmpty then GroupRejection.EmptyGroup group.Id ]
+
+            match text, location with
+            | [], Ok verified ->
+                let ids = memberIds group
+                let stateOf id = catalog.Items.TryFind id |> Option.map (fun item -> RecordedWorkState.code item.State)
+                let having code = ids |> List.filter (fun id -> stateOf id = Some code)
+
+                let draft =
+                    { Id = ""
+                      RecordedAt = request.OccurredAt
+                      Actor = request.Actor
+                      Location = verified
+                      Summary = request.Summary.Trim()
+                      NextAction = request.NextAction.Trim()
+                      SharedDecisions = request.SharedDecisions
+                      Active = having "active"
+                      Completed = having "complete"
+                      Abandoned = having "abandoned"
+                      Remaining = ids |> List.filter (fun id -> stateOf id <> Some "complete" && stateOf id <> Some "abandoned")
+                      MemberCheckpoints =
+                        ids
+                        |> List.map (fun id ->
+                            { WorkItemId = id
+                              CheckpointId = catalog.Items.TryFind id |> Option.bind (fun item -> item.LatestCheckpointId) }) }
+
+                let recorded = { draft with Id = identify draft }
+
+                Ok(
+                    { group with
+                        Checkpoints = group.Checkpoints @ [ recorded ]
+                        History =
+                            group.History
+                            @ [ { Change = GroupChange.Checkpointed recorded.Id
+                                  OccurredAt = request.OccurredAt
+                                  Actor = request.Actor
+                                  Reason = None } ] },
+                    recorded
+                )
+            | text, Ok _ -> Error text
+            | text, Error rejections -> Error(text @ (rejections |> List.map GroupRejection.Checkpoint)))
 
     /// The planner's view of a stored group: exactly a `grouping.groups`
     /// declaration (PRX-GRP-073).

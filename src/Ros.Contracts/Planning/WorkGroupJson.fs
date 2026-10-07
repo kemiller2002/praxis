@@ -76,7 +76,11 @@ module WorkGroupJson =
           "nextAction", text checkpoint.NextAction
           "sharedDecisions", texts checkpoint.SharedDecisions
           "members",
-          record [ "active", texts checkpoint.Active; "completed", texts checkpoint.Completed; "remaining", texts checkpoint.Remaining ]
+          record
+              [ "active", texts checkpoint.Active
+                "completed", texts checkpoint.Completed
+                "abandoned", texts checkpoint.Abandoned
+                "remaining", texts checkpoint.Remaining ]
           "memberCheckpoints",
           checkpoint.MemberCheckpoints
           |> List.map (fun reference -> record [ "workItemId", text reference.WorkItemId; "checkpointId", optionalText reference.CheckpointId ])
@@ -189,6 +193,7 @@ module WorkGroupJson =
           SharedDecisions = readTexts node "sharedDecisions"
           Active = readTexts members "active"
           Completed = readTexts members "completed"
+          Abandoned = readTexts members "abandoned"
           Remaining = readTexts members "remaining"
           MemberCheckpoints =
             readObjects node "memberCheckpoints"

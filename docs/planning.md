@@ -388,6 +388,28 @@ longer tracked can still be removed. Removing the last member is refused
 unless `--allow-empty`: the group then stays declared with its history and
 declares nothing to the planner.
 
+```
+praxis work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                             [--decision TEXT]* [--dry-run] [--json]
+```
+
+`checkpoint` records a group checkpoint (PRX-GRP-044): the group, its
+members partitioned by their own recorded state (`active`, `completed`,
+`abandoned`, and `remaining`: every member not complete or abandoned), the
+shared architectural decisions (`--decision`), the verified branch and commit,
+the summary and the next action. It requires exactly the durable-checkpoint
+verification `work checkpoint` applies (`CheckpointVerification.verifyDurableLocation`:
+local HEAD on a branch whose upstream remote head, read from the remote
+now, is the same commit, with no meaningful uncommitted work) and refuses with
+the same codes (`local-ahead`, `uncommitted-changes`, `no-upstream`, ...), as
+well as blank text and a group with no members. It **references** each
+member's own latest checkpoint and never replaces it: it writes no event,
+no `latestCheckpoint` and no paths, so no member is attributed another
+member's changes (PRX-GRP-043), and each member still checkpoints and
+completes on its own. The checkpoint ID is content-addressed; `validate`
+reports an altered checkpoint and a member reference that is not one of that
+member's recorded checkpoints. `show` prints the latest group checkpoint.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,

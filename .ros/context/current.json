@@ -4962,11 +4962,22 @@
       },
       "completedAt": "2026-10-07T17:42:32.000Z",
       "conclusion": "work group remove removes one member with provenance, never touching the item's own records; the last member only with --allow-empty. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 814 test(s), 814 passed, 0 failed; ./ros validate: validation passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T17:43:01.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T174302159Z-df63a3f7"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:42:32.000Z",
+  "updatedAt": "2026-10-07T17:43:01.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

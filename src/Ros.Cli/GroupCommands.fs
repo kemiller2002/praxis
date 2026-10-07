@@ -4,11 +4,15 @@ open System
 open System.Globalization
 open System.IO
 open System.Text.Json.Nodes
+open Ros.Application.Work
 open Ros.Contracts.Planning
 open Ros.Domain.Planning
+open Ros.Domain.Work
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Artifacts
+open Ros.Infrastructure.Git
 open Ros.Infrastructure.Planning
+open Ros.Infrastructure.Work
 
 /// `praxis work group ...`: durable, human-declared execution groups
 /// (requirements/PLANNING-WORK-GROUPS.md phase two, PRX-GRP-073). This module
@@ -19,7 +23,7 @@ open Ros.Infrastructure.Planning
 [<RequireQualifiedAccess>]
 module GroupCommands =
     let usage =
-        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--allow-empty] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--allow-empty] [--dry-run] [--json] [IDENTITY] | work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -293,6 +297,60 @@ module GroupCommands =
                           $"{request.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
                       Fields = [ "workItemId", WorkGroupJson.text request.WorkItemId ] }))
 
+    // ---- work group checkpoint ----
+
+    let private checkpointErrors (arguments: string list) =
+        commonErrors "work group checkpoint" [ "--summary"; "--next-action"; "--decision" ] [] arguments
+        @ [ if (optionValues "--summary" arguments).Length <> 1 then
+                yield "work group checkpoint requires one --summary TEXT describing the group's progress"
+            if (optionValues "--next-action" arguments).Length <> 1 then
+                yield "work group checkpoint requires one --next-action TEXT naming the group's next step" ]
+
+    let private checkpointLines (group: StoredWorkGroup) (recorded: GroupCheckpoint) =
+        let listed (values: string list) = if values.IsEmpty then "none" else String.concat ", " values
+        let location = recorded.Location
+
+        let references =
+            recorded.MemberCheckpoints
+            |> List.map (fun reference -> $"""{reference.WorkItemId}={reference.CheckpointId |> Option.defaultValue "none"}""")
+
+        [ $"group checkpoint recorded for {group.Id} (checkpoint {recorded.Id})"
+          $"  commit:        {location.LocalCommit.Value} on {location.Branch}"
+          $"  verified at:   {location.Remote.Name}/{location.RemoteBranch} == local HEAD (read from the remote itself)"
+          $"  recorded:      {recorded.RecordedAt} by {Actor.describe recorded.Actor}"
+          $"  completed:     {recorded.Summary}"
+          $"  next action:   {recorded.NextAction}"
+          $"  members:       active {listed recorded.Active}; completed {listed recorded.Completed}; abandoned {listed recorded.Abandoned}; remaining {listed recorded.Remaining}"
+          $"  member checkpoints referenced (never replaced): {listed references}" ]
+        @ (recorded.SharedDecisions |> List.map (fun decision -> $"  shared decision: {decision}"))
+        @ [ "  attributed:    no path to any member; each member's changes stay attributed by its own checkpoints" ]
+
+    let checkpoint (root: string) (arguments: string list) (actor: Actor) =
+        match checkpointErrors arguments with
+        | _ :: _ as errors -> reportUsage errors
+        | [] ->
+            let request =
+                { GroupId = (optionValue "--id" arguments).Value
+                  Summary = (optionValue "--summary" arguments).Value
+                  NextAction = (optionValue "--next-action" arguments).Value
+                  SharedDecisions = optionValues "--decision" arguments
+                  OccurredAt = (optionValue "--occurred-at" arguments).Value
+                  Actor = actor }
+
+            mutate root "work group checkpoint" arguments (fun context ->
+                // Never cached: the remote is read now, exactly as `work checkpoint` reads it.
+                let git = ProcessGitDurability.create root
+                let policy = FileCheckpointRepository.readPolicy root
+                let observations = CheckpointObservation.candidate git policy None ExecutionObservation.NoneActive
+                let location = CheckpointVerification.verifyDurableLocation (FileWorkConfigRepository.readRepositoryId root) observations
+
+                WorkGroups.checkpoint context.Catalog context.Stored location FileWorkGroupRepository.checkpointId request
+                |> Result.map (fun (group, recorded) ->
+                    { Group = group
+                      Groups = replace context.Stored group
+                      Lines = checkpointLines group recorded
+                      Fields = [ "checkpoint", WorkGroupJson.checkpoint recorded ] }))
+
     // ---- work group show ----
 
     let private showLines (view: GroupView) =
@@ -385,4 +443,5 @@ module GroupCommands =
         | "show" :: rest -> show root rest
         | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
         | "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (remove root rest)
+        | "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (checkpoint root rest)
         | _ -> reportUsage [ "unknown work group command" ]

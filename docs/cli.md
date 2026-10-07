@@ -318,6 +318,8 @@ ros work group add    --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execu
                       [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]
 ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT]
                       [--allow-empty] [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                      [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
 ```
 
 Durable, human-declared execution groups (phase two of the work-group
@@ -328,7 +330,11 @@ group exits `1`. `add` refuses unknown or terminal items, items already present,
 and items executing in another repository unless the group is
 cross-repository, and records who added the member. `remove` refuses
 non-members and refuses removing the last member unless `--allow-empty`, and
-records who removed it. A group command never changes a member's lifecycle state, evidence or
+records who removed it. `checkpoint` records a group checkpoint (active,
+completed and remaining members, shared decisions, branch and commit, next
+action) only under the same durable verification as `work checkpoint`; it
+references members' own checkpoints, never replaces them, and attributes no
+path to any member. A group command never changes a member's lifecycle state, evidence or
 attribution, and the planner reads a stored group exactly as a
 `grouping.groups` declaration. `validate` checks stored groups. See
 [`planning.md`](planning.md) ("Declared work groups").
