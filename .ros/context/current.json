@@ -4932,38 +4932,53 @@
     {
       "id": "PRAXIS-GROUP-04",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T21:26:13.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:32:21.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T212613734Z-5add0863"
       ],
       "latestCheckpoint": {
-        "id": "8dae5d2ca4baa0400081286f",
-        "recordedAt": "2026-10-07T21:31:14.000Z",
+        "id": "bd759094af4a22f4f7647114",
+        "recordedAt": "2026-10-07T21:32:13.000Z",
         "executionId": "EXE-20261007T212613734Z-5add0863",
         "repository": "repository-operating-system",
         "branch": "experiment/a024-arm-3",
-        "commit": "56d16c5abb73de6beb497c1f2349cee94b085815",
+        "commit": "e29d5b94e64cfc5e58ae0376dbb696708918b274",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a024-arm-3",
-        "remoteCommit": "56d16c5abb73de6beb497c1f2349cee94b085815",
-        "summary": "work group remove implemented with domain, application, JSON, CLI, docs and 8 tests; build ok, 833/833 tests pass, ./ros validate passes",
-        "nextAction": "write and commit the PRAXIS-GROUP-04 structured handoff, then complete the item",
+        "remoteCommit": "e29d5b94e64cfc5e58ae0376dbb696708918b274",
+        "summary": "work group remove implemented (56d16c5) and structured handoff PRAXIS-GROUP-04.json committed (e29d5b9); build ok, 833/833 F# tests pass, ./ros validate passes",
+        "nextAction": "complete PRAXIS-GROUP-04 and commit the Praxis state; PRAXIS-GROUP-05 is next",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T21:32:21.000Z",
+      "conclusion": "work group remove: refuses non-members and the last member, records removed provenance, writes only the group store. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) succeeded with 0 warnings; dotnet Ros.Tests.dll 833 passed, 0 failed; ./ros validate passed; node differential tests 7 passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:26:13.000Z",
+  "updatedAt": "2026-10-07T21:32:21.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
