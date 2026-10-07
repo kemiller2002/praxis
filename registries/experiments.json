@@ -272,5 +272,46 @@
       "HY-ROS-2026-A028"
     ],
     "title": "Affinity moderation of grouped execution across repository blocks"
+  },
+  {
+    "author_agent": "openai/chatgpt",
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "id": "EX-ROS-2026-A024",
+    "inputs": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "outputs": [],
+    "path": "research/experiments/EX-ROS-2026-A024--context-continuity-and-externalized-handoff.md",
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029",
+      "HY-ROS-2026-A030",
+      "research/experiments/EX-ROS-2026-A024-harness/handoff.schema.json",
+      "prompts/CLAUDE-EX-ROS-2026-A024.md"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "continuity",
+      "handoff",
+      "mechanism",
+      "experiment"
+    ],
+    "tests_hypotheses": [
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028"
+    ],
+    "title": "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
   }
 ]

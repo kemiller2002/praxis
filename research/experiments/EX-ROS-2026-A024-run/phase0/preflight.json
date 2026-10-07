@@ -1,0 +1,85 @@
+{
+  "schema": "ex-ros-2026-a024.preflight/1",
+  "purpose": "Observe the executor configuration a create_session child receives in this environment before freezing the manifest. Not an arm session; it read and changed no repository files.",
+  "orchestratorSession": {
+    "id": "session_017jqvmNzwivr7inMUUL6ku4",
+    "configured_model": "claude-opus-5-5",
+    "session_context.model": "claude-opus-5-5",
+    "effort_level": "medium",
+    "permission_mode": "auto",
+    "container_cc_version": "2.1.292",
+    "environment_id": "env_016QeyeEJj49imTiwTeC9Tgd"
+  },
+  "probeSession": {
+    "id": "session_01LF9wTRatrsvBPSCz5tLK7G",
+    "created_at": "2026-10-07T16:37:16.109477Z",
+    "configured_model": "claude-opus-5-5",
+    "session_context.model": "claude-opus-5-5",
+    "last_served_model": "claude-opus-5-5",
+    "permission_mode": "auto",
+    "container_cc_version": "2.1.292",
+    "init.claude_code_version": "2.1.292",
+    "init.per_turn_effort_active": true,
+    "effort_level": null,
+    "effortNote": "get_session reports no effort_level for create_session children; the transcript 'effort' field per request is the binding record",
+    "toolVersions": {
+      "node": "v22.22.0",
+      "python": "3.13.16",
+      "git": "2.43.0",
+      "kernel": "6.18.44-fc-v77",
+      "dotnet": "not installed (harness note installs dotnet-sdk-10.0 via apt)"
+    },
+    "usage": {
+      "cost_usd": 0.1211538,
+      "input_tokens": 4,
+      "output_tokens": 226,
+      "cache_read_tokens": 99249,
+      "cache_write_tokens": 12096
+    }
+  },
+  "baselineValidation": {
+    "baselineCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+    "build": "npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400: exit 0",
+    "fsharpTests": "792 passed, 0 failed (baseline-fsharp-tests.log)",
+    "validate": "./ros validate at baseline and at the sanitized start: validation passed"
+  },
+  "currentMainValidationBeforeA024Changes": {
+    "log": "validate-before-a024-changes.log",
+    "preexistingErrors": [
+      "EX-ROS-2026-A024 protocol records no provenance (created 2026-10-07 by openai/chatgpt per author_agent; this orchestrator must not record a 'created' contribution it did not make)",
+      "HY-ROS-2026-A030 records no provenance (same cause)"
+    ],
+    "resolution": "resolved truthfully when this orchestration records its own 'modified' contributions to those records; the originator stays unknown in provenance (a warning, as for EV-ROS-2026-A063)"
+  },
+  "telemetryProbe1": {
+    "id": "session_01K2uq5tGob5heiRq38Eti7j",
+    "branch": "experiment/a024-preflight (start candidate a83a32b4a11b965ad4d992b9b512dd662c292031)",
+    "outcome": "the first telemetry design (push metrics and sanitized raw transcript to experiment/a024-telemetry/LABEL) was denied by the platform auto-mode permission classifier as [Data Exfiltration]; the session did not run it",
+    "consequence": "telemetry redesigned before freezing: no commit or push; metrics printed gzip+base64 with SHA-256 and read by the orchestrator from the platform event record",
+    "usage": {
+      "cost_usd": 0.3534832,
+      "output_tokens": 909
+    }
+  },
+  "telemetryProbe2": {
+    "id": "session_01Y6TTvXHcEs8e7eWAR88TsL",
+    "branch": "experiment/a024-preflight-2 (start candidate ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d)",
+    "outcome": "session_telemetry.py ran without a permission block; output retrieved via list_events and verified by decode_telemetry.py (sha256 120819cc3b405de861dc26d28aa76306eb48c3cc70383df73dd761b27ebc1dea)",
+    "executor": {
+      "models": {
+        "claude-opus-5-5": 2
+      },
+      "effort": {
+        "medium": 2
+      },
+      "runtimeVersion": {
+        "2.1.292": 2
+      },
+      "entrypoint": {
+        "remote": 2
+      }
+    },
+    "decoded": "preflight-probe-2.telemetry.json"
+  },
+  "harnessReview": "An independent helper agent reviewed the harness before freezing (no arm existed). Fixes applied before the freeze: salted blind mapping (seed + secret nonce), arm-A prompt no longer paraphrases the rubric dimensions, arm-C sessions git rm the previous handoff, telemetry tested in a child session, own-transcript selection by CLAUDE_CODE_SESSION_ID, synthetic placeholder messages excluded, compactions counted once, missing primary data yields an indeterminate verdict, exact-rational thresholds, redirect-target code-mutation detection, pinned blind inputs, verify_start ref handling."
+}
