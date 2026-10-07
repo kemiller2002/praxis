@@ -76,6 +76,7 @@
     <Compile Include="Planning/FileGroupObservation.fs" />
     <Compile Include="Planning/FileWorkGroupFacts.fs" />
     <Compile Include="Planning/FileGroupGates.fs" />
+    <Compile Include="Planning/FileGroupExecution.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />
   </ItemGroup>

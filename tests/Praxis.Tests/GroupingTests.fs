@@ -60,7 +60,7 @@ module GroupingTests =
                                 SharedContext = [ "one typed migration model" ]
                                 ExecutionRepository = None
                                 CrossRepository = false
-                                ArchitectureNotes = [ "no member may introduce direct SQL" ] } ] })
+                                ArchitectureNotes = [ "no member may introduce direct SQL" ]; IndependentReason = None; IndependentMembers = [] } ] })
 
               let _, _, grouping = report (persistence @ [ tagged "D-1" [ "docs" ] ]) [] [] configuration
               let human = grouping.Groups |> List.find (fun group -> WorkGroupId.value group.Id = "GROUP-HUMAN-001")
@@ -122,7 +122,7 @@ module GroupingTests =
                                 SharedContext = []
                                 ExecutionRepository = None
                                 CrossRepository = cross
-                                ArchitectureNotes = [] } ] })
+                                ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] } ] })
 
               let queue = [ tagged "LOCAL-1" [ "site" ]; tagged "EXT-1" [ "site" ] ]
               let _, _, mixed = report queue [] [] (declared false)
@@ -167,7 +167,7 @@ module GroupingTests =
                                 SharedContext = []
                                 ExecutionRepository = None
                                 CrossRepository = false
-                                ArchitectureNotes = [] } ] })
+                                ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] } ] })
 
               let states (analysis: PlanningAnalysis) = analysis.Items |> List.map (fun entry -> entry.Id, entry.LifecycleState, entry.PlanningState)
               let _, plain, _ = report persistence [] [] stateSafe
@@ -202,7 +202,7 @@ module GroupingTests =
                                 SharedContext = []
                                 ExecutionRepository = None
                                 CrossRepository = false
-                                ArchitectureNotes = [] } ] })
+                                ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] } ] })
 
               let queue = [ "DB-21"; "DB-22"; "DB-23"; "DB-24" ] |> List.map (fun id -> tagged id [ "database" ])
               let liveItems = [ live "DB-21" LiveWorkState.Complete; live "DB-22" LiveWorkState.Complete; { live "DB-23" LiveWorkState.Blocked with BlockReason = Some "needs a DBA" } ]
@@ -262,7 +262,7 @@ module GroupingTests =
                                 SharedContext = []
                                 ExecutionRepository = None
                                 CrossRepository = false
-                                ArchitectureNotes = [] } ] })
+                                ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] } ] })
 
               let _, _, safe = report [ tagged "S-1" [ "alpha" ]; tagged "S-2" [ "beta" ] ] [] [] declared
               let group = Assert.single safe.Groups
@@ -330,7 +330,7 @@ module GroupingTests =
                                 SharedContext = []
                                 ExecutionRepository = None
                                 CrossRepository = false
-                                ArchitectureNotes = [] } ] })
+                                ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] } ] })
 
               let _, _, human = report queue [] [] declared
               let group = Assert.single human.Groups

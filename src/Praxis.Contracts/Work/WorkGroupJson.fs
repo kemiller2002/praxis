@@ -52,7 +52,15 @@ module WorkGroupJson =
           "sharedContext", texts declaration.SharedContext
           "executionRepository", optionalText declaration.ExecutionRepository
           "crossRepository", boolean declaration.CrossRepository
-          "architectureNotes", texts declaration.ArchitectureNotes ]
+          "architectureNotes", texts declaration.ArchitectureNotes
+          if declaration.IndependentReason.IsSome then
+              "executionMode", text "independent"
+              "executionModeReason", text declaration.IndependentReason.Value
+          if not declaration.IndependentMembers.IsEmpty then
+              "independentMembers",
+              declaration.IndependentMembers
+              |> List.map (fun (memberId, reason) -> record [ "workItem", text memberId; "reason", text reason ] :> JsonNode)
+              |> array ]
 
     let historyNode (entry: GroupHistoryEntry) : JsonNode =
         record
