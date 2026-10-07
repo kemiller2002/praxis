@@ -4882,38 +4882,57 @@
     {
       "id": "PRAXIS-GROUP-03",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T21:08:55.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        },
+        {
+          "type": "handoff",
+          "path": "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:19:28.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T210856276Z-39498852"
       ],
       "latestCheckpoint": {
-        "id": "dda56e4a82b04604160547e8",
-        "recordedAt": "2026-10-07T21:18:11.000Z",
+        "id": "fef262db6f27119507699911",
+        "recordedAt": "2026-10-07T21:19:17.000Z",
         "executionId": "EXE-20261007T210856276Z-39498852",
         "repository": "repository-operating-system",
         "branch": "experiment/a024-arm-3",
-        "commit": "bffeedc6da01b32a8986e5936f6768eae7f0e026",
+        "commit": "c30ef6a86c7da77efe28a27dd507de408b39883c",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "experiment/a024-arm-3",
-        "remoteCommit": "bffeedc6da01b32a8986e5936f6768eae7f0e026",
-        "summary": "work group add implemented, tested (825/825) and pushed at bffeedc",
-        "nextAction": "write structured handoff, complete item",
+        "remoteCommit": "c30ef6a86c7da77efe28a27dd507de408b39883c",
+        "summary": "work group add implemented (bffeedc), tests 825/825, validate passed, handoff PRAXIS-GROUP-03.json committed (c30ef6a)",
+        "nextAction": "PRAXIS-GROUP-04 work group remove",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T21:19:28.000Z",
+      "conclusion": "work group add: refuses unknown/terminal/already-present items and repository mismatch outside cross-repository groups; records who added each member in the stored group's membership history; member lifecycle untouched. Verification: build (npm run build:fsharp with FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings/0 errors; dotnet Ros.Tests 825/825 passed; ./ros validate passed; node differential tests 7/7 passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:08:55.000Z",
+  "updatedAt": "2026-10-07T21:19:28.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
