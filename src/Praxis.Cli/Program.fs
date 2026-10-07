@@ -2066,8 +2066,7 @@ let private computeUnifiedFindings root : Result<ArtifactFinding list, string> =
                 let stepReferenceFindings =
                     FileTelemetryUsageRepository.stepReferenceFindings root |> List.map (fun (path, field, message) -> convert path field message)
 
-                let workGroupFindings =
-                    (WorkGroupCommands.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)) @ fst (identityValidation root)
+                let workGroupFindings = (WorkGroupCommands.validationFindings root |> List.map (fun (path, field, message) -> convert path field message)) @ fst (identityValidation root)
 
                 match ProvenanceCommands.findingsOf FindingSeverity.Error root, ArchitectureCommands.findings root with
                 | Error message, _
