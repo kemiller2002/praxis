@@ -5213,6 +5213,145 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-01",
+      "title": "Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050)",
+      "description": "Close PRX-REMOTE-045, 046, 048, 049 and 050 (GitHub issue #90, adopted by RQ-ROS-2026-A021) and the Contradicted rule that ros.json repository.id is only a name. Acceptance criteria: (1) the domain has typed RepositoryIdentity (provider, stable provider ID, owner/repo locator) and WorkItemIdentity (repository + local ID) values; the display form owner/repo:ID is derived and never parsed to establish identity; (2) the same local ID in two repositories, and two repositories with the same name under different owners, are distinct identities; a rename or transfer (same provider ID, new locator) keeps the identity; (3) an unqualified ID resolves only inside one repository context, and an unqualified lookup across several repositories that is ambiguous fails closed; (4) duplicate or conflicting canonical identities (one provider ID with two locators in one observation, one locator claimed by two provider IDs) fail closed; (5) ros.json gains a versioned repository.identity {provider, providerId, locator}; the legacy repository.id name is kept, read, and reported explicitly as legacy; 'praxis repository identity' shows and sets it and verifies it against the hosting platform's observed ID (GITHUB_REPOSITORY_ID) when available; validate reports a legacy or locator-changed identity as a warning and a contradicted one as an error, while a never-adopted identity is reported by 'praxis repository identity' and 'work capture' rather than as a validate warning on every repository (decision recorded in the group verification); the migration rule is documented; (6) work capture reports the canonical identity, or states that it is incomplete because the repository identity is not established; (7) the structured reference {repositoryId, repository, localId} round-trips through JSON without parsing the display string; (8) tests cover every PRX-REMOTE-050 case. Reuse: Target.repositoryFromRemote (Domain/Installation/Registration.fs) and the owner/repo:ID grammar used by PRAXIS-GROUP-07 member references.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:26.996Z",
+      "updatedAt": "2026-10-07T05:04:54.726Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-02",
+      "title": "Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment)",
+      "description": "The remote protocol must consume the canonical identity model of PRAXIS-ID-01 instead of bare workItemId/workItemIds strings (PRX-REMOTE-047 and the issue #90 implementation-order amendment). Acceptance criteria: (1) protocol 1.4 accepts {repositoryId, repository, localId} objects wherever a work-item ID is accepted, including batch constituents; (2) a bare ID stays valid and means the executing repository; (3) a structured reference naming another repository, or one whose provider ID and locator contradict the executing repository, is refused fail-closed with invalid-request and changes nothing; (4) a structured reference in a 1.0-1.3 request is refused as invalid; a 1.4 request to a 1.3 executor is refused as unsupported-protocol by the existing rule; 1.0-1.3 requests behave and fingerprint exactly as before, so recorded replays still match; (5) praxis.describe advertises the executing repository's identity and the reference shape; responses carry the canonical identity of the work items they acted on; (6) docs/remote-protocol.md and docs/remote-agent-contract.md document the shape, compatibility and refusal rules; (7) tests cover each case. Depends on PRAXIS-ID-01.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:27.375Z",
+      "updatedAt": "2026-10-06T20:38:51.244Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-03",
+      "title": "Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182)",
+      "description": "Carry the canonical work-item identity structurally in execution telemetry and planner documents and correct the documentation that overstates identity. Acceptance criteria: (1) new execution telemetry records carry workItem {repositoryId, repository, localId} next to the legacy workItemId, and records without it stay valid (legacy rule documented); (2) every praxis.plan document carries the repository identity it was computed in and each work item carries its structured canonical reference, with no competing identity scheme (PRX-PLAN-182); parsers read documents without them; (3) docs/planning.md no longer reports PRX-PLAN-182 as met on the grounds that no identity scheme exists; (4) RQ-ROS-2026-A021 names PRX-REMOTE-001..050, no longer defers the npm bin to the abandoned PRAXIS-NPM-BIN and no longer cites deleted Node test files; (5) tests cover the round-trips. Depends on PRAXIS-ID-01.",
+      "tags": [
+        "identity",
+        "planning"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:27.755Z",
+      "updatedAt": "2026-10-06T20:38:51.558Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-04",
+      "title": "Generate and govern the Praxis instance identity (DER-16, 17, 22, 23, 24)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 16, 17, 22, 23 and 24 (audit IDs DER-16/17/22/23/24): no code generates .praxis/instance.json, so instance-mismatch rejection is inert. Acceptance criteria: (1) praxis init, praxis upgrade and an explicit 'praxis instance init' create .praxis/instance.json (schema praxis.instance/1, a random instance ID, createdAt, the Praxis version and the repository it was created for) before any registration is attempted, and never replace an existing one; (2) an upgrade preserves the instance ID; (3) a clone of the same repository keeps the identity; a copy into another repository (template or fork, detected from the stable provider ID) is reported as foreign, is never stamped into new telemetry and is refused by envelope reconciliation until 'praxis instance init --reinitialize --reason TEXT' creates a new identity that records its predecessor; a rename or transfer keeps it; (4) new telemetry executions and envelope receipts carry the local instance ID; (5) envelope reconciliation rejects a claimed instance ID that differs from the generated local one, proved end to end with an instance file created by the generator; (6) the instance reader reports a malformed file as a typed failure instead of swallowing the exception; (7) validate reports a missing or foreign instance identity; (8) this repository gets its own instance identity. Tests prove each criterion.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.106Z",
+      "updatedAt": "2026-10-07T05:04:57.698Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-05",
+      "title": "Praxis instance registration projection (DER-19, 20, 25, 26)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md items 19, 20, 25 and 26: installation register records system installations, not an instance identity projection. Acceptance criteria: (1) 'praxis instance projection [--json]' renders a praxis.instance-projection/1 document with the instance ID, repository/provider coordinates, Praxis version, reconciliation and remote protocol versions, supported capabilities and the availability state of each optional Echelon integration, where unknown and unavailable are representable and are not failures; (2) it works with no Echelon component, network or credentials; (3) 'praxis instance register' sends the projection through the existing installation registration client with a deterministic operation ID, so a retry is idempotent and never creates a second identity; an unavailable registry exits 0 and changes nothing local; (4) the projection is built from an allow-list and contains no credentials, secrets, local paths or agent-private data, proved by a test that seeds secrets in the environment and configuration. Depends on PRAXIS-ID-04.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.429Z",
+      "updatedAt": "2026-10-07T05:05:00.522Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-ID-06",
+      "title": "Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01)",
+      "description": "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md item 1 and its acceptance criterion 'Validation rejects meaningful work on a branch other than its work-item ID'. Today only the envelope path enforces it. Acceptance criteria: (1) ros.json workProtocol.branchPolicy 'work-item-id' enables the rule; it is off by default and the setting is validated; (2) with the policy on, praxis validate reports an error when meaningful changes (working tree plus ROS_BASE_REF range) exist on a branch whose name is not the ID of a work item recorded in the work context; (3) the branch is read from GITHUB_HEAD_REF in pull-request CI and from Git otherwise; an unknown or detached branch with meaningful work is an error, not a pass; (4) no meaningful changes, or the policy off, produce no finding; (5) the decision is a pure domain rule with unit tests, and an integration test runs validate on a real repository for both outcomes; (6) docs/work-protocol.md documents the setting.",
+      "tags": [
+        "identity"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:37:28.753Z",
+      "updatedAt": "2026-10-07T05:05:03.598Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
