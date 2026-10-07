@@ -4874,11 +4874,22 @@
       },
       "completedAt": "2026-10-07T18:45:22.000Z",
       "conclusion": "Verification: npm run build:fsharp (with the harness FSharpCore property, not committed) built with 0 errors/0 warnings; full F# suite dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 819 tests, 819 passed, 0 failed (11 new work-group show tests); ./ros validate: validation passed. Acceptance: text and --json views list members with their own recorded and planning states, partial-completion progress, blocked members and who they gate, execution repository (declared/derived) and architecture notes; unknown group exits 1 (tested); never writes (tested: every non-.git file byte- and mtime-identical across text, JSON and unknown-ID runs). Not merged (experiment branch only)."
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T20:52:59.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T205300207Z-58155ff9"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T18:45:22.000Z",
+  "updatedAt": "2026-10-07T20:52:59.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

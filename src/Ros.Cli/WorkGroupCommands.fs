@@ -13,6 +13,8 @@ open Ros.Infrastructure.Planning
 /// Praxis state (`.ros/work/groups.json`; PRX-GRP-073 phase two). It writes
 /// the group store only; members keep their own lifecycle state.
 /// `praxis work group show`: a read-only view of one stored group.
+/// `praxis work group add`: one more member for a stored group, recording who
+/// added it; the member's own lifecycle is untouched.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let showUsage = "work group show GROUP-ID [--json]"
@@ -20,7 +22,10 @@ module WorkGroupCommands =
     let createUsage =
         "work group create --id GROUP-ID --member ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--dry-run] [--json]"
 
-    let usage = createUsage + " | " + showUsage
+    let addUsage =
+        "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json]"
+
+    let usage = createUsage + " | " + showUsage + " | " + addUsage
 
     let private valued =
         [ "--id"; "--member"; "--occurred-at"; "--kind"; "--execution-repository"; "--shared-context"; "--architecture-note" ]
@@ -62,6 +67,20 @@ module WorkGroupCommands =
                   DeclaredAt = timestamp
                   DeclaredBy = actor.Id }
 
+    let private addRequest (actor: Actor) (arguments: string list) : Result<GroupAddRequest, string> =
+        match unexpected arguments, value "--id" arguments, values "--member" arguments, value "--occurred-at" arguments with
+        | (_ :: _) as stray, _, _, _ -> Error("unexpected argument(s): " + String.concat " " stray)
+        | _, None, _, _ -> Error "work group add requires --id GROUP-ID"
+        | _, _, members, _ when members.Length <> 1 -> Error "work group add requires exactly one --member ID"
+        | _, _, _, None -> Error "work group add requires --occurred-at TIMESTAMP"
+        | _, _, _, Some timestamp when not (isTimestamp timestamp) -> Error $"--occurred-at '{timestamp}' is not a timestamp"
+        | _, Some id, members, Some timestamp ->
+            Ok
+                { GroupId = id
+                  WorkItem = List.head members
+                  AddedAt = timestamp
+                  AddedBy = actor.Id }
+
     let private envelope (kind: string) (fields: (string * JsonNode) list) : string =
         let root = JsonObject()
         root["schema"] <- JsonValue.Create "praxis.work-group/1.0.0"
@@ -69,8 +88,8 @@ module WorkGroupCommands =
         fields |> List.iter (fun (name, node) -> root[name] <- node)
         PlanningJson.render root
 
-    let private document (dryRun: bool) (fields: (string * JsonNode) list) : string =
-        envelope "work-group-create" (("dryRun", JsonValue.Create dryRun :> JsonNode) :: fields)
+    let private document (kind: string) (dryRun: bool) (fields: (string * JsonNode) list) : string =
+        envelope kind (("dryRun", JsonValue.Create dryRun :> JsonNode) :: fields)
 
     let private rejectionsNode (rejections: GroupRejection list) : JsonNode =
         let array = JsonArray()
@@ -98,16 +117,16 @@ module WorkGroupCommands =
           "  member lifecycle states are unchanged" ]
         |> String.concat "\n"
 
-    let private emit (json: bool) (dryRun: bool) (outcome: Result<StoredGroup, GroupCreateFailure>) =
+    let private emit (kind: string) (describe: StoredGroup -> string) (json: bool) (dryRun: bool) (outcome: Result<StoredGroup, GroupCreateFailure>) =
         match outcome, json with
         | Ok stored, true ->
-            printf "%s" (document dryRun [ "ok", JsonValue.Create true; "group", PlanningJson.storedGroup stored ])
+            printf "%s" (document kind dryRun [ "ok", JsonValue.Create true; "group", PlanningJson.storedGroup stored ])
             0
         | Ok stored, false ->
-            printfn "%s" (describe dryRun stored)
+            printfn "%s" (describe stored)
             0
         | Error(GroupCreateFailure.Rejected rejections), true ->
-            printf "%s" (document dryRun [ "ok", JsonValue.Create false; "rejections", rejectionsNode rejections ])
+            printf "%s" (document kind dryRun [ "ok", JsonValue.Create false; "rejections", rejectionsNode rejections ])
             1
         | Error(GroupCreateFailure.Rejected rejections), false ->
             rejections |> List.iter (GroupRejection.message >> eprintfn "ERROR %s")
@@ -125,7 +144,30 @@ module WorkGroupCommands =
             eprintfn "ERROR %s" message
             eprintfn "Usage: %s" createUsage
             2
-        | Ok parsed -> FileWorkGroupRepository.create root dryRun parsed |> emit json dryRun
+        | Ok parsed -> FileWorkGroupRepository.create root dryRun parsed |> emit "work-group-create" (describe dryRun) json dryRun
+
+    // ---- add ----------------------------------------------------------------------
+
+    let private describeAddition (dryRun: bool) (request: GroupAddRequest) (stored: StoredGroup) =
+        let verb = if dryRun then "would add" else "added"
+
+        [ $"{verb} {request.WorkItem} to {stored.Group.Id} (by {request.AddedBy} at {request.AddedAt})"
+          "  members: " + String.concat ", " stored.Group.Members
+          $"  cross-repository: {stored.Group.CrossRepository}"
+          $"  {request.WorkItem} keeps its own lifecycle state" ]
+        |> String.concat "\n"
+
+    /// Exit 0 added, 1 refused or unreadable, 2 usage.
+    let add (root: string) (actor: Actor) (arguments: string list) : int =
+        let json = List.contains "--json" arguments
+        let dryRun = List.contains "--dry-run" arguments
+
+        match addRequest actor arguments with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            eprintfn "Usage: %s" addUsage
+            2
+        | Ok parsed -> FileWorkGroupRepository.add root dryRun parsed |> emit "work-group-add" (describeAddition dryRun parsed) json dryRun
 
     // ---- show ---------------------------------------------------------------------
 

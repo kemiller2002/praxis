@@ -9,8 +9,8 @@ open Ros.Domain.Planning
 open Ros.Domain.Work
 open PlanningFixtures
 
-/// `work group create` (PRAXIS-GROUP-01) and `work group show`
-/// (PRAXIS-GROUP-02; PRX-GRP-073 phase two): the pure declaration decision and
+/// `work group create` (PRAXIS-GROUP-01), `work group show`
+/// (PRAXIS-GROUP-02) and `work group add` (PRAXIS-GROUP-03; PRX-GRP-073 phase two): the pure declaration decision and
 /// view, the stored contract, the planner merge, and the commands through the
 /// real binary.
 module WorkGroupTests =
@@ -141,6 +141,86 @@ module WorkGroupTests =
               Assert.equal [ configured ] (GroupDeclaration.mergeInto [ stored ] configuration).Grouping.Groups) ]
 
 
+    // ---- add: the pure decision -------------------------------------------------
+
+    let private addRequest group item =
+        { GroupId = group
+          WorkItem = item
+          AddedAt = "2026-10-08T00:00:00.000Z"
+          AddedBy = "adder" }
+
+    let private here (_: string) = "praxis"
+
+    let private located (repositories: Map<string, string>) (id: string) =
+        repositories.TryFind id |> Option.defaultValue "praxis"
+
+    let private baseGroup =
+        GroupDeclaration.create [] statuses (request "GROUP-A-1" [ "A-1"; "A-2" ]) |> created
+
+    let private addTests =
+        [ t "add: an open item joins, and who added it is recorded" (fun () ->
+              let updated = GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "LIVE-1") |> created
+              Assert.equal [ "A-1"; "A-2"; "LIVE-1" ] updated.Group.Members
+              Assert.equal [ { WorkItem = "LIVE-1"; AddedAt = "2026-10-08T00:00:00.000Z"; AddedBy = "adder" } ] updated.Additions
+              Assert.equal "tester" updated.DeclaredBy
+              Assert.equal { baseGroup.Group with Members = updated.Group.Members } updated.Group)
+
+          t "add: an undeclared group is refused" (fun () ->
+              Assert.equal [ "unknown-group" ] (GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-9" "A-3") |> rejected))
+
+          t "add: unknown and terminal items are refused" (fun () ->
+              Assert.equal [ "unknown-member" ] (GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "NOPE-9") |> rejected)
+              Assert.equal [ "terminal-member" ] (GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "GONE-1") |> rejected)
+              Assert.equal [ "terminal-member" ] (GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "DONE-1") |> rejected))
+
+          t "add: an item already present is refused" (fun () ->
+              Assert.equal [ "already-member" ] (GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "A-2") |> rejected))
+
+          t "add: a different execution repository is refused unless the group is cross-repository" (fun () ->
+              let elsewhere = located (Map.ofList [ "A-3", "other-repo" ])
+              Assert.equal [ "repository-mismatch" ] (GroupDeclaration.add [ baseGroup ] statuses elsewhere (addRequest "GROUP-A-1" "A-3") |> rejected)
+              let declared = { baseGroup with Group = { baseGroup.Group with ExecutionRepository = Some "praxis" } }
+              Assert.equal [ "repository-mismatch" ] (GroupDeclaration.add [ declared ] statuses elsewhere (addRequest "GROUP-A-1" "A-3") |> rejected)
+              let cross = { baseGroup with Group = { baseGroup.Group with CrossRepository = true } }
+              let updated = GroupDeclaration.add [ cross ] statuses elsewhere (addRequest "GROUP-A-1" "A-3") |> created
+              Assert.equal [ "A-1"; "A-2"; "A-3" ] updated.Group.Members)
+
+          t "add: a declared execution repository outranks the members' own" (fun () ->
+              let declared = { baseGroup with Group = { baseGroup.Group with ExecutionRepository = Some "other-repo" } }
+              let elsewhere = located (Map.ofList [ "A-3", "other-repo" ])
+              Assert.equal [ "A-1"; "A-2"; "A-3" ] (GroupDeclaration.add [ declared ] statuses elsewhere (addRequest "GROUP-A-1" "A-3") |> created).Group.Members
+              Assert.equal [ "repository-mismatch" ] (GroupDeclaration.add [ declared ] statuses here (addRequest "GROUP-A-1" "A-3") |> rejected))
+
+          t "add: the mismatch message names both repositories" (fun () ->
+              let message =
+                  GroupRejection.message (GroupRejection.RepositoryMismatch("A-3", "other-repo", [ "praxis" ]))
+
+              Assert.isTrue (message.Contains "other-repo" && message.Contains "praxis" && message.Contains "cross-repository") message)
+
+          t "add: the location is the planner's own (explicit, inferred external, or current)" (fun () ->
+              let queue =
+                  [ queued "L-1" "ready" "2026-09-01T00:00:00Z"
+                    { queued "L-2" "ready" "2026-09-01T00:00:00Z" with Description = Some "Lives in an external repository." }
+                    queued "L-3" "ready" "2026-09-01T00:00:00Z" ]
+
+              let grouping = { PlannerConfiguration.defaults.Grouping with ExecutionRepositories = [ "L-3", "elsewhere" ] }
+              let where id = Grouping.locate grouping "praxis" queue id |> fst |> ExecutionLocation.describe
+              Assert.equal [ "praxis"; "unknown external repository"; "elsewhere" ] ([ "L-1"; "L-2"; "L-3" ] |> List.map where))
+
+          t "add: additions round-trip, and a store without them still parses" (fun () ->
+              let updated = GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "LIVE-1") |> created
+
+              match PlanningJson.parseGroupStore (PlanningJson.renderGroupStore [ updated ]) with
+              | Ok parsed -> Assert.equal [ updated ] parsed
+              | Error message -> failwith message
+
+              let legacy =
+                  """{"schemaVersion":"1.0.0","groups":[{"id":"GROUP-A-1","members":["A-1","A-2"],"kind":null,"origin":"human-declared","sharedContext":[],"executionRepository":null,"crossRepository":false,"architectureNotes":[],"declaredAt":"2026-10-07T00:00:00.000Z","declaredBy":"tester"}]}"""
+
+              match PlanningJson.parseGroupStore legacy with
+              | Ok [ parsed ] -> Assert.empty parsed.Additions
+              | other -> failwith $"unexpected parse: {other}") ]
+
     // ---- show: the pure view ---------------------------------------------------
 
     let private viewQueue =
@@ -164,7 +244,8 @@ module WorkGroupTests =
               CrossRepository = false
               ArchitectureNotes = [ "one renderer" ] }
           DeclaredAt = "2026-10-07T00:00:00.000Z"
-          DeclaredBy = "tester" }
+          DeclaredBy = "tester"
+          Additions = [] }
 
     let private plannedView (stored: StoredGroup) =
         let configuration = GroupDeclaration.mergeInto [ stored ] PlannerConfiguration.defaults
@@ -423,4 +504,79 @@ module WorkGroupTests =
               PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-404" ] |> ignore
               Assert.equal before (snapshot ())) ]
 
-    let tests = domain @ viewTests @ cli
+    let private addMember root extra =
+        PraxisCli.run root None ([ "work"; "group"; "add"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+    let private addCli =
+        [ t "add stores the member with its adder and changes no lifecycle" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let before = lifecycleBytes root
+              let result = addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-E"; "--json" ]
+              Assert.equal 1 result.ExitCode
+              write root ".ros/work/queue.json" (queueDocument.Replace("]}", ",\n  {\"id\":\"TASK-E\",\"title\":\"Task E\",\"tags\":[],\"priority\":\"low\",\"status\":\"ready\",\"createdAt\":\"2026-09-05T00:00:00.000Z\",\"updatedAt\":\"2026-09-05T00:00:00.000Z\",\"createdBy\":\"unknown\",\"source\":\"manual\",\"sourceReference\":null}\n]}"))
+              let lifecycle = lifecycleBytes root
+              let added = addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-E"; "--actor"; "group-adder"; "--json" ] |> PraxisCli.ok
+              Assert.equal "work-group-add" (PraxisCli.text (added.Json["kind"]))
+              Assert.equal lifecycle (lifecycleBytes root)
+              Assert.isTrue (before <> lifecycle) "fixture queue changed only by the test"
+
+              match PlanningJson.parseGroupStore (File.ReadAllText(storePath root)) with
+              | Ok [ stored ] ->
+                  Assert.equal [ "TASK-A"; "TASK-B"; "TASK-E" ] stored.Group.Members
+                  Assert.equal [ "TASK-E" ] (stored.Additions |> List.map (fun addition -> addition.WorkItem))
+                  Assert.isTrue ((List.head stored.Additions).AddedBy.Contains "group-adder") (List.head stored.Additions).AddedBy
+              | other -> failwith $"unexpected store: {other}"
+
+              Assert.empty (validateFindings root)
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ]
+              Assert.isTrue (shown.Output.Contains "TASK-E: recorded ready") shown.Output)
+
+          t "add refuses unknown groups, unknown, terminal and present items with exit 1" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+
+              let codes extra =
+                  let result = addMember root (extra @ [ "--json" ])
+                  Assert.equal 1 result.ExitCode
+                  result.Json["rejections"].AsArray() |> Seq.map (fun entry -> PraxisCli.text (entry["code"])) |> Seq.toList
+
+              Assert.equal [ "unknown-group" ] (codes [ "--id"; "GROUP-FIXTURE-404"; "--member"; "TASK-A" ])
+              Assert.equal [ "unknown-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-Z" ])
+              Assert.equal [ "terminal-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-C" ])
+              Assert.equal [ "terminal-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-D" ])
+              Assert.equal [ "already-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-B" ])
+              Assert.equal stored (File.ReadAllText(storePath root)))
+
+          t "add refuses an item in another execution repository unless the group is cross-repository" (fun () ->
+              let root = fixture ()
+              write root ".ros/work/queue.json" (queueDocument.Replace("]}", ",\n  {\"id\":\"TASK-X\",\"title\":\"Task X\",\"description\":\"Implemented in an external repository.\",\"tags\":[],\"priority\":\"low\",\"status\":\"ready\",\"createdAt\":\"2026-09-05T00:00:00.000Z\",\"updatedAt\":\"2026-09-05T00:00:00.000Z\",\"createdBy\":\"unknown\",\"source\":\"manual\",\"sourceReference\":null}\n]}"))
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              declare root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--cross-repository" ] |> PraxisCli.ok |> ignore
+              let refused = addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-X" ]
+              Assert.equal 1 refused.ExitCode
+              Assert.isTrue (refused.Error.Contains "unknown external repository") refused.Error
+              addMember root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-X" ] |> PraxisCli.ok |> ignore)
+
+          t "add --dry-run decides the same way and writes nothing" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              write root ".ros/work/queue.json" (queueDocument.Replace("\"status\":\"abandoned\"", "\"status\":\"ready\""))
+              let stored = File.ReadAllText(storePath root)
+              let result = addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-C"; "--dry-run"; "--json" ] |> PraxisCli.ok
+              Assert.isTrue (result.Json["dryRun"].GetValue<bool>()) "dry run reported"
+              Assert.equal stored (File.ReadAllText(storePath root)))
+
+          t "add usage errors exit 2" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+              Assert.equal 2 (addMember root [ "--member"; "TASK-D" ]).ExitCode
+              Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001" ]).ExitCode
+              Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A" ]).ExitCode
+              Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--bogus" ]).ExitCode
+              Assert.equal stored (File.ReadAllText(storePath root))) ]
+
+    let tests = domain @ addTests @ viewTests @ cli @ addCli

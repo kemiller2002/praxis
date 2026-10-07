@@ -10,13 +10,22 @@ open Ros.Domain.Work
 // (PRX-GRP-002) and never collapses members into one item (PRX-GRP-003).
 // Everything here is pure: no clock, filesystem or Git.
 
+/// Who added one member to an existing declaration, and when
+/// (`work group add`). Members named at `create` are covered by the
+/// declaration's own `DeclaredBy`.
+type MemberAddition =
+    { WorkItem: string
+      AddedAt: string
+      AddedBy: string }
+
 /// A declaration as stored in `.ros/work/groups.json`: the same
 /// `DeclaredGroup` the planner reads from `grouping.groups`, plus who
-/// declared it and when.
+/// declared it and when, and who added each later member.
 type StoredGroup =
     { Group: DeclaredGroup
       DeclaredAt: string
-      DeclaredBy: string }
+      DeclaredBy: string
+      Additions: MemberAddition list }
 
 /// What a work item's recorded lifecycle says about group membership.
 [<RequireQualifiedAccess>]
@@ -35,6 +44,12 @@ type GroupCreateRequest =
       DeclaredAt: string
       DeclaredBy: string }
 
+type GroupAddRequest =
+    { GroupId: string
+      WorkItem: string
+      AddedAt: string
+      AddedBy: string }
+
 [<RequireQualifiedAccess>]
 type GroupRejection =
     | InvalidGroupId of id: string
@@ -45,6 +60,9 @@ type GroupRejection =
     | TerminalMember of workItem: string * state: string
     | UnknownKind of kind: string
     | EmptyValue of field: string
+    | UnknownGroup of id: string
+    | AlreadyMember of workItem: string * group: string
+    | RepositoryMismatch of workItem: string * itemRepository: string * groupRepositories: string list
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -58,6 +76,9 @@ module GroupRejection =
         | GroupRejection.TerminalMember _ -> "terminal-member"
         | GroupRejection.UnknownKind _ -> "unknown-kind"
         | GroupRejection.EmptyValue _ -> "empty-value"
+        | GroupRejection.UnknownGroup _ -> "unknown-group"
+        | GroupRejection.AlreadyMember _ -> "already-member"
+        | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
 
     let message rejection =
         match rejection with
@@ -69,6 +90,10 @@ module GroupRejection =
         | GroupRejection.TerminalMember(id, state) -> $"{id} is {state}; terminal work cannot join a group"
         | GroupRejection.UnknownKind kind -> $"unknown group kind '{kind}'"
         | GroupRejection.EmptyValue field -> $"{field} cannot be empty"
+        | GroupRejection.UnknownGroup id -> $"group {id} is not declared (see .ros/work/groups.json or 'work group create')"
+        | GroupRejection.AlreadyMember(id, group) -> $"{id} is already a member of {group}"
+        | GroupRejection.RepositoryMismatch(id, repository, repositories) ->
+            $"""{id} executes in {repository} but the group executes in {String.concat " + " repositories}; only a cross-repository group may span execution repositories (PRX-GRP-051)"""
 
 [<RequireQualifiedAccess>]
 module GroupDeclaration =
@@ -159,9 +184,56 @@ module GroupDeclaration =
             Ok
                 { Group = group
                   DeclaredAt = request.DeclaredAt
-                  DeclaredBy = request.DeclaredBy }
+                  DeclaredBy = request.DeclaredBy
+                  Additions = [] }
         else
             Error rejections
+
+    /// The execution repositories a group runs in: the declared one, or else
+    /// those of its current members.
+    let private groupRepositories (locate: string -> string) (group: DeclaredGroup) =
+        match group.ExecutionRepository with
+        | Some declared -> [ declared ]
+        | None -> group.Members |> List.map locate |> List.distinct
+
+    /// Decides a `work group add`: one open, recorded work item joins a
+    /// declared group. `locate` names an item's execution repository
+    /// (PRX-GRP-051). Every reason is reported at once; on success the
+    /// updated declaration records who added the member and when. No
+    /// member's lifecycle state is changed (PRX-GRP-002).
+    let add (existing: StoredGroup list) (statuses: Map<string, GroupMemberStatus>) (locate: string -> string) (request: GroupAddRequest) : Result<StoredGroup, GroupRejection list> =
+        match existing |> List.tryFind (fun stored -> stored.Group.Id = request.GroupId) with
+        | None -> Error [ GroupRejection.UnknownGroup request.GroupId ]
+        | Some stored ->
+            let group = stored.Group
+            let item = request.WorkItem
+
+            let mismatch () =
+                let repository = locate item
+
+                match groupRepositories locate group with
+                | repositories when group.CrossRepository || repositories |> List.forall ((=) repository) -> []
+                | repositories -> [ GroupRejection.RepositoryMismatch(item, repository, repositories) ]
+
+            let rejections =
+                [ if List.contains item group.Members then
+                      yield GroupRejection.AlreadyMember(item, group.Id)
+                  match statuses.TryFind item with
+                  | None -> yield GroupRejection.UnknownMember item
+                  | Some(GroupMemberStatus.Terminal state) -> yield GroupRejection.TerminalMember(item, state)
+                  | Some(GroupMemberStatus.Open _) -> yield! mismatch () ]
+
+            if rejections.IsEmpty then
+                Ok
+                    { stored with
+                        Group = { group with Members = group.Members @ [ item ] }
+                        Additions =
+                            stored.Additions
+                            @ [ { WorkItem = item
+                                  AddedAt = request.AddedAt
+                                  AddedBy = request.AddedBy } ] }
+            else
+                Error rejections
 
     /// `validate` over the stored declarations. A member that became
     /// terminal after the group was declared is legitimate partial

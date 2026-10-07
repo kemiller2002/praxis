@@ -1231,7 +1231,7 @@ module PlanningJson =
     let groupStoreSchemaVersion = "1.0.0"
 
     /// One declaration, with the keys `grouping.groups` reads, plus who
-    /// declared it and when.
+    /// declared it and when, and who added each later member.
     let storedGroup (value: StoredGroup) : JsonNode =
         let group = value.Group
 
@@ -1245,7 +1245,15 @@ module PlanningJson =
               "crossRepository", boolean group.CrossRepository
               "architectureNotes", texts group.ArchitectureNotes
               "declaredAt", text value.DeclaredAt
-              "declaredBy", text value.DeclaredBy ]
+              "declaredBy", text value.DeclaredBy
+              "additions",
+              value.Additions
+              |> List.map (fun addition ->
+                  record
+                      [ "workItem", text addition.WorkItem
+                        "addedAt", text addition.AddedAt
+                        "addedBy", text addition.AddedBy ])
+              |> array ]
 
     /// `work group show`: one declaration with its members' own states and
     /// partial-completion progress. Unavailable values are null, never zero.
@@ -1307,7 +1315,17 @@ module PlanningJson =
                 |> List.map (fun node ->
                     { Group = readDeclaredGroup node
                       DeclaredAt = readText node "declaredAt"
-                      DeclaredBy = readText node "declaredBy" })
+                      DeclaredBy = readText node "declaredBy"
+                      // Absent in declarations written before `work group add`.
+                      Additions =
+                        match field node "additions" with
+                        | null -> []
+                        | _ ->
+                            objects node "additions"
+                            |> List.map (fun addition ->
+                                { WorkItem = readText addition "workItem"
+                                  AddedAt = readText addition "addedAt"
+                                  AddedBy = readText addition "addedBy" }) })
                 |> Ok
         with
         | Malformed message -> Error $"malformed group store: {message}"

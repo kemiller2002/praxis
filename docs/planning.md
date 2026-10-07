@@ -45,7 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
-| Human-declared groups | `.ros/work/groups.json` (written by `work group create`), merged into `grouping.groups` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (written by `work group create` and `work group add`), merged into `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -302,7 +302,8 @@ ros work group create --id GROUP-AREA-001 --member ID --member ID [--member ID]*
 Records a human-declared execution group (PRX-GRP-073 phase two) in
 `.ros/work/groups.json`. Each entry has exactly the keys of a
 `grouping.groups` configuration entry (`origin` is always `human-declared`)
-plus `declaredAt` and `declaredBy` (the resolved actor). The planner merges
+plus `declaredAt`, `declaredBy` (the resolved actor) and `additions` (see
+"Adding a member"). The planner merges
 stored groups into `grouping.groups`; when an explicit `--config` file
 declares the same ID, the configuration's definition is used.
 
@@ -349,6 +350,34 @@ either `view` (`group`, `executionRepository` `{name, basis}`, `members`
 `{workItem, recordedState, planningState, status, gatedBy, gates}`,
 `progress`, `blocked` `{workItem, gates}`, `architectureNotes`,
 `plannerNotes`, `unavailable`) or `error`. Unknown values are `null`.
+
+### Adding a member
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json]
+```
+
+Adds one work item to a stored declaration (`PRAXIS-GROUP-03`). The store
+records who added it: the declaration gains an `additions` entry
+`{workItem, addedAt, addedBy}` (`addedBy` is the resolved actor); members
+named at `create` stay covered by `declaredBy`. A store written before
+`additions` existed parses with none.
+
+The command refuses, reporting every reason at once and exiting `1`: an
+undeclared group; an item that is not a recorded work item; a terminal item
+(as for `create`); an item already in the group; and, unless the group is
+`crossRepository`, an item whose execution repository differs from the
+group's. The group's repository is its declared `executionRepository`, or
+else the repositories of its current members; an item's repository is the
+planner's own (PRX-GRP-051, without an explicit `--config`): an item whose
+description names an external repository is in `unknown external
+repository`, every other item is in the current repository. Missing or
+malformed arguments (including more than one `--member`) exit `2`. It writes
+only the group store, under the work-protocol lock; the member's lifecycle
+state, queue entry and context record are untouched. `--dry-run` takes the
+same decision and writes nothing. `--json` emits a `praxis.work-group/1.0.0`
+document of kind `work-group-add` with `dryRun`, `ok` and either the updated
+`group` or `rejections` (`code`, `message`).
 
 ## JSON contract
 
@@ -413,7 +442,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), and viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"). `add`, `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-03..05`, deferred. |
+| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"), and extended via `work group add` (`PRAXIS-GROUP-03`, experimental branch; see "Adding a member"). `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-04..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

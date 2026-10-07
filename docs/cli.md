@@ -333,6 +333,18 @@ the execution repository (declared or derived) and architecture notes. An
 undeclared ID exits `1`; it never writes. See
 [`planning.md`](planning.md#showing-a-group).
 
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to a stored group and records who added it and when.
+Refuses (exit `1`) an undeclared group, unknown or terminal items, an item
+already present, and an item whose execution repository differs from the
+group's unless the group is cross-repository; never changes the member's
+lifecycle state. See [`planning.md`](planning.md#adding-a-member).
+
 ### `work reconcile`
 
 ```
