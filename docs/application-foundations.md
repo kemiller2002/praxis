@@ -106,7 +106,8 @@ Praxis is itself an Echelon application and is bound by
 | PRX-UI-030 | Met | As SAF-FORMA-1..6 |
 | PRX-UI-031 | Not applicable (decision) | Script-free, server-rendered UI has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
 | SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
-| SAF-DEP-1, SAF-DEP-2 | Open | PRAXIS-FND-03 |
+| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
+| SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
 ### Forma (SAF-FORMA-1..6)
 
@@ -114,3 +115,13 @@ Praxis is itself an Echelon application and is bound by
 in `vendor/forma/` (see [`web-interface.md`](web-interface.md)). Praxis has no
 npm, so the verifier accepts that lock as Forma's pin when the tarball's
 sha256 matches it.
+
+### Declaration
+
+`.echelon/foundations.json` requires Aegis, Forma and Ordo. Folio is not
+applicable: Praxis has no printable or PDF surface (SAF-FOLIO-1 is
+conditional). Limen is not applicable: the web and hub UIs are script-free
+and server-rendered (PRX-UI-031, see `web-interface.md`). Praxis is not
+required of itself: this repository is Praxis's source and runs its own
+build. The suite runs `foundations verify` against this repository, so a
+missing pin, unused dependency or absent boundary manifest fails CI.

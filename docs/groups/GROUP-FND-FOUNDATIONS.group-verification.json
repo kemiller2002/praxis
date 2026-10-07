@@ -2,17 +2,185 @@
   "schema": "praxis.group-verification/1",
   "groupId": "GROUP-FND-FOUNDATIONS",
   "rows": [
-    { "member": "PRAXIS-FND-04", "criterion": "Boundary module classifies escaped failures into per-boundary codes equal to aegis-boundaries.json", "status": "met",
-      "evidence": { "kind": "test", "reference": "aegis boundary: each operational boundary is recorded under its own code; aegis boundary: aegis-boundaries.json declares exactly the codes Praxis records; aegis boundary: a failure raised inside the Git adapter is attributed to Git", "result": "passed" } },
-    { "member": "PRAXIS-FND-04", "criterion": "Web and hub handlers capture per request and answer 500 with a safe message and reference", "status": "met",
-      "evidence": { "kind": "test", "reference": "aegis boundary: a web request that fails answers 500 with a reference and no exception text", "result": "passed" } },
-    { "member": "PRAXIS-FND-04", "criterion": "Redaction rules extend Aegis defaults; a test proves secrets, tokens and work content never reach a sink", "status": "met",
-      "evidence": { "kind": "test", "reference": "aegis boundary: credentials, repository data and work content never reach a sink; aegis boundary: configuration is released, blocking and keeps Aegis's credential rules", "result": "passed" } },
-    { "member": "PRAXIS-FND-04", "criterion": "Collector-sink tests: success and refusals record nothing; each code recorded; defects and cancellation not disguised", "status": "met",
-      "evidence": { "kind": "test", "reference": "aegis boundary: a completed command keeps its exit code and records nothing; aegis boundary: programming defects and cancellation are re-raised, not disguised", "result": "passed" } },
-    { "member": "PRAXIS-FND-04", "criterion": "Expected outcomes stay typed exit codes", "status": "met",
-      "evidence": { "kind": "test", "reference": "aegis boundary: a completed command keeps its exit code and records nothing (exit codes 0-6 unchanged, nothing recorded); full suite 1479 tests", "result": "passed" } },
-    { "member": "PRAXIS-FND-04", "criterion": "Aegis pin remains a released version", "status": "met",
-      "evidence": { "kind": "location", "reference": "src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj", "result": "EchelonFoundry.Aegis.Core 1.0.0 (asserted by 'aegis boundary: configuration is released, blocking ...')" } }
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Boundary module classifies escaped failures into per-boundary codes equal to aegis-boundaries.json",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: each operational boundary is recorded under its own code; aegis boundary: aegis-boundaries.json declares exactly the codes Praxis records; aegis boundary: a failure raised inside the Git adapter is attributed to Git",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Web and hub handlers capture per request and answer 500 with a safe message and reference",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: a web request that fails answers 500 with a reference and no exception text",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Redaction rules extend Aegis defaults; a test proves secrets, tokens and work content never reach a sink",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: credentials, repository data and work content never reach a sink; aegis boundary: configuration is released, blocking and keeps Aegis's credential rules",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Collector-sink tests: success and refusals record nothing; each code recorded; defects and cancellation not disguised",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: a completed command keeps its exit code and records nothing; aegis boundary: programming defects and cancellation are re-raised, not disguised",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Expected outcomes stay typed exit codes",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: a completed command keeps its exit code and records nothing (exit codes 0-6 unchanged, nothing recorded); full suite 1479 tests",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-04",
+      "criterion": "Aegis pin remains a released version",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj",
+        "result": "EchelonFoundry.Aegis.Core 1.0.0 (asserted by 'aegis boundary: configuration is released, blocking ...')"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-03",
+      "criterion": "foundations.json declares aegis, forma and ordo pinned; limen and folio not applicable with reasons",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": ".echelon/foundations.json",
+        "result": "aegis 1.0.0, forma 0.4.1, ordo 1.5.0 required; reasons in docs/application-foundations.md 'Declaration'"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-03",
+      "criterion": "aegis-boundaries.json declares every Praxis boundary code",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "aegis boundary: aegis-boundaries.json declares exactly the codes Praxis records",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-03",
+      "criterion": "Verifier accepts a checksum-pinned Forma tarball lock and an Ordo.Core package pin",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: foundations verify accepts the checksum-verified tarball lock as Forma's pin; foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-03",
+      "criterion": "A test runs foundations verify against this repository and fails on any finding",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "foundation verifier: Praxis's own repository passes its declared foundations (SAF-DEP-1, SAF-DEP-2)",
+        "result": "passed; ./praxis foundations verify -> application foundations passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-03",
+      "criterion": "Requirement status recorded",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "docs/application-foundations.md",
+        "result": "SAF-DEP-1/2 rows"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "Forma lock pins the release tarball by version, URL and sha256; digest test",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: the vendored tarball is the pinned immutable release artifact; forma: the lock refuses floating versions, other URLs and bad digests",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "Web and hub serve Forma dist/all.css from the tarball and pages link it; local CSS removed",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: the stylesheet is Forma's all.css from the verified tarball, at a versioned path; forma: the web host serves the pinned stylesheet as CSS; forma: every web and hub page links the pinned stylesheet and uses Forma patterns; forma: Praxis ships no presentation of its own (web and hub stylesheets carry no rules)",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "Markup uses Forma classes and patterns with native HTML semantics",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: every web and hub page links the pinned stylesheet and uses Forma patterns",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "Faults and errors render with Forma fault/alert presentation",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: every web and hub page links the pinned stylesheet and uses Forma patterns (inline fault, alert, fault banner)",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "Tests assert stylesheet served, linked, no local stylesheet, Forma classes present",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "forma: (six tests)",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "PRX-UI-031 Limen decision recorded and limen declared not applicable",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "docs/web-interface.md",
+        "result": "'Limen (PRX-UI-031)' bullet; .echelon/foundations.json limen required:false"
+      }
+    },
+    {
+      "member": "PRAXIS-FND-05",
+      "criterion": "docs/web-interface.md and requirement status updated",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "docs/application-foundations.md",
+        "result": "SAF-FORMA-1..6, PRX-UI-030/031 rows"
+      }
+    }
   ]
 }

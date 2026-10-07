@@ -51,8 +51,26 @@ module FoundationsTests =
     let private limenResult root =
         (report root).Capabilities |> List.find (fun item -> item.Name = "limen")
 
+    let rec private praxisRoot (directory: DirectoryInfo) =
+        if File.Exists(Path.Combine(directory.FullName, "release.json")) && File.Exists(Path.Combine(directory.FullName, ".echelon", "foundations.json")) then
+            directory.FullName
+        else
+            match directory.Parent with
+            | null -> failwith "repository root with .echelon/foundations.json not found"
+            | parent -> praxisRoot parent
+
     let tests =
-        [ { Name = "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use"
+        [ { Name = "foundation verifier: Praxis's own repository passes its declared foundations (SAF-DEP-1, SAF-DEP-2)"
+            Run =
+              fun () ->
+                  let root = praxisRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let result = report root
+                  Assert.empty result.Findings
+
+                  let required = result.Capabilities |> List.filter _.Required |> List.map _.Name
+                  Assert.equal [ "aegis"; "forma"; "ordo" ] required
+                  Assert.isTrue (result.Capabilities |> List.forall (fun c -> not c.Required || (c.Installed && c.Pinned && c.Used && c.EvidencePresent))) "every required foundation is installed, pinned, used and evidenced" }
+          { Name = "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use"
             Run =
               fun () ->
                   withTemp (fun root ->
