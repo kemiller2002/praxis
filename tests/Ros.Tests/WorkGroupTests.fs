@@ -144,7 +144,8 @@ module WorkGroupTests =
         { Groups =
             [ { Declaration = declared "GROUP-PRAXIS-SHOW-001" [ "S-1"; "S-2"; "S-3"; "S-4"; "S-5"; "GONE-1" ]
                 DeclaredAt = "2026-10-07T00:00:00.000Z"
-                DeclaredBy = Some actor } ] }
+                DeclaredBy = Some actor
+                Membership = [] } ] }
 
     let private showPorts () =
         let writes = ref 0
@@ -266,6 +267,197 @@ module WorkGroupTests =
               Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "show"; "A"; "B" ]).ExitCode
               Assert.equal before (fingerprint root)) ]
 
+    // ---- work group add (PRAXIS-GROUP-03) ---------------------------------------
+
+    /// Everything executes in "praxis" except E-1 (echelon) and X-1 (an
+    /// undeclared external repository).
+    let private locate id =
+        match id with
+        | "E-1" -> ExecutionLocation.Repository "echelon"
+        | "X-1" -> ExecutionLocation.UnknownExternal
+        | _ -> ExecutionLocation.Repository "praxis"
+
+    let private addStates = GroupDeclaration.memberStates (queue @ [ queued "E-1" "ready" "2026-09-01T00:00:00Z"; queued "X-1" "ready" "2026-09-01T00:00:00Z" ]) liveItems
+
+    let private addTo store groupId memberId =
+        GroupDeclaration.addMember store addStates locate "2026-10-07T01:00:00.000Z" (Some actor) groupId memberId
+
+    let private baseStore = recorded GroupStore.empty (declared "GROUP-PRAXIS-A-001" [ "A-1" ])
+
+    let private addRejected store groupId memberId =
+        match addTo store groupId memberId with
+        | Ok _ -> failwith "expected a rejection"
+        | Error rejections -> rejections
+
+    let private addTests =
+        [ t "add: appends the member and records who added it, leaving the declaration otherwise unchanged" (fun () ->
+              match addTo baseStore "GROUP-PRAXIS-A-001" "L-1" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, change) ->
+                  Assert.equal (declared "GROUP-PRAXIS-A-001" [ "A-1"; "L-1" ]) group.Declaration
+                  Assert.equal
+                      { Member = "L-1"
+                        Operation = MembershipOperation.Added
+                        OccurredAt = "2026-10-07T01:00:00.000Z"
+                        Actor = Some actor }
+                      change
+                  Assert.equal [ change ] group.Membership
+                  Assert.equal "2026-10-07T00:00:00.000Z" group.DeclaredAt
+                  Assert.equal (Some group) (GroupStore.tryFind "GROUP-PRAXIS-A-001" store)
+                  Assert.equal 1 store.Groups.Length)
+
+          t "add: refuses unknown and terminal items" (fun () ->
+              Assert.equal [ GroupRejection.UnknownMember "NOPE-1" ] (addRejected baseStore "GROUP-PRAXIS-A-001" "NOPE-1")
+              Assert.equal [ GroupRejection.TerminalMember("A-3", "abandoned") ] (addRejected baseStore "GROUP-PRAXIS-A-001" "A-3")
+              Assert.equal [ GroupRejection.TerminalMember("A-4", "complete") ] (addRejected baseStore "GROUP-PRAXIS-A-001" "A-4"))
+
+          t "add: refuses an item already present and an unknown group" (fun () ->
+              Assert.equal [ GroupRejection.AlreadyMember("A-1", "GROUP-PRAXIS-A-001") ] (addRejected baseStore "GROUP-PRAXIS-A-001" "A-1")
+              Assert.equal [ GroupRejection.UnknownGroup "GROUP-PRAXIS-NONE-001" ] (addRejected baseStore "GROUP-PRAXIS-NONE-001" "A-2"))
+
+          t "add: refuses another repository's item unless the group is cross-repository" (fun () ->
+              Assert.equal [ GroupRejection.RepositoryMismatch("E-1", "echelon", "praxis") ] (addRejected baseStore "GROUP-PRAXIS-A-001" "E-1")
+              Assert.equal [ GroupRejection.RepositoryMismatch("X-1", "unknown external repository", "praxis") ] (addRejected baseStore "GROUP-PRAXIS-A-001" "X-1")
+              // Undeclared group repository: the members' own repository is the group's.
+              let undeclared = recorded GroupStore.empty { declared "GROUP-PRAXIS-B-001" [ "A-1" ] with ExecutionRepository = None }
+              Assert.equal [ GroupRejection.RepositoryMismatch("E-1", "echelon", "praxis") ] (addRejected undeclared "GROUP-PRAXIS-B-001" "E-1")
+              Assert.isTrue (addTo undeclared "GROUP-PRAXIS-B-001" "A-2" |> Result.isOk) "same repository"
+              let cross = recorded GroupStore.empty { declared "GROUP-ECHELON-A-001" [ "A-1" ] with CrossRepository = true; ExecutionRepository = Some "echelon" }
+              Assert.isTrue (addTo cross "GROUP-ECHELON-A-001" "E-1" |> Result.isOk) "cross-repository admits echelon"
+              Assert.isTrue (addTo cross "GROUP-ECHELON-A-001" "X-1" |> Result.isOk) "cross-repository admits external")
+
+          t "add: the membership history round-trips and the planner still reads the plain declaration" (fun () ->
+              match addTo baseStore "GROUP-PRAXIS-A-001" "A-2" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, _, _) ->
+                  let json = PlanningJson.renderGroupStore store
+                  Assert.equal (Ok store) (PlanningJson.parseGroupStore json)
+                  Assert.equal [ declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-2" ] ] (GroupStore.declarations store)
+                  // A store written before membership history existed still parses.
+                  let legacy = json.Replace("\"membership\"", "\"ignoredMembership\"")
+                  Assert.equal (Ok []) (PlanningJson.parseGroupStore legacy |> Result.map (fun parsed -> (Assert.single parsed.Groups).Membership))
+                  Assert.empty (GroupDeclaration.findings store addStates))
+
+          t "add: validate reports membership history that contradicts the members" (fun () ->
+              match addTo baseStore "GROUP-PRAXIS-A-001" "A-2" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, _) ->
+                  let broken = GroupStore.replace { group with Declaration = { group.Declaration with Members = [ "A-1" ] } } store
+                  let finding = Assert.single (GroupDeclaration.findings broken addStates)
+                  Assert.equal "groups[GROUP-PRAXIS-A-001].membership" finding.Field)
+
+          t "add operation: repositories come from the planner configuration and only the store is written" (fun () ->
+              let store = ref baseStore
+              let writes = ref 0
+              let addQueue = queue @ [ queued "E-1" "ready" "2026-09-01T00:00:00Z" ]
+
+              let groups: WorkGroupPort =
+                  { ReadStore = fun () -> Ok store.Value
+                    Queue = fun () -> Ok addQueue
+                    Live = fun () -> Ok liveItems
+                    WriteStore =
+                      fun updated ->
+                          writes.Value <- writes.Value + 1
+                          store.Value <- updated
+                          Ok() }
+
+              let planning: PlanningReadPort =
+                  { Repository = fun () -> { Name = "praxis"; Commit = Some "1111111111111111111111111111111111111111"; Branch = Some "main" }
+                    Queue = fun () -> Ok addQueue
+                    Live = fun () -> Ok liveItems
+                    Executions = fun () -> history
+                    RepositoryObservations = fun _ -> []
+                    SuppliedObservations = fun () -> Ok []
+                    Configuration = fun () -> Ok { PlannerConfiguration.defaults with Grouping = { GroupingConfiguration.defaults with ExecutionRepositories = [ "E-1", "echelon" ] } }
+                    DeclaredGroups = fun () -> Ok(GroupStore.declarations store.Value) }
+
+              let run memberId dryRun =
+                  let request =
+                      { GroupId = "GROUP-PRAXIS-A-001"
+                        Member = memberId
+                        OccurredAt = "2026-10-07T01:00:00.000Z"
+                        Actor = Some actor
+                        DryRun = dryRun }
+
+                  match WorkGroupOperations.add groups planning "2026-10-07T01:00:00.000Z" "test" request with
+                  | Ok outcome -> outcome
+                  | Error message -> failwith message
+
+              match run "E-1" false with
+              | GroupAddOutcome.Rejected [ GroupRejection.RepositoryMismatch("E-1", "echelon", "praxis") ] -> ()
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              match run "A-2" true with
+              | GroupAddOutcome.Planned(_, added) -> Assert.equal ("captured", "praxis") (added.State, added.ExecutionRepository)
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 0 writes.Value
+
+              match run "A-2" false with
+              | GroupAddOutcome.Recorded(group, _) -> Assert.equal [ "A-1"; "A-2" ] group.Declaration.Members
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 1 writes.Value
+              Assert.equal [ "A-1"; "A-2" ] (GroupStore.tryFind "GROUP-PRAXIS-A-001" store.Value).Value.Declaration.Members)
+
+          t "cli: add records the member with provenance and changes no member's state" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A" ] [])).ExitCode
+              let before = memberFiles root
+              let addArguments = [ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--occurred-at"; PraxisCli.now (); "--json" ]
+              let result = PraxisCli.run root executor addArguments
+              Assert.equal 0 result.ExitCode
+              Assert.equal "member-added" (text (result.Json["kind"]))
+              Assert.isTrue (result.Json["recorded"].GetValue<bool>()) "recorded"
+              Assert.equal "group-fixture" (text (result.Json.["member"].["executionRepository"]))
+              Assert.equal "ready" (text (result.Json.["member"].["state"]))
+              Assert.equal "test/agent" (text (result.Json.["change"].["actor"].["id"]))
+              Assert.equal before (memberFiles root)
+
+              match PlanningJson.parseGroupStore (File.ReadAllText(storePath root)) with
+              | Ok store ->
+                  let group = Assert.single store.Groups
+                  Assert.equal [ "TASK-A"; "TASK-B" ] group.Declaration.Members
+                  let change = Assert.single group.Membership
+                  Assert.equal ("TASK-B", MembershipOperation.Added) (change.Member, change.Operation)
+                  Assert.equal (Some "test/agent") (change.Actor |> Option.map (fun recordedActor -> recordedActor.Id))
+              | Error message -> failwith message
+
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-CORE-001"; "--json" ]
+              Assert.equal [ "TASK-A"; "TASK-B" ] (shown.Json["members"].AsArray() |> Seq.map (fun entry -> text (entry["id"])) |> List.ofSeq)
+              Assert.isTrue (not ((PraxisCli.run root None [ "validate"; "--json" ]).Output.Contains ".ros/work/groups.json")) "no group finding")
+
+          t "cli: add refusals and --dry-run write nothing; argument errors exit 2" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A" ] [])).ExitCode
+              let configuration = Path.Combine(Path.GetTempPath(), $"praxis-group-config-{Guid.NewGuid():N}.json")
+              File.WriteAllText(configuration, """{"grouping":{"executionRepositories":{"TASK-B":"echelon"}}}""")
+              let before = fingerprint root
+              let add (extra: string list) = PraxisCli.run root executor ([ "work"; "group"; "add"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+              for groupId, memberId in
+                  [ "GROUP-FIXTURE-CORE-001", "TASK-A"
+                    "GROUP-FIXTURE-CORE-001", "NOPE-9"
+                    "GROUP-FIXTURE-CORE-001", "TASK-X"
+                    "GROUP-FIXTURE-CORE-001", "TASK-DONE"
+                    "GROUP-FIXTURE-NONE-001", "TASK-B" ] do
+                  let result = add [ "--id"; groupId; "--member"; memberId; "--json" ]
+                  Assert.equal 1 result.ExitCode
+                  Assert.equal "member-rejected" (text (result.Json["kind"]))
+
+              let mismatch = add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--config"; configuration; "--json" ]
+              Assert.equal 1 mismatch.ExitCode
+              Assert.isTrue (mismatch.Output.Contains "echelon") mismatch.Output
+
+              let dryRun = add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--dry-run"; "--json" ]
+              Assert.equal 0 dryRun.ExitCode
+              Assert.isTrue (not (dryRun.Json["recorded"].GetValue<bool>())) "not recorded"
+              Assert.equal 2 (add [ "--id"; "GROUP-FIXTURE-CORE-001" ]).ExitCode
+              Assert.equal 2 (add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--member"; "TASK-A" ]).ExitCode
+              Assert.equal 2 (add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--cross-repository" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root executor [ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B" ]).ExitCode
+              Assert.equal before (fingerprint root)) ]
+
     let tests =
         [ t "create records a valid declaration and sorts the store by ID" (fun () ->
               let store = recorded (recorded GroupStore.empty (declared "GROUP-PRAXIS-B-001" [ "A-1" ])) (declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-2"; "L-1" ])
@@ -350,7 +542,8 @@ module WorkGroupTests =
               let stored id members =
                   { Declaration = declared id members
                     DeclaredAt = "2026-10-07T00:00:00.000Z"
-                    DeclaredBy = None }
+                    DeclaredBy = None
+                    Membership = [] }
 
               let store = { Groups = [ stored "GROUP-PRAXIS-A-001" [ "A-1"; "A-4" ]; stored "GROUP-PRAXIS-A-001" [ "GONE-1" ] ] }
               let findings = GroupDeclaration.findings store states
@@ -427,3 +620,4 @@ module WorkGroupTests =
               Assert.equal 1 result.ExitCode
               Assert.isTrue (result.Output.Contains ".ros/work/groups.json" && result.Output.Contains "GONE-1") "the unknown member is reported") ]
         @ showTests
+        @ addTests

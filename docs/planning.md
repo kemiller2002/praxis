@@ -273,7 +273,8 @@ concurrently under the `accept-elevated` policy.
 ```
 
 Groups recorded with `work group create` (see [`cli.md`](cli.md)) live in
-`.ros/work/groups.json` as the same entries plus `declaredAt`/`declaredBy`;
+`.ros/work/groups.json` as the same entries plus `declaredAt`/`declaredBy` and a
+`membership` history (`work group add` records who added each later member);
 the planner appends them after configured groups, skipping a stored ID the
 configuration also declares. `work group show GROUP-ID` shows one stored group with
 each member's own recorded state, the planner's view, progress and blocked
@@ -360,7 +361,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration and from `work group create` (`PRAXIS-GROUP-01`, stored in `.ros/work/groups.json`, read exactly as `grouping.groups`); `work group show` (`PRAXIS-GROUP-02`) is the read-only per-group view; `add`, `remove`, `checkpoint` remain `PRAXIS-GROUP-03..05`. |
+| GRP-073 | Declarations from configuration and from `work group create` (`PRAXIS-GROUP-01`, stored in `.ros/work/groups.json`, read exactly as `grouping.groups`); `work group show` (`PRAXIS-GROUP-02`) is the read-only per-group view; `work group add` (`PRAXIS-GROUP-03`) adds one member with provenance and the PRX-GRP-051 repository check; `remove`, `checkpoint` remain `PRAXIS-GROUP-04..05`. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

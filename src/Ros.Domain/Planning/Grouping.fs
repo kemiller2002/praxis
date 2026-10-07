@@ -531,17 +531,24 @@ module Grouping =
         let generic = configuration.GenericTags |> List.map (fun tag -> tag.ToLowerInvariant()) |> Set.ofList
         item.Tags |> List.map (fun tag -> tag.ToLowerInvariant()) |> List.filter (generic.Contains >> not) |> Text.distinctOrdinal
 
+    let private descriptionOf (input: PlanningInput) (id: string) =
+        input.Queue |> List.tryFind (fun entry -> entry.Id = id) |> Option.bind (fun entry -> entry.Description) |> Option.defaultValue ""
+
+    /// Where work item `id` is implemented (PRX-GRP-051), and on what basis:
+    /// `grouping.executionRepositories` (explicit), an "external repository"
+    /// description (inferred, location unknown), else this repository
+    /// (derived). `work group add` checks membership with this same rule.
+    let executionLocation (input: PlanningInput) (id: string) : ExecutionLocation * SignalBasis =
+        match input.Configuration.Grouping.ExecutionRepositories |> List.tryFind (fun (configured, _) -> configured = id) with
+        | Some(_, repository) -> ExecutionLocation.Repository repository, SignalBasis.Explicit
+        | None when externalPattern.IsMatch(descriptionOf input id) -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
+        | None -> ExecutionLocation.Repository input.Repository, SignalBasis.Derived
+
     let private evidenceFor (input: PlanningInput) (item: ItemAnalysis) : Evidence =
         let configuration = input.Configuration
         let grouping = configuration.Grouping
-        let queued = input.Queue |> List.tryFind (fun entry -> entry.Id = item.Id)
-        let description = queued |> Option.bind (fun entry -> entry.Description) |> Option.defaultValue ""
-
-        let location, basis =
-            match grouping.ExecutionRepositories |> List.tryFind (fun (id, _) -> id = item.Id) with
-            | Some(_, repository) -> ExecutionLocation.Repository repository, SignalBasis.Explicit
-            | None when externalPattern.IsMatch description -> ExecutionLocation.UnknownExternal, SignalBasis.Inferred
-            | None -> ExecutionLocation.Repository input.Repository, SignalBasis.Derived
+        let description = descriptionOf input item.Id
+        let location, basis = executionLocation input item.Id
 
         { Item = item
           Areas = areaTags configuration item

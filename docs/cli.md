@@ -326,6 +326,28 @@ evidence or attribution. `--dry-run` validates and writes nothing. `validate`
 checks the stored groups (duplicate IDs, unknown members, malformed entries);
 a member that became terminal later is partial completion, not a finding.
 
+### `work group add`
+
+```
+ros work group add --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--config FILE]
+    [--dry-run] [--json] [IDENTITY]
+```
+
+Adds one work item to the end of a stored group's members (`PRAXIS-GROUP-03`,
+PRX-GRP-073) and appends a `membership` entry (`member`, `operation: added`,
+`occurredAt`, `actor`) to the stored group, recording who added it. It refuses
+an unknown group, an unknown or terminal item, an item already in the group,
+and an item whose execution repository differs from the group's unless the
+group is cross-repository (PRX-GRP-051). The group's repository is its declared
+`executionRepository`, else wherever its current members execute; an item's
+repository comes from the planner's own rule (`grouping.executionRepositories`
+in `--config FILE`, an undeclared "external repository" description, else this
+repository). A refusal exits `1` (`--json` kind `member-rejected`) and writes
+nothing; `--dry-run` writes nothing; an argument error (missing or repeated
+`--id`/`--member`, a bad timestamp, `--cross-repository`) exits `2`. It never
+changes the member's lifecycle state, evidence or attribution. `--json` kind is
+`member-added` (`group`, `member{id,state,executionRepository}`, `change`).
+
 ### `work group show`
 
 ```

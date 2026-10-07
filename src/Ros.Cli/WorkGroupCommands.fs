@@ -8,7 +8,7 @@ open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
-/// `work group create`: records a declared execution group in Praxis state
+/// `work group create|add|show`: declared execution groups in Praxis state
 /// (PRX-GRP-073 phase two). Parses, delegates to `WorkGroupOperations`, and
 /// renders; it holds no group policy.
 [<RequireQualifiedAccess>]
@@ -18,16 +18,21 @@ module WorkGroupCommands =
     let createUsage =
         "work group create --id GROUP-ID --member ITEM [--member ITEM]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]* [--execution-repository NAME] [--cross-repository] [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]"
 
-    let usage = createUsage + " | " + showUsage
+    let addUsage =
+        "work group add --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--config FILE] [--dry-run] [--json] [IDENTITY]"
+
+    let usage = createUsage + " | " + addUsage + " | " + showUsage
 
     let private identityFlags =
         [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
 
-    let private flagsWithValues =
+    let private createFlags =
         set (
             [ "--id"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--execution-repository"; "--architecture-note" ]
             @ identityFlags
         )
+
+    let private addFlags = set ([ "--id"; "--member"; "--occurred-at"; "--config" ] @ identityFlags)
 
     let private switches = set [ "--dry-run"; "--json"; "--cross-repository" ]
 
@@ -36,13 +41,15 @@ module WorkGroupCommands =
         { Values: (string * string) list
           Unexpected: string list }
 
-    let rec private parse (parsed: Parsed) (arguments: string list) =
+    let rec private parseWith (flagsWithValues: Set<string>) (parsed: Parsed) (arguments: string list) =
         match arguments with
         | [] -> parsed
         | flag :: value :: rest when flagsWithValues.Contains flag && not (value.StartsWith "--") ->
-            parse { parsed with Values = parsed.Values @ [ flag, value ] } rest
-        | switch :: rest when switches.Contains switch -> parse parsed rest
-        | token :: rest -> parse { parsed with Unexpected = parsed.Unexpected @ [ token ] } rest
+            parseWith flagsWithValues { parsed with Values = parsed.Values @ [ flag, value ] } rest
+        | switch :: rest when switches.Contains switch -> parseWith flagsWithValues parsed rest
+        | token :: rest -> parseWith flagsWithValues { parsed with Unexpected = parsed.Unexpected @ [ token ] } rest
+
+    let private parse = parseWith createFlags
 
     let private valuesOf (flag: string) (parsed: Parsed) =
         parsed.Values |> List.filter (fst >> (=) flag) |> List.map snd
@@ -175,6 +182,111 @@ module WorkGroupCommands =
                 eprintfn "ERROR %s" message
                 1
             | Ok outcome -> render (List.contains "--json" arguments) group.Id outcome
+
+    /// The add request the arguments describe (with the optional planner
+    /// configuration file), or every argument error. `--cross-repository`
+    /// belongs to the group's declaration, so add refuses it.
+    let private addRequest (arguments: string list) (parsed: Parsed) : Result<GroupAddRequest * string option, string list> =
+        let one flag what =
+            match valuesOf flag parsed with
+            | [ value ] -> Ok value
+            | [] -> Error $"work group add requires {flag} {what}"
+            | _ -> Error $"work group add takes exactly one {flag}; add members one at a time"
+
+        let groupId = one "--id" "GROUP-ID"
+        let memberId = one "--member" "ITEM"
+
+        let occurredAt =
+            match valuesOf "--occurred-at" parsed with
+            | [ value ] when isTimestamp value -> Ok value
+            | [ value ] -> Error $"--occurred-at '{value}' is not a timestamp"
+            | _ -> Error "work group add requires exactly one --occurred-at TIMESTAMP (the real current time)"
+
+        let configuration = single "--config" parsed
+
+        let errors =
+            [ for result in [ groupId |> Result.map ignore; memberId |> Result.map ignore; occurredAt |> Result.map ignore; configuration |> Result.map ignore ] do
+                  match result with
+                  | Error message -> yield message
+                  | Ok() -> ()
+              if List.contains "--cross-repository" arguments then
+                  yield "--cross-repository is part of a group's declaration; work group add does not change it"
+              for token in parsed.Unexpected do
+                  yield $"unexpected argument '{token}'" ]
+
+        match errors, groupId, memberId, occurredAt, configuration with
+        | [], Ok groupId, Ok memberId, Ok occurredAt, Ok configuration ->
+            Ok(
+                { GroupId = groupId
+                  Member = memberId
+                  OccurredAt = occurredAt
+                  Actor = None
+                  DryRun = List.contains "--dry-run" arguments },
+                configuration
+            )
+        | errors, _, _, _, _ -> Error errors
+
+    let private addText (verb: string) (stored: StoredGroup) (added: AddedMember) =
+        let group = stored.Declaration
+        let by = added.Change.Actor |> Option.map (fun actor -> actor.Id) |> Option.defaultValue "unknown"
+        let members = String.concat ", " group.Members
+
+        [ $"{verb} {added.Change.Member} to group {group.Id} ({added.State}; executes in {added.ExecutionRepository})"
+          $"added at {added.Change.OccurredAt} by {by}"
+          $"members ({group.Members.Length}): {members}"
+          "membership is advisory: the member's lifecycle state, evidence and attribution are unchanged" ]
+        |> List.iter (printfn "%s")
+
+    let private renderAdd asJson (request: GroupAddRequest) (outcome: GroupAddOutcome) =
+        match outcome with
+        | GroupAddOutcome.Rejected rejections ->
+            let messages = rejections |> List.map GroupRejection.message
+
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRejected request.GroupId request.Member messages)
+            else
+                for message in messages do
+                    eprintfn "ERROR %s" message
+
+                eprintfn "%s was not added to %s" request.Member request.GroupId
+
+            1
+        | GroupAddOutcome.Planned(stored, added) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberAdded true stored added.Change added.State added.ExecutionRepository)
+            else
+                addText "dry run: would add" stored added
+                printfn "nothing was recorded"
+
+            0
+        | GroupAddOutcome.Recorded(stored, added) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberAdded false stored added.Change added.State added.ExecutionRepository)
+            else
+                addText "added" stored added
+
+            0
+
+    /// `work group add`: exit 0 added (or dry run), 1 refusal or IO error
+    /// (nothing written), 2 argument error.
+    let add root (version: string) (arguments: string list) (actor: Actor) =
+        match addRequest arguments (parseWith addFlags { Values = []; Unexpected = [] } arguments) with
+        | Error errors ->
+            for error in errors do
+                eprintfn "ERROR %s" error
+
+            eprintfn "Usage: ros %s" addUsage
+            2
+        | Ok(request, configuration) ->
+            let request = { request with Actor = Some actor }
+            let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+            let planning = FilePlanningRepository.create root None configuration
+
+            match WorkGroupOperations.add (FileWorkGroupRepository.create root) planning plannedAt version request with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok outcome -> renderAdd (List.contains "--json" arguments) request outcome
 
     let private showText (plan: PlanSnapshot) (view: GroupView) =
         let group = view.Group.Declaration

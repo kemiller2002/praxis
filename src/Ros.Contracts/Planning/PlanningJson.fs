@@ -723,14 +723,37 @@ module PlanningJson =
           "crossRepository", boolean group.CrossRepository
           "architectureNotes", texts group.ArchitectureNotes ]
 
+    let private actorNode (actor: Ros.Domain.Provenance.Actor option) : JsonNode =
+        actor |> Option.map (fun value -> Ros.Contracts.Provenance.ActorJson.node value :> JsonNode) |> Option.toObj
+
+    let private readActor (node: JsonObject) (name: string) =
+        match Ros.Contracts.Provenance.ActorJson.tryParse (field node name) with
+        | Ok actor -> actor
+        | Error message -> fail $"{name}: {message}"
+
+    let private membershipChangeNode (change: MembershipChange) : JsonNode =
+        record
+            [ "member", text change.Member
+              "operation", text (MembershipOperation.code change.Operation)
+              "occurredAt", text change.OccurredAt
+              "actor", actorNode change.Actor ]
+
+    let private readMembershipChange (node: JsonObject) : MembershipChange =
+        { Member = readText node "member"
+          Operation = readText node "operation" |> parsed "membership operation" MembershipOperation.tryParse
+          OccurredAt = readOptionalText node "occurredAt" |> Option.defaultValue ""
+          Actor = readActor node "actor" }
+
     let private storedGroupNode (stored: StoredGroup) : JsonNode =
         record (
             declaredGroupFields stored.Declaration
             @ [ "declaredAt", text stored.DeclaredAt
-                "declaredBy", stored.DeclaredBy |> Option.map (fun actor -> Ros.Contracts.Provenance.ActorJson.node actor :> JsonNode) |> Option.toObj ]
+                "declaredBy", actorNode stored.DeclaredBy
+                "membership", stored.Membership |> List.map membershipChangeNode |> array ]
         )
 
-    /// `.ros/work/groups.json`: `{schema, groups: [entry + declaredAt, declaredBy]}`.
+    /// `.ros/work/groups.json`: `{schema, groups: [entry + declaredAt,
+    /// declaredBy, membership]}`. `membership` is optional when read.
     let renderGroupStore (store: GroupStore) =
         record [ "schema", text GroupStore.Schema; "groups", store.Groups |> List.map storedGroupNode |> array ] |> render
 
@@ -746,10 +769,8 @@ module PlanningJson =
                 |> List.map (fun node ->
                     { Declaration = readDeclaredGroup node
                       DeclaredAt = readOptionalText node "declaredAt" |> Option.defaultValue ""
-                      DeclaredBy =
-                        match Ros.Contracts.Provenance.ActorJson.tryParse (field node "declaredBy") with
-                        | Ok actor -> actor
-                        | Error message -> fail $"declaredBy: {message}" })
+                      DeclaredBy = readActor node "declaredBy"
+                      Membership = if isNull (field node "membership") then [] else objects node "membership" |> List.map readMembershipChange })
                 |> fun groups -> Ok { Groups = groups }
         with
         | Malformed message -> Error $"malformed group store: {message}"
@@ -768,6 +789,30 @@ module PlanningJson =
 
     let renderGroupRejected (id: string) (messages: string list) =
         record [ "schema", text GroupStore.Schema; "kind", text "group-rejected"; "id", text id; "recorded", boolean false; "errors", texts messages ]
+        |> render
+
+    /// The `--json` result of `work group add`: the group as it is (or, with
+    /// `--dry-run`, would be) stored, the change, and the member's own state
+    /// and execution repository.
+    let renderMemberAdded (dryRun: bool) (stored: StoredGroup) (change: MembershipChange) (state: string) (repository: string) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "member-added"
+              "dryRun", boolean dryRun
+              "recorded", boolean (not dryRun)
+              "group", storedGroupNode stored
+              "member", record [ "id", text change.Member; "state", text state; "executionRepository", text repository ]
+              "change", membershipChangeNode change ]
+        |> render
+
+    let renderMemberRejected (id: string) (memberId: string) (messages: string list) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "member-rejected"
+              "id", text id
+              "member", text memberId
+              "recorded", boolean false
+              "errors", texts messages ]
         |> render
 
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =

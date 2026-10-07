@@ -25,6 +25,26 @@ type GroupCreateOutcome =
     | Planned of group: StoredGroup * members: (string * string) list
     | Recorded of group: StoredGroup * members: (string * string) list
 
+type GroupAddRequest =
+    { GroupId: string
+      Member: string
+      OccurredAt: string
+      Actor: Actor option
+      DryRun: bool }
+
+/// The member's own recorded state and where it executes, as checked.
+type AddedMember =
+    { Change: MembershipChange
+      State: string
+      ExecutionRepository: string }
+
+[<RequireQualifiedAccess>]
+type GroupAddOutcome =
+    | Rejected of GroupRejection list
+    /// Valid; nothing written (`--dry-run`).
+    | Planned of group: StoredGroup * added: AddedMember
+    | Recorded of group: StoredGroup * added: AddedMember
+
 [<RequireQualifiedAccess>]
 type GroupShowOutcome =
     | NotFound of id: string
@@ -54,6 +74,32 @@ module WorkGroupOperations =
                         Ok(GroupCreateOutcome.Planned(stored, members))
                     else
                         port.WriteStore updated |> Result.map (fun () -> GroupCreateOutcome.Recorded(stored, members))))
+
+    /// `work group add`: adds one member to a stored group and records who
+    /// added it. Member states come from the same backlog and live context
+    /// the planner reads; execution repositories from the planner's own
+    /// rule (`Grouping.executionLocation`) over its configuration. The only
+    /// write is the group store.
+    let add (port: WorkGroupPort) (planning: PlanningReadPort) (plannedAt: string) (plannerVersion: string) (request: GroupAddRequest) : Result<GroupAddOutcome, string> =
+        port.ReadStore()
+        |> Result.bind (fun store ->
+            PlanningOperations.gather planning plannedAt plannerVersion
+            |> Result.bind (fun input ->
+                let known = GroupDeclaration.memberStates input.Queue input.Live
+                let locate = Grouping.executionLocation input >> fst
+
+                match GroupDeclaration.addMember store known locate request.OccurredAt request.Actor request.GroupId request.Member with
+                | Error rejections -> Ok(GroupAddOutcome.Rejected rejections)
+                | Ok(updated, stored, change) ->
+                    let added =
+                        { Change = change
+                          State = known |> Map.find change.Member |> stateCode
+                          ExecutionRepository = locate change.Member |> ExecutionLocation.describe }
+
+                    if request.DryRun then
+                        Ok(GroupAddOutcome.Planned(stored, added))
+                    else
+                        port.WriteStore updated |> Result.map (fun () -> GroupAddOutcome.Recorded(stored, added))))
 
     /// `work group show`: the stored group, each member's own recorded state
     /// and the planner's view of the same group. Reads only: neither port's

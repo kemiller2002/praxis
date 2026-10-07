@@ -5,15 +5,40 @@ open System.Text.RegularExpressions
 open Ros.Domain.Provenance
 open Ros.Domain.Work
 
+[<RequireQualifiedAccess>]
+type MembershipOperation =
+    | Added
+
+[<RequireQualifiedAccess>]
+module MembershipOperation =
+    let code operation =
+        match operation with
+        | MembershipOperation.Added -> "added"
+
+    let all = [ MembershipOperation.Added ]
+
+    let tryParse value = all |> List.tryFind (fun operation -> code operation = value)
+
+/// One membership change after declaration, with who made it and when
+/// (provenance). It names the member only: the member's own lifecycle
+/// state, evidence and attribution are never part of it (PRX-GRP-043).
+type MembershipChange =
+    { Member: string
+      Operation: MembershipOperation
+      OccurredAt: string
+      Actor: Actor option }
+
 /// A human-declared execution group recorded in Praxis state
 /// (`.ros/work/groups.json`, PRX-GRP-073 phase two). `Declaration` has
 /// exactly the shape of a `grouping.groups` entry, so the planner reads a
-/// stored group exactly as it reads a configured one. `DeclaredAt` and
-/// `DeclaredBy` are store metadata the planner ignores.
+/// stored group exactly as it reads a configured one. `DeclaredAt`,
+/// `DeclaredBy` and `Membership` (changes after declaration, oldest first)
+/// are store metadata the planner ignores.
 type StoredGroup =
     { Declaration: DeclaredGroup
       DeclaredAt: string
-      DeclaredBy: Actor option }
+      DeclaredBy: Actor option
+      Membership: MembershipChange list }
 
 /// Every stored group, in ordinal ID order.
 type GroupStore = { Groups: StoredGroup list }
@@ -35,6 +60,9 @@ type GroupRejection =
     | UnknownMember of id: string
     | TerminalMember of id: string * state: string
     | CrossRepositoryWithoutRepository
+    | UnknownGroup of id: string
+    | AlreadyMember of id: string * group: string
+    | RepositoryMismatch of id: string * memberRepository: string * groupRepository: string
 
 /// A stored-group problem `validate` reports.
 type GroupFinding = { Field: string; Message: string }
@@ -50,6 +78,10 @@ module GroupRejection =
         | GroupRejection.UnknownMember id -> $"{id} is not a work item in this repository's backlog or live context"
         | GroupRejection.TerminalMember(id, state) -> $"{id} is {state}; a terminal item cannot join a new group"
         | GroupRejection.CrossRepositoryWithoutRepository -> "--cross-repository needs --execution-repository naming where the coordinated outcome is integrated (PRX-GRP-051)"
+        | GroupRejection.UnknownGroup id -> $"no declared group {id}; see 'plan groups' or .ros/work/groups.json"
+        | GroupRejection.AlreadyMember(id, group) -> $"{id} is already a member of {group}"
+        | GroupRejection.RepositoryMismatch(id, memberRepository, groupRepository) ->
+            $"{id} executes in {memberRepository} but the group executes in {groupRepository}; only a cross-repository group may mix repositories (PRX-GRP-051)"
 
 [<RequireQualifiedAccess>]
 module GroupStore =
@@ -64,6 +96,10 @@ module GroupStore =
     let add (group: StoredGroup) (store: GroupStore) = { Groups = sorted (group :: store.Groups) }
 
     let tryFind (id: string) (store: GroupStore) = store.Groups |> List.tryFind (fun group -> group.Declaration.Id = id)
+
+    /// `store` with the group of the same ID replaced by `group`.
+    let replace (group: StoredGroup) (store: GroupStore) =
+        { Groups = store.Groups |> List.map (fun existing -> if existing.Declaration.Id = group.Declaration.Id then group else existing) }
 
     let declarations (store: GroupStore) = store.Groups |> List.map (fun group -> group.Declaration)
 
@@ -137,10 +173,79 @@ module GroupDeclaration =
             let stored =
                 { Declaration = declaration
                   DeclaredAt = declaredAt
-                  DeclaredBy = declaredBy }
+                  DeclaredBy = declaredBy
+                  Membership = [] }
 
             Ok(GroupStore.add stored store, stored)
         | found -> Error found
+
+    /// Every repository a group already executes in: its declared execution
+    /// repository, else wherever its current members execute.
+    let private groupLocations (locate: string -> ExecutionLocation) (group: DeclaredGroup) =
+        match group.ExecutionRepository with
+        | Some repository -> [ ExecutionLocation.Repository repository ]
+        | None -> group.Members |> List.map locate |> List.distinct
+
+    /// PRX-GRP-051: outside a cross-repository group a member must execute
+    /// where the group does. An undeclared external location is never known
+    /// to match, so it is refused too.
+    let private repositoryRejection (locate: string -> ExecutionLocation) (group: DeclaredGroup) (memberId: string) =
+        let location = locate memberId
+        let expected = groupLocations locate group
+
+        let matches =
+            match location with
+            | ExecutionLocation.UnknownExternal -> expected.IsEmpty
+            | ExecutionLocation.Repository _ -> expected |> List.forall ((=) location)
+
+        if group.CrossRepository || matches then
+            None
+        else
+            let groupRepository = expected |> List.map ExecutionLocation.describe |> String.concat " + "
+            Some(GroupRejection.RepositoryMismatch(memberId, ExecutionLocation.describe location, groupRepository))
+
+    /// Every reason `memberId` cannot join group `groupId`, in a fixed order;
+    /// empty when it can. An unknown group is the only reason reported then.
+    let addRejections (store: GroupStore) (states: Map<string, MemberState>) (locate: string -> ExecutionLocation) (groupId: string) (memberId: string) =
+        match GroupStore.tryFind groupId store with
+        | None -> [ GroupRejection.UnknownGroup groupId ]
+        | Some stored ->
+            let group = stored.Declaration
+
+            [ if group.Members |> List.contains memberId then
+                  yield GroupRejection.AlreadyMember(memberId, groupId)
+              yield! memberRejections states [ memberId ]
+              if states.ContainsKey memberId then
+                  yield! repositoryRejection locate group memberId |> Option.toList ]
+
+    /// Adds `memberId` to the end of group `groupId` and records who added it
+    /// and when. Only the store changes: the member's lifecycle state,
+    /// evidence and attribution are neither inputs nor outputs.
+    let addMember
+        (store: GroupStore)
+        (states: Map<string, MemberState>)
+        (locate: string -> ExecutionLocation)
+        (addedAt: string)
+        (addedBy: Actor option)
+        (groupId: string)
+        (memberId: string)
+        : Result<GroupStore * StoredGroup * MembershipChange, GroupRejection list> =
+        match addRejections store states locate groupId memberId, GroupStore.tryFind groupId store with
+        | [], Some stored ->
+            let change =
+                { Member = memberId
+                  Operation = MembershipOperation.Added
+                  OccurredAt = addedAt
+                  Actor = addedBy }
+
+            let updated =
+                { stored with
+                    Declaration = { stored.Declaration with Members = stored.Declaration.Members @ [ memberId ] }
+                    Membership = stored.Membership @ [ change ] }
+
+            Ok(GroupStore.replace updated store, updated, change)
+        | [], None -> Error [ GroupRejection.UnknownGroup groupId ]
+        | found, _ -> Error found
 
     /// The planner's view: configured declarations first, then stored ones in
     /// ID order. A configured group with the same ID wins, since the
@@ -176,6 +281,13 @@ module GroupDeclaration =
                   if group.CrossRepository && group.ExecutionRepository.IsNone then
                       yield { Field = at "executionRepository"; Message = "a cross-repository group must name its execution repository" }
                   if String.IsNullOrWhiteSpace stored.DeclaredAt then
-                      yield { Field = at "declaredAt"; Message = "declaredAt is required" } ])
+                      yield { Field = at "declaredAt"; Message = "declaredAt is required" }
+                  for change in stored.Membership do
+                      if String.IsNullOrWhiteSpace change.OccurredAt then
+                          yield { Field = at "membership"; Message = $"the membership change for {change.Member} has no occurredAt" }
+                  // Only each member's latest change describes current membership.
+                  for memberId, changes in stored.Membership |> List.groupBy (fun change -> change.Member) do
+                      if (List.last changes).Operation = MembershipOperation.Added && not (group.Members |> List.contains memberId) then
+                          yield { Field = at "membership"; Message = $"{memberId} is recorded as added but is not a member" } ])
 
         duplicateIds @ perGroup
