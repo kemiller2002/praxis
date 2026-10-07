@@ -195,7 +195,8 @@
                 "rate-limited",
                 "timeout",
                 "cancelled",
-                "internal"
+                "internal",
+                "incompatible-state"
               ]
             },
             "decidedBy": {

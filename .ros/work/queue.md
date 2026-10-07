@@ -135,7 +135,7 @@
 | PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | complete | quality, pacing | medium |
 | PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | complete | quality, pacing | high |
 | PRAXIS-QUAL-05 | Provider-neutral capacity port consumed by the planner (PRX-QUAL-009) | complete | quality, planning | medium |
-| PRAXIS-QUAL-06 | Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010) | ready | quality, release | high |
+| PRAXIS-QUAL-06 | Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010) | complete | quality, release | high |
 | PRAXIS-QUAL-07 | Engineering-risk metadata on work items (PRX-QUAL-020) | ready | quality, completion | high |
 | PRAXIS-QUAL-08 | Design-debt declaration as a completion-readiness facet (PRX-QUAL-021) | ready | quality, completion | high |
 | PRAXIS-QUAL-09 | Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022) | ready | quality, completion | high |
