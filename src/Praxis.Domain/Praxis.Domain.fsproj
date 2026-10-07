@@ -3,6 +3,12 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Ordo's execution semantics, consumed as the pinned release artifact
+         (vendor/nuget/ordo-core.lock; ORDO-CORE-PACKAGE, PRX-ARCH-001). Pure:
+         no I/O, no provider SDK. -->
+    <PackageReference Include="EchelonFoundry.Ordo.Core" Version="1.5.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Identity/Repository.fs" />
     <Compile Include="Identity/RepositoryStatus.fs" />

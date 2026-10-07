@@ -52,7 +52,19 @@ module FoundationsTests =
         (report root).Capabilities |> List.find (fun item -> item.Name = "limen")
 
     let tests =
-        [ { Name = "foundation verifier accepts pinned Forma with canonical usage"
+        [ { Name = "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use"
+            Run =
+              fun () ->
+                  withTemp (fun root ->
+                      write root ".echelon/foundations.json" (config "Example" "\"ordo\": { \"required\": true, \"version\": \"1.5.0\" }")
+                      write root "src/App/App.fsproj" "<Project><ItemGroup><PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"1.5.0\" /></ItemGroup></Project>"
+                      write root "src/App/Rules.fs" "module Rules\nlet authority = Ordo.Core.ExecutionRole.RoleAuthority.defaultFor"
+                      let ordo = (report root).Capabilities |> List.find (fun item -> item.Name = "ordo")
+                      Assert.isTrue ordo.Passed $"pinned Ordo.Core package passes: {ordo}"
+                      write root "src/App/App.fsproj" "<Project><ItemGroup><PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"1.4.2\" /></ItemGroup></Project>"
+                      let stale = (report root).Capabilities |> List.find (fun item -> item.Name = "ordo")
+                      Assert.isTrue (not stale.Passed) "a different Ordo.Core version is not the declared pin") }
+          { Name = "foundation verifier accepts pinned Forma with canonical usage"
             Run =
               fun () ->
                   withTemp (fun root ->
