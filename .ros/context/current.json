@@ -4966,18 +4966,58 @@
     {
       "id": "PRAXIS-GROUP-05",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T17:43:01.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/GroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:55:31.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T174302159Z-df63a3f7"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "3e77e560ae9b3c56ee57dabb",
+        "recordedAt": "2026-10-07T17:55:28.000Z",
+        "executionId": "EXE-20261007T174302159Z-df63a3f7",
+        "stepId": "checkpoint",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-1",
+        "commit": "28d70c4e9f05e823ffb0497fb618a0de34c2146f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-1",
+        "remoteCommit": "28d70c4e9f05e823ffb0497fb618a0de34c2146f",
+        "summary": "work group checkpoint implemented (durable verification shared with work checkpoint via verifyDurableLocation, member checkpoint references, no path attribution, validate checks); 5 tests; build clean, 819/819 F# tests, validate passed",
+        "nextAction": "Complete PRAXIS-GROUP-05; phase two awaits EX-ROS-2026-A021 evaluation and owner acceptance before merge",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T17:55:31.000Z",
+      "conclusion": "work group checkpoint records a group checkpoint under work checkpoint's own durable verification, referencing members' checkpoints without replacing them or attributing paths. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 819 test(s), 819 passed, 0 failed; ./ros validate: validation passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:43:01.000Z",
+  "updatedAt": "2026-10-07T17:55:31.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
