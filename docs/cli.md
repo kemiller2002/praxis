@@ -431,6 +431,7 @@ See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.m
 ### `work group`
 
 ```
+ros work group list [--status STATUS] [--member ID] [--repository NAME] [--config FILE] [--json]
 ros work group show GROUP-ID [--config FILE] [--json]
 ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
@@ -438,11 +439,14 @@ ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--al
                       [--reason TEXT] [--dry-run] [--json] [IDENTITY]
 ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT
                       --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
-ros work group create --group GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+ros work group create --group GROUP-ID --member ID|OWNER/REPO:ID [--member ...]* --occurred-at TIMESTAMP
                       [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
                       [--architecture-note TEXT]* [--execution-repository NAME]
-                      [--cross-repository] [--config FILE] [--reason TEXT]
-                      [--dry-run] [--json] [IDENTITY]
+                      [--cross-repository] [--home-repository OWNER/REPO]
+                      [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG]]*
+                      [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group link   --group GROUP-ECHELON-AREA-SEQ --home OWNER/REPO --member ID
+                      --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
 ```
 
 Durable execution groups (PRX-GRP-073, phase two; `PRAXIS-GROUP-01..05`),
@@ -470,17 +474,19 @@ external repository when its description names one, else this repository. `--kin
 origin `human-declared`). The creation is recorded with the resolved actor,
 `--occurred-at` and `--reason`. Every problem is reported together and nothing
 is written: invalid arguments exit `2`, refusals (unknown, terminal or
-foreign-repository member, duplicate group) exit `1`. `--dry-run` shows the
-group without writing it.
+foreign-repository member, an existing group with a different declaration)
+exit `1`. Repeating a `create` whose declaration is identical to the recorded
+one succeeds unchanged (below). `--dry-run` shows the group without writing it.
 
 **`work group add`** adds one member by the same join rule as `create`
 (recorded, non-terminal, same execution repository unless the group is
-cross-repository) and refuses an item that is already a member or a group
-that is not recorded. The history entry records who added it (resolved
+cross-repository) and refuses a group that is not recorded. Adding a current
+member succeeds unchanged. The history entry records who added it (resolved
 actor), when and why. The member's own record is untouched.
 
 **`work group remove`** removes one member, whatever its state, and refuses
-an item that is not a member. Removing the last member is refused unless
+an item that was never a member; removing a member whose removal is already
+recorded succeeds unchanged. Removing the last member is refused unless
 `--allow-empty` is given; the removal is then recorded as `explicitEmpty` and
 `validate` accepts the empty group. The history entry records who removed it.
 The item's lifecycle state, evidence and attribution are untouched.
@@ -506,7 +512,100 @@ planner's analysis; `--config` is passed through), partial-completion
 progress (`k of n complete`; `progress.complete` is true only when every
 member completed on its own evidence), the work items each member still waits
 on, blocked members and the open members they gate, shared context,
-architecture notes and history. An unknown group exits `1`.
+architecture notes and history, the derived group status (`groupStatus`), and
+every member that was removed while open (`removedOpen`, with its removal
+reason). An unknown group exits `1`.
+
+**`work group list`** is read-only (PRX-GRP-110): one row per group, sorted by
+ID, with its kind, origin, home and execution repository, `crossRepository`,
+member count, derived `groupStatus`, progress, removed-open members, execution
+mode and latest group checkpoint time. `--status`, `--member` and
+`--repository` filter the rows (all given filters must hold); `--config` is
+passed to the planner.
+
+**Group status is derived, never stored** (PRX-GRP-103, PRX-GRP-116). In
+order of precedence: `complete` (every current member completed on its own
+evidence), `unknown` (some member's state is not known), `partially-complete`
+(some member completed), `blocked` (every open member is blocked or waits on a
+blocked prerequisite), `active` (some member is active), `not-started`. There
+is no `work group complete`: no command or flag can mark a group done. A
+member removed while open never counts toward `k of n` and is reported
+`removed-open`; an abandoned member is reported `abandoned`, never complete.
+
+**Idempotency** (PRX-GRP-114). A repeated request whose end state already
+holds (`create` of an identical declaration, `add` of a current member,
+`remove` of an already-removed member) exits `0` with `"status": "unchanged"`
+and `"changed": false`, and appends no history. Every mutation document
+carries `changed`. A request that conflicts with recorded state is refused
+with exit `1`. Concurrent mutations are serialized by the store lock.
+
+**Audit** (PRX-GRP-113). Every change appends one history entry with the
+operation, member, time, resolved actor, reason, explicit-empty flag, the
+caller's active execution (`executionId`, when it has exactly one) and the
+member's state when it joined or left (`memberState`). History is
+append-only: `validate` refuses a store whose history for a group recorded at
+`HEAD` (or at `$ROS_BASE_REF`, when set) was rewritten, reordered or truncated,
+or whose group vanished. Group commands write only the group store, so no
+`work.group.*` event is appended to `.ros/events` (PRX-GRP-115 outranks that
+PRX-GRP-113 SHOULD; the group history is the audit trail).
+
+**Cross-repository groups** (PRX-GRP-100..109). A group whose members live in
+several repositories (a portfolio sweep: one brief, one pull request per
+repository, one consolidated status table) is created with
+`--cross-repository` and an ID in the reserved area `GROUP-ECHELON-<AREA>-<SEQ>`;
+a repository-local group may not use that area. Its **home** is the repository
+where `create` ran (`homeRepository`, from `--home-repository` or the
+checkout's `origin` remote, `owner/repo`); only the home holds the group record,
+and the home never changes. Members of other repositories are named
+`owner/repo:WORK-ID` (a bare ID is a home item; a qualified name of the home is
+stored bare). Each member is governed only in its own repository: its own
+queue entry, executions, evidence, checkpoints, pull request and completion.
+
+- **Observation, never copying.** The home reads a member repository's Praxis
+  state read-only from a local clone at a fetched ref (`git show REF:.ros/...`),
+  configured in planner configuration under
+  `grouping.crossRepository.repositories` (`{"owner/repo": {"path": "../repo",
+  "ref": "origin/main"}}`; `ref` defaults to `origin/HEAD`). Planner
+  configuration is `--config FILE`, else the `planner` object of `ros.json`.
+  Each observation records repository, ref, commit, `observedAt`, how current
+  the ref was (`sourceAsOf`: its reflog, else its commit time) and the method
+  (`git-ref`). Nothing is fetched, written, committed or pushed in another
+  repository. An observation older than `maxObservationAgeMinutes` (default
+  1440) is `stale`; a repository that is not configured, missing, a clone of a
+  different repository, without Praxis, with state this version cannot parse,
+  or denying access makes its members `unknown` with the reason (`unreachable`,
+  `praxis-not-installed`, `unsupported-schema`, `access-denied`). A stale or
+  unknown member is never complete; the rest of the view still renders.
+- **Joining.** A qualified member is checked by observation: a terminal or
+  unrecorded item is refused; an unobservable one joins with
+  `verified: false` and a warning (`verifications` in the group record).
+- **Order.** `--dependency CONSUMER=PRODUCER[@MILESTONE]` records an edge whose
+  producer must reach `complete` (default), `merged` (its latest checkpoint
+  commit is reachable from its observed ref) or `released:TAG` (the tag exists
+  there). `show` reports each edge `satisfied`, `waiting` or `unknown`, and each
+  consumer's planning state; it never changes the consumer's lifecycle state.
+  Edges must join members and may not form a cycle, across repositories.
+- **References.** `work group link`, run in a member's own repository, records
+  the only group data that repository holds: an immutable reference on its
+  item (group ID and home). Repeating it is `unchanged`; another home is
+  refused. A membership whose member repository holds no reference, or a
+  reference the observed home does not list, is `unlinked`: shown by `show`
+  and reported by `validate` as a warning.
+- **Status table.** `show` is the consolidated sweep table: per member its
+  repository, observed state, ref and commit, latest checkpoint, staleness and
+  link; progress per repository and overall (`k of n complete`); order edges.
+  In a member repository, `show` of a group homed elsewhere prints that
+  repository's references and whether the home lists them. Group checkpoints
+  in the home record `memberObservations` (labelled observations, never
+  verifications of another repository's remote). The planner reports a
+  qualified member as `executes-elsewhere` with the repository to act in and
+  never schedules it into this checkout (PRX-GRP-108).
+
+**Store and documents** (PRX-GRP-112). `.ros/work/groups.json` is written as
+`schemaVersion` 2 (additive fields); a version-1 store is read as-is and is
+rewritten only by a mutation, its history intact. Every group command prints
+exactly one `{command, schemaVersion, status, ...}` document with `--json`;
+unknown values are `null`, never `0`.
 
 ### `remote execute`
 

@@ -101,8 +101,20 @@
       "effects": 8
     },
     "WorkGroupCommands.fs": {
-      "lines": 634,
-      "effects": 3
+      "lines": 538,
+      "effects": 0
+    },
+    "WorkGroupLinkCommands.fs": {
+      "lines": 79,
+      "effects": 0
+    },
+    "WorkGroupListCommands.fs": {
+      "lines": 81,
+      "effects": 0
+    },
+    "WorkGroupShowCommands.fs": {
+      "lines": 221,
+      "effects": 0
     }
   },
   "exceptions": []

@@ -4288,10 +4288,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:34.872Z",
-      "updatedAt": "2026-10-06T19:48:34.872Z",
+      "updatedAt": "2026-10-06T20:44:18.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4311,10 +4311,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.208Z",
-      "updatedAt": "2026-10-06T19:48:35.208Z",
+      "updatedAt": "2026-10-06T21:49:23.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4334,10 +4334,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.533Z",
-      "updatedAt": "2026-10-06T19:48:35.533Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4357,10 +4357,10 @@
         "grouping"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:35.870Z",
-      "updatedAt": "2026-10-06T19:48:35.870Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4380,10 +4380,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-06T19:48:36.196Z",
-      "updatedAt": "2026-10-06T19:48:36.196Z",
+      "updatedAt": "2026-10-06T20:09:54.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4419,6 +4419,346 @@
       "sourceReference": null
     },
     {
+      "id": "PRAXIS-FND-01",
+      "title": "ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001)",
+      "description": "Gap (audit 2026-10-06, rank 7): src/Praxis.Domain/Execution/Governance.fs re-implements Ordo's execution-governance semantics (RoleAuthority.defaultFor, mutation-boundary classification, evaluator fingerprint) and names a backlog item ORDO-CORE-PACKAGE that never existed. Covers PRX-EXEC-002 and PRX-ARCH-001. Prerequisite outside this repository: Ordo publishes Ordo.Core as an immutable release artifact (EchelonFoundry.Ordo.Core nupkg on the Ordo GitHub release, checksummed) through its own PR and workflow_dispatch release. Acceptance criteria: 1. Ordo releases a version whose GitHub release carries the Ordo.Core package with a published sha256. 2. Praxis references that exact version, restored from an immutable, checksum-verified artifact (no floating version, no copied source). 3. Role capability sets come from Ordo.Core (RoleAuthority.defaultFor delegates to Ordo), and no role-to-capability table remains in Praxis. 4. Mutation-boundary classification and evaluator fingerprinting delegate to Ordo.Core. 5. A test fails if the Praxis capability vocabulary and Ordo's diverge, and a test fails if the vendored package does not match its pinned sha256. 6. .echelon/foundations.json and praxis foundations verify evidence the Ordo.Core package pin. 7. Governance.fs header and docs/execution-runtime.md updated; requirement status recorded.",
+      "tags": [
+        "ordo",
+        "group:GROUP-FND-ORDO"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:09.000Z",
+      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-02",
+      "title": "Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010)",
+      "description": "Gap: execution start takes the boundary from --scope/--allow and the evaluator from --evaluator CLI flags, not from an Ordo execution contract. Covers PRX-BND-001, PRX-SEQ-003, PRX-VER-010. Depends on PRAXIS-FND-01 (the contract parser is Ordo's). Acceptance criteria: 1. praxis execution start accepts --contract FILE, an ordo.execution-contract/1 document parsed and validated by Ordo.Core, that supplies the role, the semantic mutation boundary (scopes, projections, evaluator references) and the evaluator closure. 2. The envelope records the contract's source path and sha256 so the boundary and evaluator are traceable to the authority that supplied them. 3. Flags that would contradict a supplied contract are refused (exit 2) rather than merged. 4. Without --contract the flags are assembled into the same Ordo contract shape and validated by Ordo, and the envelope records that the operator supplied it. 5. Tests cover contract acceptance, digest recording, invalid contract refusal and flag conflict. 6. docs/execution-runtime.md and requirement status updated.",
+      "tags": [
+        "ordo",
+        "execution",
+        "group:GROUP-FND-ORDO"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:10.000Z",
+      "updatedAt": "2026-10-06T20:39:26.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-03",
+      "title": "Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2)",
+      "description": "Gap: Praxis has no .echelon/foundations.json, so praxis foundations verify cannot evidence its own Aegis, Forma or Ordo use, and the verifier recognises Forma only through package.json (Praxis owns no npm). Covers SAF-DEP-1, SAF-DEP-2. Acceptance criteria: 1. .echelon/foundations.json declares aegis, forma and ordo with their pinned versions, limen and folio as not applicable with the reason recorded in docs/application-foundations.md. 2. aegis-boundaries.json declares every Praxis Aegis boundary code. 3. The verifier accepts a checksum-pinned Forma release-tarball lock and an EchelonFoundry.Ordo.Core PackageReference as pins. 4. A test runs foundations verify against this repository and fails on any finding (systemic guard). 5. requirements status recorded.",
+      "tags": [
+        "foundations",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:10.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-04",
+      "title": "Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6)",
+      "description": "Gap: Aegis is used only as one top-level capture with PRAXIS.CLI.UNHANDLED and an empty scope context (src/Praxis.Cli/Program.fs). Covers SAF-AEGIS-1, 5, 6. Acceptance criteria: 1. One Praxis Aegis boundary module classifies an escaped failure into stable codes per boundary (git, process, filesystem, network, state, web request, unexpected), declared in aegis-boundaries.json and asserted equal by test. 2. The web and hub request handlers capture per request with Aegis and answer 500 with a safe message and reference rather than dropping the connection. 3. Redaction rules extend Aegis defaults for repository URLs, work content, prompts, descriptions and attachment names; a test proves a secret, a token and work content never reach a sink. 4. Tests drive the boundary with a replaceable collector sink: success and refusals record nothing; each boundary code is recorded; programming defects and cancellation are not disguised. 5. Expected outcomes stay typed exit codes (SAF-AEGIS-2 unchanged). 6. Aegis package pin remains a released version.",
+      "tags": [
+        "foundations",
+        "aegis",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-05",
+      "title": "Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031)",
+      "description": "Gap: web/styles.css and web-hub/styles.css are Praxis-local presentation; no Forma release is consumed. Covers SAF-FORMA-1, SAF-FORMA-2, SAF-FORMA-5, SAF-FORMA-6, PRX-UI-030 and the PRX-UI-031 Limen decision. Acceptance criteria: 1. A forma lock pins the immutable Forma release tarball by version, URL and sha256; the tarball is the unmodified release artifact and a test fails if its digest differs. 2. Web and hub serve Forma's dist/all.css from that tarball at a versioned path, and pages link it; local web/styles.css and web-hub/styles.css are removed (no Praxis-local equivalents of Forma presentation). 3. Markup uses Forma classes and patterns (skip link, navigation shell, data/work tables, fields, buttons, status lozenges, alert/fault banners) with native HTML semantics kept. 4. Operational faults and errors render with Forma fault/alert presentation. 5. Tests assert the pinned stylesheet is served, every page links it, no local stylesheet route remains, and key Forma classes are present. 6. PRX-UI-031: record that the script-free server-rendered architecture has no browser runtime for Limen and declare limen not applicable with that reason. 7. docs/web-interface.md and requirement status updated.",
+      "tags": [
+        "foundations",
+        "forma",
+        "web",
+        "group:GROUP-FND-FOUNDATIONS"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-FND-06",
+      "title": "Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3)",
+      "description": "Gap: Praxis.Domain.Telemetry.Tutela/TutelaTrend are domain-only; nothing ingests or queries them; resolved unknown effects, evidence age and staleness, time-to-expiry, hotspots, boundary/capability changes, remediation lead time and transitions are missing; snapshots have no ref. Covers TUT-1, TUT-2, TUT-3 (TUT-4/5 preserved). Acceptance criteria: 1. praxis tutela ingest --input FILE accepts a Tutela security assessment (schemaVersion 1) and stores an append-only snapshot with repository, ref (the assessment's subject ref, resolved to a commit when it is one), collectedAt and source digest. 2. praxis tutela metrics [--json] projects every listed metric per snapshot and over time: invariant state counts and transitions, unknown effects created and resolved, evidence age and stale evidence, exceptions created/expired and time-to-expiry, recurring/reopened findings, security-sensitive churn and hotspots between snapshot refs, boundary/capability changes, remediation lead time, independent-verification coverage. 3. No single score is produced; output says the metrics are decision support, not certification. 4. A measurement that cannot be derived is reported as unknown, never zero. 5. Tests cover ingest, provenance, each derived metric and missing-as-unknown. 6. docs and requirement status updated.",
+      "tags": [
+        "tutela",
+        "telemetry"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:38:11.000Z",
+      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-01",
+      "title": "Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041)",
+      "description": "Requirements: PRX-EXEC-030, PRX-EXEC-014, PRX-EXEC-055, PRX-EXEC-026, PRX-EXEC-053, PRX-EXEC-041 (requirements/EXECUTION-ORCHESTRATION.md); audit gap 4. Acceptance criteria: (1) work begin/start (also when run by remote execute, and when run in-process by plan execute-group, PRAXIS-GROUP-09) persists .ros/executions/<id>/envelope.json for each begun item, sharing the telemetry execution ID when telemetry is enabled, recording actor, role (default implementation, --role ROLE), baseline HEAD, the current checkout and branch as workspace, and a containment profile; it never creates a branch or worktree. (2) work block/resume/complete/abandon mirror the envelope state with an append-only transition record; complete records the candidate HEAD and the commits baseline..candidate. (3) work resume re-verifies the bound workspace (recorded branch, baseline ancestor of HEAD, recorded candidate ancestor of HEAD) and refuses with exit 3 and no state change on divergence unless --rebind-reason TEXT, which records a rebind event. (4) work complete refuses with exit 3 and no state change while a bound envelope has a mismatched or unknown-effect step receipt or a failed or stale verification. (5) work continue marks the predecessor envelope interrupted and binds the successor with parentExecution. (6) runtime-free fallback reconciliation of work.begin binds an envelope with origin fallback. (7) .ros/executions/** is always-ignored Praxis bookkeeping for attribution. (8) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "binding"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:22.000Z",
+      "updatedAt": "2026-10-06T20:36:31.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-02",
+      "title": "Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007)",
+      "description": "Requirements: PRX-VER-001, PRX-VER-002, PRX-EXEC-024, PRX-REC-007; audit doc discrepancy 'every mutation checks legal actions'. Acceptance criteria: (1) execution start accepts --evaluator-command CMD; execution evaluate runs only the declared command (a different --command is refused, exit 3) and only when the legal action execution.evaluate is available (role holds evaluator.invoke, execution not terminal, evaluator declared). (2) The verification record holds actor id and kind, command identity, candidate commit, evaluator fingerprint, exit code or unknown outcome, and produced evidence references (--evidence PATH). (3) A verification recorded for a different candidate than the workspace HEAD blocks execution.complete as stale. (4) Every step ledger entry Praxis appends carries an attribution (actor/observer id and kind, role, evaluator fingerprint, workspace revision). (5) Every praxis execution mutation is gated by LegalActions; tests cover refusal paths.",
+      "tags": [
+        "execution",
+        "evaluation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-03",
+      "title": "Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010)",
+      "description": "Requirements: PRX-EXEC-005, PRX-EXEC-040, PRX-EXEC-041, PRX-EXEC-042, PRX-EXEC-010, PRX-UI-025. Acceptance criteria: (1) ros.json execution.launchers maps roles (optionally a transition) to a configured launcher command; Praxis never selects a provider itself. (2) praxis execution launch EXE-ID [--dry-run] requires the legal action execution.launch, runs the configured launcher for the envelope's role in the workspace with PRAXIS_EXECUTION_ID, PRAXIS_EXECUTION_ROLE, PRAXIS_EXECUTION_ENVELOPE, PRAXIS_WORK_ITEM and the effective capabilities in its environment, and records launcher id, command, exit code and actor. (3) execution start --launch accepts the start first, then launches (UI-025). (4) Separate roles are launchable independently with distinct execution identities; a verification launcher receives only the verification capability set. (5) ros.json execution.worktree (required for listed roles) makes execution start create the worktree automatically. (6) Tests cover each criterion including no-launcher-configured refusal.",
+      "tags": [
+        "execution",
+        "launchers"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-04",
+      "title": "Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014)",
+      "description": "Requirements: PRX-SEC-001, PRX-SEC-003, PRX-SEC-010, PRX-SEC-011, PRX-SEC-013, PRX-SEC-014, PRX-SEC-012 kept. Acceptance criteria: (1) Every envelope carries a containment profile listing filesystem, process, network, credential and environment restrictions, each enforced, unavailable, unrestricted or unknown, with mechanism and evidence; anything the host did not report stays unknown and nothing is inferred from a worktree, branch, directory, prompt or provider permission mode. (2) A host or launcher supplies evidence as praxis.containment-evidence/1 via --containment-evidence FILE or PRAXIS_CONTAINMENT_EVIDENCE; Praxis records its source as host-reported. (3) Containment is host-enforced only when at least one restriction is enforced with evidence; otherwise semantic-only or unknown. (4) Repository policy execution.containment.<role>.require lists restrictions that must be enforced; start and launch refuse (exit 3) when the evidence does not show them. (5) praxis execution containment EXE-ID --json emits the profile in a stable schema documented for Tutela. (6) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "containment"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:23.000Z",
+      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-05",
+      "title": "Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008)",
+      "description": "Requirements: PRX-CTL-001, PRX-CTL-003, PRX-CTL-005, PRX-CTL-006, PRX-CTL-011, PRX-CTL-012, PRX-UI-008, PRX-UI-009. Acceptance criteria: (1) GET /api/executions[?workItem=ID] and GET /api/executions/ID return the CLI's own execution JSON (envelope, actor, role, steps with receipt status, scope effects, verification, containment, legalActions with reasons and actorRequirement). (2) POST /api/executions/ID/transitions runs the CLI's own execution transition and returns a structured refusal on an illegal one with state unchanged. (3) GET /api/control-plane declares the bind host, port and whether it is loopback-only. (4) Provider/model/runtime appear only as execution-host attributes of the actor. (5) The host keeps no state and adds no rule: every route shells out to the CLI. (6) Tests cover each route.",
+      "tags": [
+        "execution",
+        "control-plane"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-06",
+      "title": "Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026)",
+      "description": "Requirements: PRX-UI-001, PRX-UI-004, PRX-UI-007, PRX-UI-020, PRX-UI-021, PRX-UI-026, PRX-UI-027. Acceptance criteria: (1) The work detail page lists the item's executions with state, role, actor, evaluator and containment. (2) An execution page shows steps with receipt status (match, mismatch, indeterminate, reconciled), unresolved scope effects as obligations, unknown effects, blocked state and verification, each labelled distinctly rather than as a generic failure. (3) Legal actions render with availability, the engine's reasons when unavailable, and a visible human-required marker in text, not color alone. (4) A human-required transition is offered only through a form that records the operator as a human actor with normal provenance; agent/any transitions are separate. (5) The UI computes no legality and has no script. (6) Tests cover each criterion.",
+      "tags": [
+        "execution",
+        "operator-ui"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-07",
+      "title": "Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md)",
+      "description": "Fix audit documentation discrepancies: docs/execution-runtime.md 'Not yet implemented' points at completed EXEC-INSTALL-109 and claims every mutation checks legal actions; requirements/EXECUTION-ORCHESTRATION.md says Status: Proposed. Acceptance criteria: (1) requirements/EXECUTION-ORCHESTRATION.md carries an accurate status per requirement row (implemented, partial, not implemented, with the work item that covers each gap). (2) docs/execution-runtime.md documents work-transition binding, evaluation runner, launchers, containment evidence, the control-plane API and operator UI, and names open work items for what remains. (3) Untested implemented rows (PRX-EXEC-033, 043, 044, 045, 054) gain tests. (4) A test fails when the requirement status table omits an EXECUTION-ORCHESTRATION requirement ID.",
+      "tags": [
+        "execution",
+        "docs"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:24.000Z",
+      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-EXEC-08",
+      "title": "Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003)",
+      "description": "Gap 7 of the 2026-10-06 audit: src/Praxis.Domain/Execution/Governance.fs copies Ordo's RoleAuthority.defaultFor and evaluator algorithm and refers to a backlog item ORDO-CORE-PACKAGE that does not exist. Acceptance criteria: (1) Praxis takes role capability sets, mutation boundaries and evaluator closure from the governing Ordo execution contract (package or ordo.execution/1 document) rather than CLI flags and a hard-coded matrix. (2) The conformance vectors stay byte-identical. (3) Requirement status rows updated. Depends on Ordo publishing Ordo.Core or an execution-contract document.",
+      "tags": [
+        "execution",
+        "ordo"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T20:36:25.000Z",
+      "updatedAt": "2026-10-06T21:31:23.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
       "id": "PRAXIS-QUAL-01",
       "title": "Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004)",
       "description": "Covers PRX-QUAL-004 (Stale, Unsupported window states) and the PRX-QUAL-003 creation-evidence gap. Acceptance: 1. WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage. 2. A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped. 3. Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic. 4. Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider window reference) in hold.json as an additive schema-2 field that older readers ignore; holds without it read as unrecorded, never invented. 5. Tests cover each state and the migration.",
@@ -4429,8 +4769,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:45.942Z",
-      "updatedAt": "2026-10-06T20:59:31.424Z",
+      "createdAt": "2026-10-06T23:55:38.288Z",
+      "updatedAt": "2026-10-06T23:55:52.881Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4453,8 +4793,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:46.286Z",
-      "updatedAt": "2026-10-06T20:37:10.743Z",
+      "createdAt": "2026-10-06T23:55:38.804Z",
+      "updatedAt": "2026-10-06T23:55:53.531Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4477,8 +4817,8 @@
       "priority": "medium",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:46.616Z",
-      "updatedAt": "2026-10-06T20:37:11.053Z",
+      "createdAt": "2026-10-06T23:55:39.313Z",
+      "updatedAt": "2026-10-06T23:55:54.289Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4501,8 +4841,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:47.063Z",
-      "updatedAt": "2026-10-06T20:37:11.402Z",
+      "createdAt": "2026-10-06T23:55:40.087Z",
+      "updatedAt": "2026-10-06T23:55:54.703Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4525,8 +4865,8 @@
       "priority": "medium",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:47.416Z",
-      "updatedAt": "2026-10-06T20:37:11.709Z",
+      "createdAt": "2026-10-06T23:55:40.540Z",
+      "updatedAt": "2026-10-06T23:55:55.129Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4549,8 +4889,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:47.739Z",
-      "updatedAt": "2026-10-06T20:37:12.042Z",
+      "createdAt": "2026-10-06T23:55:41.005Z",
+      "updatedAt": "2026-10-06T23:55:55.789Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4573,8 +4913,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:48.078Z",
-      "updatedAt": "2026-10-06T20:37:12.331Z",
+      "createdAt": "2026-10-06T23:55:41.447Z",
+      "updatedAt": "2026-10-06T23:55:56.381Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4597,8 +4937,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:48.464Z",
-      "updatedAt": "2026-10-06T20:37:12.621Z",
+      "createdAt": "2026-10-06T23:55:42.069Z",
+      "updatedAt": "2026-10-06T23:55:56.880Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4621,8 +4961,8 @@
       "priority": "high",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:48.807Z",
-      "updatedAt": "2026-10-06T20:37:12.915Z",
+      "createdAt": "2026-10-06T23:55:42.753Z",
+      "updatedAt": "2026-10-06T23:55:57.491Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4645,8 +4985,8 @@
       "priority": "medium",
       "status": "ready",
       "attachments": [],
-      "createdAt": "2026-10-06T20:34:49.141Z",
-      "updatedAt": "2026-10-06T20:37:13.240Z",
+      "createdAt": "2026-10-06T23:55:43.349Z",
+      "updatedAt": "2026-10-06T23:55:57.981Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
