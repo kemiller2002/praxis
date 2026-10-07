@@ -2,7 +2,7 @@
   "name": "@echelon-foundry/repository-operating-system",
   "version": "3.7.2",
   "compatibility": {
-    "remoteProtocol": "1.3",
+    "remoteProtocol": "1.4",
     "stateSchemas": {
       "work-queue": { "reads": ["1.0.0"], "writes": "1.0.0" },
       "work-context": { "reads": ["1.0.0"], "writes": "1.0.0" },
