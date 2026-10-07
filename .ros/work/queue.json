@@ -4551,10 +4551,10 @@
         "telemetry"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:11.000Z",
-      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "updatedAt": "2026-10-07T05:20:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

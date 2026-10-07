@@ -54,6 +54,7 @@
     <Compile Include="PacingStatus.fs" />
     <Compile Include="PacingCommands.fs" />
     <Compile Include="SyncCommands.fs" />
+    <Compile Include="TutelaCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

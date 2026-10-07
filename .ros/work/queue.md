@@ -82,7 +82,7 @@
 | PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | complete | foundations, group:GROUP-FND-FOUNDATIONS | high |
 | PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | complete | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
 | PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | complete | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
-| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | ready | tutela, telemetry | medium |
+| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | complete | tutela, telemetry | medium |
 | PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
 | PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
 | PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | complete | work-group, cli | low |

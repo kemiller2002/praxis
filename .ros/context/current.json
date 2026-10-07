@@ -7308,6 +7308,51 @@
         }
       },
       "completedAt": "2026-10-07T06:24:45.000Z"
+    },
+    {
+      "id": "PRAXIS-FND-06",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Telemetry/TutelaHistory.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/TutelaMetricsTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "docs/groups/PRAXIS-FND-06.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:20:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T001026787Z-d9933253"
+      ],
+      "latestCheckpoint": {
+        "id": "1e23cddc9ca46b0f4b2acc79",
+        "recordedAt": "2026-10-07T05:20:49.000Z",
+        "executionId": "EXE-20261007T001026787Z-d9933253",
+        "repository": "repository-operating-system",
+        "branch": "fnd/tutela-metrics",
+        "commit": "ae4ae70c3727a415cd4236ce390daddad5077d42",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/tutela-metrics",
+        "remoteCommit": "ae4ae70c3727a415cd4236ce390daddad5077d42",
+        "summary": "Tutela ingest/metrics implemented; full suite 1475/1475",
+        "nextAction": "Review and merge the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:20:51.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
