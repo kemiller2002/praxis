@@ -306,14 +306,24 @@ def build_denylist(terms: PersonTerms, advisory: Iterable[str]) -> dict:
 class CompiledDenylist:
     blocking: tuple[tuple[str, re.Pattern[str]], ...]
     advisory: tuple[tuple[str, re.Pattern[str]], ...]
+    real_shas: frozenset[str] = frozenset()
+    sha_prefixes: frozenset[str] = frozenset()
 
 
-def compile_denylist(denylist: Mapping) -> CompiledDenylist:
+def compile_denylist(denylist: Mapping, review: bool = False) -> CompiledDenylist:
+    """Faithful mode: person identifiers block, product names are advisory.
+    Review mode: product/organisation tokens and real object ids block too."""
     literal = tuple((t, re.compile(re.escape(t), re.IGNORECASE)) for t in denylist.get("literals", ()))
     words = tuple((t, re.compile(rf"\b{re.escape(t)}\b", re.IGNORECASE)) for t in denylist.get("words", ()))
     regexes = tuple((p, re.compile(p, re.IGNORECASE)) for p in denylist.get("regexes", ()))
     advisory = tuple((t, re.compile(re.escape(t), re.IGNORECASE)) for t in denylist.get("advisory", ()))
-    return CompiledDenylist(blocking=literal + words + regexes, advisory=advisory)
+    if not review:
+        return CompiledDenylist(blocking=literal + words + regexes, advisory=advisory)
+    product = tuple((t, re.compile(re.escape(t), re.IGNORECASE)) for t in denylist.get("review_literals", ())) + tuple(
+        (p, re.compile(p, re.IGNORECASE)) for p in denylist.get("review_regexes", ()))
+    shas = frozenset(denylist.get("review_shas", ()))
+    return CompiledDenylist(blocking=literal + words + regexes + product, advisory=(),
+                            real_shas=shas, sha_prefixes=frozenset(s[:7] for s in shas))
 
 
 def decode_for_scan(data: bytes) -> str:
@@ -340,3 +350,117 @@ def is_text(data: bytes) -> bool:
         return True
     except UnicodeDecodeError:
         return False
+
+
+# --------------------------------------------------------------------------
+# Review mode: product/organisation aliasing and commit-SHA pseudonyms
+# --------------------------------------------------------------------------
+#
+# The real tokens are configuration (scripts/artifact_sources.json, never
+# bundled); nothing below names them.
+
+HEX_TOKEN_RE = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
+
+
+@dataclass(frozen=True)
+class AliasConfig:
+    tokens: tuple[tuple[str, str], ...]  # (real, alias), same length, matched as substrings
+    phrases: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]  # word-wise, same lengths
+
+
+def alias_config(raw: Mapping) -> AliasConfig:
+    tokens = tuple((r.lower(), a.lower()) for r, a in raw["token_aliases"])
+    phrases = tuple((tuple(w.lower() for w in r), tuple(w.lower() for w in a)) for r, a in raw["phrase_aliases"])
+    bad = tuple(f"{r}->{a}" for r, a in tokens if len(r) != len(a)) + tuple(
+        f"{' '.join(r)}->{' '.join(a)}" for r, a in phrases
+        if len(r) != len(a) or any(len(x) != len(y) for x, y in zip(r, a)))
+    if bad:
+        raise ValueError(f"aliases must preserve length (byte offsets, padding, hunk geometry): {bad}")
+    return AliasConfig(tokens, phrases)
+
+
+def case_like(source: str, alias: str) -> str:
+    """Positional case transfer between same-length strings."""
+    return "".join(a.upper() if s.isupper() else a.lower() for s, a in zip(source, alias))
+
+
+def phrase_regex(words: tuple[str, ...]) -> str:
+    """Words as capture groups, each pair joined by an optional captured separator."""
+    return "".join(f"({re.escape(w)})" + (r"([-_\s]?)" if i < len(words) - 1 else "")
+                   for i, w in enumerate(words))
+
+
+def alias_rules(cfg: AliasConfig) -> tuple[Rule, ...]:
+    def phrase_replace(alias_words: tuple[str, ...]):
+        def replace(m: re.Match[str]) -> str:
+            groups = m.groups()
+            words, seps = groups[0::2], groups[1::2] + ("",)
+            return "".join(case_like(w, a) + s for w, a, s in zip(words, alias_words, seps))
+        return replace
+
+    phrase = tuple(Rule(f"alias-phrase:{i}", re.compile(phrase_regex(r), re.IGNORECASE), phrase_replace(a))
+                   for i, (r, a) in enumerate(cfg.phrases, start=1))
+    token = tuple(Rule(f"alias-token:{i}", re.compile(re.escape(r), re.IGNORECASE),
+                       (lambda alias: lambda m: case_like(m.group(0), alias))(a))
+                  for i, (r, a) in enumerate(cfg.tokens, start=1))
+    return phrase + token
+
+
+def alias_collisions(texts: Iterable[str], cfg: AliasConfig) -> tuple[str, ...]:
+    """Alias forms already present in the faithful corpus (the rename must be invertible)."""
+    probes = tuple((a, re.compile(re.escape(a), re.IGNORECASE)) for _, a in cfg.tokens) + tuple(
+        (" ".join(a), re.compile(phrase_regex(a), re.IGNORECASE)) for _, a in cfg.phrases)
+    corpus = tuple(texts)
+    return tuple(name for name, p in probes if any(p.search(t) for t in corpus))
+
+
+def hex_candidates(texts: Iterable[str]) -> tuple[str, ...]:
+    """Hex tokens that may be object ids. All-digit tokens shorter than 12 are
+    treated as numbers (dates, counters), not abbreviated SHAs."""
+    found = {m.group(0) for t in texts for m in HEX_TOKEN_RE.finditer(t)}
+    return tuple(sorted(t for t in found if not t.isdigit() or len(t) >= 12))
+
+
+def sha_pseudonym(index: int) -> str:
+    """40-hex pseudonym; abbreviations use its prefix, so prefixes stay consistent."""
+    return ((f"{index:05x}" + "c") * 7)[:40]
+
+
+@dataclass(frozen=True)
+class ShaMap:
+    resolved: Mapping[str, str]  # token -> real full object id (or the token itself if ambiguous)
+    pseudo: Mapping[str, str]  # real full object id (or ambiguous token) -> 40-hex pseudonym
+
+
+def sha_map(resolved: Mapping[str, str]) -> ShaMap:
+    keys = sorted(set(resolved.values()))
+    return ShaMap(dict(resolved), {k: sha_pseudonym(i) for i, k in enumerate(keys, start=1)})
+
+
+def sha_rule(smap: ShaMap) -> Rule:
+    def replace(m: re.Match[str]) -> str:
+        token = m.group(0)
+        key = smap.resolved.get(token)
+        return smap.pseudo[key][:len(token)] if key else token
+    return Rule("commit-sha", HEX_TOKEN_RE, replace)
+
+
+def review_rules(cfg: AliasConfig, smap: ShaMap) -> tuple[Rule, ...]:
+    return alias_rules(cfg) + (sha_rule(smap),)
+
+
+def review_denylist(cfg: AliasConfig, real_shas: Iterable[str]) -> dict:
+    return {
+        "review_literals": sorted({r for r, _ in cfg.tokens}),
+        "review_regexes": sorted({phrase_regex(r) for r, _ in cfg.phrases}),
+        "review_shas": sorted(set(real_shas)),
+    }
+
+
+def scan_shas(text: str, real_shas: frozenset[str], prefixes: frozenset[str]) -> tuple[Finding, ...]:
+    """Any hex token of 7+ chars that abbreviates a real object id is a leak."""
+    return tuple(
+        Finding("real-sha", text.count("\n", 0, m.start()) + 1, m.group(0))
+        for m in HEX_TOKEN_RE.finditer(text)
+        if m.group(0)[:7] in prefixes and any(s.startswith(m.group(0)) for s in real_shas)
+    )
