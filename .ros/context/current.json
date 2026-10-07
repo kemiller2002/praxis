@@ -4938,7 +4938,27 @@
       "updatedAt": "2026-10-07T21:26:13.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T212613734Z-5add0863"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "8dae5d2ca4baa0400081286f",
+        "recordedAt": "2026-10-07T21:31:14.000Z",
+        "executionId": "EXE-20261007T212613734Z-5add0863",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-3",
+        "commit": "56d16c5abb73de6beb497c1f2349cee94b085815",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-3",
+        "remoteCommit": "56d16c5abb73de6beb497c1f2349cee94b085815",
+        "summary": "work group remove implemented with domain, application, JSON, CLI, docs and 8 tests; build ok, 833/833 tests pass, ./ros validate passes",
+        "nextAction": "write and commit the PRAXIS-GROUP-04 structured handoff, then complete the item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",

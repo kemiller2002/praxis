@@ -2,9 +2,9 @@
   "schemaVersion": "1.0.0",
   "experimentId": "EX-ROS-2026-A024",
   "arm": "structured-handoff",
-  "completedItem": "PRAXIS-GROUP-03",
+  "completedItem": "PRAXIS-GROUP-04",
   "baselineCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
-  "headCommit": "bffeedc6da01b32a8986e5936f6768eae7f0e026",
+  "headCommit": "56d16c5abb73de6beb497c1f2349cee94b085815",
   "decisions": [
     {
       "topic": "Storage location and format of declared groups",
@@ -77,8 +77,8 @@
       ]
     },
     {
-      "topic": "Where per-member add provenance lives",
-      "decision": "In the stored group entry, not in .ros/events/events.jsonl: StoredGroup.Membership is a MembershipChange list {Member; Operation: MembershipOperation; OccurredAt; Actor} appended oldest-first. MembershipOperation currently has only Added (code 'added', tryParse); PRAXIS-GROUP-04 should add Removed there (code 'removed') rather than a new structure. The planner ignores membership (GroupStore.declarations returns only Declaration).",
+      "topic": "Where per-member add/remove provenance lives",
+      "decision": "In the stored group entry, not in .ros/events/events.jsonl: StoredGroup.Membership is a MembershipChange list {Member; Operation: MembershipOperation; OccurredAt; Actor} appended oldest-first and never rewritten. MembershipOperation is Added ('added') | Removed ('removed'), parsed by MembershipOperation.tryParse over MembershipOperation.all. The planner ignores membership (GroupStore.declarations returns only Declaration).",
       "evidencePaths": [
         "src/Ros.Domain/Planning/GroupDeclaration.fs",
         "src/Ros.Contracts/Planning/PlanningJson.fs"
@@ -118,10 +118,43 @@
     },
     {
       "topic": "validate findings for membership history",
-      "decision": "GroupDeclaration.findings additionally reports (field groups[ID].membership) a change with empty occurredAt, and a member whose LATEST change is Added but who is not in members. Grouping by member and taking the last change is deliberate so a later Removed change will not be a finding.",
+      "decision": "GroupDeclaration.findings additionally reports (field groups[ID].membership) a change with empty occurredAt, a member whose LATEST change is Added but who is not in members, and a member whose LATEST change is Removed but who is still in members. Only each member's latest change counts, so remove-then-add (or add-then-remove) histories are valid.",
       "evidencePaths": [
         "src/Ros.Domain/Planning/GroupDeclaration.fs",
         "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "Removing the last member",
+      "decision": "Refused, with no override flag: GroupRejection.LastMember(id, group). A stored group with no members is already a validate finding ('a stored group has no members') and create refuses NoMembers, so a group always keeps at least one member. To retire a group entirely there is no command yet.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "work group remove semantics and refusal order",
+      "decision": "GroupDeclaration.removeRejections store groupId memberId returns exactly one reason: UnknownGroup (group absent), else NotMember(member, group), else LastMember(member, group), else []. The member's own state is NOT an input: open, terminal and unknown members may all be removed. GroupDeclaration.removeMember store removedAt removedBy groupId memberId filters the member out of Declaration.Members (others keep order; no other declaration field, DeclaredAt or DeclaredBy changes), appends a MembershipChange Removed, and replaces the group via GroupStore.replace. A removed item can be re-added with work group add (subject to add's checks).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "work group remove application operation",
+      "decision": "WorkGroupOperations.remove (port: WorkGroupPort) (request: GroupRemoveRequest) reads the store and member states via port.Queue/port.Live only (no PlanningReadPort, no --config, since removal needs no repository check), and writes only via port.WriteStore unless DryRun. Outcomes: GroupRemoveOutcome.Rejected | Planned(StoredGroup, RemovedMember) | Recorded(StoredGroup, RemovedMember); RemovedMember = {Change; State} where State is the item's own recorded state code or 'unknown'. GroupRemoveRequest has the same field names as GroupAddRequest (and RemovedMember shares Change/State with AddedMember), so record constructions are type-annotated (': GroupAddRequest', ': GroupRemoveRequest', ': AddedMember') to keep F# inference unambiguous.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs"
+      ]
+    },
+    {
+      "topic": "work group remove CLI shape and exit codes",
+      "decision": "ros work group remove --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]; exactly one --id and one --member; --cross-repository and --config are argument errors. Dispatched in Program.fs through ProvenanceCommands.withResolvedActor (before 'work group show'). Exit 0 removed/dry-run, 1 refusal (unknown group, non-member, last member) or IO error, 2 argument error. --json kinds member-removed {dryRun, recorded, group (storedGroupNode of the updated group), member{id,state}, change} and member-removal-rejected {id, member, recorded:false, errors}. add and remove share the private WorkGroupCommands.memberChange parser for --id/--member/--occurred-at/--cross-repository/stray tokens; add layers --config on top. WorkGroupCommands.usage = createUsage | addUsage | removeUsage | showUsage.",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "docs/cli.md"
       ]
     }
   ],
@@ -190,6 +223,20 @@
       "statement": "The planner and work group add resolve an item's execution repository with the same function (Grouping.executionLocation); do not duplicate that rule.",
       "evidencePaths": [
         "src/Ros.Domain/Planning/Grouping.fs"
+      ]
+    },
+    {
+      "statement": "work group remove writes only the group store: queue.json and context/current.json are byte-identical after a CLI remove; refusals (non-member, unknown group, last member), --dry-run and argument errors leave the whole-fixture fingerprint unchanged; the operation test counts zero writes for refusal and dry run.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "After remove, GroupStore.declarations equals the plain declaration without the member, the store with a Removed change round-trips through renderGroupStore/parseGroupStore, and the result has no validate findings; re-adding the member also has none.",
+      "evidencePaths": [
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
       ]
     }
   ],
@@ -262,7 +309,7 @@
     {
       "name": "MembershipOperation / MembershipChange, StoredGroup.Membership",
       "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
-      "purpose": "Per-member provenance history on a stored group; extend MembershipOperation with Removed for PRAXIS-GROUP-04."
+      "purpose": "Per-member provenance history on a stored group: Added and Removed. Add new operations here (code + all) if a later command changes membership."
     },
     {
       "name": "GroupStore.replace",
@@ -272,7 +319,7 @@
     {
       "name": "GroupDeclaration.addRejections / addMember (private groupLocations, repositoryRejection, memberRejections)",
       "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
-      "purpose": "Pure add validation and update; template for removeRejections/removeMember (NotMember, LastMember cases)."
+      "purpose": "Pure add validation and update (repository check via locate)."
     },
     {
       "name": "Grouping.executionLocation",
@@ -298,10 +345,34 @@
       "name": "WorkGroupTests add fixtures (locate, addStates, addTo, baseStore, addRejected)",
       "path": "tests/Ros.Tests/WorkGroupTests.fs",
       "purpose": "Domain fixtures with E-1 (echelon) and X-1 (unknown external) items for repository checks; CLI tests write a --config file outside the fixture root so the fingerprint is unaffected."
+    },
+    {
+      "name": "GroupDeclaration.removeRejections / removeMember",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Pure remove validation (UnknownGroup, NotMember, LastMember) and update appending a Removed change."
+    },
+    {
+      "name": "GroupRemoveRequest, RemovedMember, GroupRemoveOutcome, WorkGroupOperations.remove",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Read-validate-write with dry-run over WorkGroupPort alone (no planner); template for a store-only group mutation."
+    },
+    {
+      "name": "PlanningJson.renderMemberRemoved, renderMemberRemovalRejected",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for remove results (member-removed / member-removal-rejected)."
+    },
+    {
+      "name": "WorkGroupCommands.memberChange, removeFlags, renderRemove, remove",
+      "path": "src/Ros.Cli/WorkGroupCommands.fs",
+      "purpose": "Shared one-member argument parsing for add/remove and the remove CLI."
+    },
+    {
+      "name": "WorkGroupTests remove fixtures (removeFrom, twoMemberStore, removeRejected, removeTests)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "Domain fixtures for remove; CLI tests use fixture/fingerprint/memberFiles with a second single-member group GROUP-FIXTURE-SOLO-001 for the last-member refusal."
     }
   ],
   "changedPaths": [
-    "src/Ros.Domain/Planning/Grouping.fs",
     "src/Ros.Domain/Planning/GroupDeclaration.fs",
     "src/Ros.Application/Planning/WorkGroups.fs",
     "src/Ros.Contracts/Planning/PlanningJson.fs",
@@ -314,29 +385,24 @@
   "verification": {
     "acceptanceStatus": [
       {
-        "criterion": "Refuses unknown and terminal items",
+        "criterion": "Refuses non-members",
         "status": "pass",
-        "evidence": "WorkGroupTests 'add: refuses unknown and terminal items' and 'cli: add refusals and --dry-run write nothing; argument errors exit 2'"
+        "evidence": "WorkGroupTests 'remove: refuses non-members and unknown groups', 'remove operation: ...' (NotMember outcome) and 'cli: remove refusals and --dry-run write nothing; argument errors exit 2' (TASK-X, NOPE-9 exit 1, kind member-removal-rejected)"
       },
       {
-        "criterion": "Refuses items already present",
+        "criterion": "Removal never changes the item's lifecycle state, evidence or attribution",
         "status": "pass",
-        "evidence": "WorkGroupTests 'add: refuses an item already present and an unknown group' and CLI refusal of TASK-A"
+        "evidence": "'cli: remove records provenance and changes no member's state' (memberFiles hashes of queue.json and context/current.json unchanged); WorkGroupPort's only write is the group store; removeMember takes no member state"
       },
       {
-        "criterion": "Refuses an item whose execution repository differs unless the group is cross-repository",
+        "criterion": "Removing the last member is refused or explicit",
         "status": "pass",
-        "evidence": "WorkGroupTests 'add: refuses another repository's item unless the group is cross-repository', 'add operation: repositories come from the planner configuration and only the store is written', and CLI --config mismatch case"
+        "evidence": "Refused: 'remove: refuses the last member' (GroupRejection.LastMember) and CLI GROUP-FIXTURE-SOLO-001 exit 1 with 'last member' on stderr, store unchanged"
       },
       {
-        "criterion": "Records who added it (provenance)",
+        "criterion": "Provenance recorded",
         "status": "pass",
-        "evidence": "WorkGroupTests 'add: appends the member and records who added it...' and 'cli: add records the member with provenance and changes no member's state' (membership[].actor.id = test/agent)"
-      },
-      {
-        "criterion": "Member lifecycle untouched",
-        "status": "pass",
-        "evidence": "memberFiles hash unchanged after CLI add; fingerprint unchanged for refusals/dry-run; port write counter"
+        "evidence": "'remove: drops the member ... records who removed it' and CLI test: membership[] gains {member: TASK-B, operation: removed, occurredAt, actor.id test/agent}"
       }
     ],
     "testsRun": [
@@ -346,7 +412,7 @@
       },
       {
         "command": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll",
-        "result": "825 tests; 825 passed; 0 failed (9 new add tests)"
+        "result": "833 tests; 833 passed; 0 failed (8 new remove tests)"
       },
       {
         "command": "./ros validate",
@@ -360,8 +426,9 @@
   },
   "unresolvedRisks": [
     "The group store write has no lock or journal (temp file then rename only); concurrent group commands could lose an update.",
-    "Without --config, add only knows this repository and 'external repository' descriptions; an item executing elsewhere but undeclared is treated as local. show still ignores --config/--observations.",
+    "Without --config, add only knows this repository and 'external repository' descriptions; an item executing elsewhere but undeclared is treated as local. show and remove ignore --config/--observations (remove needs no repository check).",
     "create still does not run the repository check that add runs, so a group can be created with mixed repositories that add would refuse.",
+    "There is no command to retire or delete a whole group; remove refuses the last member.",
     "Node's validate (tools/ros_cli.mjs) does not know groups.json; differential tests stay equal only while fixtures lack groups.json.",
     "The local branch ref in a fresh checkout may be stale relative to origin and HEAD may be detached; this session fast-forwarded experiment/a024-arm-3 to HEAD before pushing. Checkpoints require a named branch.",
     "The work item descriptions say this must not be merged before EX-ROS-2026-A021 is evaluated and the owner accepts phase two."
@@ -374,15 +441,15 @@
       "Record membership changes as MembershipChange entries in StoredGroup.Membership (append-only, oldest first); never rewrite earlier entries.",
       "A member becoming terminal after declaration is partial completion, not a validate finding (PRX-GRP-042).",
       "PRAXIS-GROUP-05 must reuse work checkpoint's durable-checkpoint verification and reference, never replace, members' own checkpoints.",
-      "Add new 'work group' subcommands in WorkGroupCommands with their own usage string and flag set (parseWith), appended to WorkGroupCommands.usage, dispatched in Program.fs beside create/add/show (before 'work checkpoint')."
+      "Add new 'work group' subcommands in WorkGroupCommands with their own usage string and flag set (parseWith), appended to WorkGroupCommands.usage, dispatched in Program.fs beside create/add/remove/show (before 'work checkpoint').",
+      "Record-type field names overlap across GroupAddRequest/GroupRemoveRequest and AddedMember/RemovedMember; annotate record constructions with their type when adding further request or result records."
     ],
     "likelyReuse": [
-      "PRAXIS-GROUP-04 remove: add MembershipOperation.Removed ('removed'); new GroupRejection cases NotMember and (if refused) LastMember next to AlreadyMember; GroupStore.tryFind/replace; a removeMember mirroring addMember (filter Members, append change); WorkGroupOperations.remove mirroring add (gather may be unnecessary if no repository check is needed - port.Queue/Live suffice); renderMemberAdded/renderMemberRejected patterns; findings already use each member's latest change.",
       "PRAXIS-GROUP-05 checkpoint: WorkGroupOperations.show / GroupView.build give active, completed and remaining members via GroupView.statusCode; member checkpoints are on PlanningLiveItem.Checkpoint from FilePlanningRepository.readLive; durable verification in CheckpointCommands / Application Work/Checkpoint.fs.",
-      "Test helpers: fixture, fingerprint, memberFiles, createArguments, executor, and the add fixtures (addStates, addTo, baseStore) in tests/Ros.Tests/WorkGroupTests.fs."
+      "Test helpers: fixture, fingerprint, memberFiles, createArguments, executor, the add fixtures (addStates, addTo, baseStore) and remove fixtures (removeFrom, twoMemberStore) in tests/Ros.Tests/WorkGroupTests.fs.",
+      "PRAXIS-GROUP-05 checkpoint: if it records anything on the stored group, follow the remove pattern (WorkGroupOperations.remove: port-only read-validate-write with dry-run, refusal exit 1, argument error exit 2, --json kinds with schema praxis.work-groups/1.0.0)."
     ],
     "openQuestions": [
-      "Should removing the last member be refused or require an explicit flag (PRAXIS-GROUP-04 allows either)?",
       "Should create run the same repository check as add (Grouping.executionLocation) for consistency with PRX-GRP-051?",
       "Should show accept --config/--observations to mirror plan groups and add?"
     ]
