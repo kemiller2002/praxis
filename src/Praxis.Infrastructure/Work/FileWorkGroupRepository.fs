@@ -23,17 +23,20 @@ module FileWorkGroupRepository =
         if File.Exists file then Some(WorkGroupJson.parseStore (File.ReadAllText(file, Encoding.UTF8)))
         else None
 
-    /// Every stored group; no file means none.
-    let read (root: string) : Result<StoredWorkGroup list, string> =
+    /// The whole store; no file means no groups and no references.
+    let readStore (root: string) : Result<GroupStore, string> =
         let file = path root
 
         if not (File.Exists file) then
-            Ok []
+            Ok { Groups = []; References = [] }
         else
             try
-                WorkGroupJson.readStore (File.ReadAllText(file, Encoding.UTF8)) |> Result.mapError (fun message -> $"{relativePath}: {message}")
+                WorkGroupJson.readGroupStore (File.ReadAllText(file, Encoding.UTF8)) |> Result.mapError (fun message -> $"{relativePath}: {message}")
             with error ->
                 Error $"cannot read {relativePath}: {error.Message}"
+
+    /// Every stored group; no file means none.
+    let read (root: string) : Result<StoredWorkGroup list, string> = readStore root |> Result.map (fun store -> store.Groups)
 
     let private writeAtomic (file: string) (content: string) : Result<unit, string> =
         let directory = Path.GetDirectoryName file
@@ -52,24 +55,30 @@ module FileWorkGroupRepository =
 
             Error $"cannot write {relativePath}: {error.Message}"
 
-    let write (root: string) (groups: StoredWorkGroup list) : Result<unit, string> =
-        writeAtomic (path root) (WorkGroupJson.renderStore groups)
+    let writeStore (root: string) (store: GroupStore) : Result<unit, string> =
+        writeAtomic (path root) (WorkGroupJson.renderGroupStore store)
 
-    /// Reads, decides and (unless `dryRun`) writes under the `work-groups`
-    /// lock, so concurrent group commands never lose each other's changes.
-    /// `decide` returns the new store and a command-specific outcome.
-    let transact (root: string) (dryRun: bool) (decide: StoredWorkGroup list -> Result<StoredWorkGroup list * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
+    /// Reads, decides and (unless `dryRun`, or the store is unchanged)
+    /// writes under the `work-groups` lock, so concurrent group commands
+    /// never lose each other's changes. `decide` returns the new store and
+    /// a command-specific outcome.
+    let transactStore (root: string) (dryRun: bool) (decide: GroupStore -> Result<GroupStore * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
         match RegistryLock.acquire root "work-groups" RegistryLock.defaultSettings with
         | Error failure -> Error failure.Message
         | Ok lease ->
             let result =
-                read root
-                |> Result.bind (fun groups ->
-                    match decide groups with
+                readStore root
+                |> Result.bind (fun store ->
+                    match decide store with
                     | Error rejection -> Ok(Error rejection)
                     | Ok(_, outcome) when dryRun -> Ok(Ok outcome)
-                    | Ok(updated, outcome) -> write root updated |> Result.map (fun () -> Ok outcome))
+                    | Ok(updated, outcome) when updated = store -> Ok(Ok outcome)
+                    | Ok(updated, outcome) -> writeStore root updated |> Result.map (fun () -> Ok outcome))
 
             match lease.Release(), result with
             | Error failure, Ok _ -> Error failure.Message
             | _, value -> value
+
+    /// `transactStore` over the groups alone; references are kept as read.
+    let transact (root: string) (dryRun: bool) (decide: StoredWorkGroup list -> Result<StoredWorkGroup list * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
+        transactStore root dryRun (fun store -> decide store.Groups |> Result.map (fun (groups, outcome) -> { store with Groups = groups }, outcome))
