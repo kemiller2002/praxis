@@ -68,6 +68,7 @@
     <Compile Include="Execution/ExecutionStore.fs" />
     <Compile Include="Tutela/TutelaStore.fs" />
     <Compile Include="Execution/ExecutionContracts.fs" />
+    <Compile Include="Execution/FileExecutionPorts.fs" />
     <Compile Include="Installation/AdministrationClient.fs" />
     <Compile Include="Identity/FileInstanceProjection.fs" />
     <Compile Include="Work/FileWorkGroupRepository.fs" />

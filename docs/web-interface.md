@@ -139,6 +139,40 @@ Errors are `4xx` with `{"error": "..."}`, where the message is the CLI's own
 `ERROR` line; an unknown `/api/...` route is `404`, as is an unknown
 attachment.
 
+## Executions: the local control plane and operator views
+
+The same host serves governed executions (`docs/execution-runtime.md`,
+PRX-CTL-001/005, PRX-UI-001/020). Every route runs `praxis execution ...
+--json` and returns or renders exactly what the CLI computed: legal actions,
+their reasons and actor requirements come from `LegalActions`, never from the
+host (PRX-UI-034, PRX-CTL-006).
+
+| Method | Path | Runs |
+|---|---|---|
+| `GET` | `/api/control-plane` | the declared listen scope (`praxis.control-plane/1`: host, port, `loopbackOnly`, authentication none) |
+| `GET` | `/api/executions?workItem=ID` | `praxis execution list [--work-item ID] --json` |
+| `GET` | `/api/executions/:id` | `praxis execution show ID --json`: envelope, actor and execution host, role, steps with receipt state and attributions, scope effects, verification, divergence, containment profile, legal actions |
+| `GET` | `/api/executions/:id/actions` | `praxis execution actions ID --json` |
+| `POST` | `/api/executions/:id/transitions` `{action, reason?}` | `praxis execution transition ID --action ACTION` (or `rebind`); answers the new state, or `409 {"error", "refused": true}` for a governance refusal (exit 3) with nothing changed |
+| `GET` | `/executions/:id` | the execution page |
+| `POST` | `/executions/:id/transitions` (form) | the same transition, then a redirect with the CLI's notice or error |
+
+The work detail page lists the item's executions. The execution page shows
+state and blocked reason, actor and execution host (provider, model and
+runtime are attributes of the actor, never the owner of the work,
+PRX-CTL-012), evaluator and verification, step receipts labelled `receipt
+matches`, `receipt mismatch` or `unknown effect`, obligations (unresolved
+scope effects, workspace divergence), unknown effects, containment per
+restriction, and every legal action with its availability, the engine's
+reasons when unavailable, and who may take it (PRX-UI-007/021). A
+human-required action is labelled `human required` in text (PRX-UI-026); its
+form asks for the operator's name and a confirmation and records the
+transition as a human actor (`--actor-kind human --actor NAME`) through the
+same CLI path, so it carries normal provenance (PRX-UI-004/027). Like all
+Praxis identity, that declaration is self-reported, not authenticated: the
+server has no authentication and binds to loopback by default. Requests made
+through the JSON API carry the server process's own identity.
+
 ## Tests
 
 `tests/Praxis.Tests/WebInterfaceTests.fs` unit-tests the pure pieces (escaping,
@@ -151,3 +185,7 @@ multipart uploads (several files, custom names, duplicate display names,
 byte-for-byte download), the HTML form flows (capture with a file, redirects
 carrying the CLI's own errors, clearing tags, completing with evidence), and
 that no page carries script and hostile titles are escaped.
+`tests/Praxis.Tests/WebExecutionTests.fs` covers the execution routes: a
+work-bound execution listed with legal actions, reasons and actor
+requirements, the declared listen scope, a refused transition as a `409`
+with state unchanged, and a human form transition recorded as a human.

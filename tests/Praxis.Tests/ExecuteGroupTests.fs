@@ -125,9 +125,10 @@ module ExecuteGroupTests =
                   let context = JsonNode.Parse(File.ReadAllText(Path.Combine(clone, ".ros", "context", "current.json")))
                   Assert.equal "active" (text (context["workItems"].AsArray() |> Seq.find (fun node -> text node["id"] = "ITEM-1")).["semanticState"])
 
-                  // Only work begin's own files and the group store changed.
+                  // Only work begin's own files and the group store changed. work begin
+                  // binds an execution envelope under .ros/executions/ (PRAXIS-EXEC-01).
                   let allowed (path: string) =
-                      path.StartsWith ".ros/telemetry/executions/" || List.contains path [ ".ros/work/queue.json"; ".ros/work/queue.md"; ".ros/context/current.json"; ".ros/events/events.jsonl"; ".ros/work/groups.json" ]
+                      path.StartsWith ".ros/telemetry/executions/" || path.StartsWith ".ros/executions/" || List.contains path [ ".ros/work/queue.json"; ".ros/work/queue.md"; ".ros/context/current.json"; ".ros/events/events.jsonl"; ".ros/work/groups.json" ]
 
                   Assert.isTrue (changedPaths clone |> List.forall allowed) $"{changedPaths clone}"
                   Assert.equal (branch, head) (GitFixture.git clone [ "rev-parse"; "--abbrev-ref"; "HEAD" ], GitFixture.git clone [ "rev-parse"; "HEAD" ])

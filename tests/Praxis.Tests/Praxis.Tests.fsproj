@@ -110,6 +110,9 @@
     <Compile Include="TelemetrySegmentationTests.fs" />
     <Compile Include="RecoveryProofTests.fs" />
     <Compile Include="ExecutionGovernanceTests.fs" />
+    <Compile Include="ExecutionRuntimeTests.fs" />
+    <Compile Include="ExecutionBindingTests.fs" />
+    <Compile Include="WebExecutionTests.fs" />
     <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="CommitOwnershipTests.fs" />
     <Compile Include="WorkAbandonTests.fs" />

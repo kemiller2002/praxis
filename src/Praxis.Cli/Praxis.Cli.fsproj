@@ -39,12 +39,14 @@
     <Compile Include="ArchitectureCommands.fs" />
     <Compile Include="WebHttp.fs" />
     <Compile Include="CliProcess.fs" />
+    <Compile Include="WebExecutions.fs" />
     <Compile Include="WebInterface.fs" />
     <Compile Include="Hub.fs" />
     <Compile Include="CheckpointCommands.fs" />
     <Compile Include="QualityEvidenceCommands.fs" />
     <Compile Include="RemoteCommands.fs" />
     <Compile Include="ExecutionCommands.fs" />
+    <Compile Include="ExecutionBindingCommands.fs" />
     <Compile Include="InstallationCommands.fs" />
     <Compile Include="IdentityCommands.fs" />
     <Compile Include="PlanCommands.fs" />
