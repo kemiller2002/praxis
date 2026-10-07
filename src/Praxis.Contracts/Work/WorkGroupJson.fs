@@ -75,6 +75,51 @@ module WorkGroupJson =
               "remoteBranch", text location.RemoteBranch
               "remoteCommit", text location.RemoteCommit.Value ]
 
+    /// A dated observation of a member repository (PRX-GRP-103). Labelled
+    /// an observation: never a verification of another repository.
+    let observationNode (observation: MemberObservation) : JsonNode =
+        record
+            [ yield "member", text observation.Member
+              yield "repository", text observation.Repository
+              yield "workItemId", text observation.WorkItemId
+              yield "kind", text "observation"
+              yield "method", text observation.Method
+              yield "ref", optionalText observation.Ref
+              yield "commit", optionalText observation.Commit
+              yield "observedAt", text observation.ObservedAt
+              yield "sourceAsOf", optionalText observation.SourceAsOf
+              match observation.Outcome with
+              | ObservedMember.Read state ->
+                  yield "verified", boolean true
+                  yield "state", optionalText state
+                  yield "unobservable", null
+              | ObservedMember.Unobservable why ->
+                  yield "verified", boolean false
+                  yield "state", null
+                  yield "unobservable", (record [ "code", text (Unobservable.code why); "reason", text (Unobservable.reason why) ] :> JsonNode)
+              yield
+                  "latestCheckpoint",
+                  (match observation.LatestCheckpoint with
+                   | Some(id, commit, branch) -> record [ "id", text id; "commit", text commit; "branch", text branch ] :> JsonNode
+                   | None -> null)
+              yield "pullRequest", null
+              yield "linked", (observation.Linked |> Option.map boolean |> Option.toObj) ]
+
+    let dependencyNode (dependency: MemberDependency) : JsonNode =
+        record
+            [ "consumer", text dependency.Consumer
+              "producer", text dependency.Producer
+              "milestone", text (ProducerMilestone.code dependency.Milestone) ]
+
+    let referenceNode (reference: GroupReference) : JsonNode =
+        record
+            [ "groupId", text reference.GroupId
+              "homeRepository", text reference.HomeRepository
+              "workItemId", text reference.WorkItemId
+              "linkedAt", text reference.LinkedAt
+              "actor", (ActorJson.node reference.Actor :> JsonNode)
+              "executionId", optionalText reference.ExecutionId ]
+
     let checkpointNode (checkpoint: GroupCheckpoint) : JsonNode =
         record
             [ "id", text checkpoint.CheckpointId
@@ -96,19 +141,30 @@ module WorkGroupJson =
               |> List.map (fun reference ->
                   record [ "workItemId", text reference.WorkItemId; "checkpointId", text reference.CheckpointId; "commit", text reference.Commit ] :> JsonNode)
               |> array
+              "memberObservations", checkpoint.MemberObservations |> List.map observationNode |> array
               "location", locationNode checkpoint.Location
               "verification", (record [ "status", text "verified"; "mechanism", text "git-remote-observation" ] :> JsonNode) ]
 
     let groupNode (group: StoredWorkGroup) : JsonObject =
         record
             [ yield! declarationFields group.Declaration
+              yield "homeRepository", optionalText group.HomeRepository
+              yield "dependencies", group.Dependencies |> List.map dependencyNode |> array
+              yield "verifications", group.Verifications |> List.map observationNode |> array
               yield "createdAt", text group.CreatedAt
               yield "createdBy", (ActorJson.node group.CreatedBy :> JsonNode)
               yield "history", group.History |> List.map historyNode |> array
               yield "checkpoints", group.Checkpoints |> List.map checkpointNode |> array ]
 
-    let storeNode (groups: StoredWorkGroup list) : JsonNode =
-        record [ "schemaVersion", integer schemaVersion; "groups", groups |> List.map (groupNode >> fun node -> node :> JsonNode) |> array ]
+    let groupStoreNode (store: GroupStore) : JsonNode =
+        record
+            [ "schemaVersion", integer schemaVersion
+              "groups", store.Groups |> List.map (groupNode >> fun node -> node :> JsonNode) |> array
+              "references", store.References |> List.map referenceNode |> array ]
+
+    let storeNode (groups: StoredWorkGroup list) : JsonNode = groupStoreNode { Groups = groups; References = [] }
+
+    let renderGroupStore (store: GroupStore) = render (groupStoreNode store)
 
     let renderStore (groups: StoredWorkGroup list) = render (storeNode groups)
 
@@ -248,6 +304,96 @@ module WorkGroupJson =
                   RemoteCommit = value remoteCommit }
         | errors -> Error(errors |> List.distinct)
 
+    let private all (read: JsonObject -> Result<'a, string list>) (entries: JsonObject list) : Result<'a list, string list> =
+        let results = entries |> List.map read
+        let errors = results |> List.collect (function Error problems -> problems | Ok _ -> [])
+        if errors.IsEmpty then Ok(results |> List.choose (function Ok value -> Some value | Error _ -> None)) else Error errors
+
+    let private listOf (node: JsonObject) (name: string) (read: JsonObject -> Result<'a, string list>) : Result<'a list, string list> =
+        objects node name |> Result.mapError List.singleton |> Result.bind (all read)
+
+    let readObservation (node: JsonObject) : Result<MemberObservation, string list> =
+        let memberId = requiredText node "member"
+        let repository = requiredText node "repository"
+        let workItemId = requiredText node "workItemId"
+        let method' = requiredText node "method"
+        let ref' = optionalString node "ref"
+        let commitId = optionalString node "commit"
+        let observedAt = requiredText node "observedAt"
+        let asOf = optionalString node "sourceAsOf"
+        let verified = flag node "verified"
+        let state = optionalString node "state"
+
+        let outcome =
+            match verified, field node "unobservable" with
+            | Ok true, _ -> state |> Result.map ObservedMember.Read
+            | Ok false, Some(:? JsonObject as why) ->
+                match requiredText why "code", requiredText why "reason" with
+                | Ok code, Ok reason ->
+                    Unobservable.tryCreate code reason
+                    |> Option.map (ObservedMember.Unobservable >> Ok)
+                    |> Option.defaultValue (Error $"unobservable code '{code}' is not recognized")
+                | _ -> Error "unobservable needs code and reason"
+            | Ok false, _ -> Error "an unverified observation needs unobservable {code, reason}"
+            | Error message, _ -> Error message
+
+        let latest =
+            match field node "latestCheckpoint" with
+            | None -> Ok None
+            | Some(:? JsonObject as checkpoint) ->
+                match requiredText checkpoint "id", requiredText checkpoint "commit", requiredText checkpoint "branch" with
+                | Ok id, Ok commitId, Ok branch -> Ok(Some(id, commitId, branch))
+                | _ -> Error "latestCheckpoint needs id, commit and branch"
+            | Some _ -> Error "latestCheckpoint must be an object or null"
+
+        let linked =
+            match field node "linked" with
+            | None -> Ok None
+            | Some _ -> flag node "linked" |> Result.map Some
+
+        match errorsOf [ boxed memberId; boxed repository; boxed workItemId; boxed method'; boxed ref'; boxed commitId; boxed observedAt; boxed asOf; boxed outcome; boxed latest; boxed linked ] with
+        | [] ->
+            Ok
+                { Member = value memberId
+                  Repository = value repository
+                  WorkItemId = value workItemId
+                  Method = value method'
+                  Ref = value ref'
+                  Commit = value commitId
+                  ObservedAt = value observedAt
+                  SourceAsOf = value asOf
+                  Outcome = value outcome
+                  LatestCheckpoint = value latest
+                  Linked = value linked }
+        | errors -> Error errors
+
+    let readDependency (node: JsonObject) : Result<MemberDependency, string list> =
+        match requiredText node "consumer", requiredText node "producer", requiredText node "milestone" with
+        | Ok consumer, Ok producer, Ok raw ->
+            match ProducerMilestone.tryParse raw with
+            | Some milestone -> Ok { Consumer = consumer; Producer = producer; Milestone = milestone }
+            | None -> Error [ $"milestone '{raw}' is not complete, merged or released:TAG" ]
+        | consumer, producer, milestone -> Error(errorsOf [ boxed consumer; boxed producer; boxed milestone ])
+
+    let readReference (node: JsonObject) : Result<GroupReference, string list> =
+        let groupId = requiredText node "groupId"
+        let home = requiredText node "homeRepository"
+        let workItemId = requiredText node "workItemId"
+        let linkedAt = requiredText node "linkedAt"
+        let who = actor node "actor"
+        let executionId = optionalString node "executionId"
+
+        match errorsOf [ boxed groupId; boxed home; boxed workItemId; boxed linkedAt; boxed who; boxed executionId ] with
+        | [] ->
+            Ok
+                { GroupId = value groupId
+                  HomeRepository = value home
+                  WorkItemId = value workItemId
+                  LinkedAt = value linkedAt
+                  Actor = value who
+                  ExecutionId = value executionId }
+        | errors -> Error errors
+
     let readCheckpoint (node: JsonObject) : Result<GroupCheckpoint, string list> =
         let id = requiredText node "id"
         let recordedAt = requiredText node "recordedAt"
@@ -270,13 +416,14 @@ module WorkGroupJson =
                 |> List.fold (fun state next -> match state, next with | Ok values, Ok value -> Ok(values @ [ value ]) | Error message, _ | _, Error message -> Error message) (Ok []))
 
         let location = child node "location" |> Result.mapError List.singleton |> Result.bind readLocation
+        let observations = listOf node "memberObservations" readObservation
 
         let scalar =
             errorsOf [ boxed id; boxed recordedAt; boxed who; boxed summary; boxed nextAction; boxed decisions; boxed completed; boxed active; boxed blocked; boxed remaining; boxed abandoned; boxed references ]
             |> List.distinct
 
-        match scalar, location with
-        | [], Ok location ->
+        match scalar, location, observations with
+        | [], Ok location, Ok observations ->
             Ok
                 { CheckpointId = value id
                   RecordedAt = value recordedAt
@@ -290,8 +437,10 @@ module WorkGroupJson =
                   Remaining = value remaining
                   Abandoned = value abandoned
                   MemberCheckpoints = value references
+                  MemberObservations = observations
                   Location = location }
-        | errors, location -> Error(errors @ (match location with Error problems -> problems | Ok _ -> []))
+        | errors, location, observations ->
+            Error(errors @ (match location with Error problems -> problems | Ok _ -> []) @ (match observations with Error problems -> problems | Ok _ -> []))
 
     /// One stored group, or every problem with it.
     let readGroup (node: JsonObject) : Result<StoredWorkGroup, string list> =
@@ -315,24 +464,32 @@ module WorkGroupJson =
                 let errors = read |> List.collect (function Error problems -> problems | Ok _ -> [])
                 if errors.IsEmpty then Ok(read |> List.choose (function Ok checkpoint -> Some checkpoint | Error _ -> None)) else Error errors)
 
-        let scalarErrors = errorsOf [ boxed createdAt; boxed createdBy ]
+        let home = optionalString node "homeRepository"
+        let dependencies = listOf node "dependencies" readDependency
+        let verifications = listOf node "verifications" readObservation
+        let scalarErrors = errorsOf [ boxed createdAt; boxed createdBy; boxed home ]
 
-        match declaration, history, checkpoints, scalarErrors with
-        | Ok declaration, Ok history, Ok checkpoints, [] ->
+        match declaration, history, checkpoints, dependencies, verifications, scalarErrors with
+        | Ok declaration, Ok history, Ok checkpoints, Ok dependencies, Ok verifications, [] ->
             Ok
                 { Declaration = declaration
+                  HomeRepository = value home
+                  Dependencies = dependencies
+                  Verifications = verifications
                   CreatedAt = value createdAt
                   CreatedBy = value createdBy
                   History = history
                   Checkpoints = checkpoints }
         | _ ->
             let problems result = match result with Error problems -> problems | Ok _ -> []
-            Error(problems declaration @ problems history @ problems checkpoints @ scalarErrors)
+            Error(problems declaration @ problems history @ problems checkpoints @ problems dependencies @ problems verifications @ scalarErrors)
 
     /// A parsed store: each group's own result, keyed by its position and
     /// (when readable) its ID, so validation can report every bad record.
     type StoreRead =
-        { Groups: (int * string option * Result<StoredWorkGroup, string list>) list }
+        { Groups: (int * string option * Result<StoredWorkGroup, string list>) list
+          /// References on this repository's items to groups homed elsewhere.
+          References: Result<GroupReference list, string list> }
 
     let parseStore (json: string) : Result<StoreRead, string> =
         try
@@ -346,7 +503,8 @@ module WorkGroupJson =
                         Ok
                             { Groups =
                                 groups
-                                |> List.mapi (fun index node -> index, field node "id" |> Option.bind stringValue, readGroup node) }
+                                |> List.mapi (fun index node -> index, field node "id" |> Option.bind stringValue, readGroup node)
+                              References = listOf root "references" readReference }
                 | _ -> Error "schemaVersion must be 1 or 2"
             | _ -> Error "the document must be a JSON object"
         with error ->
@@ -363,6 +521,17 @@ module WorkGroupJson =
                 Error $"group {name} is invalid: {joined}"
             | None -> Ok(read.Groups |> List.choose (fun (_, _, result) -> match result with Ok group -> Some group | Error _ -> None)))
 
+    /// The whole store: groups and references, or the first reason it
+    /// cannot be trusted.
+    let readGroupStore (json: string) : Result<GroupStore, string> =
+        readStore json
+        |> Result.bind (fun groups ->
+            parseStore json
+            |> Result.bind (fun read ->
+                match read.References with
+                | Ok references -> Ok { Groups = groups; References = references }
+                | Error problems -> Error $"""references are invalid: {String.concat "; " problems}"""))
+
     // ---- command views ----
 
     let rejectionNode (rejection: GroupRejection) : JsonNode =
@@ -376,7 +545,10 @@ module WorkGroupJson =
               "planningState", optionalText row.PlanningState
               "waitsOn", texts row.WaitsOn
               "waitsOnBlocked", texts row.WaitsOnBlocked
-              "gates", texts row.Gates ]
+              "gates", texts row.Gates
+              "repository", optionalText row.Repository
+              "stale", boolean row.Stale
+              "observation", (row.Observation |> Option.map observationNode |> Option.toObj) ]
 
     /// The partial-completion view (PRX-GRP-042). `complete` is true only
     /// when every member completed on its own evidence.
@@ -480,3 +652,22 @@ module WorkGroupJson =
                   ExecutionMode = value mode
                   LatestCheckpointAt = value latest }
         | errors -> Error errors
+
+    let orderNode (row: OrderRow) : JsonNode =
+        record
+            [ "consumer", text row.Dependency.Consumer
+              "producer", text row.Dependency.Producer
+              "milestone", text (ProducerMilestone.code row.Dependency.Milestone)
+              "state", text (EdgeState.code row.State)
+              "reason",
+              (match row.State with
+               | EdgeState.Unknown reason -> text reason
+               | _ -> null) ]
+
+    let repositoryProgressNode (progress: RepositoryProgress) : JsonNode =
+        record
+            [ "repository", text progress.Repository
+              "completed", integer progress.Completed
+              "total", integer progress.Total
+              "unknown", integer progress.Unknown
+              "summary", text $"{progress.Completed} of {progress.Total} complete" ]
