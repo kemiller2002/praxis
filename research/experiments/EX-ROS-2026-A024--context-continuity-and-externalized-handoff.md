@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A024
 title: "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
 research_area: repository-operating-system
-status: blocked
+status: active
 created: 2026-10-07
 author_agent: openai/chatgpt
 tests_hypotheses:
@@ -426,7 +426,14 @@ Not performed: arms B and C are not terminal. The frozen analysis
 
 ### Execution amendments (owner decision pending)
 
-None accepted. BLOCKER.txt lists the options. Any amendment is recorded here
+**Amendment A1 (accepted by the owner, 2026-10-07T20:48Z, "Try it now" in
+response to BLOCKER.txt, adopting the recommended option 1):** a session the
+platform starts on a commit other than the recorded head, which the frozen
+start check stops before any repository change, is a launcher defect and not
+an attempt; it does not consume the slot's single retry. Every later B/C
+session is launched without `outcome_branch`, using the probe-validated
+launcher. No treatment, threshold, margin, blinding rule or stop condition
+changes. BLOCKER.txt lists the options that were offered. Any amendment is recorded here
 with its date and author, below the preregistered text, and never edits it.
 
 ## Threats to validity

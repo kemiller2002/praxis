@@ -104,3 +104,15 @@ treatments, thresholds, blinding or stop rules.
   `make_manifest.py --check`, which would now report the renamed key.
 - No treatment, threshold, margin, blinding rule, stop rule or rubric content
   changed. The evaluator prompt and blinding script have not been used.
+
+## D5 — owner amendment A1 accepted; resumption (20:48Z)
+
+- The owner replied "Try it now" to the blocker, adopting option 1 (see the
+  EX record, "Execution amendments"). Pre-start launcher failures that
+  changed nothing do not consume a retry.
+- From now on every B/C session is created **without `outcome_branch`**
+  (source_revision = arm branch name). The checkout is the recorded head, as
+  a detached HEAD. Each prompt is the frozen text with START_SHA and, for the
+  arm-C item-02 slot, label `arm-3-02r2`.
+- Before each launch the orchestrator confirms the remote head with
+  `git ls-remote`. After launch it confirms that the start check passed.
