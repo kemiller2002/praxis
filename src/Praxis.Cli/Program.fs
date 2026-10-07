@@ -2962,8 +2962,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "pacing" :: rest -> PacingCommands.run root rest
-    | "sync" :: rest -> SyncCommands.run root rest
-    | "tutela" :: rest -> TutelaCommands.run root rest
+    | ("sync" | "tutela") as command :: rest -> (if command = "sync" then SyncCommands.run else TutelaCommands.run) root rest
     | "work" :: "decide" :: rest -> runWorkDecision rest
     | "work" :: "plan" :: rest -> runWorkPlan root rest
     | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
