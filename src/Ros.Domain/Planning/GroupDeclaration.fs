@@ -1,0 +1,198 @@
+namespace Ros.Domain.Planning
+
+open System
+open System.Text.RegularExpressions
+open Ros.Domain.Work
+
+// Phase two of requirements/PLANNING-WORK-GROUPS.md (PRX-GRP-073): a human
+// declares, durably in Praxis state, that work items belong together. The
+// declaration is data only. It never changes a member's lifecycle state
+// (PRX-GRP-002) and never collapses members into one item (PRX-GRP-003).
+// Everything here is pure: no clock, filesystem or Git.
+
+/// A declaration as stored in `.ros/work/groups.json`: the same
+/// `DeclaredGroup` the planner reads from `grouping.groups`, plus who
+/// declared it and when.
+type StoredGroup =
+    { Group: DeclaredGroup
+      DeclaredAt: string
+      DeclaredBy: string }
+
+/// What a work item's recorded lifecycle says about group membership.
+[<RequireQualifiedAccess>]
+type GroupMemberStatus =
+    | Open of state: string
+    | Terminal of state: string
+
+type GroupCreateRequest =
+    { Id: string
+      Members: string list
+      Kind: string option
+      ExecutionRepository: string option
+      CrossRepository: bool
+      SharedContext: string list
+      ArchitectureNotes: string list
+      DeclaredAt: string
+      DeclaredBy: string }
+
+[<RequireQualifiedAccess>]
+type GroupRejection =
+    | InvalidGroupId of id: string
+    | DuplicateGroupId of id: string
+    | TooFewMembers of count: int
+    | DuplicateMember of workItem: string
+    | UnknownMember of workItem: string
+    | TerminalMember of workItem: string * state: string
+    | UnknownKind of kind: string
+    | EmptyValue of field: string
+
+[<RequireQualifiedAccess>]
+module GroupRejection =
+    let code rejection =
+        match rejection with
+        | GroupRejection.InvalidGroupId _ -> "invalid-group-id"
+        | GroupRejection.DuplicateGroupId _ -> "duplicate-group-id"
+        | GroupRejection.TooFewMembers _ -> "too-few-members"
+        | GroupRejection.DuplicateMember _ -> "duplicate-member"
+        | GroupRejection.UnknownMember _ -> "unknown-member"
+        | GroupRejection.TerminalMember _ -> "terminal-member"
+        | GroupRejection.UnknownKind _ -> "unknown-kind"
+        | GroupRejection.EmptyValue _ -> "empty-value"
+
+    let message rejection =
+        match rejection with
+        | GroupRejection.InvalidGroupId id -> $"group ID '{id}' must look like GROUP-<AREA>-<SEQUENCE> (upper-case letters, digits and hyphens; PRX-GRP-010)"
+        | GroupRejection.DuplicateGroupId id -> $"group {id} is already declared"
+        | GroupRejection.TooFewMembers count -> $"a group needs at least two distinct members; {count} given"
+        | GroupRejection.DuplicateMember id -> $"{id} is named more than once"
+        | GroupRejection.UnknownMember id -> $"{id} is not a recorded work item (backlog or live context)"
+        | GroupRejection.TerminalMember(id, state) -> $"{id} is {state}; terminal work cannot join a group"
+        | GroupRejection.UnknownKind kind -> $"unknown group kind '{kind}'"
+        | GroupRejection.EmptyValue field -> $"{field} cannot be empty"
+
+[<RequireQualifiedAccess>]
+module GroupDeclaration =
+    let private idPattern = Regex(@"^GROUP-[A-Z0-9]+(?:-[A-Z0-9]+)+$", RegexOptions.CultureInvariant)
+
+    let isValidId (id: string) = idPattern.IsMatch id
+
+    let private liveCode state =
+        match state with
+        | LiveWorkState.Ready -> "ready"
+        | LiveWorkState.Active -> "active"
+        | LiveWorkState.Blocked -> "blocked"
+        | LiveWorkState.Complete -> "complete"
+        | LiveWorkState.Abandoned -> "abandoned"
+
+    let private liveStatus state =
+        match state with
+        | LiveWorkState.Complete
+        | LiveWorkState.Abandoned -> GroupMemberStatus.Terminal(liveCode state)
+        | open' -> GroupMemberStatus.Open(liveCode open')
+
+    let private queueStatus (status: string) =
+        match status with
+        | "abandoned" -> GroupMemberStatus.Terminal status
+        | other -> GroupMemberStatus.Open other
+
+    /// Every recorded work item and its membership status. A live-context
+    /// record outranks the backlog entry it was promoted from.
+    let memberStatuses (queue: PlanningQueueItem list) (live: PlanningLiveItem list) : Map<string, GroupMemberStatus> =
+        let fromQueue = queue |> List.map (fun item -> item.Id, queueStatus item.Status)
+        let fromLive = live |> List.map (fun item -> item.Id, liveStatus item.State)
+        fromQueue @ fromLive |> Map.ofList
+
+    let private duplicates (values: string list) =
+        values |> List.countBy id |> List.filter (snd >> (<) 1) |> List.map fst
+
+    /// Problems with a group's shape, independent of when it is checked.
+    let private shapeRejections (group: DeclaredGroup) (statuses: Map<string, GroupMemberStatus>) =
+        let distinct = group.Members |> List.distinct
+
+        [ if not (isValidId group.Id) then yield GroupRejection.InvalidGroupId group.Id
+          if distinct.Length < 2 then yield GroupRejection.TooFewMembers distinct.Length
+          yield! duplicates group.Members |> List.map GroupRejection.DuplicateMember
+          yield! distinct |> List.filter (statuses.ContainsKey >> not) |> List.map GroupRejection.UnknownMember
+          if group.ExecutionRepository |> Option.exists String.IsNullOrWhiteSpace then
+              yield GroupRejection.EmptyValue "execution repository"
+          if group.SharedContext |> List.exists String.IsNullOrWhiteSpace then
+              yield GroupRejection.EmptyValue "shared context"
+          if group.ArchitectureNotes |> List.exists String.IsNullOrWhiteSpace then
+              yield GroupRejection.EmptyValue "architecture note" ]
+
+    /// Decides a `work group create`. Every reason is reported at once; on
+    /// success the declaration is returned for storage and nothing else
+    /// changes: no member's lifecycle state is read for writing.
+    let create (existing: StoredGroup list) (statuses: Map<string, GroupMemberStatus>) (request: GroupCreateRequest) : Result<StoredGroup, GroupRejection list> =
+        let kind =
+            request.Kind
+            |> Option.map (fun value -> GroupKind.tryParse value |> Option.map Ok |> Option.defaultValue (Error(GroupRejection.UnknownKind value)))
+
+        let group =
+            { Id = request.Id
+              Members = request.Members
+              Kind = kind |> Option.bind (function Ok value -> Some value | Error _ -> None)
+              Origin = GroupOrigin.HumanDeclared
+              SharedContext = request.SharedContext
+              ExecutionRepository = request.ExecutionRepository
+              CrossRepository = request.CrossRepository
+              ArchitectureNotes = request.ArchitectureNotes }
+
+        let terminal =
+            group.Members
+            |> List.distinct
+            |> List.choose (fun id ->
+                match statuses.TryFind id with
+                | Some(GroupMemberStatus.Terminal state) -> Some(GroupRejection.TerminalMember(id, state))
+                | _ -> None)
+
+        let rejections =
+            [ if existing |> List.exists (fun stored -> stored.Group.Id = request.Id) then
+                  yield GroupRejection.DuplicateGroupId request.Id
+              yield! shapeRejections group statuses
+              yield! terminal
+              match kind with
+              | Some(Error rejection) -> yield rejection
+              | _ -> () ]
+
+        if rejections.IsEmpty then
+            Ok
+                { Group = group
+                  DeclaredAt = request.DeclaredAt
+                  DeclaredBy = request.DeclaredBy }
+        else
+            Error rejections
+
+    /// `validate` over the stored declarations. A member that became
+    /// terminal after the group was declared is legitimate partial
+    /// completion (PRX-GRP-042), so only shape, duplicate IDs and unknown
+    /// members are findings. Returns (group ID, message) pairs.
+    let findings (stored: StoredGroup list) (statuses: Map<string, GroupMemberStatus>) : (string * string) list =
+        let duplicateIds =
+            stored
+            |> List.map (fun entry -> entry.Group.Id)
+            |> duplicates
+            |> List.map (fun id -> id, GroupRejection.message (GroupRejection.DuplicateGroupId id))
+
+        let shapes =
+            stored
+            |> List.collect (fun entry ->
+                shapeRejections entry.Group statuses |> List.map (fun rejection -> entry.Group.Id, GroupRejection.message rejection))
+
+        duplicateIds @ shapes
+
+    /// The planner reads stored declarations exactly as it reads
+    /// `grouping.groups`. A group already declared under the same ID in an
+    /// explicit `--config` file keeps that definition.
+    let mergeInto (stored: StoredGroup list) (configuration: PlannerConfiguration) : PlannerConfiguration =
+        let configured = configuration.Grouping.Groups |> List.map (fun group -> group.Id) |> Set.ofList
+
+        let added =
+            stored
+            |> List.map (fun entry -> entry.Group)
+            |> List.filter (fun group -> not (configured.Contains group.Id))
+
+        { configuration with
+            Grouping =
+                { configuration.Grouping with
+                    Groups = configuration.Grouping.Groups @ added } }

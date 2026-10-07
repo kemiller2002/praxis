@@ -306,6 +306,21 @@ execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
 
+### `work group create`
+
+```
+ros work group create --id GROUP-AREA-001 --member ID --member ID [--member ID]*
+                      --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME]
+                      [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]*
+                      [--dry-run] [--json] [IDENTITY]
+```
+
+Records a human-declared execution group in `.ros/work/groups.json`, which the
+planner reads exactly as it reads `grouping.groups`. Refuses (exit `1`) unknown
+or terminal members and duplicate IDs; never changes a member's lifecycle
+state; `validate` checks stored groups. See
+[`planning.md`](planning.md#declaring-a-group).
+
 ### `work reconcile`
 
 ```

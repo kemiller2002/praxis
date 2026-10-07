@@ -262,6 +262,23 @@ module FilePlanningRepository =
         | Some path when not (File.Exists path) -> Error $"{path} does not exist"
         | Some path -> parse path (File.ReadAllText path)
 
+    /// `.ros/work/groups.json`: human-declared groups (PRX-GRP-073).
+    let groupStorePath (root: string) = Path.Combine(root, ".ros", "work", "groups.json")
+
+    /// The stored declarations; no store means none.
+    let readStoredGroups (root: string) : Result<StoredGroup list, string> =
+        let path = groupStorePath root
+
+        if File.Exists path then
+            PlanningJson.parseGroupStore (File.ReadAllText path) |> Result.mapError (fun message -> $"{path}: {message}")
+        else
+            Ok []
+
+    /// The planner reads stored declarations exactly as `grouping.groups`.
+    let private readConfiguration (root: string) (configurationFile: string option) =
+        readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+        |> Result.bind (fun configuration -> readStoredGroups root |> Result.map (fun stored -> GroupDeclaration.mergeInto stored configuration))
+
     let create (root: string) (observationsFile: string option) (configurationFile: string option) : PlanningReadPort =
         { Repository = fun () -> readRepository root
           Queue = fun () -> readQueue root
@@ -269,4 +286,4 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
+          Configuration = fun () -> readConfiguration root configurationFile }

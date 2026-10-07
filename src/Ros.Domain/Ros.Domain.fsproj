@@ -54,6 +54,7 @@
     <Compile Include="Execution/Governance.fs" />
     <Compile Include="Installation/Registration.fs" />
     <Compile Include="Planning/Model.fs" />
+    <Compile Include="Planning/GroupDeclaration.fs" />
     <Compile Include="Planning/History.fs" />
     <Compile Include="Planning/Inventory.fs" />
     <Compile Include="Planning/Graph.fs" />

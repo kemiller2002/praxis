@@ -45,6 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (written by `work group create`), merged into `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -289,6 +290,39 @@ than the observed execution (at least two).
 **IDs.** Recommendations are named `GROUP-<REPOSITORY>-<AREA>-<NNN>` and are
 stable for identical inputs only; durable IDs come from declarations.
 
+### Declaring a group
+
+```
+ros work group create --id GROUP-AREA-001 --member ID --member ID [--member ID]*
+                      --occurred-at TIMESTAMP [--kind KIND] [--execution-repository NAME]
+                      [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]*
+                      [--dry-run] [--json]
+```
+
+Records a human-declared execution group (PRX-GRP-073 phase two) in
+`.ros/work/groups.json`. Each entry has exactly the keys of a
+`grouping.groups` configuration entry (`origin` is always `human-declared`)
+plus `declaredAt` and `declaredBy` (the resolved actor). The planner merges
+stored groups into `grouping.groups`; when an explicit `--config` file
+declares the same ID, the configuration's definition is used.
+
+The command refuses, reporting every reason at once and exiting `1`: an ID
+that is not `GROUP-<AREA>-<SEQUENCE>` or is already stored; fewer than two
+distinct members or a repeated member; a member that is not a recorded work
+item (backlog or live context); a terminal member (abandoned in the backlog,
+or complete/abandoned in live context; a live record outranks its backlog
+entry); an unknown `--kind`. Missing or malformed arguments exit `2`. It
+writes only the group store, under the work-protocol lock: no member's
+lifecycle state, queue entry or context record changes. `--dry-run` takes the
+same decision and writes nothing. `--json` emits a `praxis.work-group/1.0.0`
+document of kind `work-group-create` with `ok` and either `group` or
+`rejections` (`code`, `message`).
+
+`ros validate` checks the stored groups: a malformed store, duplicate IDs,
+an invalid ID, fewer than two members, repeated or unknown members, and empty
+values are findings. A member that became terminal after the declaration is
+partial completion (PRX-GRP-042), not a finding.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
@@ -352,7 +386,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration; mutation commands captured as `PRAXIS-GROUP-01..05`, deferred. |
+| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"). `show`, `add`, `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-02..05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

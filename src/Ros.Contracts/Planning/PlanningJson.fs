@@ -697,6 +697,20 @@ module PlanningJson =
 
     /// The optional planner configuration file. Every field is optional and
     /// defaults to `PlannerConfiguration.defaults`.
+    /// One `grouping.groups` entry. `.ros/work/groups.json` stores the same
+    /// shape, so a stored declaration is read exactly as a configured one.
+    let private readDeclaredGroup (group: JsonObject) : DeclaredGroup =
+        let optionalTexts name = if isNull (field group name) then [] else readTexts group name
+
+        { Id = readText group "id"
+          Members = readTexts group "members"
+          Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
+          Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
+          SharedContext = optionalTexts "sharedContext"
+          ExecutionRepository = readOptionalText group "executionRepository"
+          CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
+          ArchitectureNotes = optionalTexts "architectureNotes" }
+
     let parseConfiguration (json: string) : Result<PlannerConfiguration, string> =
         try
             let root = JsonNode.Parse json |> asObject "configuration"
@@ -749,18 +763,7 @@ module PlanningJson =
                         readOptionalText node "minimumAffinity"
                         |> Option.map (parsed "affinity" ContextAffinity.tryParse)
                         |> Option.defaultValue fallback.MinimumAffinity
-                      Groups =
-                        optionalList "groups" (fun group ->
-                            let optionalTexts name = if isNull (field group name) then [] else readTexts group name
-
-                            { Id = readText group "id"
-                              Members = readTexts group "members"
-                              Kind = readOptionalText group "kind" |> Option.map (parsed "group kind" GroupKind.tryParse)
-                              Origin = readOptionalText group "origin" |> Option.map (parsed "group origin" GroupOrigin.tryParse) |> Option.defaultValue GroupOrigin.HumanDeclared
-                              SharedContext = optionalTexts "sharedContext"
-                              ExecutionRepository = readOptionalText group "executionRepository"
-                              CrossRepository = if isNull (field group "crossRepository") then false else readBool group "crossRepository"
-                              ArchitectureNotes = optionalTexts "architectureNotes" })
+                      Groups = optionalList "groups" readDeclaredGroup
                       Architecture =
                         optionalList "architecture" (fun decision ->
                             { Decision = readText decision "decision"
@@ -1222,3 +1225,52 @@ module PlanningJson =
         | Malformed message -> Error $"malformed groups document: {message}"
         | :? JsonException as error -> Error $"malformed groups document: {error.Message}"
         | :? InvalidOperationException as error -> Error $"malformed groups document: {error.Message}"
+
+    // ---- stored group declarations (.ros/work/groups.json, PRX-GRP-073) -------
+
+    let groupStoreSchemaVersion = "1.0.0"
+
+    /// One declaration, with the keys `grouping.groups` reads, plus who
+    /// declared it and when.
+    let storedGroup (value: StoredGroup) : JsonNode =
+        let group = value.Group
+
+        record
+            [ "id", text group.Id
+              "members", texts group.Members
+              "kind", group.Kind |> Option.map GroupKind.code |> optionalText
+              "origin", text (GroupOrigin.code group.Origin)
+              "sharedContext", texts group.SharedContext
+              "executionRepository", optionalText group.ExecutionRepository
+              "crossRepository", boolean group.CrossRepository
+              "architectureNotes", texts group.ArchitectureNotes
+              "declaredAt", text value.DeclaredAt
+              "declaredBy", text value.DeclaredBy ]
+
+    /// The whole store, ordered by group ID so it renders deterministically.
+    let renderGroupStore (groups: StoredGroup list) : string =
+        record
+            [ "schemaVersion", text groupStoreSchemaVersion
+              "groups",
+              groups
+              |> List.sortWith (fun left right -> String.CompareOrdinal(left.Group.Id, right.Group.Id))
+              |> List.map storedGroup
+              |> array ]
+        |> render
+
+    let parseGroupStore (json: string) : Result<StoredGroup list, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "group store"
+
+            match readText root "schemaVersion" with
+            | version when version <> groupStoreSchemaVersion -> fail $"unsupported schemaVersion '{version}'"
+            | _ ->
+                objects root "groups"
+                |> List.map (fun node ->
+                    { Group = readDeclaredGroup node
+                      DeclaredAt = readText node "declaredAt"
+                      DeclaredBy = readText node "declaredBy" })
+                |> Ok
+        with
+        | Malformed message -> Error $"malformed group store: {message}"
+        | :? JsonException as error -> Error $"malformed group store: {error.Message}"

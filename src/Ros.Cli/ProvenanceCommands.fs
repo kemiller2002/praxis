@@ -78,7 +78,7 @@ module ProvenanceCommands =
             2
         | Ok actor -> run actor
 
-    let private identityFlags =
+    let identityFlags =
         [ "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--agent"; "--actor"; "--subagent"; "--actor-kind" ]
 
     let toArtifactFinding (finding: ProvenanceFinding) : ArtifactFinding =
