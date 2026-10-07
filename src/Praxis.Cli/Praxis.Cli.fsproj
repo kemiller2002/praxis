@@ -31,6 +31,7 @@
   <ItemGroup>
     <Compile Include="Lifecycle.fs" />
     <Compile Include="Foundations.fs" />
+    <Compile Include="WorkRiskArguments.fs" />
     <Compile Include="ProvenanceCommands.fs" />
     <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
@@ -45,6 +46,7 @@
     <Compile Include="RemoteCommands.fs" />
     <Compile Include="ExecutionCommands.fs" />
     <Compile Include="InstallationCommands.fs" />
+    <Compile Include="IdentityCommands.fs" />
     <Compile Include="PlanCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />
     <Compile Include="WorkGroupCheckpointCommands.fs" />
@@ -53,9 +55,9 @@
     <Compile Include="WorkGroupLinkCommands.fs" />
     <Compile Include="WorkGroupRoutes.fs" />
     <Compile Include="ExecuteGroupCommands.fs" />
-    <Compile Include="PacingStatus.fs" />
     <Compile Include="PacingCommands.fs" />
     <Compile Include="SyncCommands.fs" />
+    <Compile Include="TutelaCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

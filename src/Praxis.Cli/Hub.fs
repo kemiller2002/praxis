@@ -1,5 +1,6 @@
 namespace Praxis.Cli
 
+open Praxis.Infrastructure.Foundations
 open System
 open System.IO
 open System.Text.Json
@@ -576,7 +577,6 @@ module HubWeb =
     // ------------------------------------------------------------------
 
     let private e = Html.escape
-
     let private stringField (row: JsonObject) (name: string) =
         match row[name] with
         | :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> value.GetValue<string>()
@@ -592,7 +592,7 @@ module HubWeb =
 
         match row["error"] with
         | :? JsonValue as error ->
-            $"<tr class=\"error-row\"><td>{repoLabel}</td><td colspan=\"5\">{e (error.ToString())}</td></tr>"
+            $"<tr><td>{repoLabel}</td><td colspan=\"5\">{FormaMarkup.alert (error.ToString())}</td></tr>"
         | _ ->
             let status = stringField row "status"
 
@@ -610,7 +610,7 @@ module HubWeb =
     let private fileRows =
         [ 1..3 ]
         |> List.map (fun _ ->
-            "<div class=\"file-row\"><input type=\"file\" name=\"file\" /><input type=\"text\" name=\"name\" placeholder=\"name (optional)\" /></div>")
+            "<div class=\"ef-cluster\"><input type=\"file\" name=\"file\" aria-label=\"File\" /><input type=\"text\" name=\"name\" aria-label=\"File name (optional)\" placeholder=\"name (optional)\" /></div>")
         |> String.concat "\n"
 
     let renderHome (repos: Result<HubRepo list, string>) (work: Result<JsonObject list, string>) (query: (string * string) list) : string =
@@ -621,14 +621,14 @@ module HubWeb =
 
         let reposTable =
             match repos with
-            | Error message -> $"<p class=\"error\" role=\"alert\">{e message}</p>"
-            | Ok [] -> "<p class=\"muted\">No repositories registered yet.</p>"
+            | Error message -> FormaMarkup.alert message
+            | Ok [] -> "<section class=\"ef-empty-state\"><h3>No repositories registered yet.</h3></section>"
             | Ok entries ->
                 entries
                 |> List.map (fun repo ->
                     $"<tr><td>{e repo.Id}</td><td>{e repo.Name}</td><td><code>{e repo.Path}</code></td><td><form method=\"post\" action=\"/repos/{Html.segment repo.Id}/unregister\"><button type=\"submit\">Unregister</button></form></td></tr>")
                 |> String.concat "\n"
-                |> sprintf "<table id=\"repos-table\"><thead><tr><th>ID</th><th>Name</th><th>Path</th><th></th></tr></thead><tbody>\n%s\n</tbody></table>"
+                |> sprintf "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Registered repositories\"><table id=\"repos-table\"><thead><tr><th>ID</th><th>Name</th><th>Path</th><th><span class=\"ef-visually-hidden\">Actions</span></th></tr></thead><tbody>\n%s\n</tbody></table></div>"
 
         let repoOptions (selected: string) =
             registered
@@ -639,57 +639,57 @@ module HubWeb =
 
         let workTable =
             match work with
-            | Error message -> $"<p class=\"error\" role=\"alert\">{e message}</p>"
-            | Ok [] -> "<p class=\"muted\">No work items match.</p>"
+            | Error message -> FormaMarkup.alert message
+            | Ok [] -> "<section class=\"ef-empty-state\"><h3>No work items match.</h3></section>"
             | Ok rows ->
                 rows
                 |> List.map workRow
                 |> String.concat "\n"
-                |> sprintf "<table id=\"work-table\"><thead><tr><th>Repo</th><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th></tr></thead><tbody>\n%s\n</tbody></table>"
+                |> sprintf "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Aggregated work\"><table id=\"work-table\"><thead><tr><th>Repo</th><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th></tr></thead><tbody>\n%s\n</tbody></table></div>"
 
         Html.page
             "Praxis Project Administration Hub"
             (String.concat
                 "\n"
-                [ "<header>"
+                [ "<header class=\"ef-section\">"
                   "<h1>Project Administration Hub</h1>"
-                  "<p class=\"muted\">Creates work in other Praxis repositories by running their own <code>./praxis</code> -- it never edits a repository's files directly.</p>"
+                  "<p class=\"ef-lead\">Creates work in other Praxis repositories by running their own <code>./praxis</code> -- it never edits a repository's files directly.</p>"
                   "</header>"
-                  "<main>"
+                  "<main id=\"main\" tabindex=\"-1\">"
                   Html.flash query
-                  "<section id=\"repos\" aria-label=\"Registered repositories\">"
+                  "<section id=\"repos\" class=\"ef-section\" aria-label=\"Registered repositories\">"
                   "<h2>Registered repositories</h2>"
                   "<form id=\"register-form\" method=\"post\" action=\"/repos\">"
-                  "<input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required />"
-                  "<input name=\"name\" type=\"text\" placeholder=\"display name (optional)\" />"
-                  "<button type=\"submit\" class=\"primary\">Register</button>"
+                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-path\">Repository path</label><input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required /></div>"
+                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-name\">Display name</label><input id=\"register-name\" name=\"name\" type=\"text\" placeholder=\"display name (optional)\" /></div>"
+                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Register</button></div>"
                   "</form>"
                   reposTable
                   "</section>"
-                  "<section id=\"create\" aria-label=\"Create work item in a repository\">"
+                  "<section id=\"create\" class=\"ef-section\" aria-label=\"Create work item in a repository\">"
                   "<h2>Create work item</h2>"
                   "<form id=\"create-form\" method=\"post\" action=\"/work\" enctype=\"multipart/form-data\">"
-                  $"<select name=\"repo\" required>{repoOptions repoFilter}</select>"
-                  "<input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required />"
-                  "<input name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" />"
-                  $"""<select name="priority">{Html.options "medium" WebInterface.priorities}</select>"""
-                  "<textarea name=\"description\" placeholder=\"Optional longer description\"></textarea>"
-                  "<div class=\"file-rows\">"
+                  $"<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-repo\">Repository</label><select id=\"create-repo\" name=\"repo\" required>{repoOptions repoFilter}</select></div>"
+                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-title\">Title</label><input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
+                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-tags\">Tags</label><input id=\"create-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
+                  $"""<div class="ef-field"><label class="ef-field__label" for="create-priority">Priority</label><select id="create-priority" name="priority">{Html.options "medium" WebInterface.priorities}</select></div>"""
+                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-description\">Description</label><textarea id=\"create-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
+                  "<div class=\"ef-stack\">"
                   fileRows
                   "</div>"
-                  "<button type=\"submit\" class=\"primary\">Create</button>"
+                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Create</button></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"filters\" aria-label=\"Filter aggregated work\">"
+                  "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter aggregated work\">"
                   "<h2>Filter</h2>"
                   "<form method=\"get\" action=\"/\">"
                   $"<label>Repo <select name=\"repo\"><option value=\"\">all</option>{repoOptions repoFilter}</select></label>"
                   $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
                   $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter WebInterface.statuses}</select></label>"""
-                  "<button type=\"submit\">Filter</button> <a href=\"/\">Clear</a>"
+                  "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"queue\" aria-label=\"Aggregated work across repositories\">"
+                  "<section id=\"queue\" class=\"ef-section\" aria-label=\"Aggregated work across repositories\">"
                   "<h2>Aggregated queue</h2>"
                   workTable
                   "</section>"

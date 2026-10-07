@@ -34,6 +34,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:42.388Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
 ---
 
 > **Renumbered 2026-09-30** (`PRAXIS-PR92-ID-RENUMBER`, owner-approved): this record was numbered A023 on PR #92's branch. Main had already given A023 to a different record, so this one took the next free number before the branches were reconciled. Its content is unchanged.
@@ -56,6 +66,6 @@ Agents and people copy the commands they are shown. Compatibility with existing 
 
 ## Verification
 
-- `tests/Ros.Tests/PraxisNamingTests.fs`
-- `tests/Ros.Tests/LifecycleTests.fs` (`move-managed-file` planning)
+- `tests/Praxis.Tests/PraxisNamingTests.fs`
+- `tests/Praxis.Tests/LifecycleTests.fs` (`move-managed-file` planning)
 - `.github/workflows/praxis-validation.yml` step "Compatibility alias runs the same Praxis CLI"

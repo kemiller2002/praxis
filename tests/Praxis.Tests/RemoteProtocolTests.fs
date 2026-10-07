@@ -63,7 +63,8 @@ module RemoteProtocolTests =
         { Principal = "principal:test"
           Grants = set grants
           ObservedRef = Some "refs/heads/main"
-          ObservedSha = observedSha }
+          ObservedSha = observedSha
+          Repository = None }
 
     let private allGrants = Capability.all
 
@@ -104,12 +105,12 @@ module RemoteProtocolTests =
               fun () ->
                   let failure = rejected (document (startRequest |> replace "protocol" "\"other.protocol\""))
                   Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code
-                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.3") "diagnostics name the supported version" }
+                  Assert.isTrue (failure.Failure.Message.Contains "praxis.remote 1.4") "diagnostics name the supported version" }
 
           { Name = "remote: a newer major or newer minor protocol version fails closed with the supported versions"
             Run =
               fun () ->
-                  [ "\"2.0\""; "\"1.4\""; "\"0.9\"" ]
+                  [ "\"2.0\""; "\"1.5\""; "\"0.9\"" ]
                   |> List.iter (fun version ->
                       let failure = rejected (document (startRequest |> replace "protocolVersion" version))
                       Assert.equal FailureCode.UnsupportedProtocol failure.Failure.Code

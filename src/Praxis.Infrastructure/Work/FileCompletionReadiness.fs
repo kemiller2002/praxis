@@ -1,6 +1,8 @@
 namespace Praxis.Infrastructure.Work
 
+open System
 open System.IO
+open System.Security.Cryptography
 open System.Text.Json
 open System.Text.Json.Nodes
 open Praxis.Application.Work
@@ -24,9 +26,99 @@ module FileCompletionReadiness =
         | :? IOException as error -> EvidenceReading.Malformed $"the evidence file could not be read: {error.Message}"
         | :? System.UnauthorizedAccessException as error -> EvidenceReading.Malformed $"the evidence file could not be read: {error.Message}"
 
+    /// SHA-256 of an evidence file's bytes (PRX-QUAL-023), `None` when the
+    /// file cannot be read; the readiness record then shows the gap.
+    let digest (root: string) (relativePath: string) : string option =
+        let path = Path.Combine(root, relativePath)
+
+        try
+            if File.Exists path then
+                Some("sha256:" + Convert.ToHexString(SHA256.HashData(File.ReadAllBytes path)).ToLowerInvariant())
+            else
+                None
+        with
+        | :? IOException
+        | :? UnauthorizedAccessException -> None
+
+    /// A `path` or `path:line` reference exists in the repository (and, with
+    /// a line, the file has that many lines).
+    let locationExists (root: string) (reference: string) : bool =
+        let path, line =
+            match reference.LastIndexOf ':' with
+            | index when index > 0 && index < reference.Length - 1 && Seq.forall Char.IsAsciiDigit (reference.Substring(index + 1)) ->
+                reference.Substring(0, index), Some(int (reference.Substring(index + 1)))
+            | _ -> reference, None
+
+        let full = Path.GetFullPath(Path.Combine(root, path))
+        let inside = full.StartsWith(Path.GetFullPath root, StringComparison.Ordinal)
+
+        try
+            match line with
+            | _ when not inside -> false
+            | None -> File.Exists full || Directory.Exists full
+            | Some number -> File.Exists full && number >= 1 && File.ReadLines full |> Seq.length >= number
+        with
+        | :? IOException
+        | :? UnauthorizedAccessException -> false
+
     let sources (root: string) : QualityEvidenceSources =
         { ReadDokimos = fun path -> readText root path QualityEvidenceJson.decodeDokimos
-          ReadOrdo = fun path -> readText root path QualityEvidenceJson.decodeOrdo }
+          ReadOrdo = fun path -> readText root path QualityEvidenceJson.decodeOrdo
+          ReadDesignDebt = fun path -> readText root path QualityEvidenceJson.decodeDesignDebt
+          ReadVerificationMatrix = fun path -> readText root path QualityEvidenceJson.decodeVerificationMatrix
+          ReadReleaseReadiness = fun path -> readText root path QualityEvidenceJson.decodeReleaseReadiness
+          Digest = digest root
+          LocationExists = locationExists root }
+
+    let private terminalStates = set [ "complete"; "abandoned" ]
+
+    /// Risk metadata by work item, from the queue (`risk` members). A present
+    /// but invalid declaration is an error so completion fails closed.
+    let readRisks (root: string) : Result<Map<string, WorkRisk>, string> =
+        let path = Path.Combine(root, ".ros", "work", "queue.json")
+
+        if not (File.Exists path) then
+            Ok Map.empty
+        else
+            try
+                use document = JsonDocument.Parse(File.ReadAllText path)
+
+                match document.RootElement.TryGetProperty "items" with
+                | true, items when items.ValueKind = JsonValueKind.Array ->
+                    items.EnumerateArray()
+                    |> Seq.fold
+                        (fun acc item ->
+                            acc
+                            |> Result.bind (fun risks ->
+                                match item.TryGetProperty "id", item.TryGetProperty "risk" with
+                                | (true, id), (true, risk) when risk.ValueKind <> JsonValueKind.Null ->
+                                    QualityEvidenceJson.decodeRisk risk
+                                    |> Result.map (fun decoded -> risks |> Map.add (id.GetString()) decoded)
+                                    |> Result.mapError (fun reason -> $"work item '{id.GetString()}' has invalid risk metadata: {reason}")
+                                | _ -> Ok risks))
+                        (Ok Map.empty)
+                | _ -> Ok Map.empty
+            with :? JsonException as error ->
+                Error $"queue.json is not valid JSON: {error.Message}"
+
+    /// Recorded work items that are not complete or abandoned, in the queue
+    /// or the live context.
+    let openItems (root: string) (context: WorkContextPlanningView option) : Set<string> =
+        let queueOpen =
+            FileBacklogQueueRepository.readItems root
+            |> List.filter (fun item -> not (terminalStates.Contains item.Status))
+            |> List.map _.Id
+            |> Set.ofList
+
+        let closed, live =
+            match context with
+            | Some context ->
+                context.WorkItems
+                |> List.partition (fun item -> item.SemanticState = LiveWorkState.Complete || item.SemanticState = LiveWorkState.Abandoned)
+                |> fun (closed, live) -> closed |> List.map _.Id |> Set.ofList, live |> List.map _.Id |> Set.ofList
+            | None -> Set.empty, Set.empty
+
+        Set.union queueOpen live - closed
 
     /// The repository policy. Absent: the legacy default (no gate). Present
     /// but unreadable or invalid: an error, so completion fails closed.
@@ -48,10 +140,25 @@ module FileCompletionReadiness =
             with :? JsonException as error ->
                 Error $"ros.json is not valid JSON: {error.Message}"
 
+    let private readContext (root: string) =
+        let contextPath = Path.Combine(root, ".ros", "context", "current.json")
+
+        if File.Exists contextPath then
+            WorkContextPlanContract.parseJson (File.ReadAllText contextPath) |> Result.toOption
+        else
+            None
+
     /// Gate for explicitly typed items (the envelope path already holds
     /// them). `group` gives a grouped-mode member's `group-verified` facet.
     let evaluateItems (root: string) (items: (string * string) list) (provided: WorkEvidence list) (group: string -> FacetStatus option) : CompletionGateOutcome =
-        CompletionReadinessOperations.gate (sources root) (readPolicy root) items provided group
+        match readRisks root with
+        | Error reason -> CompletionGateOutcome.PolicyInvalid reason
+        | Ok risks ->
+            let facts =
+                { Risk = fun id -> risks |> Map.tryFind id
+                  OpenItems = openItems root (readContext root) }
+
+            CompletionReadinessOperations.gate (sources root) facts (readPolicy root) items provided group
 
     /// For a path without the native group gates (the runtime-free envelope):
     /// every item begun in grouped mode by any group execution is refused,
@@ -88,15 +195,10 @@ module FileCompletionReadiness =
     /// active items can complete; any other id is left to the transition
     /// planner to reject with its usual message.
     let evaluate (root: string) (ids: string list) (provided: WorkEvidence list) (group: string -> FacetStatus option) : CompletionGateOutcome =
-        let contextPath = Path.Combine(root, ".ros", "context", "current.json")
-
         let types =
-            if File.Exists contextPath then
-                match WorkContextPlanContract.parseJson (File.ReadAllText contextPath) with
-                | Ok context -> context.WorkItems |> List.filter (fun item -> item.SemanticState = LiveWorkState.Active) |> List.map (fun item -> item.Id, item.WorkType) |> Map.ofList
-                | Error _ -> Map.empty
-            else
-                Map.empty
+            match readContext root with
+            | Some context -> context.WorkItems |> List.filter (fun item -> item.SemanticState = LiveWorkState.Active) |> List.map (fun item -> item.Id, item.WorkType) |> Map.ofList
+            | None -> Map.empty
 
         evaluateItems root (ids |> List.choose (fun id -> types |> Map.tryFind id |> Option.map (fun workType -> id, workType))) provided group
 
@@ -118,10 +220,17 @@ module FileCompletionReadiness =
         node["completionReadiness"] <- readiness
         node.ToJsonString(JsonSerializerOptions(WriteIndented = true))
 
-    /// What `work context` shows for an item still to be completed.
-    let contextRequirement (policy: QualityEvidencePolicy) =
+    /// What `work context` shows for an item still to be completed: the
+    /// policy, the item's risk obligations and the evidence they require.
+    let contextRequirement (policy: QualityEvidencePolicy) (risk: WorkRisk option) =
+        let obligations = WorkRisk.obligations risk
         let node = QualityEvidenceJson.policyNode policy
         let required = JsonArray()
-        QualityEvidencePolicies.requiredEvidenceTypes policy |> List.iter (fun evidenceType -> required.Add(JsonValue.Create evidenceType: JsonNode))
+
+        QualityEvidencePolicies.requiredEvidenceTypes policy obligations
+        |> List.iter (fun evidenceType -> required.Add(JsonValue.Create evidenceType: JsonNode))
+
         node["requiredEvidenceTypes"] <- required
+        risk |> Option.iter (fun declared -> node["risk"] <- QualityEvidenceJson.riskNode declared)
+        node["obligations"] <- QualityEvidenceJson.obligationsNode obligations
         node

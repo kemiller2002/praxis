@@ -64,11 +64,12 @@ module ArchitectureTests =
 
         let cliCommands = read "src/Praxis.Cli/PacingCommands.fs"
 
+        // Every Application pacing source, so a new file cannot escape the rule.
         let applicationSources =
-            [ "src/Praxis.Application/Pacing/Contracts.fs"
-              "src/Praxis.Application/Pacing/Status.fs"
-              "src/Praxis.Application/Pacing/Operations.fs" ]
-            |> List.map (fun path -> path, read path)
+            Directory.GetFiles(Path.Combine(root, "src", "Praxis.Application", "Pacing"), "*.fs")
+            |> Array.sort
+            |> Array.map (fun path -> Path.GetRelativePath(root, path).Replace('\\', '/'), File.ReadAllText path)
+            |> Array.toList
 
         let forbiddenCli =
             [ "System.Net.Http"

@@ -63,6 +63,13 @@ Acceptance:
 - weekly holds also record reset identity so a new quota window cannot inherit
   the prior window's hysteresis latch accidentally.
 
+Status (2026-10-06, PRAXIS-QUAL-01): implemented. Hard and weekly holds
+persist their creation evidence (`evidence: {observedAt, reference}` in
+`hold.json`, additive within schema 2 so older readers ignore it); holds
+written without it read as unrecorded, never invented. Tests:
+PacingHardeningTests "a hard hold records the reading that created it" and
+the evidence round-trip/migration cases.
+
 ### PRX-QUAL-004 — Model observation completeness explicitly
 Priority: critical
 Depends on: PRX-QUAL-001
@@ -80,6 +87,13 @@ Acceptance:
 - partial responses preserve only the evidence justified by each window.
 - provider response-shape drift produces explicit diagnostics.
 
+Status (2026-10-06, PRAXIS-QUAL-01): implemented. `WindowStatus` is
+Observed, Missing, Invalid, Stale (carried from the cache, or reported after
+its reset) or Unsupported (a window kind the adapter rules do not map); every
+non-observed status makes the reading incomplete and is named in the
+diagnostic and in status `coverage`. Tests: PacingHardeningTests coverage
+cases.
+
 ### PRX-QUAL-005 — Introduce typed provider and quota identities
 Priority: high
 Depends on: PRX-QUAL-001
@@ -95,6 +109,14 @@ Acceptance:
 - unknown models have a declared conservative behavior rather than accidental
   substring behavior.
 - adapter capability/version information is observable.
+
+Status (2026-10-06, PRAXIS-QUAL-02): implemented. `ProviderId`,
+`ModelFamily`/`ModelIdentity`, `QuotaBucket` and `QuotaScope` are typed;
+model matching is whole-token equality against known families, with
+unspecified, unrecognized or ambiguous models conservative. Codex bucket
+selection and Claude window/scope mapping are versioned rule tables
+(`PacingAdapterRules`, `codex-rules/1`, `claude-rules/1`) reported by `pacing
+status`. A guard test refuses substring model matching in pacing code.
 
 ### PRX-QUAL-006 — Make pacing gate orchestration deterministic and testable
 Priority: high
@@ -136,6 +158,12 @@ Acceptance:
   payloads.
 - repeated polling does not spam duplicate transition events.
 
+Status (2026-10-06, PRAXIS-QUAL-03): implemented. Typed
+`praxis.pacing-event/1` events with the stable codes above (plus
+`state-fault`) in `events.jsonl`; `pace.log` is their rendering. Hold
+transitions are derived from persisted state; the gate deduplicates against
+the last recorded event. Diagnostics are redacted and bounded.
+
 ### PRX-QUAL-009 — Integrate provider capacity into planning/work groups
 Priority: medium
 Depends on: PRX-QUAL-001, PRX-QUAL-008
@@ -149,6 +177,14 @@ Acceptance:
 - capacity uncertainty is distinct from zero capacity.
 - scheduling decisions explain whether pacing affected ordering.
 - provider switching never occurs without capability/model compatibility.
+
+Status (2026-10-07, PRAXIS-QUAL-05): implemented. The planner reads
+provider-neutral `ProviderCapacity` (available, constrained, exhausted,
+unknown) through `PlanningReadPort.Capacity`: supplied in the observations
+file, or mapped from usage-pacing state by `FilePacingCapacity` when
+`PRAXIS_PACING_DIR` is set. Unknown is distinct from zero; limited capacity
+orders `provider-free` items first with explaining reasons and a finding;
+the planner never switches provider (PlanningCapacityTests, docs/planning.md).
 
 ### PRX-QUAL-010 — Replace release-version equality with compatibility authority
 Priority: high
@@ -167,6 +203,21 @@ Acceptance:
   attestations exist.
 - CI proves incompatible executor/state combinations are refused before remote
   mutation.
+
+Status (2026-10-07, PRAXIS-QUAL-06): implemented.
+- `release.json` declares `compatibility` (remote protocol, and per state
+  document the schema versions read and written); a fence keeps it equal to
+  the compiled `StateCompatibility.current`.
+- The pin is no longer tied to `release.json`: the bump changes only
+  `release.json`; `scripts/praxis-remote-enable.sh --skip-release` advances
+  the pin after verifying checksum and attestation and records the
+  release's compatibility in `quality/release-compatibility.json`.
+- A fence requires the pinned release's recorded reads to cover the
+  committed state, or an owned, unexpired exception. QX-COMPAT-1 records the
+  live gap: PRAXIS-GROUP-08's group store schema 2 is not read by the pinned
+  3.7.2 (expires 2026-10-21; retired by the next release's pin advance).
+- `remote execute` refuses mutation of state it does not read with
+  `incompatible-state`, before any effect (RemoteExecuteCliTests).
 
 ### PRX-QUAL-011 — Add adversarial pacing integration tests
 Priority: critical
@@ -190,6 +241,15 @@ Required cases:
 
 ## Praxis process hardening
 
+Status (2026-10-06, PRAXIS-QUAL-04): every listed case is covered.
+PacingSafetyTests holds the state, window, reset, hold, lock and override
+cases; PacingHardeningTests adds Keychain unavailable/missing/expired/
+malformed credentials, HTTP redirect/error/transport failure (injected
+handler), provider process timeout/EOF/error reply/malformed JSON (scripted
+protocol channel), unknown model/scope behaviour, and hook contract fixtures
+for both providers (`tests/fixtures/pacing/hooks`, written to the runtimes'
+documented hook input shapes, not captured live).
+
 ### PRX-QUAL-020 — Add engineering-risk metadata to work planning
 Priority: high
 
@@ -204,6 +264,14 @@ Meaningful work SHALL declare, when applicable:
 
 Praxis should derive completion obligations from this metadata.
 
+Status (2026-10-06, PRAXIS-QUAL-07): implemented. Work items declare
+`praxis.work-risk/1` metadata through `work update` (change classes, risk
+level, state/protocol/security impact, failure posture, tier ownership, live
+proof); invalid declarations are refused. `WorkRisk.obligations` derives the
+design-debt and verification-matrix obligations, shown by `work context` and
+enforced at completion (DF-ROS-2026-A052 amendment). Tests:
+CompletionObligationsTests.
+
 ### PRX-QUAL-021 — Add explicit design-debt capture to completion
 Priority: high
 
@@ -216,6 +284,12 @@ Acceptance:
 - untracked known debt is a completion failure for high-risk work.
 - follow-up debt records rationale, risk, and the boundary that was compromised.
 - prototypes cannot become canonical silently.
+
+Status (2026-10-06, PRAXIS-QUAL-08): implemented as the
+`design-debt-declared` facet (`--evidence design-debt=PATH`,
+`praxis.design-debt/1`). High-risk work without a declaration, debt not
+tracked by a recorded open work item, and a prototype without a debt entry
+refuse completion (exit 3, no state change).
 
 ### PRX-QUAL-022 — Add verification matrices for high-risk work
 Priority: high
@@ -231,6 +305,13 @@ execution work, Praxis SHALL require evidence across:
 - representative live effect.
 
 Green compilation/unit tests alone SHALL not satisfy completion.
+
+Status (2026-10-06, PRAXIS-QUAL-09): implemented as the
+`verification-matrix-satisfied` facet (`--evidence verification-matrix=PATH`,
+`praxis.verification-matrix/1`), required for the listed change classes and
+impacts. Compilation or unit tests alone, a not-met row, a missing required
+dimension, a live effect without live evidence, or a missing location
+reference refuse completion.
 
 ### PRX-QUAL-023 — Integrate Dokimos quality evidence into Praxis completion
 Priority: medium
@@ -262,11 +343,33 @@ Status (2026-10-05, branch `quality/prx-qual-023-quality-evidence`,
 
 Tracked debt (migration bridge): the policy is off by default so existing
 repositories keep their behaviour. Retire it, defaulting new repositories to
-`dokimos: required`, once Conditor installs Dokimos by default. Not yet done:
-a digest of each consumed evidence file in the record, and a consumable
-release-readiness contract (`release-ready` is always unavailable when
-required). PRX-QUAL-020, 021 and 022 remain open; readiness facets are the
-hook their obligations will feed.
+`dokimos: required`, once Conditor installs Dokimos by default.
+
+Update (2026-10-06, PRAXIS-QUAL-10, `DF-ROS-2026-A052` amendment): every
+consumed evidence file is recorded in `consumedEvidence` with the SHA-256
+digest of the bytes decoded, and `release-ready` is established by a
+consumable `praxis.release-readiness/1` document (`--evidence
+release-readiness=PATH`). PRX-QUAL-020, 021 and 022 feed the readiness facets
+(see their status notes). The branch named above was merged; the work is
+tracked by PRAXIS-QUAL-07..10.
+
+## Tracking
+
+Work items (captured 2026-10-06 from the requirements audit; groups and
+analyses in `research/groups/`):
+
+| Requirement | Work item | Group |
+|---|---|---|
+| PRX-QUAL-003 (creation evidence), PRX-QUAL-004 | PRAXIS-QUAL-01 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-005 | PRAXIS-QUAL-02 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-008 | PRAXIS-QUAL-03 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-011 (remaining cases) | PRAXIS-QUAL-04 | GROUP-PRAXIS-PACING-001 |
+| PRX-QUAL-009 | PRAXIS-QUAL-05 | - |
+| PRX-QUAL-010 | PRAXIS-QUAL-06 | - |
+| PRX-QUAL-020 | PRAXIS-QUAL-07 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-021 | PRAXIS-QUAL-08 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-022 | PRAXIS-QUAL-09 | GROUP-PRAXIS-COMPLETION-001 |
+| PRX-QUAL-023 (digest, release-readiness) | PRAXIS-QUAL-10 | GROUP-PRAXIS-COMPLETION-001 |
 
 ## Sequencing
 

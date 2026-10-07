@@ -229,6 +229,7 @@ module FileWorkContextRepository =
             | _ ->
                 let defaultEvidence, evidenceByType = FileWorkConfigRepository.readCompletionEvidence root
                 let qualityPolicy = FileCompletionReadiness.readPolicy root
+                let risks = FileCompletionReadiness.readRisks root
 
                 let augmented =
                     items
@@ -252,17 +253,28 @@ module FileWorkContextRepository =
 
                         node["requiredEvidenceForCompletion"] <- stringArrayNode requiredEvidence
 
-                        // PRX-QUAL-023: only when the repository opted in, and
-                        // only for an item still to be completed.
-                        match qualityPolicy with
-                        | Ok policy when
-                            QualityEvidencePolicies.appliesTo policy evidenceType
-                            && stringField item "semanticState" <> Some "complete"
+                        // PRX-QUAL-020/023: only when the repository opted in
+                        // or the item declared risk obligations, and only for
+                        // an item still to be completed.
+                        let risk =
+                            match risks, stringField item "id" with
+                            | Ok declared, Some id -> declared |> Map.tryFind id
+                            | _ -> None
+
+                        let open' =
+                            stringField item "semanticState" <> Some "complete"
                             && stringField item "semanticState" <> Some "abandoned"
+
+                        match qualityPolicy, risks with
+                        | Error reason, _ -> node["qualityEvidenceForCompletion"] <- JsonValue.Create $"invalid policy: {reason}"
+                        | _, Error reason -> node["qualityEvidenceForCompletion"] <- JsonValue.Create $"invalid risk metadata: {reason}"
+                        | Ok policy, Ok _ when
+                            open'
+                            && (QualityEvidencePolicies.appliesTo policy evidenceType
+                                || WorkRisk.hasObligations (WorkRisk.obligations risk))
                             ->
-                            node["qualityEvidenceForCompletion"] <- FileCompletionReadiness.contextRequirement policy
-                        | Error reason -> node["qualityEvidenceForCompletion"] <- JsonValue.Create $"invalid policy: {reason}"
-                        | Ok _ -> ()
+                            node["qualityEvidenceForCompletion"] <- FileCompletionReadiness.contextRequirement policy risk
+                        | Ok _, Ok _ -> ()
 
                         node)
 

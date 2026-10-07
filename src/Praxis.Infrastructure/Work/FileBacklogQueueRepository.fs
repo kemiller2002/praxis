@@ -467,6 +467,10 @@ module FileBacklogQueueRepository =
                     | WorkPriorityChange.Set priority -> target["priority"] <- JsonValue.Create priority
                     | WorkPriorityChange.Keep -> ()
 
+                    match plan.Risk with
+                    | WorkRiskChange.Set risk -> target["risk"] <- Praxis.Contracts.Work.QualityEvidenceJson.riskNode risk
+                    | WorkRiskChange.Keep -> ()
+
                     target["updatedAt"] <- JsonValue.Create plan.UpdatedAt
 
                     commitQueue root queueNode items contextItems (fun rows ->

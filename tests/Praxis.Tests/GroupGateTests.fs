@@ -33,7 +33,7 @@ module GroupGateTests =
           Searches = []
           NewAbstractions = [ { Name = "GroupStatus"; ConsideredExisting = "MemberCategory"; WhyNotReused = "per member only" } ] }
 
-    let private row criterion status deferred : VerificationRow =
+    let private row criterion status deferred : CriterionVerificationRow =
         { Member = "ITEM-1"
           Criterion = criterion
           Status = status
