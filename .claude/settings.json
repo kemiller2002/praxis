@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__merge_pull_request",
+      "mcp__github__update_pull_request",
+      "mcp__github__update_pull_request_branch",
+      "mcp__github__create_pull_request",
+      "Bash(git merge *)",
+      "Bash(git push *)"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Merging pull requests in the user's own GitHub repositories (and marking drafts ready, opening PRs, merging the base branch into a PR head, and pushing PR branches) without separate human review, once CI is green and the branch is conflict-free."
+    ]
+  }
+}
