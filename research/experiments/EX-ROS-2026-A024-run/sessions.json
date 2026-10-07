@@ -467,6 +467,25 @@
         "session_context_model": "claude-opus-5-5"
       },
       "note": "handoff PRAXIS-GROUP-04 valid (sha256 9c36cef0...); audit 1 event: git branch -a (ref-name exposure, deviation D7, not invalidating)"
+    },
+    {
+      "label": "arm-3-05",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01XCigN8PQHsBEB3TfC2Ycaa",
+      "createdAt": "2026-10-07T21:33:42.305294Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071",
+      "prompt": "prompts/arm-3-05.txt",
+      "promptSubstitution": {
+        "START_SHA": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071"
+      },
+      "attempt": 1,
+      "status": "running"
     }
   ],
   "status": "active: resumed under owner amendment A1"
