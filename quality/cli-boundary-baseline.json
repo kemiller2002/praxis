@@ -61,12 +61,8 @@
       "effects": 1
     },
     "PacingCommands.fs": {
-      "lines": 175,
+      "lines": 156,
       "effects": 1
-    },
-    "PacingStatus.fs": {
-      "lines": 129,
-      "effects": 0
     },
     "PlanCommands.fs": {
       "lines": 582,

@@ -80,6 +80,7 @@
     <Compile Include="Planning/Inventory.fs" />
     <Compile Include="Planning/Graph.fs" />
     <Compile Include="Planning/Snapshot.fs" />
+    <Compile Include="Planning/Capacity.fs" />
     <Compile Include="Planning/Scheduling.fs" />
     <Compile Include="Planning/Comparison.fs" />
     <Compile Include="Planning/Replay.fs" />
