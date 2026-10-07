@@ -424,6 +424,9 @@ type FailureCode =
     | Timeout
     | Cancelled
     | Internal
+    /// The repository's state uses a schema version this executor does not
+    /// read (PRX-QUAL-010): refused before any mutation.
+    | IncompatibleState
 
 [<RequireQualifiedAccess>]
 module FailureCode =
@@ -444,7 +447,8 @@ module FailureCode =
           FailureCode.RateLimited
           FailureCode.Timeout
           FailureCode.Cancelled
-          FailureCode.Internal ]
+          FailureCode.Internal
+          FailureCode.IncompatibleState ]
 
     let code failure =
         match failure with
@@ -465,6 +469,7 @@ module FailureCode =
         | FailureCode.Timeout -> "timeout"
         | FailureCode.Cancelled -> "cancelled"
         | FailureCode.Internal -> "internal"
+        | FailureCode.IncompatibleState -> "incompatible-state"
 
     let tryParse (value: string) = all |> List.tryFind (fun failure -> code failure = value)
 
@@ -479,6 +484,7 @@ module FailureCode =
         | FailureCode.StaleRef
         | FailureCode.DomainRejected
         | FailureCode.ValidationFailed
+        | FailureCode.IncompatibleState
         | FailureCode.Internal -> DecidedBy.Praxis
         | FailureCode.ConcurrencyConflict
         | FailureCode.BootstrapFailed
@@ -501,6 +507,7 @@ module FailureCode =
         | FailureCode.Unauthorized
         | FailureCode.IdempotencyConflict
         | FailureCode.StaleRef
+        | FailureCode.IncompatibleState
         | FailureCode.DomainRejected -> Outcome.Rejected
         | FailureCode.ValidationFailed
         | FailureCode.ConcurrencyConflict
@@ -521,6 +528,7 @@ module FailureCode =
         | FailureCode.Unauthorized
         | FailureCode.IdempotencyConflict
         | FailureCode.DomainRejected
+        | FailureCode.IncompatibleState
         | FailureCode.ValidationFailed -> RetryAdvice.Never
         | FailureCode.StaleRef
         | FailureCode.ConcurrencyConflict -> RetryAdvice.AfterRefresh

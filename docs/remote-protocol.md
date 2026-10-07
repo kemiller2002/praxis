@@ -341,13 +341,21 @@ unchanged. A `requestId` that fails validation is never echoed back.
 
 | `failure.code` | `decidedBy` | `outcome` | `retry` |
 |---|---|---|---|
-| `invalid-request`, `secret-detected`, `unsupported-operation`, `unsupported-protocol`, `unauthorized`, `idempotency-conflict`, `domain-rejected` | praxis | rejected | `never` |
+| `invalid-request`, `secret-detected`, `unsupported-operation`, `unsupported-protocol`, `unauthorized`, `idempotency-conflict`, `domain-rejected`, `incompatible-state` | praxis | rejected | `never` |
 | `stale-ref` | praxis | rejected | `after-refresh` |
 | `validation-failed` | praxis | failed | `never` |
 | `internal` | praxis | failed | `same-request` |
 | `concurrency-conflict` | executor | failed | `after-refresh` |
 | `bootstrap-failed` | executor | failed | `same-request` |
 | `repository-write-failed`, `transport-failed`, `rate-limited`, `timeout`, `cancelled` | executor | unknown | `same-request` |
+
+`incompatible-state` (PRX-QUAL-010) is decided before a mutation: the
+executor reads the schema version of each gating state document
+(`.ros/work/queue.json`, `.ros/context/current.json`, `.ros/work/groups.json`,
+`.ros/events/events.jsonl`) and refuses when it does not read one of them.
+Each release declares the versions it reads and writes in its `release.json`
+(`compatibility.stateSchemas`, with `compatibility.remoteProtocol`). Reads are
+not gated.
 
 The retry values mean:
 

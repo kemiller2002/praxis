@@ -168,6 +168,21 @@ Acceptance:
 - CI proves incompatible executor/state combinations are refused before remote
   mutation.
 
+Status (2026-10-07, PRAXIS-QUAL-06): implemented.
+- `release.json` declares `compatibility` (remote protocol, and per state
+  document the schema versions read and written); a fence keeps it equal to
+  the compiled `StateCompatibility.current`.
+- The pin is no longer tied to `release.json`: the bump changes only
+  `release.json`; `scripts/praxis-remote-enable.sh --skip-release` advances
+  the pin after verifying checksum and attestation and records the
+  release's compatibility in `quality/release-compatibility.json`.
+- A fence requires the pinned release's recorded reads to cover the
+  committed state, or an owned, unexpired exception. QX-COMPAT-1 records the
+  live gap: PRAXIS-GROUP-08's group store schema 2 is not read by the pinned
+  3.7.2 (expires 2026-10-21; retired by the next release's pin advance).
+- `remote execute` refuses mutation of state it does not read with
+  `incompatible-state`, before any effect (RemoteExecuteCliTests).
+
 ### PRX-QUAL-011 — Add adversarial pacing integration tests
 Priority: critical
 Depends on: PRX-QUAL-002, PRX-QUAL-003, PRX-QUAL-004, PRX-QUAL-006
