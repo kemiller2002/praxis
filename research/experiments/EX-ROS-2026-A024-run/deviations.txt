@@ -154,3 +154,14 @@ treatments, thresholds, blinding or stop rules.
 - `arm-2-05` ran `git fetch origin experiment/a024-arm-2`, its own branch, and
   compared HEAD with `FETCH_HEAD`. That is allowed: a false positive of the
   broad `main-ref` rule.
+
+## D8 — harness amendment 2: rubric key fallback in prepare_blind.py (22:06Z)
+
+- The first blinding run after amendment 1 failed with `KeyError: 'rubric.txt'`.
+  The pinned-input check looks up the frozen rubric hash by file name, and the
+  frozen manifest keys it `rubric.md`. No output was produced or examined.
+- Fix: one line. The check now falls back from `rubric.txt` to the frozen key
+  `rubric.md`. `verify_amendment_2.py` proves that `prepare_blind.py` equals
+  its frozen version plus amendment 1's literal rename plus this line.
+  `verify_amendment_1.py` delegates that file to it.
+- No mapping, scrubbing, label, seed or nonce logic changed.

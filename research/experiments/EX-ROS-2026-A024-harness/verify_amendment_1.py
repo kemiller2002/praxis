@@ -36,6 +36,11 @@ def main():
     for name, frozen_hash in sorted(hashes.items()):
         if name == "rubric.md":
             continue
+        if name == "prepare_blind.py":  # amended again in amendment 2; proven by verify_amendment_2.py
+            ok = subprocess.run([sys.executable, os.path.join(HERE, "verify_amendment_2.py")], capture_output=True).returncode == 0
+            findings += [] if ok else ["prepare_blind.py fails amendment 2 verification"]
+            print(("amendments-1+2 " if ok else "CHANGED ") + name)
+            continue
         now = current(name)
         if sha(now) == frozen_hash:
             continue

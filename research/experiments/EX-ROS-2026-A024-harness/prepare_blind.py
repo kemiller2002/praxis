@@ -127,7 +127,7 @@ def inputs(start, dest):
     frozen = json.load(open(os.path.join(REPO, HARNESS, "manifest.json")))["hashes"]
     for name in ("acceptance-criteria.json", "rubric.txt"):
         data = open(os.path.join(REPO, HARNESS, name), "rb").read()
-        if hashlib.sha256(data).hexdigest() != frozen[name]:
+        if hashlib.sha256(data).hexdigest() != frozen.get(name, frozen.get(name.replace(".txt", ".md"))):
             sys.exit(f"{name} does not match its frozen manifest hash")
         open(os.path.join(folder, name), "wb").write(data)
     open(os.path.join(folder, "start-commit.txt"), "w").write(f"common start (sanitized harness commit): {start}\nbaseline: {BASELINE}\n")

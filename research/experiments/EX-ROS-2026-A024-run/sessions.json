@@ -552,5 +552,46 @@
       "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
     }
   ],
-  "status": "active: resumed under owner amendment A1"
+  "status": "all arms terminal; blinded acceptance scoring running",
+  "scorers": [
+    {
+      "label": "scorer-K",
+      "snapshot": "snapshot-K",
+      "session": "session_01DPVmNPxNv9Mm4Yv5SZ8P7f",
+      "branch": "experiment/a024-blind-score-snapshot-K",
+      "packageCommit": "533e6f0b7f0fb3b6d2a1450b1e23a53e9af8ca1f",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-K",
+        "LABEL": "snapshot-K"
+      },
+      "status": "running"
+    },
+    {
+      "label": "scorer-P",
+      "snapshot": "snapshot-P",
+      "session": "session_01Vc7aHUqzVTRCrpVvKxdVr9",
+      "branch": "experiment/a024-blind-score-snapshot-P",
+      "packageCommit": "68dc99b670c28fff2778eabe5b231498b6c1892a",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-P",
+        "LABEL": "snapshot-P"
+      },
+      "status": "running"
+    },
+    {
+      "label": "scorer-W",
+      "snapshot": "snapshot-W",
+      "session": "session_01EYACPKcUBqDFcPt4F7swHM",
+      "branch": "experiment/a024-blind-score-snapshot-W",
+      "packageCommit": "f894ece655d18f772c9cb8435e3b9bbe8e539763",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-W",
+        "LABEL": "snapshot-W"
+      },
+      "status": "running"
+    }
+  ]
 }
