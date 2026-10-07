@@ -31,9 +31,9 @@ provenance:
         runtime: claude-code
       reason: "Consume Dokimos and Ordo quality evidence at completion (PRX-QUAL-023)"
       evidence: [https://github.com/kemiller2002/praxis/issues/167]
-    EXE-20261006T215449549Z-494ad502:
+    EXE-20261007T001212751Z-17f1cf28:
       operations: [modified]
-      at: 2026-10-06T21:55:13.063Z
+      at: 2026-10-07T00:12:14.018Z
       actor:
         kind: agent
         id: anthropic/claude-code

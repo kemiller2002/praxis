@@ -6592,14 +6592,185 @@
       "completedAt": "2026-10-06T19:50:10.000Z"
     },
     {
+      "id": "PRAXIS-FND-01",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203928979Z-8000c1f2"
+      ],
+      "latestCheckpoint": {
+        "id": "63732bcf8fcf20dccaae3004",
+        "recordedAt": "2026-10-06T20:39:43.000Z",
+        "executionId": "EXE-20261006T203928979Z-8000c1f2",
+        "repository": "repository-operating-system",
+        "branch": "fnd/work-items",
+        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/work-items",
+        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
+        "nextAction": "Implement per docs/groups order",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "PRAXIS-FND-04",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203929690Z-5e05ecd4"
+      ],
+      "latestCheckpoint": {
+        "id": "e652c2643e30c98917a3be0a",
+        "recordedAt": "2026-10-06T20:39:46.000Z",
+        "executionId": "EXE-20261006T203929690Z-5e05ecd4",
+        "repository": "repository-operating-system",
+        "branch": "fnd/work-items",
+        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/work-items",
+        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
+        "nextAction": "Implement per docs/groups order",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "PRAXIS-GROUP-08",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WorkGroupListCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-08.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T20:44:18.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T201004081Z-5d1f4933"
+      ],
+      "latestCheckpoint": {
+        "id": "17cdad5fda9c0779effb3997",
+        "recordedAt": "2026-10-06T20:44:11.000Z",
+        "executionId": "EXE-20261006T201004081Z-5d1f4933",
+        "repository": "repository-operating-system",
+        "branch": "group/08-command-surface",
+        "commit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/08-command-surface",
+        "remoteCommit": "162e029143df71d3ca30dbd7ecb52e31f98d3f46",
+        "summary": "PRAXIS-GROUP-08 implemented and verified (full suite 1463/1463)",
+        "nextAction": "Complete PRAXIS-GROUP-08; merge PR #178; continue with PRAXIS-GROUP-07",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T20:44:18.000Z"
+    },
+    {
+      "id": "PRAXIS-EXEC-02",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T20:37:33.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T203734506Z-a99c3fac"
+      ]
+    },
+    {
+      "id": "PRAXIS-GROUP-07",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/FileGroupObservation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "research/groups/GROUP-PRAXIS-GROUPING-001/group-verification-PRAXIS-GROUP-07.json"
+        }
+      ],
+      "updatedAt": "2026-10-06T21:49:23.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T211258004Z-aee38004"
+      ],
+      "latestCheckpoint": {
+        "id": "48b118be1dbe93cb0a7ec38e",
+        "recordedAt": "2026-10-06T21:49:14.000Z",
+        "executionId": "EXE-20261006T211258004Z-aee38004",
+        "repository": "repository-operating-system",
+        "branch": "group/07-cross-repository",
+        "commit": "d471e4df4e59e5359d38b9000491210146c670b1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "group/07-cross-repository",
+        "remoteCommit": "d471e4df4e59e5359d38b9000491210146c670b1",
+        "summary": "PRAXIS-GROUP-07 implemented and verified (full suite 1470/1470)",
+        "nextAction": "Complete PRAXIS-GROUP-07 and merge PR #183",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-06T21:49:23.000Z"
+    },
+    {
       "id": "PRAXIS-QUAL-01",
       "type": "task",
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-10-06T20:37:13.543Z",
+      "updatedAt": "2026-10-06T23:56:00.705Z",
       "telemetryExecutionIds": [
-        "EXE-20261006T203714127Z-dfd040fb"
+        "EXE-20261006T235601611Z-b5b6f4e0"
       ]
     },
     {
@@ -6608,9 +6779,9 @@
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-10-06T21:54:40.903Z",
+      "updatedAt": "2026-10-07T00:12:01.945Z",
       "telemetryExecutionIds": [
-        "EXE-20261006T215442314Z-6f7f2a09"
+        "EXE-20261007T001204420Z-905b1f14"
       ]
     },
     {
@@ -6619,9 +6790,9 @@
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-10-06T21:54:43.640Z",
+      "updatedAt": "2026-10-07T00:12:05.584Z",
       "telemetryExecutionIds": [
-        "EXE-20261006T215445197Z-d78e578d"
+        "EXE-20261007T001207499Z-5dda573d"
       ]
     },
     {
@@ -6630,9 +6801,9 @@
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-10-06T21:54:45.995Z",
+      "updatedAt": "2026-10-07T00:12:08.784Z",
       "telemetryExecutionIds": [
-        "EXE-20261006T215446769Z-522e92f9"
+        "EXE-20261007T001210003Z-368163bb"
       ]
     },
     {
@@ -6641,15 +6812,15 @@
       "state": "active",
       "semanticState": "active",
       "evidence": [],
-      "updatedAt": "2026-10-06T21:54:48.243Z",
+      "updatedAt": "2026-10-07T00:12:11.023Z",
       "telemetryExecutionIds": [
-        "EXE-20261006T215449549Z-494ad502"
+        "EXE-20261007T001212751Z-17f1cf28"
       ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T21:54:48.243Z",
+  "updatedAt": "2026-10-07T00:12:11.023Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

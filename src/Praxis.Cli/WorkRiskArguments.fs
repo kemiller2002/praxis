@@ -79,3 +79,12 @@ module WorkRiskArguments =
                 with
                 | Ok risk -> WorkRiskInput.Given risk
                 | Error reason -> WorkRiskInput.Invalid reason
+
+    /// The `work update` refusal message for a rejected plan.
+    let rejectionMessage (rejection: WorkUpdateRejection) =
+        match rejection with
+        | WorkUpdateRejection.InvalidId id -> $"invalid work-item ID '{id}'"
+        | WorkUpdateRejection.NotFound id -> $"work item '{id}' was not found"
+        | WorkUpdateRejection.EmptyTitle -> "title cannot be empty"
+        | WorkUpdateRejection.InvalidPriority priority -> $"invalid priority '{priority}'; use high, medium, or low"
+        | WorkUpdateRejection.InvalidRisk reason -> $"invalid risk metadata: {reason}"
