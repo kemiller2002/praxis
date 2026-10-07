@@ -146,7 +146,7 @@ module GroupMeasurementTests =
           t "cli a shared session is ingested once into the group execution and never counted twice" (fun () ->
               withGroupExecution (fun clone gex execution ->
                   let input = Path.Combine(clone, "..", "session.json")
-                  File.WriteAllText(input, """{"snapshotId":"shared-session-1","metrics":[{"id":"cost.execution_total","value":3.5,"unit":"currency","currency":"USD","quality":"observed"}]}""")
+                  File.WriteAllText(input, """{"snapshotId":"shared-session-1","prompt":"NEEDLE-PROMPT","message":"NEEDLE-MESSAGE","toolInput":"NEEDLE-TOOL-INPUT","command":"NEEDLE-COMMAND","metrics":[{"id":"cost.execution_total","value":3.5,"unit":"currency","currency":"USD","quality":"observed"}]}""")
                   let first = cli clone [ "telemetry"; "ingest"; gex; "--input"; input; "--json" ] |> ok
                   Assert.equal true (first.Json["changed"].GetValue<bool>())
                   let again = cli clone [ "telemetry"; "ingest"; gex; "--input"; input; "--json" ] |> ok
@@ -163,7 +163,8 @@ module GroupMeasurementTests =
                   Assert.equal 3.5m (split["total"].GetValue<decimal>())
                   Assert.equal "allocated" (text split["allocated"].[0].["quality"])
                   let stored = File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json"))
-                  Assert.isTrue (not (stored.Contains "\"raw\"")) "group-execution telemetry stored a raw payload"))
+                  Assert.isTrue (not (stored.Contains "\"raw\"")) "group-execution telemetry stored a raw payload"
+                  Assert.isTrue (not (stored.Contains "NEEDLE-")) "group-execution telemetry stored prompt, message, tool or command text"))
 
           t "cli completing a group-execution member without cost or an explained capability state warns and still completes" (fun () ->
               withGroupExecutionMode [ "--execution-mode"; "independent"; "--reason"; "measured separately" ] (fun clone _ execution ->
@@ -173,6 +174,25 @@ module GroupMeasurementTests =
                   let completed = cli clone [ "work"; "complete"; "--id"; "ITEM-1"; "--occurred-at"; now (); "--evidence"; "implementation=src/one.txt"; "--evidence"; "tests=src/one.txt" ]
                   Assert.isTrue (completed.Error.Contains "records no cost.execution_total") completed.Error
                   Assert.isTrue (completed.Error.Contains execution && completed.ExitCode = 0) completed.Error))
+
+          t "cli plan groups, explain-group and compare --groups report pricing with its basis and sample counts" (fun () ->
+              withGroupExecution (fun clone _ _ ->
+                  let pricingOf (group: JsonNode) =
+                      let pricing = group["pricing"]
+                      Assert.isTrue ((text pricing["statement"]).Contains "unknown") (pricing.ToJsonString())
+
+                      for arm in [ "grouped"; "independent" ] do
+                          Assert.isTrue (not (isNull pricing[arm].["samples"]) && not (isNull pricing[arm].["costSamples"]) && text pricing[arm].["coverage"] <> "") (pricing.ToJsonString())
+
+                      pricing.ToJsonString()
+
+                  let listed = (run clone None [ "plan"; "groups"; "--json" ] |> ok).Json["groups"].AsArray() |> Seq.find (fun group -> text group["id"] = groupId)
+                  let explained = (run clone None [ "plan"; "explain-group"; groupId; "--json" ] |> ok).Json["group"]
+                  Assert.equal (pricingOf listed) (pricingOf explained)
+                  let compared = run clone None [ "plan"; "compare"; "--groups"; "--json" ]
+                  Assert.isTrue (compared.ExitCode = 0 || compared.ExitCode = 3) compared.Error
+                  let saving = text (compared.Json["tradeoffs"].AsArray() |> Seq.find (fun row -> text row["group"] = groupId)).["contextSaving"]
+                  Assert.isTrue (saving.Contains "priced from measured samples only" && saving.Contains "fewer than 3 priced samples" && saving.Contains "0 of 0 grouped executions") saving))
 
           t "cli the prediction is frozen when a group execution starts and compared with the outcome when it ends" (fun () ->
               withGroupExecution (fun clone gex _ ->
