@@ -4,6 +4,11 @@
 - Members: `PRAXIS-QUAL-01`, `PRAXIS-QUAL-02`, `PRAXIS-QUAL-03`, `PRAXIS-QUAL-04`
 - Execution repository: kemiller2002/praxis
 - Base commit: `f242aae664b4601e106b6e33ebce2b95bedfae35`
+- Group record: first declared at 2026-10-06T20:35Z (commit `aaba4aa`); when
+  `origin/main` (group store v2) was merged in, the branch's Praxis state was
+  taken from main and the declaration was re-recorded with `work group
+  create` (commit `2723128`), so the store's `createdAt` is the re-recorded
+  time. History is append-only from that commit on.
 - Machine-readable form: [`group-analysis.json`](group-analysis.json) (`praxis.group-analysis/1`)
 
 ## 1. Members
