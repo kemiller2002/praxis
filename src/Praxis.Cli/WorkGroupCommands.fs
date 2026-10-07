@@ -31,7 +31,7 @@ module WorkGroupCommands =
         "work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     let addUsage =
-        "work group add --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+        "work group add --group GROUP-ID --member ID|OWNER/REPO:ID --occurred-at TIMESTAMP [--dependency CONSUMER=PRODUCER[@MILESTONE] ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     let usage =
         showUsage
@@ -41,7 +41,7 @@ module WorkGroupCommands =
         + removeUsage
         + " | "
         + checkpointUsage
-        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--home-repository OWNER/REPO] [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG] ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
 
     // ---- argument parsing (shared by the family) ----
 
@@ -102,58 +102,24 @@ module WorkGroupCommands =
 
     // ---- repository facts ----
 
-    let private resolve (root: string) (path: string) = if Path.IsPathRooted path then path else Path.GetFullPath(Path.Combine(root, path))
+    let standing (root: string) = FileWorkGroupFacts.standing root
 
-    /// Where each item executes, by the planner's own rule
-    /// (`Grouping.executionLocation`, PRX-GRP-051): declared
-    /// `grouping.executionRepositories` in the supplied configuration, else an
-    /// external repository inferred from the description, else this one.
-    let private locationOf
-        (root: string)
-        (configurationFile: string option)
-        (queue: PlanningQueueItem list)
-        : Result<string * (string -> ExecutionLocation), string> =
-        let repository = (FilePlanningRepository.readRepository root).Name
-
-        let configured =
-            match configurationFile |> Option.map (resolve root) with
-            | None -> Ok PlannerConfiguration.defaults
-            | Some file when not (File.Exists file) -> Error $"{file} does not exist"
-            | Some file -> PlanningJson.parseConfiguration (File.ReadAllText file)
-
-        configured
-        |> Result.map (fun configuration -> repository, Grouping.executionLocation configuration.Grouping repository queue >> fst)
-
-    /// The standing of every recorded item, from the queue and live context.
-    let standing (root: string) : Result<string -> MemberStanding, string> =
-        FilePlanningRepository.readQueue root
-        |> Result.bind (fun queue -> FilePlanningRepository.readLive root |> Result.map (MemberStanding.lookup queue))
-
-    let private contextFor (root: string) (configurationFile: string option) (groups: StoredWorkGroup list) : Result<string * GroupContext, string> =
-        FilePlanningRepository.readQueue root
-        |> Result.bind (fun queue ->
-            FilePlanningRepository.readLive root
-            |> Result.bind (fun live ->
-                locationOf root configurationFile queue
-                |> Result.map (fun (repository, locate) ->
-                    repository,
-                    { Groups = groups
-                      Standing = MemberStanding.lookup queue live
-                      RepositoryOf = locate })))
+    let private contextFor (root: string) (configurationFile: string option) (groupId: string) (groups: StoredWorkGroup list) =
+        FileWorkGroupFacts.contextFor root configurationFile (Some groupId) groups
 
     // ---- rendering (shared by the family) ----
 
-    let private envelope (command: string) (status: string) (fields: (string * JsonNode) list) =
+    let envelope (command: string) (status: string) (fields: (string * JsonNode) list) =
         WorkGroupJson.record ([ "command", WorkGroupJson.text command; "schemaVersion", WorkGroupJson.integer 1; "status", WorkGroupJson.text status ] @ fields)
 
-    let private printJson (node: JsonObject) = printf "%s" (WorkGroupJson.render node)
+    let printJson (node: JsonObject) = printf "%s" (WorkGroupJson.render node)
 
-    let private reportArgumentErrors (command: string) (commandUsage: string) (errors: string list) =
+    let reportArgumentErrors (command: string) (commandUsage: string) (errors: string list) =
         errors |> List.iter (eprintfn "ERROR %s")
         eprintfn "Usage: ros %s" commandUsage
         2
 
-    let private reportFailure (asJson: bool) (command: string) (message: string) =
+    let reportFailure (asJson: bool) (command: string) (message: string) =
         if asJson then
             printJson (envelope command "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "persistence-failed"; "message", WorkGroupJson.text message ] ])
         else
@@ -161,7 +127,7 @@ module WorkGroupCommands =
 
         1
 
-    let private reportRejections (asJson: bool) (command: string) (groupId: string) (rejections: GroupRejection list) =
+    let reportRejections (asJson: bool) (command: string) (groupId: string) (rejections: GroupRejection list) =
         if asJson then
             printJson (envelope command "rejected" [ "groupId", WorkGroupJson.text groupId; "rejections", rejections |> List.map WorkGroupJson.rejectionNode |> WorkGroupJson.array ])
         else
@@ -175,13 +141,15 @@ module WorkGroupCommands =
     let private stateNotice = $"Praxis state changed in {FileWorkGroupRepository.relativePath}; commit and push it. No member's lifecycle, evidence or attribution was changed."
 
     /// Runs one mutation of the store: facts, decision, write (unless
-    /// `--dry-run`), render. Every mutating verb goes through here.
+    /// `--dry-run` or nothing changed), render. Every mutating verb goes
+    /// through here. A repeat whose end state holds reports `changed: false`
+    /// and appends no history (PRX-GRP-114).
     let private mutate
         (root: string)
         (command: string)
         (arguments: Arguments)
         (groupId: string)
-        (decide: GroupContext -> Result<StoredWorkGroup, GroupRejection list>)
+        (decide: GroupContext -> Result<GroupChange, GroupRejection list>)
         (describe: StoredWorkGroup -> string list)
         =
         let asJson = arguments.Switches.Contains "--json"
@@ -189,34 +157,58 @@ module WorkGroupCommands =
 
         let outcome =
             FileWorkGroupRepository.transact root dryRun (fun groups ->
-                match contextFor root (single arguments "--config") groups with
+                match contextFor root (single arguments "--config") groupId groups with
                 | Error message -> Error(Choice1Of2 message)
                 | Ok(_, context) ->
                     decide context
                     |> Result.mapError Choice2Of2
-                    |> Result.map (fun group -> WorkGroups.upsert groups group, group))
+                    |> Result.map (fun change -> (if change.Changed then WorkGroups.upsert groups change.Group else groups), change))
 
         match outcome with
         | Error message
         | Ok(Error(Choice1Of2 message)) -> reportFailure asJson command message
         | Ok(Error(Choice2Of2 rejections)) -> reportRejections asJson command groupId rejections
-        | Ok(Ok group) ->
-            let status = if dryRun then "dry-run" else "recorded"
+        | Ok(Ok change) ->
+            let status = if dryRun then "dry-run" elif change.Changed then "recorded" else "unchanged"
 
             if asJson then
-                printJson (envelope command status [ "dryRun", WorkGroupJson.boolean dryRun; "group", WorkGroupJson.groupNode group ])
+                printJson (
+                    envelope
+                        command
+                        status
+                        [ "dryRun", WorkGroupJson.boolean dryRun
+                          "changed", WorkGroupJson.boolean change.Changed
+                          "warnings", WorkGroupJson.texts change.Warnings
+                          "group", WorkGroupJson.groupNode change.Group ]
+                )
             else
-                describe group |> List.iter (printfn "%s")
+                describe change.Group |> List.iter (printfn "%s")
+                change.Warnings |> List.iter (eprintfn "WARN %s")
 
-                if dryRun then printfn "dry run: nothing was written"
+                if not change.Changed then printfn "unchanged: the requested state already holds; nothing was recorded"
+                elif dryRun then printfn "dry run: nothing was written"
                 else printfn "%s" stateNotice
 
             0
 
+    /// `--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG]`.
+    let private dependencies (arguments: Arguments) =
+        all arguments "--dependency" |> List.map (fun raw -> raw, MemberDependency.tryParse raw)
+
+    let private dependencyErrors (arguments: Arguments) =
+        dependencies arguments
+        |> List.choose (fun (raw, parsed) ->
+            match parsed with
+            | None -> Some $"--dependency '{raw}' is not CONSUMER=PRODUCER[@complete|merged|released:TAG]"
+            | Some _ -> None)
+
     // ---- work group create ----
 
     let private createValues =
-        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--config"; "--reason" ]
+        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--home-repository"; "--dependency"; "--config"; "--reason" ]
+
+    let private callerExecution (root: string) (rawArguments: string list) =
+        FileWorkGroupFacts.callerExecution root (ProvenanceCommands.identityOverridesFrom rawArguments)
 
     let create (root: string) (rawArguments: string list) (actor: Actor) =
         let command = "work group create"
@@ -259,7 +251,10 @@ module WorkGroupCommands =
                       ArchitectureNotes = all arguments "--architecture-note"
                       OccurredAt = (single arguments "--occurred-at").Value
                       Actor = actor
-                      Reason = single arguments "--reason" }
+                      Reason = single arguments "--reason"
+                      ExecutionId = callerExecution root rawArguments
+                      HomeRepository = single arguments "--home-repository" |> Option.orElse (FileWorkGroupFacts.thisRepository root)
+                      Dependencies = dependencies arguments |> List.choose snd }
 
             let describe (group: StoredWorkGroup) =
                 let declaration = group.Declaration
@@ -275,10 +270,11 @@ module WorkGroupCommands =
 
     // ---- membership changes (add, remove) ----
 
-    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason" ]
+    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason"; "--dependency" ]
 
     let private memberErrors (command: string) (arguments: Arguments) =
         [ yield! commonErrors command arguments [ "--config"; "--reason" ]
+          yield! dependencyErrors arguments
           yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
           yield! groupErrors command arguments
           yield! occurredAtErrors command arguments
@@ -287,13 +283,15 @@ module WorkGroupCommands =
           | [] -> yield $"{command} requires --member ID"
           | _ -> yield $"{command} changes exactly one member; pass --member once" ]
 
-    let private memberRequest (arguments: Arguments) (actor: Actor) : GroupMemberRequest =
+    let private memberRequest (root: string) (rawArguments: string list) (arguments: Arguments) (actor: Actor) : GroupMemberRequest =
         { GroupId = (single arguments "--group").Value
           WorkItemId = (single arguments "--member").Value
           OccurredAt = (single arguments "--occurred-at").Value
           Actor = actor
           Reason = single arguments "--reason"
-          AllowEmpty = arguments.Switches.Contains "--allow-empty" }
+          AllowEmpty = arguments.Switches.Contains "--allow-empty"
+          ExecutionId = callerExecution root rawArguments
+          Dependencies = dependencies arguments |> List.choose snd }
 
     let private changeLines (verb: string) (request: GroupMemberRequest) (group: StoredWorkGroup) =
         let members = match group.Declaration.Members with [] -> "(none)" | ids -> String.concat ", " ids
@@ -308,7 +306,7 @@ module WorkGroupCommands =
         match memberErrors command arguments with
         | _ :: _ as errors -> reportArgumentErrors command addUsage errors
         | [] ->
-            let request = memberRequest arguments actor
+            let request = memberRequest root rawArguments arguments actor
             mutate root command arguments request.GroupId (fun context -> WorkGroups.add context request) (changeLines "added to" request)
 
     let remove (root: string) (rawArguments: string list) (actor: Actor) =
@@ -318,7 +316,7 @@ module WorkGroupCommands =
         match memberErrors command arguments with
         | _ :: _ as errors -> reportArgumentErrors command removeUsage errors
         | [] ->
-            let request = memberRequest arguments actor
+            let request = memberRequest root rawArguments arguments actor
             mutate root command arguments request.GroupId (fun context -> WorkGroups.remove context request) (changeLines "removed from" request)
 
     // ---- work group checkpoint ----
@@ -401,7 +399,7 @@ module WorkGroupCommands =
 
             let outcome =
                 FileWorkGroupRepository.transact root dryRun (fun groups ->
-                    match contextFor root None groups, memberCheckpoints root, ownExecution root rawArguments with
+                    match contextFor root None groupId groups, memberCheckpoints root, ownExecution root rawArguments with
                     | Error message, _, _
                     | _, Error message, _
                     | _, _, Error message -> Error(Choice1Of2 message)
@@ -458,143 +456,6 @@ module WorkGroupCommands =
 
     // ---- work group show ----
 
-    /// Facts per member from the planner's read-only analysis: recorded
-    /// state, planning state and the work items it still waits on.
-    let private analysisFacts (analysis: PlanningAnalysis) (standing: string -> MemberStanding) : string -> MemberFacts =
-        let byId = analysis.Items |> List.map (fun item -> item.Id, item) |> Map.ofList
-
-        fun id ->
-            match byId.TryFind id with
-            | None -> MemberFacts.ofStanding standing id
-            | Some item ->
-                { State = Some item.LifecycleState
-                  PlanningState = Some(PlanningWorkState.code item.PlanningState)
-                  WaitsOn =
-                    item.Dependencies
-                    |> List.filter (fun resolved -> resolved.Status <> DependencyStatus.Satisfied)
-                    |> List.choose (fun resolved ->
-                        match resolved.Dependency.Target with
-                        | DependencyTarget.WorkItem target -> Some target
-                        | _ -> None)
-                    |> List.distinct }
-
-    let private showText (group: StoredWorkGroup) (progress: GroupProgress) =
-        let declaration = group.Declaration
-        let kind = declaration.Kind |> Option.map GroupKind.code |> Option.defaultValue "unspecified kind"
-        let repository = declaration.ExecutionRepository |> Option.defaultValue "unknown"
-        let scope = if declaration.CrossRepository then "yes" else "no"
-        let bullets (values: string list) = match values with [] -> [ "  (none)" ] | values -> values |> List.map (fun value -> $"  - {value}")
-
-        let memberLine (row: MemberProgress) =
-            let state = row.State |> Option.defaultValue "not recorded"
-            let planning = row.PlanningState |> Option.map (fun value -> $" [planning: {value}]") |> Option.defaultValue ""
-            let listed (label: string) (ids: string list) = match ids with [] -> "" | ids -> "; " + label + " " + String.concat ", " ids
-            let waits = listed "waits on" row.WaitsOn
-            let gates = listed "gates" row.Gates
-            $"  {row.WorkItemId,-24} {MemberCategory.code row.Category,-10} recorded {state}{planning}{waits}{gates}"
-
-        let historyLine (entry: GroupHistoryEntry) =
-            let memberText = entry.Member |> Option.map (fun id -> $" {id}") |> Option.defaultValue ""
-            let reason = entry.Reason |> Option.map (fun text -> $": {text}") |> Option.defaultValue ""
-            let empty = if entry.ExplicitEmpty then " (explicitly left the group empty)" else ""
-            $"  {entry.At} {GroupOperation.code entry.Operation}{memberText} by {ActorKind.code entry.Actor.Kind}:{entry.Actor.Id}{empty}{reason}"
-
-        [ yield $"WORK GROUP {declaration.Id} ({kind}, {GroupOrigin.code declaration.Origin})"
-          yield $"Executes in: {repository} (cross-repository: {scope})"
-          yield $"Progress:    {GroupProgress.summary progress}; each member completes on its own evidence (PRX-GRP-042)"
-          yield ""
-          yield "MEMBERS"
-          yield! progress.Members |> List.map memberLine
-          match progress.Members |> List.filter (fun row -> row.Category = MemberCategory.Blocked) with
-          | [] -> ()
-          | blocked ->
-              yield ""
-              yield "BLOCKED"
-
-              for row in blocked do
-                  let gates = match row.Gates with [] -> "gates no other member" | ids -> "gates " + String.concat ", " ids
-                  yield $"  {row.WorkItemId}: {gates}"
-          yield ""
-          yield "SHARED CONTEXT"
-          yield! bullets declaration.SharedContext
-          yield ""
-          yield "ARCHITECTURE NOTES"
-          yield! bullets declaration.ArchitectureNotes
-          yield ""
-          yield "HISTORY"
-          yield! group.History |> List.map historyLine
-          yield ""
-          yield "LATEST GROUP CHECKPOINT"
-          match group.Checkpoints |> List.tryLast with
-          | None -> yield "  none recorded"
-          | Some latest ->
-              let listed (values: string list) = match values with [] -> "(none)" | values -> String.concat ", " values
-              yield $"  {latest.CheckpointId} at {latest.RecordedAt} on {latest.Location.Branch} @ {latest.Location.LocalCommit.Value}"
-              yield $"  completed then: {listed latest.Completed}; remaining then: {listed latest.Remaining}"
-              yield! latest.Decisions |> List.map (fun decision -> $"  decision: {decision}")
-              yield $"  summary: {latest.Summary}"
-              yield $"  next action: {latest.NextAction}" ]
-
-    /// Read-only: reads the store, the queue, the live context and the
-    /// planner's analysis; never takes a lock and never writes.
-    let show (root: string) (rawArguments: string list) =
-        let command = "work group show"
-        let arguments = parse [ "--config" ] [] rawArguments
-        let asJson = arguments.Switches.Contains "--json"
-
-        let errors =
-            [ yield! commonErrors command arguments [ "--config" ]
-              match arguments.Positional with
-              | [ _ ] -> ()
-              | [] -> yield $"{command} requires GROUP-ID"
-              | _ -> yield $"{command} shows exactly one group" ]
-
-        match errors with
-        | _ :: _ -> reportArgumentErrors command showUsage errors
-        | [] ->
-            let groupId = arguments.Positional.Head
-            let plannedAt = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
-            let port = FilePlanningRepository.create root None (single arguments "--config" |> Option.map (resolve root))
-
-            let found =
-                FileWorkGroupRepository.read root
-                |> Result.bind (fun groups ->
-                    standing root
-                    |> Result.bind (fun standing ->
-                        match WorkGroups.tryFind groups groupId with
-                        | None -> Ok None
-                        | Some group ->
-                            Praxis.Application.Planning.PlanningOperations.analyze port plannedAt "work-group"
-                            |> Result.map (fun (_, analysis) -> Some(group, WorkGroups.progress group (analysisFacts analysis standing)))))
-
-            match found with
-            | Error message ->
-                if asJson then printJson (envelope command "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "read-failed"; "message", WorkGroupJson.text message ] ])
-                else eprintfn "ERROR %s" message
-
-                1
-            | Ok None ->
-                let rejection = GroupRejection.UnknownGroup groupId
-
-                if asJson then printJson (envelope command "not-found" [ "groupId", WorkGroupJson.text groupId; "rejections", WorkGroupJson.array [ WorkGroupJson.rejectionNode rejection ] ])
-                else eprintfn "ERROR [%s] %s" (GroupRejection.code rejection) (GroupRejection.message rejection)
-
-                1
-            | Ok(Some(group, progress)) ->
-                if asJson then
-                    printJson (
-                        envelope
-                            command
-                            "found"
-                            [ "group", WorkGroupJson.groupNode group
-                              "progress", WorkGroupJson.progressNode progress
-                              "members", progress.Members |> List.map WorkGroupJson.memberProgressNode |> WorkGroupJson.array ]
-                    )
-                else
-                    showText group progress |> List.iter (printfn "%s")
-
-                0
-
     // ---- validate ----
 
     /// `validate`'s findings for stored groups: an unreadable store, a
@@ -618,9 +479,11 @@ module WorkGroupCommands =
             let groups = read.Groups |> List.choose (fun (_, _, result) -> match result with Ok group -> Some group | Error _ -> None)
 
             let invariants =
-                match contextFor root None groups with
+                match FileWorkGroupFacts.context root None groups with
                 | Error message -> [ path, "groups", message ]
-                | Ok(_, context) -> WorkGroups.findings context |> List.map (fun (id, field, message) -> path, (if id = "" then field else $"{id}.{field}"), message)
+                | Ok(_, context) ->
+                    let references = match read.References with Ok references -> references | Error _ -> []
+                    (WorkGroups.findings context @ WorkGroups.crossRepositoryFindings { Groups = groups; References = references } context.Standing) |> List.map (fun (id, field, message) -> path, (if id = "" then field else $"{id}.{field}"), message)
 
             let checkpoints =
                 let owners =
@@ -631,4 +494,45 @@ module WorkGroupCommands =
                 WorkGroups.checkpointFindings owners.TryFind groups
                 |> List.map (fun (id, field, message) -> path, $"{id}.{field}", message)
 
-            malformed @ invariants @ checkpoints
+            let history =
+                FileWorkGroupFacts.committed root
+                |> List.collect (fun (revision, committed) -> WorkGroups.historyFindings revision committed groups)
+                |> List.distinctBy (fun (id, field, _) -> id, field)
+                |> List.map (fun (id, field, message) -> path, $"{id}.{field}", message)
+
+            let references =
+                match read.References with
+                | Ok _ -> []
+                | Error problems -> problems |> List.map (fun problem -> path, "references", problem)
+
+            malformed @ references @ invariants @ checkpoints @ history
+
+    /// `validate` warnings (PRX-GRP-102): a cross-repository membership whose
+    /// member repository holds no reference, or a reference whose home does
+    /// not list the item. Only observable repositories are judged; the two
+    /// repositories change at different times, so this is never an error.
+    let validationWarnings (root: string) : (string * string * string) list =
+        let path = FileWorkGroupRepository.relativePath
+
+        match FileWorkGroupRepository.readStore root with
+        | Error _ -> []
+        | Ok store ->
+            let home =
+                store.Groups
+                |> List.filter (fun group -> group.Declaration.CrossRepository)
+                |> List.collect (fun group ->
+                    match FileWorkGroupFacts.memberFactsFor root None (Some group.Declaration.Id) with
+                    | Error _ -> []
+                    | Ok facts ->
+                        WorkGroups.unlinkedMembers (WorkGroups.progress group facts)
+                        |> List.map (fun memberId -> path, $"{group.Declaration.Id}.members", $"{memberId} is a member of {group.Declaration.Id}, but its repository holds no reference to the group: unlinked (run work group link there)"))
+
+            let members =
+                match store.References, FileWorkGroupFacts.homeMembership root None with
+                | [], _
+                | _, Error _ -> []
+                | references, Ok membership ->
+                    WorkGroups.unlinkedReferences references (FileWorkGroupFacts.thisRepository root) membership
+                    |> List.map (fun (reference, message) -> path, $"references.{reference.GroupId}.{reference.WorkItemId}", message)
+
+            home @ members
