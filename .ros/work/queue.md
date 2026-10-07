@@ -115,11 +115,11 @@
 | PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |
 | PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
 | PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | complete | pr92 | high |
-| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | ready | quality, pacing | high |
-| PRAXIS-QUAL-02 | Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005) | ready | quality, pacing | high |
-| PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | ready | quality, pacing | medium |
-| PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | ready | quality, pacing | high |
-| PRAXIS-QUAL-05 | Provider-neutral capacity port consumed by the planner (PRX-QUAL-009) | ready | quality, planning | medium |
+| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | active | quality, pacing | high |
+| PRAXIS-QUAL-02 | Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005) | active | quality, pacing | high |
+| PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | active | quality, pacing | medium |
+| PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | active | quality, pacing | high |
+| PRAXIS-QUAL-05 | Provider-neutral capacity port consumed by the planner (PRX-QUAL-009) | complete | quality, planning | medium |
 | PRAXIS-QUAL-06 | Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010) | ready | quality, release | high |
 | PRAXIS-QUAL-07 | Engineering-risk metadata on work items (PRX-QUAL-020) | ready | quality, completion | high |
 | PRAXIS-QUAL-08 | Design-debt declaration as a completion-readiness facet (PRX-QUAL-021) | ready | quality, completion | high |
