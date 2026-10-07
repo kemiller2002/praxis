@@ -178,10 +178,7 @@ module FilePlanningRepository =
         |> List.choose execution
         |> List.sortWith (fun left right -> String.CompareOrdinal(left.ExecutionId, right.ExecutionId))
 
-    let private repositoryName (root: string) =
-        [ readObject (queuePath root); readObject (contextPath root) ]
-        |> List.tryPick (Option.bind (fun document -> text document "repository"))
-        |> Option.defaultValue (Path.GetFileName(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)))
+    let private repositoryName (root: string) = FileWorkGroupRepository.repositoryName root
 
     let readRepository (root: string) : RepositoryIdentity =
         let branch, commit = ProcessGitRepository.readBranchAndCommit root
@@ -269,4 +266,11 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults }
+          // Stored `work group` declarations are read exactly like
+          // `grouping.groups` (PRX-GRP-073).
+          Configuration =
+            fun () ->
+                readOptionalFile configurationFile (fun _ content -> PlanningJson.parseConfiguration content) PlannerConfiguration.defaults
+                |> Result.bind (fun configuration ->
+                    FileWorkGroupRepository.read root
+                    |> Result.map (fun stored -> WorkGroups.declare (repositoryName root) stored configuration)) }

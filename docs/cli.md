@@ -306,6 +306,22 @@ execution for each) without changing any item; `explain-group` answers why a
 group exists and what would change it (`DF-ROS-2026-A047`). See
 [`planning.md`](planning.md).
 
+### `work group`
+
+```
+ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository]
+                      [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
+                      [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+Durable, human-declared execution groups (phase two of the work-group
+requirements, PRX-GRP-073), stored in `.ros/work/groups.json` with provenance.
+A group command never changes a member's lifecycle state, evidence or
+attribution, and the planner reads a stored group exactly as a
+`grouping.groups` declaration. `validate` checks stored groups. See
+[`planning.md`](planning.md) ("Declared work groups").
+
 ### `work reconcile`
 
 ```

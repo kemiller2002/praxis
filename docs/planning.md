@@ -24,6 +24,9 @@ praxis plan simulate --groups [--max-concurrency N]    waves of groups and ungro
 praxis plan compare  --groups [--max-concurrency N]    grouped versus independent execution, per group
 ```
 
+Durable, human-declared groups are recorded with `praxis work group ...`
+(see "Declared work groups"); the planner reads them like `grouping.groups`.
+
 Common options: `--observations FILE` (external CI/GitHub evidence, below),
 `--config FILE` (planner configuration, below), `--as-of TIMESTAMP` (pin the
 planning timestamp, for reproducible documents). In this checkout use `./ros
@@ -288,6 +291,62 @@ than the observed execution (at least two).
 
 **IDs.** Recommendations are named `GROUP-<REPOSITORY>-<AREA>-<NNN>` and are
 stable for identical inputs only; durable IDs come from declarations.
+
+## Declared work groups (`work group`, phase two)
+
+Phase two of [`PLANNING-WORK-GROUPS.md`](../requirements/PLANNING-WORK-GROUPS.md)
+(PRX-GRP-073; `PRAXIS-GROUP-01`..`05`, proposed cohort of `EX-ROS-2026-A021`;
+not to be merged before that experiment is evaluated and the owner accepts
+phase two). A human (or an agent acting for one) records a durable execution
+group instead of keeping it in a planner configuration file.
+
+**Architecture, shared by every `work group` command.**
+
+- One store: `.ros/work/groups.json` (`schemaVersion` `1.0.0`), Praxis
+  state like the backlog, written atomically under the `work-protocol` lock.
+  A group command writes **only** this file: never a member's backlog row,
+  live record, events, telemetry or checkpoints, so membership cannot change
+  a member's lifecycle state, evidence or attribution (PRX-GRP-002, 041, 043).
+- One typed model and one decision module: `Ros.Domain.Planning.WorkGroups`
+  (pure) decides every command; `WorkGroupJson` is the stored and printed
+  contract; `FileWorkGroupRepository` reads and writes the file and builds the
+  work catalog (each item's recorded state: its live state when it has a live
+  record, otherwise its backlog status); `GroupCommands` parses and renders.
+- Provenance: the group records who created it, who added each member and
+  when, and an append-only `history` of every change (`created`,
+  `member-added`, `member-removed`, `checkpointed`) with actor, time and
+  optional reason.
+- The planner reads a stored group **exactly** as a `grouping.groups`
+  declaration (`WorkGroups.declared`): `plan groups`, `explain-group`,
+  `simulate --groups` and `compare --groups` see it with no option. A
+  configured declaration with the same ID wins; a memberless group declares
+  nothing.
+- `validate` checks the stored file: it parses; IDs are valid and unique;
+  members are tracked work items, listed once, and repository-local unless the
+  group is cross-repository; history begins with creation; and group
+  checkpoints are internally consistent and unaltered (content-addressed IDs).
+  Terminal members are expected: groups complete partially (PRX-GRP-042).
+- Every mutating command takes `--id GROUP-ID --occurred-at TIMESTAMP`,
+  `--dry-run` (decide and print, record nothing) and `--json`, and the usual
+  identity options. A refusal records nothing; argument errors exit `2`,
+  other refusals `1`.
+
+```
+praxis work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP
+                         [--kind KIND] [--origin ORIGIN] [--execution-repository NAME]
+                         [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]*
+                         [--reason TEXT] [--config FILE] [--dry-run] [--json]
+```
+
+`create` records a declared group. IDs follow PRX-GRP-010
+(`GROUP-<AREA>-<SEQUENCE>`, for example `GROUP-PRAXIS-PLANNING-001`). It
+refuses an invalid or already-declared ID (stored, or in the `--config`
+planner configuration), no members, a member named twice, and an unknown or
+terminal (complete or abandoned) member. The execution repository defaults to
+this repository; a member executing elsewhere (its
+`grouping.executionRepositories` entry in `--config`) is refused unless the
+group is `--cross-repository` (PRX-GRP-051). `--origin` defaults to
+`human-declared`.
 
 ## JSON contract
 
