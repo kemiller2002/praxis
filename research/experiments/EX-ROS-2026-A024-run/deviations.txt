@@ -116,3 +116,12 @@ treatments, thresholds, blinding or stop rules.
   arm-C item-02 slot, label `arm-3-02r2`.
 - Before each launch the orchestrator confirms the remote head with
   `git ls-remote`. After launch it confirms that the start check passed.
+
+## D6 — Claude Code runtime moved from 2.1.292 to 2.1.293 (platform update)
+
+- The sessions launched at 20:49Z (`arm-3-02r2`, `arm-2-03`) report
+  `container_cc_version` 2.1.293. All earlier sessions reported 2.1.292.
+- Frozen binding rule: a different runtime version between sessions is a
+  recorded deviation with a sensitivity note. It does not invalidate. The
+  model (claude-opus-5-5) and the effort binding are unaffected and are
+  checked per request from telemetry.
