@@ -1717,5 +1717,62 @@
     "title": "Grouped work v2 - first-class cross-repository groups, the full group command surface, grouped execution by default for high-affinity groups behind enforced gates, and measured context reuse and cost",
     "updated": "2026-10-06",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-06",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A024"
+    ],
+    "id": "DF-ROS-2026-A054",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A054--python-automation-prohibited-with-approved-exceptions.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T213719240Z-8ddc5e25": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T21:37:44.731Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-MISC-08: prohibit Python automation and record the owner-approved exceptions"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A024",
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "EX-ROS-2026-A021",
+      "EX-ROS-2026-A022",
+      "EX-ROS-2026-A023"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "python",
+      "invariant",
+      "exception",
+      "decision"
+    ],
+    "title": "Python automation is prohibited by the F#/.NET-only invariant; frozen research instruments, the runtime-free bootstrap and the pinned remote adapter are approved exceptions",
+    "updated": "2026-10-06",
+    "version": "1.0.0"
   }
 ]

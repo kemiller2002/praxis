@@ -19,13 +19,16 @@ module FileImplementationPolicyRepository =
         { Path = stringProperty element "path"
           Decision = stringProperty element "decision" }
 
+    let private flag (policy: JsonElement) (name: string) =
+        match policy.TryGetProperty name with
+        | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+        | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+        | false, _ -> Ok false
+        | true, _ -> Error $"ros.json implementationPolicy.{name} must be true or false"
+
     let private parsePolicy (policy: JsonElement) : Result<ImplementationPolicy, string> =
-        let prohibit =
-            match policy.TryGetProperty "prohibitNodeArtifacts" with
-            | true, value when value.ValueKind = JsonValueKind.True -> Ok true
-            | true, value when value.ValueKind = JsonValueKind.False -> Ok false
-            | false, _ -> Ok false
-            | true, _ -> Error "ros.json implementationPolicy.prohibitNodeArtifacts must be true or false"
+        let prohibit = flag policy "prohibitNodeArtifacts"
+        let prohibitPython = flag policy "prohibitPythonAutomation"
 
         let exceptions =
             match policy.TryGetProperty "exceptions" with
@@ -47,13 +50,15 @@ module FileImplementationPolicyRepository =
                 |> Result.map List.rev
             | true, _ -> Error "ros.json implementationPolicy.exceptions must be an array"
 
-        match prohibit, exceptions with
-        | Ok prohibitNode, Ok items ->
+        match prohibit, prohibitPython, exceptions with
+        | Ok prohibitNode, Ok python, Ok items ->
             Ok
                 { ProhibitNodeArtifacts = prohibitNode
+                  ProhibitPythonAutomation = python
                   Exceptions = items }
-        | Error message, _
-        | _, Error message -> Error message
+        | Error message, _, _
+        | _, Error message, _
+        | _, _, Error message -> Error message
 
     let readPolicy (root: string) : Result<ImplementationPolicy, string> =
         let path = Path.Combine(root, "ros.json")
@@ -75,12 +80,23 @@ module FileImplementationPolicyRepository =
         ProcessGitRepository.listRepositoryFiles root
         |> Result.mapError (fun failure -> $"{failure.Operation} failed: {failure.Message}")
 
+    /// The text of every listed file the policy scans for Python
+    /// invocations; a listed file missing from the working tree (deleted,
+    /// not yet committed) has nothing to scan.
+    let private scannedContents (root: string) (policy: ImplementationPolicy) (paths: string list) =
+        paths
+        |> List.filter (ImplementationLanguagePolicy.scansContent policy)
+        |> List.choose (fun path ->
+            let full = Path.Combine(root, path)
+            if File.Exists full then Some(path, File.ReadAllText full) else None)
+
     /// The policy's findings for the repository at `root`; an unconfigured
     /// policy never lists files, so it needs no Git repository at all.
     let findings (root: string) : Result<ImplementationPolicyFinding list, string> =
         readPolicy root
         |> Result.bind (fun policy ->
-            if policy.ProhibitNodeArtifacts then
-                listFiles root |> Result.map (ImplementationLanguagePolicy.findings policy)
+            if policy.ProhibitNodeArtifacts || policy.ProhibitPythonAutomation then
+                listFiles root
+                |> Result.map (fun paths -> ImplementationLanguagePolicy.findings policy paths (scannedContents root policy paths))
             else
                 Ok(ImplementationLanguagePolicy.configurationFindings policy))

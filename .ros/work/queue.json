@@ -2312,33 +2312,6 @@
       "sourceReference": "RQ-ROS-2026-A021"
     },
     {
-      "id": "WI-0061-REUSED",
-      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
-      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
-      "tags": [
-        "remote-execution",
-        "gh-90"
-      ],
-      "priority": "medium",
-      "status": "abandoned",
-      "attachments": [],
-      "createdAt": "2026-09-28T20:03:07.959Z",
-      "updatedAt": "2026-10-06T21:15:24.000Z",
-      "createdBy": "unknown",
-      "createdByActor": {
-        "kind": "agent",
-        "id": "anthropic/claude-code",
-        "provider": "anthropic",
-        "model": "unknown",
-        "runtime": "claude-code"
-      },
-      "source": "manual",
-      "sourceReference": null,
-      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION.",
-      "reidentifiedFrom": "WI-0061",
-      "reidentifiedReason": "ros add allocated WI-0061 on 2026-09-28 for a new obligation although WI-0061 was already a completed live work item; this row is that other obligation (abandoned, re-captured as PRAXIS-REMOTE-14), not the completed WI-0061 (PRAXIS-HYG-02)"
-    },
-    {
       "id": "PRAXIS-REMOTE-14",
       "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
       "description": "Child of GH-90, found in PRAXIS-REMOTE-13 (supersedes the abandoned, ID-colliding WI-0061 backlog entry). In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch without force-pushing. Depends on: PRAXIS-REMOTE-06.",
@@ -5180,10 +5153,10 @@
         "tooling"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:10.203Z",
-      "updatedAt": "2026-10-06T20:37:10.203Z",
+      "updatedAt": "2026-10-07T08:49:15.917Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5218,6 +5191,57 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-MISC-10",
+      "title": "Remote adapter without Python: F# commands in the pinned release, then switch the scripts (RQ-ROS-2026-A024, DF-ROS-2026-A054)",
+      "description": "Follow-up of PRAXIS-MISC-08. scripts/praxis-remote-persist.sh, scripts/praxis-remote-inbox.sh, .github/actions/praxis-remote/action.yml and .github/workflows/praxis-remote.yml still run inline python3 under the time-boxed DF-ROS-2026-A054 exception, because they run on runners with only the pinned native Praxis release and no .NET. Plan: (1) add praxis commands that do their JSON work (adapter result document, persistence facts from a response, the outcome report to GITHUB_OUTPUT/step summary/log with stop-commands, the classification's mutating flag, inbox routing decisions) with tests mirroring RemotePersistScriptTests and PremergeRemoteScriptTests; (2) ship them in a release and pin it in .echelon/toolchain.json; (3) switch the four files to the commands, remove their ros.json exceptions and the Python note in README, and keep every existing adapter and inbox test passing. Acceptance: the four exceptions are gone, ./praxis architecture check passes, and the remote adapter and inbox tests pass unchanged in intent.",
+      "tags": [
+        "implementation-policy",
+        "remote"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-06T21:37:21.145Z",
+      "updatedAt": "2026-10-06T21:37:21.145Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0061-REUSED",
+      "title": "Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict",
+      "description": "Found in PRAXIS-REMOTE-13. In persistence: pull-request mode, scripts/praxis-remote-persist.sh pushes praxis/remote/<digest(requestId)> before gh pr create. If PR creation then fails (rate-limited or repository-write-failed, both advising same-request retry), the retry runs on a fresh checkout, produces a different commit, and pushing it to the existing per-request branch is non-fast-forward, so the adapter reports concurrency-conflict/after-refresh, contradicting the same-request advice. Decide how a retry recognizes and reuses its own existing state branch (e.g. open the PR for it) without force-pushing.",
+      "tags": [
+        "remote-execution",
+        "gh-90"
+      ],
+      "priority": "medium",
+      "status": "abandoned",
+      "attachments": [],
+      "createdAt": "2026-09-28T20:03:07.959Z",
+      "updatedAt": "2026-10-06T21:15:24.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null,
+      "abandonedReason": "Allocated by 'ros add' with an ID that collides with the completed work item WI-0061 in the live context (generated IDs are checked against the queue only). The obligation is re-captured as PRAXIS-REMOTE-14; the allocator defect as WORK-CAPTURE-ID-COLLISION.",
+      "reidentifiedFrom": "WI-0061",
+      "reidentifiedReason": "ros add allocated WI-0061 on 2026-09-28 for a new obligation although WI-0061 was already a completed live work item; this row is that other obligation (abandoned, re-captured as PRAXIS-REMOTE-14), not the completed WI-0061 (PRAXIS-HYG-02)"
     },
     {
       "id": "PRAXIS-ID-01",
