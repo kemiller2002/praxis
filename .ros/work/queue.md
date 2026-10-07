@@ -96,7 +96,7 @@
 | PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | complete | grouping | high |
 | PRAXIS-HYG-01 | Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state | complete | state-hygiene, work-protocol | high |
 | PRAXIS-HYG-02 | validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification | complete | state-hygiene, backlog | high |
-| PRAXIS-HYG-03 | Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully | blocked | provenance | medium |
+| PRAXIS-HYG-03 | Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully | complete | provenance | medium |
 | PRAXIS-HYG-04 | Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations | complete | docs, state-hygiene | medium |
 | PRAXIS-ID-01 | Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050) | complete | identity | high |
 | PRAXIS-ID-02 | Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment) | complete | identity | high |

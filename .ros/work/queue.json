@@ -5462,10 +5462,10 @@
         "provenance"
       ],
       "priority": "medium",
-      "status": "blocked",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:33:54.880Z",
-      "updatedAt": "2026-10-07T04:59:14.000Z",
+      "updatedAt": "2026-10-07T19:24:00.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5475,8 +5475,7 @@
         "runtime": "claude-code"
       },
       "source": "manual",
-      "sourceReference": null,
-      "blockedReason": "Needs the true originators: the repository owner must record EV-ROS-2026-A063's creation himself, and EV-ROS-2026-A067's blinded evaluator left no execution; an agent recording either would fabricate provenance"
+      "sourceReference": null
     },
     {
       "id": "PRAXIS-HYG-04",
