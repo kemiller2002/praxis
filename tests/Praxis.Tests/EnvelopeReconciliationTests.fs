@@ -191,6 +191,31 @@ module EnvelopeReconciliationTests =
                 | Reject findings -> Assert.isTrue (List.contains (InstanceIdentityMismatch("PRAXIS-REMOTE", "PRAXIS-LOCAL")) findings) "missing instance mismatch"
                 | value -> failwithf "expected rejection, got %A" value }
 
+          { Name = "reconciliation rejects a claimed instance the repository does not have or cannot verify (DER-23, 24)"
+            Run = fun () ->
+                let changed = { envelope with PraxisInstanceId = Some "PRAXIS-CLAIMED" }
+                let record: Praxis.Domain.Identity.InstanceRecord =
+                    { InstanceId = (Praxis.Domain.Identity.InstanceId.tryCreate "PRAXIS-CLAIMED").Value
+                      CreatedAt = None
+                      CreatedWith = "test"
+                      Repository = None
+                      Predecessors = [] }
+                let github = Praxis.Domain.Identity.RepositoryProvider.github
+                let repository id = Praxis.Domain.Identity.RepositoryIdentity.create github (Some id) None |> Result.defaultWith failwith
+                let foreign = Praxis.Domain.Identity.LocalInstance.Present(record, Praxis.Domain.Identity.InstanceBinding.Foreign(repository "1", repository "2"))
+                let expect local code =
+                    match EnvelopeReconciliation.decide changed { observed with LocalInstance = local } with
+                    | Reject findings -> Assert.isTrue (findings |> List.map EnvelopeReconciliation.findingCode |> List.contains code) $"missing {code}"
+                    | value -> failwithf "expected rejection, got %A" value
+                expect Praxis.Domain.Identity.LocalInstance.Missing "instance-identity-unestablished"
+                expect (Praxis.Domain.Identity.LocalInstance.Unreadable "broken") "instance-identity-unverifiable"
+                expect foreign "instance-identity-unverifiable"
+                let bound = { observed with LocalInstance = Praxis.Domain.Identity.LocalInstance.Present(record, Praxis.Domain.Identity.InstanceBinding.Bound) }
+                Assert.equal Accept (EnvelopeReconciliation.decide changed bound)
+                let stamped = EnvelopeReconciliation.withLocalInstance bound envelope
+                Assert.equal (Some "PRAXIS-CLAIMED") stamped.PraxisInstanceId
+                Assert.equal None (EnvelopeReconciliation.withLocalInstance { observed with LocalInstance = foreign } envelope).PraxisInstanceId }
+
           { Name = "fallback validation rejects unavailable measurements that carry exact-looking values"
             Run = fun () ->
                 let step =
