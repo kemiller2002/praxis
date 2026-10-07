@@ -36,6 +36,7 @@
     <Compile Include="StepCommands.fs" />
     <Compile Include="ReconciliationCommands.fs" />
     <Compile Include="EnvelopeReconciliationCommands.fs" />
+    <Compile Include="InputInboxCommands.fs" />
     <Compile Include="ArchitectureCommands.fs" />
     <Compile Include="WebHttp.fs" />
     <Compile Include="CliProcess.fs" />

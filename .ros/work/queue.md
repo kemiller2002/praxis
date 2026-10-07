@@ -105,7 +105,7 @@
 | PRAXIS-ID-05 | Praxis instance registration projection (DER-19, 20, 25, 26) | complete | identity | medium |
 | PRAXIS-ID-06 | Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01) | complete | identity | medium |
 | PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
-| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | captured | inbox, reconciliation | high |
+| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | complete | inbox, reconciliation | high |
 | PRAXIS-MISC-02 | Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020) | captured | planning, planner-evidence | medium |
 | PRAXIS-MISC-03 | Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081) | captured | planning, planner-evidence | low |
 | PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | captured | planning, planner-evidence | low |

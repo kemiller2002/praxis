@@ -68,6 +68,7 @@
     <Compile Include="Remote/Identity.fs" />
     <Compile Include="Remote/Execution.fs" />
     <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/InputInbox.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/ConsumerLinks.fs" />

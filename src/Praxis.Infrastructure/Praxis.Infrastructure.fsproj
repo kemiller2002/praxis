@@ -73,6 +73,7 @@
     <Compile Include="Identity/FileInstanceProjection.fs" />
     <Compile Include="Work/FileWorkGroupRepository.fs" />
     <Compile Include="Planning/FilePacingCapacity.fs" />
+    <Compile Include="Work/FileInputInbox.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileGroupObservation.fs" />
     <Compile Include="Planning/FileWorkGroupFacts.fs" />
