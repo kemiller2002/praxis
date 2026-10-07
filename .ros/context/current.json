@@ -4994,18 +4994,73 @@
     {
       "id": "PRAXIS-GROUP-05",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T21:48:10.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Work/Checkpoint.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T22:02:53.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T214810611Z-d4cbeb76"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "c0c0170248c268f05ca6beda",
+        "recordedAt": "2026-10-07T22:02:46.000Z",
+        "executionId": "EXE-20261007T214810611Z-d4cbeb76",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-2",
+        "commit": "3cec7f7a5938175c8501c2da6b4e9bfb1172c43d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-2",
+        "remoteCommit": "3cec7f7a5938175c8501c2da6b4e9bfb1172c43d",
+        "summary": "Implemented work group checkpoint (PRX-GRP-044): durable verification shared with work checkpoint via CheckpointVerification.locate, member checkpoint references, no path claims, show integration, docs and tests (855/855 pass, validate passes)",
+        "nextAction": "Complete PRAXIS-GROUP-05, rebuild the registry, validate, commit and push the Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T22:02:53.000Z",
+      "conclusion": "Verification at 3cec7f7: npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded (0 warnings, 0 errors); dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 855 test(s); 855 passed; 0 failed (10 new work group checkpoint tests, incl. real-remote CLI tests); ./ros validate: validation passed. Acceptance: same durable-checkpoint verification as work checkpoint (shared CheckpointVerification.locate; uncommitted-changes and local-ahead refusals tested); references members' own latest checkpoints and never writes their events/context (tested); carries no paths and is no checkpoint claim, so a later member checkpoint still attributes unowned shared work to itself (PRX-GRP-043, tested)."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:48:10.000Z",
+  "updatedAt": "2026-10-07T22:02:53.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
