@@ -311,6 +311,56 @@ module FilePlanningRepository =
                         { configuration.Grouping with
                             Groups = WorkGroups.declarations configuration.Grouping.Groups stored } }))
 
+    /// Ended group executions as pricing samples (PRX-GRP-155): the shared
+    /// sessions' `cost.execution_total` and `time.active_ms` when ingested,
+    /// else the members' own costs when every member recorded one; elapsed
+    /// time otherwise. Unknown stays unknown.
+    let readGroupSamples (root: string) : GroupedSample list =
+        match FileWorkGroupRepository.read root with
+        | Error _ -> []
+        | Ok groups ->
+            let executions = readExecutions root |> List.map (fun execution -> execution.ExecutionId, execution) |> Map.ofList
+
+            groups
+            |> List.collect (fun group -> group.Executions)
+            |> List.filter (fun execution -> execution.EndedAt.IsSome && not execution.Members.IsEmpty)
+            |> List.map (fun execution ->
+                let shared metricId =
+                    execution.Telemetry |> List.collect (fun snapshot -> snapshot.Metrics |> List.filter (fun metric -> metric.MetricId = metricId))
+
+                let memberCosts =
+                    execution.Members |> List.map (fun begun -> executions.TryFind begun.ExecutionId |> Option.bind History.executionCost)
+
+                let cost =
+                    match shared "cost.execution_total", memberCosts with
+                    | [], costs when not costs.IsEmpty && costs |> List.forall Option.isSome ->
+                        let known = costs |> List.choose id
+
+                        match known |> List.map snd |> List.distinct with
+                        | [ currency ] -> Some(known |> List.sumBy fst, currency)
+                        | _ -> None
+                    | [], _ -> None
+                    | metrics, _ ->
+                        match metrics |> List.map (fun metric -> metric.Currency) |> List.distinct with
+                        | [ currency ] -> Some(metrics |> List.sumBy (fun metric -> metric.Value), currency)
+                        | _ -> None
+
+                let activeMs =
+                    match shared "time.active_ms" with
+                    | [] ->
+                        let parse (value: string) = match DateTimeOffset.TryParse value with | true, at -> Some at | _ -> None
+
+                        Option.map2 (fun (started: DateTimeOffset) (ended: DateTimeOffset) -> int64 (ended - started).TotalMilliseconds) (parse execution.StartedAt) (execution.EndedAt |> Option.bind parse)
+                    | metrics -> Some(metrics |> List.sumBy (fun metric -> int64 metric.Value))
+
+                { GroupExecutionId = execution.Id
+                  Mode = ExecutionMode.code execution.Mode
+                  Members = execution.Members.Length
+                  ExecutionIds = execution.Members |> List.map (fun begun -> begun.ExecutionId)
+                  CostTotal = cost |> Option.map fst
+                  Currency = cost |> Option.bind snd
+                  ActiveMs = activeMs })
+
     let create (root: string) (observationsFile: string option) (configurationFile: string option) : PlanningReadPort =
         { Repository = fun () -> readRepository root
           Queue = fun () -> readQueue root
@@ -318,4 +368,5 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
-          Configuration = fun () -> readConfiguration root configurationFile }
+          Configuration = fun () -> readConfiguration root configurationFile
+          GroupSamples = fun () -> readGroupSamples root }

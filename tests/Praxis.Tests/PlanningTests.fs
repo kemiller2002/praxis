@@ -73,7 +73,8 @@ module PlanningFixtures =
           Live = liveItems
           Executions = executions
           Observations = observations
-          Configuration = configuration }
+          Configuration = configuration
+          GroupSamples = [] }
 
     let stateSafe = { PlannerConfiguration.defaults with PraxisStateMergeSafe = true }
 

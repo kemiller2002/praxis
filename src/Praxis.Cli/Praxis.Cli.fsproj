@@ -53,6 +53,8 @@
     <Compile Include="WorkGroupLinkCommands.fs" />
     <Compile Include="WorkGroupRoutes.fs" />
     <Compile Include="ExecuteGroupCommands.fs" />
+    <Compile Include="GroupTelemetryCommands.fs" />
+    <Compile Include="WorkGroupCostCommands.fs" />
     <Compile Include="PacingStatus.fs" />
     <Compile Include="PacingCommands.fs" />
     <Compile Include="SyncCommands.fs" />

@@ -43,7 +43,13 @@ type ExecuteGroupFacts =
       Successors: (string * string) list
       /// A context-pressure signal for this group's open execution
       /// (PRX-GRP-136), detected deterministically from recorded data.
-      Fallback: GroupFallback option }
+      Fallback: GroupFallback option
+      /// The planner's prediction for a new group execution in a mode over
+      /// its member order (PRX-GRP-158), frozen when it starts.
+      Prediction: (ExecutionMode -> string list -> GroupPrediction) option
+      /// The observed outcome of an ending execution, compared with its
+      /// frozen prediction (PRX-GRP-158).
+      Outcome: (GroupExecutionRecord -> string -> GroupOutcome) option }
 
 [<RequireQualifiedAccess>]
 type ExecuteGroupRejection =
@@ -226,9 +232,11 @@ module GroupExecutions =
             | [], [], Some openExecution, Some fallback when openExecution.Mode = ExecutionMode.Grouped && openExecution.Fallback.IsNone ->
                 let remaining = order |> List.filter (fun id -> not (begunIn (Some openExecution) id) && (blocker id).IsNone)
 
+                let ended = { openExecution with Fallback = Some fallback; EndedAt = Some request.OccurredAt }
+
                 Ok(
                     ExecuteGroupPlan.FellBack(
-                        { openExecution with Fallback = Some fallback; EndedAt = Some request.OccurredAt },
+                        { ended with Outcome = facts.Outcome |> Option.map (fun observe -> observe ended request.OccurredAt) },
                         remaining |> List.map (fun id -> $"{id}: begin it in a fresh, independent execution (work begin --id {id}), or split the group (PRX-GRP-074)")
                     )
                 )
@@ -242,7 +250,8 @@ module GroupExecutions =
 
                     match next, mine with
                     | None, Some openExecution ->
-                        Ok(ExecuteGroupPlan.Finished { openExecution with EndedAt = Some request.OccurredAt })
+                        let ended = { openExecution with EndedAt = Some request.OccurredAt }
+                        Ok(ExecuteGroupPlan.Finished { ended with Outcome = facts.Outcome |> Option.map (fun observe -> observe ended request.OccurredAt) })
                     | None, None ->
                         let why id = blocker id |> Option.defaultValue "already begun"
                         Error [ ExecuteGroupRejection.NothingRunnableHere(members |> List.map (fun id -> $"{id}: {why id}")) ]
@@ -278,7 +287,10 @@ module GroupExecutions =
                                   Members = []
                                   Fallback = None
                                   EndedAt = None
-                                  Successors = [] },
+                                  Successors = []
+                                  Telemetry = []
+                                  Prediction = facts.Prediction |> Option.map (fun predict -> predict mode order)
+                                  Outcome = None },
                                 true
 
                         let newOptOuts =

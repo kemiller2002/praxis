@@ -127,6 +127,7 @@
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="GroupGateTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
+    <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
     <Compile Include="InternalNamingTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />

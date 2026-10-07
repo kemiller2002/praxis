@@ -373,7 +373,10 @@ type WorkGroup =
       Progress: GroupProgress
       ArchitectureNotes: string list
       Notes: GroupNote list
-      GroupedExecution: GroupedQualification }
+      GroupedExecution: GroupedQualification
+      /// Grouped against independent cost and time, from measured samples
+      /// only (PRX-GRP-155).
+      Pricing: GroupPricing }
 
 [<RequireQualifiedAccess>]
 type GroupEndpoint =
@@ -1228,6 +1231,7 @@ module Grouping =
 
         let remaining = members' |> List.filter (fun entry -> entry.Status <> MemberStatus.Complete) |> List.length
         let notes = declaredNotes @ candidate.Notes @ merged @ sizeNotes @ otherNotes
+        let pricing = GroupPricing.price context.Input.Executions context.Input.GroupSamples
 
         let qualification =
             let settings = grouping.GroupedExecution
@@ -1303,7 +1307,7 @@ module Grouping =
           CollisionPairs = collisions |> List.filter (fun collision -> collision.Risk <> CollisionRisk.Safe)
           ParallelSafe = parallelSafe
           Execution = execution
-          ExecutionReasons = reasons @ triage @ [ qualification.Statement ]
+          ExecutionReasons = reasons @ triage @ [ qualification.Statement; pricing.Statement ]
           ContextCost =
             { IndependentAcquisitions = remaining
               GroupedAcquisitions = (if remaining = 0 then 0 else 1)
@@ -1315,7 +1319,8 @@ module Grouping =
           Progress = progress members'
           ArchitectureNotes = candidate.Declared |> Option.map (fun declared -> declared.ArchitectureNotes) |> Option.defaultValue []
           Notes = notes
-          GroupedExecution = qualification }
+          GroupedExecution = qualification
+          Pricing = pricing }
 
     // ---- group relations and dependencies --------------------------------------
 
@@ -1901,7 +1906,7 @@ module Grouping =
                       ExpectedDuration = Estimate.sumDurations durations
                       PeakConcurrency = min 1 items.Length
                       DesignOwners = min 1 items.Length }
-                  ContextSaving = coldStartSaving analysis.History (max 0 (items.Length - 1))
+                  ContextSaving = $"{coldStartSaving analysis.History (max 0 (items.Length - 1))}; {group.Pricing.Statement}"
                   ArchitectureConsideration =
                     $"independent execution gives {items.Length} separate design owner(s) over shared context ({shared}); grouped execution gives one, which must still keep per-item attribution"
                   ContextPressureRisk =

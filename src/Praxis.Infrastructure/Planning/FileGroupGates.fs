@@ -119,3 +119,44 @@ module FileGroupGates =
                                 (observe QualityEvidenceTypes.groupAnalysis GroupEvidenceJson.decodeAnalysis root provided)
                                 (observe QualityEvidenceTypes.groupVerification GroupEvidenceJson.decodeVerification root provided)
                         ))
+
+    /// PRX-GRP-152: a member of a group execution completing without a
+    /// `cost.execution_total` and without a recorded capability state saying
+    /// why cost is unavailable gets a warning, never a refusal.
+    let costWarnings (root: string) (ids: string list) : string list =
+        match FileWorkGroupRepository.read root with
+        | Error _ -> []
+        | Ok groups ->
+            let executions = FileProvenanceRepository.readExecutions root
+
+            ids
+            |> List.collect (fun workItemId ->
+                executions
+                |> List.filter (fun view -> view.WorkItemId = workItemId && view.Status = "active")
+                |> List.choose (fun view -> WorkGroups.executionOf groups workItemId view.ExecutionId |> Option.map (fun (_, execution, _) -> view.ExecutionId, execution.Id)))
+            |> List.choose (fun (executionId, groupExecution) ->
+                match FileTelemetryQueryRepository.readByExecutionId root executionId with
+                | Error _ -> None
+                | Ok record ->
+                    let has (field: string) (predicate: JsonObject -> bool) =
+                        match record[field] with
+                        | :? JsonArray as entries -> entries |> Seq.exists (function :? JsonObject as entry -> predicate entry | _ -> false)
+                        | _ -> false
+
+                    let named (entry: JsonObject) (key: string) (value: string) =
+                        match entry[key] with
+                        | :? JsonValue as found -> found.ToString() = value
+                        | _ -> false
+
+                    let costRecorded = has "metrics" (fun metric -> named metric "id" "cost.execution_total")
+
+                    let explained =
+                        has "capabilities" (fun capability ->
+                            named capability "metricId" "cost.execution_total"
+                            && List.exists (named capability "status") [ "unsupported"; "supported-unavailable"; "unavailable" ]
+                            && not (named capability "reason" "runtime capability not reported or mapped"))
+
+                    if costRecorded || explained then None
+                    else
+                        Some
+                            $"{executionId} ({groupExecution}) records no cost.execution_total and no capability state explaining why; record it with `telemetry record {executionId} --metric cost.execution_total --value AMOUNT --currency USD`, or record why it is unavailable (PRX-GRP-152)")
