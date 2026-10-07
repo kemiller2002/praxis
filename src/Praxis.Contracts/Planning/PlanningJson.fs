@@ -239,6 +239,36 @@ module PlanningJson =
         |> List.map (fun state -> PlanningWorkState.code state, integer (items |> List.filter (fun item -> item.PlanningState = state) |> List.length))
         |> record
 
+    let private capacityState (state: CapacityState) =
+        let fields =
+            match state with
+            | CapacityState.Available -> []
+            | CapacityState.Constrained(until, reason)
+            | CapacityState.Exhausted(until, reason) ->
+                [ yield! until |> Option.map (fun at -> "until", text at) |> Option.toList
+                  "reason", text reason ]
+            | CapacityState.Unknown reason -> [ "reason", text reason ]
+
+        ("state", text (CapacityState.code state)) :: fields
+
+    /// PRX-QUAL-009: provider capacity and whether it affected ordering.
+    let capacity (value: CapacityAssessment) : JsonNode =
+        record
+            [ "statement", text value.Statement
+              "limited", boolean value.Limited
+              "affectsOrdering", boolean value.AffectsOrdering
+              "providerFreeItems", texts value.ProviderFreeItems
+              "providerSwitching", text "never chosen by the planner; requires capability and model compatibility"
+              "providers",
+              value.Providers
+              |> List.map (fun provider ->
+                  record (
+                      [ "provider", text provider.Provider ]
+                      @ capacityState provider.State
+                      @ [ "source", text (EvidenceSource.code provider.Provenance.Source); "reference", text provider.Provenance.Reference ]
+                  ))
+              |> array ]
+
     let analysis (value: PlanningAnalysis) : JsonNode =
         record
             [ "schema", text schema
@@ -255,6 +285,7 @@ module PlanningJson =
               "unlocks", value.Unlocks |> List.map unlock |> array
               "collisions", value.Collisions |> List.map collision |> array
               "history", history value.History
+              "capacity", capacity value.Capacity
               "evidenceRecommendations", texts value.EvidenceRecommendations ]
 
     // ---- plans ------------------------------------------------------------------
@@ -885,6 +916,45 @@ module PlanningJson =
         with
         | Malformed message -> Error $"malformed observations: {message}"
         | :? JsonException as error -> Error $"malformed observations: {error.Message}"
+
+    /// Provider capacity supplied alongside observations (`capacity` array,
+    /// optional): `{provider, state: available|constrained|exhausted|unknown,
+    /// until?, reason?, reference?}`. Provider-neutral: the provider is a name.
+    let parseCapacity (origin: string) (json: string) : Result<ProviderCapacity list, string> =
+        try
+            let root = JsonNode.Parse json |> asObject "observations"
+
+            match field root "capacity" with
+            | null -> Ok []
+            | _ ->
+                objects root "capacity"
+                |> List.mapi (fun index node ->
+                    let reason () = readOptionalText node "reason" |> Option.defaultValue "no reason given"
+                    let until = readOptionalText node "until"
+
+                    let state =
+                        match readText node "state" with
+                        | "available" -> CapacityState.Available
+                        | "constrained" -> CapacityState.Constrained(until, reason ())
+                        | "exhausted" -> CapacityState.Exhausted(until, reason ())
+                        | "unknown" -> CapacityState.Unknown(reason ())
+                        | other -> fail $"unknown capacity state '{other}'"
+
+                    let provider = readText node "provider"
+
+                    if provider.Trim() = "" then
+                        fail "capacity provider must not be empty"
+
+                    { Provider = provider
+                      State = state
+                      Provenance =
+                        Provenance.create
+                            EvidenceSource.ExternalObservation
+                            (readOptionalText node "reference" |> Option.defaultValue $"{origin}#capacity[{index}]") })
+                |> Ok
+        with
+        | Malformed message -> Error $"malformed capacity: {message}"
+        | :? JsonException as error -> Error $"malformed capacity: {error.Message}"
 
     // ---- work groups (requirements/PLANNING-WORK-GROUPS.md) ----------------------
 

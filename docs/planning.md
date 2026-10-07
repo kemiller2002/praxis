@@ -45,6 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
+| Provider capacity (PRX-QUAL-009) | `capacity` in `--observations FILE`; usage-pacing state when `PRAXIS_PACING_DIR` names its directory | `external-observation`, `telemetry` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -68,6 +69,42 @@ write member at all.
 
 A CI subject is a work-item ID or a checkpoint commit. Observations are
 evidence only; they never rewrite recorded state (PRX-PLAN-021).
+
+### Provider capacity
+
+Provider capacity (PRX-QUAL-009) reaches the planner through the
+provider-neutral `PlanningReadPort.Capacity` port. The same observations file
+can carry it:
+
+```json
+{ "observations": [],
+  "capacity": [
+    { "provider": "claude", "state": "exhausted", "until": "2026-10-07T17:00:00Z", "reason": "hard limit" },
+    { "provider": "codex", "state": "unknown", "reason": "provider offline" } ] }
+```
+
+`state` is `available`, `constrained`, `exhausted` or `unknown`; the provider
+is an opaque name. When `PRAXIS_PACING_DIR` names a usage-pacing directory,
+the planner also reads it (read-only): an unexpired hard-limit hold is
+`exhausted` until its reset, a weekly pacing hold is `constrained`, a reading
+younger than 15 minutes with no hold is `available`, and an older reading or
+unreadable pacing state is `unknown`. Supplied entries win over pacing ones
+for the same provider.
+
+- Unknown capacity is uncertainty, never zero: it is reported
+  (`provider-capacity-unknown`) and changes no ordering. Nothing observed is
+  unknown as well.
+- When a provider is constrained or exhausted and runnable items tagged
+  `provider-free` exist (work that needs no model provider), every strategy
+  orders them first; their entries carry `provider-free-first` and the
+  others `provider-capacity-deferred`. A `provider-capacity-limited` finding
+  recommends provider-free work, checkpointing or waiting.
+- The planner never switches provider or model: it has no knowledge of
+  capability or model compatibility, so that choice stays with the executor.
+- `plan analyze` reports `capacity` (statement, `limited`,
+  `affectsOrdering`, provider states, provider-free items). Observed capacity
+  is part of the snapshot's input fingerprint; without it the fingerprint is
+  unchanged.
 
 ### Configuration file
 
