@@ -1,0 +1,1128 @@
+[
+  {
+    "key": "bai2026tokens",
+    "title": "How Do AI Agents Spend Your Money? Analyzing and Predicting Token Consumption in Agentic Coding Tasks",
+    "authors": [
+      "Longju Bai",
+      "Zhemin Huang",
+      "Xingyao Wang",
+      "Jiao Sun",
+      "Rada Mihalcea",
+      "Erik Brynjolfsson",
+      "Alex Pentland",
+      "Jiaxin Pei"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2604.22750",
+    "verification_url": "https://arxiv.org/pdf/2604.22750",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "limitations"
+  },
+  {
+    "key": "baldassarre2014replication",
+    "title": "Replication types: towards a shared taxonomy",
+    "authors": [
+      "Maria Teresa Baldassarre",
+      "Jeffrey Carver",
+      "Oscar Dieste",
+      "Natalia Juristo"
+    ],
+    "year": 2014,
+    "venue": "Proceedings of the International Conference on Evaluation and Assessment in Software Engineering (EASE 2014)",
+    "doi": "10.1145/2601248.2601299",
+    "arxiv": null,
+    "verification_url": "https://unpaywall.org/10.1145%2F2601248.2601299 (surfaced) ; https://portalcientifico.upm.es/es/ipublic/item/9272656",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; DOI inferred from surfaced resolver URL, re-check",
+    "used_for": "method"
+  },
+  {
+    "key": "baltes2025guidelines",
+    "title": "Guidelines for Empirical Studies in Software Engineering involving Large Language Models",
+    "authors": [
+      "Sebastian Baltes",
+      "others"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2508.15503",
+    "verification_url": "https://arxiv.org/abs/2508.15503v2",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; 22 authors, only first author verified",
+    "used_for": "method"
+  },
+  {
+    "key": "cemri2025why",
+    "title": "Why Do Multi-Agent LLM Systems Fail?",
+    "authors": [
+      "Mert Cemri",
+      "Melissa Z. Pan",
+      "Shuyi Yang",
+      "Lakshya A. Agrawal",
+      "Bhavya Chopra",
+      "Rishabh Tiwari",
+      "Kurt Keutzer",
+      "Aditya Parameswaran",
+      "Dan Klein",
+      "Kannan Ramchandran",
+      "others"
+    ],
+    "year": 2025,
+    "venue": "Advances in Neural Information Processing Systems (NeurIPS 2025), Datasets and Benchmarks Track",
+    "doi": null,
+    "arxiv": "2503.13657",
+    "verification_url": "https://raw.githubusercontent.com/multi-agent-systems-failure-taxonomy/MAST/main/README.md ; https://arxiv.org/abs/2503.13657 ; https://neurips.cc/virtual/2025/122442",
+    "verified_on": "2026-10-07",
+    "depth": "official project repository citation (fetched) + search-index of arXiv/OpenReview record; full author list truncated in source (\"and others\")",
+    "used_for": "comparison"
+  },
+  {
+    "key": "chen2021codex",
+    "title": "Evaluating Large Language Models Trained on Code",
+    "authors": [
+      "Mark Chen",
+      "others"
+    ],
+    "year": 2021,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2107.03374",
+    "verification_url": "https://arxiv.org/abs/2107.03374",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; 58 authors, truncated",
+    "used_for": "motivation"
+  },
+  {
+    "key": "cheng2023batch",
+    "title": "Batch Prompting: Efficient Inference with Large Language Model APIs",
+    "authors": [
+      "Zhoujun Cheng",
+      "Jungo Kasai",
+      "Tao Yu"
+    ],
+    "year": 2023,
+    "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing: Industry Track",
+    "doi": "10.18653/v1/2023.emnlp-industry.74",
+    "arxiv": "2301.08721",
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2023.emnlp.xml ; https://aclanthology.org/2023.emnlp-industry.74/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "comparison"
+  },
+  {
+    "key": "deng2025swebenchpro",
+    "title": "SWE-Bench Pro: Can AI Agents Solve Long-Horizon Software Engineering Tasks?",
+    "authors": [
+      "Xiang Deng",
+      "Jeff Da",
+      "Edwin Pan",
+      "others"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2509.16941",
+    "verification_url": "https://arxiv.org/abs/2509.16941",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; author list truncated",
+    "used_for": "motivation"
+  },
+  {
+    "key": "desilva2012controlling",
+    "title": "Controlling software architecture erosion: A survey",
+    "authors": [
+      "Lakshitha de Silva",
+      "Dharini Balasubramaniam"
+    ],
+    "year": 2012,
+    "venue": "Journal of Systems and Software",
+    "doi": null,
+    "arxiv": null,
+    "verification_url": "https://research-portal.st-andrews.ac.uk/en/publications/controlling-software-architecture-erosion-a-survey/",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; DOI not verified (omitted); given names not verified in source, re-check",
+    "used_for": "motivation"
+  },
+  {
+    "key": "destefanis2026coordinate",
+    "title": "When Agents Coordinate: Measuring Coordination in Multi-Agent AI Coding",
+    "authors": [
+      "Giuseppe Destefanis",
+      "Tomaso Aste"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2608.16801",
+    "verification_url": "https://arxiv.org/pdf/2608.16801",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "geng2026caid",
+    "title": "Effective Strategies for Asynchronous Software Engineering Agents",
+    "authors": [
+      "Jiayi Geng",
+      "Graham Neubig"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2603.21489",
+    "verification_url": "https://arxiv.org/abs/2603.21489",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "gomez2014understanding",
+    "title": "Understanding replication of experiments in software engineering: A classification",
+    "authors": [
+      "Omar S. Gómez",
+      "Natalia Juristo",
+      "Sira Vegas"
+    ],
+    "year": 2014,
+    "venue": "Information and Software Technology",
+    "doi": "10.1016/j.infsof.2014.04.004",
+    "arxiv": null,
+    "verification_url": "https://research.fi/en/results/publication/0671977614",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "hadfield2025multiagent",
+    "title": "How we built our multi-agent research system",
+    "authors": [
+      "Jeremy Hadfield",
+      "Barry Zhang",
+      "Kenneth Lien",
+      "Florian Scholz",
+      "Jeremy Fox",
+      "Daniel Ford"
+    ],
+    "year": 2025,
+    "venue": "Anthropic Engineering Blog (grey literature)",
+    "doi": null,
+    "arxiv": null,
+    "verification_url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "verified_on": "2026-10-07",
+    "depth": "full text (grey literature, fetched)",
+    "used_for": "motivation"
+  },
+  {
+    "key": "he2025judgese",
+    "title": "LLM-as-a-Judge for Software Engineering: Literature Review, Vision, and the Road Ahead",
+    "authors": [
+      "Junda He",
+      "Jieke Shi",
+      "Terry Yue Zhuo",
+      "Christoph Treude",
+      "Jiamou Sun",
+      "Zhenchang Xing",
+      "Xiaoning Du",
+      "David Lo"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2510.24367",
+    "verification_url": "https://arxiv.org/abs/2510.24367v1",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "limitations"
+  },
+  {
+    "key": "herbsleb1999splitting",
+    "title": "Splitting the Organization and Integrating the Code: Conway's Law Revisited",
+    "authors": [
+      "James D. Herbsleb",
+      "Rebecca E. Grinter"
+    ],
+    "year": 1999,
+    "venue": "Proceedings of the International Conference on Software Engineering (ICSE 1999)",
+    "doi": "10.1145/302405.302455",
+    "arxiv": null,
+    "verification_url": "https://www.springerprofessional.de/doi/10.1145/302405.302455 ; https://faculty.cc.gatech.edu/~beki/c10.pdf",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "hong2024metagpt",
+    "title": "MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework",
+    "authors": [
+      "Sirui Hong",
+      "Mingchen Zhuge",
+      "Jonathan Chen",
+      "Xiawu Zheng",
+      "Yuheng Cheng",
+      "Jinlin Wang",
+      "Ceyao Zhang",
+      "Zili Wang",
+      "Steven Ka Shing Yau",
+      "Zijuan Lin",
+      "Liyang Zhou",
+      "Chenyu Ran",
+      "Lingfeng Xiao",
+      "Chenglin Wu",
+      "Jürgen Schmidhuber"
+    ],
+    "year": 2024,
+    "venue": "The Twelfth International Conference on Learning Representations (ICLR)",
+    "doi": null,
+    "arxiv": "2308.00352",
+    "verification_url": "https://raw.githubusercontent.com/geekan/MetaGPT/main/README.md ; https://arxiv.org/abs/2308.00352",
+    "verified_on": "2026-10-07",
+    "depth": "official project repository citation (fetched) + search-index of arXiv/OpenReview record",
+    "used_for": "comparison"
+  },
+  {
+    "key": "jimenez2024swebench",
+    "title": "SWE-bench: Can Language Models Resolve Real-world GitHub Issues?",
+    "authors": [
+      "Carlos E. Jimenez",
+      "John Yang",
+      "Alexander Wettig",
+      "Shunyu Yao",
+      "Kexin Pei",
+      "Ofir Press",
+      "Karthik R. Narasimhan"
+    ],
+    "year": 2024,
+    "venue": "The Twelfth International Conference on Learning Representations (ICLR)",
+    "doi": null,
+    "arxiv": "2310.06770",
+    "verification_url": "https://raw.githubusercontent.com/SWE-bench/SWE-bench/main/README.md ; https://arxiv.org/abs/2310.06770",
+    "verified_on": "2026-10-07",
+    "depth": "official project repository citation (fetched) + search-index of arXiv/OpenReview record",
+    "used_for": "motivation"
+  },
+  {
+    "key": "joshi2025swebenchcl",
+    "title": "SWE-Bench-CL: Continual Learning for Coding Agents",
+    "authors": [
+      "Thomas Joshi",
+      "Shayan Chowdhury",
+      "Fatih Uysal"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2507.00014",
+    "verification_url": "https://arxiv.org/abs/2507.00014",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "kapoor2025agents",
+    "title": "AI Agents That Matter",
+    "authors": [
+      "Sayash Kapoor",
+      "Benedikt Stroebl",
+      "Zachary S. Siegel",
+      "Nitya Nadgir",
+      "Arvind Narayanan"
+    ],
+    "year": 2025,
+    "venue": "Transactions on Machine Learning Research",
+    "doi": null,
+    "arxiv": "2407.01502",
+    "verification_url": "https://arxiv.org/abs/2407.01502 ; https://openreview.net/forum?id=Zy4uFzMviZ",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "khatua2026cooperbench",
+    "title": "CooperBench: Why Coding Agents Cannot be Your Teammates Yet",
+    "authors": [
+      "Arpandeep Khatua",
+      "Hao Zhu",
+      "Peter Tran",
+      "Arya Prabhudesai",
+      "Frederic Sadrieh",
+      "Johann K. Lieberwirth",
+      "Xinkai Yu",
+      "Yicheng Fu",
+      "Michael J. Ryan",
+      "Jiaxin Pei",
+      "Diyi Yang"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2601.13295",
+    "verification_url": "https://github.com/hhh2210/CooperBench (README, fetched) ; https://arxiv.org/abs/2601.13295",
+    "verified_on": "2026-10-07",
+    "depth": "project README with Solo/Coop definitions (fetched) + search-index of arXiv abstract",
+    "used_for": "comparison"
+  },
+  {
+    "key": "laban2025lost",
+    "title": "LLMs Get Lost In Multi-Turn Conversation",
+    "authors": [
+      "Philippe Laban",
+      "Hiroaki Hayashi",
+      "Yingbo Zhou",
+      "Jennifer Neville"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2505.06120",
+    "verification_url": "https://arxiv.org/abs/2505.06120",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; given names expanded from initials, re-check",
+    "used_for": "limitations"
+  },
+  {
+    "key": "le2025sweevo",
+    "title": "SWE-EVO: Benchmarking Coding Agents in Long-Horizon Software Evolution Scenarios",
+    "authors": [
+      "Tue Le",
+      "Minh V. T. Thai",
+      "Dung Nguyen Manh",
+      "Huy Phan Nhat",
+      "Nghi D. Q. Bui"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2512.18470",
+    "verification_url": "https://arxiv.org/abs/2512.18470",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "li2022understanding",
+    "title": "Understanding software architecture erosion: A systematic mapping study",
+    "authors": [
+      "Ruiyin Li",
+      "Peng Liang",
+      "Mohamed Soliman",
+      "Paris Avgeriou"
+    ],
+    "year": 2022,
+    "venue": "Journal of Software: Evolution and Process",
+    "doi": null,
+    "arxiv": "2112.10934",
+    "verification_url": "https://arxiv.org/abs/2112.10934v2",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; DOI not verified (omitted)",
+    "used_for": "motivation"
+  },
+  {
+    "key": "li2025aiteammates",
+    "title": "The Rise of AI Teammates in Software Engineering (SE) 3.0: How Autonomous Coding Agents Are Reshaping Software Engineering",
+    "authors": [
+      "Hao Li",
+      "Haoxiang Zhang",
+      "Ahmed E. Hassan"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2507.15003",
+    "verification_url": "https://arxiv.org/abs/2507.15003",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "li2025feabench",
+    "title": "FEA-Bench: A Benchmark for Evaluating Repository-Level Code Generation for Feature Implementation",
+    "authors": [
+      "Wei Li",
+      "Xin Zhang",
+      "Zhongxin Guo",
+      "Shaoguang Mao",
+      "Wen Luo",
+      "Guangyue Peng",
+      "Yangyu Huang",
+      "Houfeng Wang",
+      "Scarlett Li"
+    ],
+    "year": 2025,
+    "venue": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2025.acl-long.839",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2025.acl.xml ; https://aclanthology.org/2025.acl-long.839/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "comparison"
+  },
+  {
+    "key": "lindenbauer2025complexity",
+    "title": "The Complexity Trap: Simple Observation Masking Is as Efficient as LLM Summarization for Agent Context Management",
+    "authors": [
+      "Tobias Lindenbauer",
+      "Igor Slinko",
+      "Ludwig Felder",
+      "Egor Bogomolov",
+      "Yaroslav Zharov"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2508.21433",
+    "verification_url": "https://arxiv.org/pdf/2508.21433 ; https://openreview.net/forum?id=OHVzruJl5k",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "liu2024lost",
+    "title": "Lost in the Middle: How Language Models Use Long Contexts",
+    "authors": [
+      "Nelson F. Liu",
+      "Kevin Lin",
+      "John Hewitt",
+      "Ashwin Paranjape",
+      "Michele Bevilacqua",
+      "Fabio Petroni",
+      "Percy Liang"
+    ],
+    "year": 2024,
+    "venue": "Transactions of the Association for Computational Linguistics",
+    "doi": "10.1162/tacl_a_00638",
+    "arxiv": "2307.03172",
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2024.tacl.xml ; https://aclanthology.org/2024.tacl-1.9/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "motivation"
+  },
+  {
+    "key": "mohammadi2026coherence",
+    "title": "The Working Set of a Coding Agent: Coherence Debt in Repository-Scale Tasks",
+    "authors": [
+      "Bardia Mohammadi",
+      "Lars Klein",
+      "Aman Chadha",
+      "Akhil Arora",
+      "Laurent Bindschaedler"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2608.16630",
+    "verification_url": "https://arxiv.org/pdf/2608.16630",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "packer2023memgpt",
+    "title": "MemGPT: Towards LLMs as Operating Systems",
+    "authors": [
+      "Charles Packer",
+      "Sarah Wooders",
+      "Kevin Lin",
+      "Vivian Fang",
+      "Shishir G. Patil",
+      "Ion Stoica",
+      "Joseph E. Gonzalez"
+    ],
+    "year": 2023,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2310.08560",
+    "verification_url": "https://arxiv.org/abs/2310.08560",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "parnas1972criteria",
+    "title": "On the Criteria To Be Used in Decomposing Systems into Modules",
+    "authors": [
+      "David L. Parnas"
+    ],
+    "year": 1972,
+    "venue": "Communications of the ACM",
+    "doi": "10.1145/361598.361623",
+    "arxiv": null,
+    "verification_url": "https://cacmb4.acm.org/magazines/1972/12/11949-on-the-criteria-to-be-used-in-decomposing-systems-into-modules",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "perry1992foundations",
+    "title": "Foundations for the Study of Software Architecture",
+    "authors": [
+      "Dewayne E. Perry",
+      "Alexander L. Wolf"
+    ],
+    "year": 1992,
+    "venue": "ACM SIGSOFT Software Engineering Notes",
+    "doi": "10.1145/141874.141884",
+    "arxiv": null,
+    "verification_url": "https://ics.uci.edu/~arcadia/arcadia_papers/arch/found_abstract.html",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "qian2024chatdev",
+    "title": "ChatDev: Communicative Agents for Software Development",
+    "authors": [
+      "Chen Qian",
+      "Wei Liu",
+      "Hongzhang Liu",
+      "Nuo Chen",
+      "Yufan Dang",
+      "Jiahao Li",
+      "Cheng Yang",
+      "Weize Chen",
+      "Yusheng Su",
+      "Xin Cong",
+      "Juyuan Xu",
+      "Dahai Li",
+      "Zhiyuan Liu",
+      "Maosong Sun"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2024.acl-long.810",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2024.acl.xml ; https://aclanthology.org/2024.acl-long.810/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "comparison"
+  },
+  {
+    "key": "qian2024experiential",
+    "title": "Experiential Co-Learning of Software-Developing Agents",
+    "authors": [
+      "Chen Qian",
+      "Yufan Dang",
+      "Jiahao Li",
+      "Wei Liu",
+      "Zihao Xie",
+      "YiFei Wang",
+      "Weize Chen",
+      "Cheng Yang",
+      "Xin Cong",
+      "Xiaoyin Che",
+      "Zhiyuan Liu",
+      "Maosong Sun"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2024.acl-long.305",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2024.acl.xml ; https://aclanthology.org/2024.acl-long.305/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "comparison"
+  },
+  {
+    "key": "rajasekaran2025context",
+    "title": "Effective context engineering for AI agents",
+    "authors": [
+      "Prithvi Rajasekaran",
+      "Ethan Dixon",
+      "Carly Ryan",
+      "Jeremy Hadfield"
+    ],
+    "year": 2025,
+    "venue": "Anthropic Engineering Blog (grey literature)",
+    "doi": null,
+    "arxiv": null,
+    "verification_url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+    "verified_on": "2026-10-07",
+    "depth": "full text (grey literature, fetched)",
+    "used_for": "motivation"
+  },
+  {
+    "key": "ralph2020empirical",
+    "title": "Empirical Standards for Software Engineering Research",
+    "authors": [
+      "Paul Ralph",
+      "others"
+    ],
+    "year": 2020,
+    "venue": "arXiv preprint (ACM SIGSOFT Empirical Standards)",
+    "doi": null,
+    "arxiv": "2010.03525",
+    "verification_url": "https://arxiv.org/abs/2010.03525v2 ; https://www2.sigsoft.org/EmpiricalStandards/",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; multi-author, only first author verified",
+    "used_for": "method"
+  },
+  {
+    "key": "ren2026coordination",
+    "title": "An Empirical Study of Coordination Mode as the First-Class Citizen in From-Scratch Multi-Agent Coding",
+    "authors": [
+      "Yanyu Ren",
+      "Yunfeng Bai",
+      "Xizheng Wang",
+      "Li Chen",
+      "Dan Li"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2607.27877",
+    "verification_url": "https://arxiv.org/abs/2607.27877 ; https://github.com/robinren03/MSEval (README fetched)",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; README fetched for topology list",
+    "used_for": "comparison"
+  },
+  {
+    "key": "runeson2009guidelines",
+    "title": "Guidelines for conducting and reporting case study research in software engineering",
+    "authors": [
+      "Per Runeson",
+      "Martin Höst"
+    ],
+    "year": 2009,
+    "venue": "Empirical Software Engineering",
+    "doi": "10.1007/s10664-008-9102-8",
+    "arxiv": null,
+    "verification_url": "https://www.cse.chalmers.se/~feldt/advice/runeson_2009_emse_case_study_guidelines.pdf ; https://lup.lub.lu.se/record/633111",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "salim2026tokenomics",
+    "title": "Tokenomics: Quantifying Where Tokens Are Used in Agentic Software Engineering",
+    "authors": [
+      "Mohamad Salim",
+      "Jasmine Latendresse",
+      "SayedHassan Khatoonabadi",
+      "Emad Shihab"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2601.14470",
+    "verification_url": "https://arxiv.org/abs/2601.14470",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "sallou2024breaking",
+    "title": "Breaking the Silence: the Threats of Using LLMs in Software Engineering",
+    "authors": [
+      "June Sallou",
+      "Thomas Durieux",
+      "Annibale Panichella"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the ACM/IEEE International Conference on Software Engineering: New Ideas and Emerging Results (ICSE-NIER 2024)",
+    "doi": "10.1145/3639476.3639764",
+    "arxiv": "2312.08055",
+    "verification_url": "https://dl.acm.org/doi/10.1145/3639476.3639764 ; https://arxiv.org/abs/2312.08055",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "limitations"
+  },
+  {
+    "key": "shen2026evocode",
+    "title": "EvoCode-Bench: Evaluating Coding Agents in Multi-Turn Iterative Interactions",
+    "authors": [
+      "Haiyang Shen",
+      "Xuanzhong Chen",
+      "Wendong Xu",
+      "Yun Ma",
+      "Liang Chen",
+      "Kuan Li"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2605.24110",
+    "verification_url": "https://arxiv.org/pdf/2605.24110",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; author list from secondary index, re-check",
+    "used_for": "comparison"
+  },
+  {
+    "key": "shull2008role",
+    "title": "The role of replications in Empirical Software Engineering",
+    "authors": [
+      "Forrest J. Shull",
+      "Jeffrey C. Carver",
+      "Sira Vegas",
+      "Natalia Juristo"
+    ],
+    "year": 2008,
+    "venue": "Empirical Software Engineering",
+    "doi": "10.1007/s10664-008-9060-1",
+    "arxiv": null,
+    "verification_url": "https://unpaywall.org/10.1007%2FS10664-008-9060-1 (surfaced) ; https://publica.fraunhofer.de/handle/publica/215611",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "son2024multitask",
+    "title": "Multi-Task Inference: Can Large Language Models Follow Multiple Instructions at Once?",
+    "authors": [
+      "Guijin Son",
+      "SangWon Baek",
+      "Sangdae Nam",
+      "Ilgyun Jeong",
+      "Seungone Kim"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2024.acl-long.304",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2024.acl.xml ; https://aclanthology.org/2024.acl-long.304/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "comparison"
+  },
+  {
+    "key": "song2026crosscontext",
+    "title": "Cross-Context Review: Improving LLM Output Quality by Separating Production and Review Sessions",
+    "authors": [
+      "Tae-Eun Song"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2603.12123",
+    "verification_url": "https://arxiv.org/abs/2603.12123",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "limitations"
+  },
+  {
+    "key": "trinkenreich2025train",
+    "title": "Get on the Train or be Left on the Station: Using LLMs for Software Engineering Research",
+    "authors": [
+      "Bianca Trinkenreich",
+      "Fabio Calefato",
+      "Geir Kjetil Hanssen",
+      "Kelly Blincoe",
+      "Marcos Kalinowski",
+      "Mauro Pezzè",
+      "Paolo Tell",
+      "Margaret-Anne Storey"
+    ],
+    "year": 2025,
+    "venue": "Companion Proceedings of the 33rd ACM International Conference on the Foundations of Software Engineering (FSE Companion), HumanAISE workshop",
+    "doi": "10.1145/3696630.3731666",
+    "arxiv": "2506.12691",
+    "verification_url": "https://dl.acm.org/doi/10.1145/3696630.3731666 ; https://arxiv.org/pdf/2506.12691",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "wagner2025towards",
+    "title": "Towards Evaluation Guidelines for Empirical Studies involving LLMs",
+    "authors": [
+      "Stefan Wagner",
+      "Marvin Muñoz Barón",
+      "Davide Falessi",
+      "Sebastian Baltes"
+    ],
+    "year": 2025,
+    "venue": "2nd IEEE/ACM International Workshop on Methodological Issues with Empirical Studies in Software Engineering (WSESE 2025)",
+    "doi": null,
+    "arxiv": "2411.07668",
+    "verification_url": "https://arxiv.org/abs/2411.07668v3 ; https://conf.researchr.org/details/icse-2025/wsese-2025-papers/6/Towards-Evaluation-Guidelines-for-Empirical-Studies-involving-LLMs",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "wang2023plan",
+    "title": "Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models",
+    "authors": [
+      "Lei Wang",
+      "Wanyu Xu",
+      "Yihuai Lan",
+      "Zhiqiang Hu",
+      "Yunshi Lan",
+      "Roy Ka-Wei Lee",
+      "Ee-Peng Lim"
+    ],
+    "year": 2023,
+    "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2023.acl-long.147",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2023.acl.xml ; https://aclanthology.org/2023.acl-long.147/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "method"
+  },
+  {
+    "key": "wang2024fair",
+    "title": "Large Language Models are not Fair Evaluators",
+    "authors": [
+      "Peiyi Wang",
+      "Lei Li",
+      "Liang Chen",
+      "Zefan Cai",
+      "Dawei Zhu",
+      "Binghuai Lin",
+      "Yunbo Cao",
+      "Lingpeng Kong",
+      "Qi Liu",
+      "Tianyu Liu",
+      "Zhifang Sui"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    "doi": "10.18653/v1/2024.acl-long.511",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2024.acl.xml ; https://aclanthology.org/2024.acl-long.511/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "limitations"
+  },
+  {
+    "key": "wang2025openhands",
+    "title": "OpenHands: An Open Platform for AI Software Developers as Generalist Agents",
+    "authors": [
+      "Xingyao Wang",
+      "Boxuan Li",
+      "Yufan Song",
+      "Frank F. Xu",
+      "Xiangru Tang",
+      "Mingchen Zhuge",
+      "Jiayi Pan",
+      "Yueqi Song",
+      "Bowen Li",
+      "Jaskirat Singh",
+      "Hoang H. Tran",
+      "Fuqiang Li",
+      "Ren Ma",
+      "Mingzhang Zheng",
+      "Bill Qian",
+      "Yanjun Shao",
+      "Niklas Muennighoff",
+      "Yizhe Zhang",
+      "Binyuan Hui",
+      "Junyang Lin",
+      "Robert Brennan",
+      "Hao Peng",
+      "Heng Ji",
+      "Graham Neubig"
+    ],
+    "year": 2025,
+    "venue": "The Thirteenth International Conference on Learning Representations (ICLR)",
+    "doi": null,
+    "arxiv": "2407.16741",
+    "verification_url": "https://arxiv.org/abs/2407.16741 ; https://iclr.cc/virtual/2025/poster/29831",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "watanabe2025agentic",
+    "title": "On the Use of Agentic Coding: An Empirical Study of Pull Requests on GitHub",
+    "authors": [
+      "Miku Watanabe",
+      "Hao Li",
+      "Yutaro Kashiwa",
+      "Brittany Reid",
+      "Hajimu Iida",
+      "Ahmed E. Hassan"
+    ],
+    "year": 2025,
+    "venue": "arXiv preprint (reported accepted at ACM TOSEM; published record not verified)",
+    "doi": null,
+    "arxiv": "2509.14745",
+    "verification_url": "https://arxiv.org/abs/2509.14745",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "wohlin2012experimentation",
+    "title": "Experimentation in Software Engineering",
+    "authors": [
+      "Claes Wohlin",
+      "Per Runeson",
+      "Martin Höst",
+      "Magnus C. Ohlsson",
+      "Björn Regnell",
+      "Anders Wesslén"
+    ],
+    "year": 2012,
+    "venue": "Springer",
+    "doi": "10.1007/978-3-642-29044-2",
+    "arxiv": null,
+    "verification_url": "https://link.springer.com/doi/10.1007/978-3-642-29044-2",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "method"
+  },
+  {
+    "key": "xia2025agentless",
+    "title": "Demystifying LLM-Based Software Engineering Agents",
+    "authors": [
+      "Chunqiu Steven Xia",
+      "Yinlin Deng",
+      "Soren Dunn",
+      "Lingming Zhang"
+    ],
+    "year": 2025,
+    "venue": "Proceedings of the ACM on Software Engineering",
+    "doi": "10.1145/3715754",
+    "arxiv": "2407.01489",
+    "verification_url": "https://dl.acm.org/doi/10.1145/3715754 ; https://arxiv.org/abs/2407.01489",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "comparison"
+  },
+  {
+    "key": "yan2025dontbuild",
+    "title": "Don't Build Multi-Agents",
+    "authors": [
+      "Walden Yan"
+    ],
+    "year": 2025,
+    "venue": "Cognition blog (grey literature)",
+    "doi": null,
+    "arxiv": null,
+    "verification_url": "https://cognition.ai/blog/dont-build-multi-agents",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only; grey literature; year from secondary sources",
+    "used_for": "motivation"
+  },
+  {
+    "key": "yang2024sweagent",
+    "title": "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering",
+    "authors": [
+      "John Yang",
+      "Carlos E. Jimenez",
+      "Alexander Wettig",
+      "Kilian Lieret",
+      "Shunyu Yao",
+      "Karthik R. Narasimhan",
+      "Ofir Press"
+    ],
+    "year": 2024,
+    "venue": "The Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS 2024)",
+    "doi": null,
+    "arxiv": "2405.15793",
+    "verification_url": "https://raw.githubusercontent.com/SWE-agent/SWE-agent/main/README.md ; https://arxiv.org/abs/2405.15793 ; https://openreview.net/forum?id=mXpq6ut8J3",
+    "verified_on": "2026-10-07",
+    "depth": "official project repository citation (fetched) + search-index of arXiv/OpenReview record",
+    "used_for": "motivation"
+  },
+  {
+    "key": "yao2023react",
+    "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+    "authors": [
+      "Shunyu Yao",
+      "Jeffrey Zhao",
+      "Dian Yu",
+      "Nan Du",
+      "Izhak Shafran",
+      "Karthik R. Narasimhan",
+      "Yuan Cao"
+    ],
+    "year": 2023,
+    "venue": "The Eleventh International Conference on Learning Representations (ICLR)",
+    "doi": null,
+    "arxiv": "2210.03629",
+    "verification_url": "https://arxiv.org/abs/2210.03629",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "zhang2023repocoder",
+    "title": "RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and Generation",
+    "authors": [
+      "Fengji Zhang",
+      "Bei Chen",
+      "Yue Zhang",
+      "Jacky Keung",
+      "Jin Liu",
+      "Daoguang Zan",
+      "Yi Mao",
+      "Jian-Guang Lou",
+      "Weizhu Chen"
+    ],
+    "year": 2023,
+    "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    "doi": "10.18653/v1/2023.emnlp-main.151",
+    "arxiv": null,
+    "verification_url": "https://raw.githubusercontent.com/acl-org/acl-anthology/master/data/xml/2023.emnlp.xml ; https://aclanthology.org/2023.emnlp-main.151/",
+    "verified_on": "2026-10-07",
+    "depth": "abstract (canonical ACL Anthology metadata+abstract read from acl-org/acl-anthology data repository)",
+    "used_for": "motivation"
+  },
+  {
+    "key": "zhang2024autocoderover",
+    "title": "AutoCodeRover: Autonomous Program Improvement",
+    "authors": [
+      "Yuntong Zhang",
+      "Haifeng Ruan",
+      "Zhiyu Fan",
+      "Abhik Roychoudhury"
+    ],
+    "year": 2024,
+    "venue": "Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA)",
+    "doi": "10.1145/3650212.3680384",
+    "arxiv": "2404.05427",
+    "verification_url": "https://dl.acm.org/doi/pdf/10.1145/3650212.3680384 ; https://arxiv.org/abs/2404.05427",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "motivation"
+  },
+  {
+    "key": "zheng2023judging",
+    "title": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+    "authors": [
+      "Lianmin Zheng",
+      "Wei-Lin Chiang",
+      "Ying Sheng",
+      "Siyuan Zhuang",
+      "Zhanghao Wu",
+      "Yonghao Zhuang",
+      "Zi Lin",
+      "Zhuohan Li",
+      "Dacheng Li",
+      "Eric P. Xing",
+      "Hao Zhang",
+      "Joseph E. Gonzalez",
+      "Ion Stoica"
+    ],
+    "year": 2023,
+    "venue": "Advances in Neural Information Processing Systems 36 (NeurIPS 2023), Datasets and Benchmarks Track",
+    "doi": null,
+    "arxiv": "2306.05685",
+    "verification_url": "https://proceedings.neurips.cc/paper_files/paper/2023/hash/91f18a1287b398d378ef22505bf41832-Abstract-Datasets_and_Benchmarks.html",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only",
+    "used_for": "limitations"
+  },
+  {
+    "key": "zhu2026smells",
+    "title": "AI-Generated Smells: An Analysis of Code and Architecture in LLM- and Agent-Driven Development",
+    "authors": [
+      "Yue Cai Zhu",
+      "Nikolaos Tsantalis",
+      "Peter C. Rigby"
+    ],
+    "year": 2026,
+    "venue": "arXiv preprint",
+    "doi": null,
+    "arxiv": "2605.02741",
+    "verification_url": "https://arxiv.org/html/2605.02741v1",
+    "verified_on": "2026-10-07",
+    "depth": "search-index (authoritative record surfaced and summarized via WebSearch; direct fetch of the record blocked by session egress policy) - abstract-level claims only (title+authors only; findings not read)",
+    "used_for": "motivation"
+  }
+]
