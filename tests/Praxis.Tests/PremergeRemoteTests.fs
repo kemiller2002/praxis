@@ -156,7 +156,7 @@ module PremergeRemoteTests =
                       |> succeeded
 
                   let result = described.["result"]
-                  Assert.equal [ "1.0"; "1.1"; "1.2"; "1.3" ] (strings result.["protocolVersions"])
+                  Assert.equal [ "1.0"; "1.1"; "1.2"; "1.3"; "1.4" ] (strings result.["protocolVersions"])
 
                   let byName name =
                       result.["operations"] |> array |> List.find (fun operation -> text operation.["operation"] = name)

@@ -10,6 +10,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Identity/Repository.fs" />
+    <Compile Include="Identity/RepositoryStatus.fs" />
+    <Compile Include="Identity/Instance.fs" />
+    <Compile Include="Identity/BranchPolicy.fs" />
     <Compile Include="Git/Model.fs" />
     <Compile Include="Git/Durability.fs" />
     <Compile Include="Git/Synchronization.fs" />

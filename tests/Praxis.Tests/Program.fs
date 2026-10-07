@@ -117,4 +117,5 @@ let main _ =
     @ QualityEvidenceTests.tests
     @ FormaPresentationTests.tests
     @ AegisBoundaryTests.tests
+    @ IdentityTests.tests
     |> TestRunner.run

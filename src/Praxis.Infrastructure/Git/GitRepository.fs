@@ -921,3 +921,35 @@ module ProcessGitDurability =
             RemoteBranch = remoteBranch
             Relation = fun left right -> relation (left, right)
             ChangedPaths = fun left right -> changed (left, right) }
+
+/// The paths a change touches, as work attribution and validation observe
+/// them. Moved out of the CLI so every caller shares one implementation.
+[<RequireQualifiedAccess>]
+module ObservedGitPaths =
+    /// Mirrors production `gitPaths` (`tools/ros_cli.mjs`): real working-tree
+    /// changed paths plus, when `$ROS_BASE_REF` resolves to an existing commit,
+    /// its committed-range diff against `HEAD` — deduped and ordinally sorted.
+    /// A non-repository directory yields no paths (greenfield compatibility); any
+    /// other Git or base-ref-diff failure is an error, never a silent empty list.
+    let observe (root: string) : Result<string list, GitFailure> =
+        let workingTreePaths =
+            match GitOperations.observe (ProcessGitRepository.create root) with
+            | GitStatusObservation.Clean -> Ok []
+            | GitStatusObservation.Changed changes -> Ok(changes |> List.map _.Path)
+            | GitStatusObservation.Unavailable failure when failure.Reason = GitUnavailableReason.NotRepository -> Ok []
+            | GitStatusObservation.Unavailable failure -> Error failure
+
+        workingTreePaths
+        |> Result.bind (fun paths ->
+            let baseRef =
+                match Environment.GetEnvironmentVariable "ROS_BASE_REF" with
+                | null
+                | "" -> None
+                | value -> Some value
+
+            match GitOperations.compareBase (ProcessGitRepository.createBaseComparison root) baseRef with
+            | GitBaseComparisonOutcome.NotConfigured
+            | GitBaseComparisonOutcome.RefUnavailable -> Ok paths
+            | GitBaseComparisonOutcome.Committed committedPaths -> Ok(paths @ committedPaths)
+            | GitBaseComparisonOutcome.Unavailable failure -> Error failure)
+        |> Result.map (fun paths -> paths |> List.distinct |> List.sortWith (fun left right -> String.CompareOrdinal(left, right)))

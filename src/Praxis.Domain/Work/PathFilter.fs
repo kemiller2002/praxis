@@ -63,8 +63,10 @@ module PathFilter =
     /// before `.echelon/` existed have no rule for it; without this invariant
     /// the first `praxis init`/`praxis upgrade` in such a repository would make its
     /// next `validate` demand work-item attribution for the tool's own
-    /// installation manifest.
-    let private alwaysIgnoredPatterns = [ ".echelon/**" ]
+    /// installation manifest. The Praxis instance identity
+    /// (`.praxis/instance.json`) is the same kind of tool bookkeeping: `init`
+    /// and `upgrade` create it (DER-16, 17), so it never needs attribution.
+    let private alwaysIgnoredPatterns = [ ".echelon/**"; ".praxis/instance.json" ]
 
     let isMeaningful (config: PathFilterConfig) (path: string) =
         (config.MeaningfulPatterns |> List.exists (fun pattern -> globMatch pattern path))
