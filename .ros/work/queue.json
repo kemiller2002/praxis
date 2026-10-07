@@ -4575,10 +4575,10 @@
         "binding"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:22.000Z",
-      "updatedAt": "2026-10-06T20:36:31.000Z",
+      "updatedAt": "2026-10-07T04:56:04.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4599,10 +4599,10 @@
         "evaluation"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-07T04:55:50.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4623,10 +4623,10 @@
         "launchers"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T20:36:32.000Z",
+      "updatedAt": "2026-10-07T04:56:00.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4647,10 +4647,10 @@
         "containment"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:23.000Z",
-      "updatedAt": "2026-10-06T21:22:51.000Z",
+      "updatedAt": "2026-10-07T04:55:56.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4671,10 +4671,10 @@
         "control-plane"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4695,10 +4695,10 @@
         "operator-ui"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4719,10 +4719,10 @@
         "docs"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:24.000Z",
-      "updatedAt": "2026-10-06T20:36:33.000Z",
+      "updatedAt": "2026-10-07T04:56:16.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
