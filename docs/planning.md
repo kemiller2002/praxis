@@ -362,6 +362,19 @@ member succeeded, PRX-GRP-042); each blocked member with its block reason and
 the open items that wait directly on it; and the latest group checkpoint. An
 unknown group exits `1`.
 
+```
+praxis work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                      [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json]
+```
+
+`add` adds one work item to a declared group and records who added it, when
+and why (the member's `addedBy`/`addedAt`/`reason` and a `member-added`
+history entry). It refuses an unknown or terminal item, an item already in
+the group, an unknown group, and an item whose execution repository
+(`--execution-repository`, else its `--config` entry, else this repository)
+differs from the group's unless the group is cross-repository. The item's own
+records are untouched.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,

@@ -4868,11 +4868,22 @@
       },
       "completedAt": "2026-10-07T17:29:20.000Z",
       "conclusion": "work group show reports a declared group read-only with member recorded/planning states, partial progress and blocked-member gating. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 807 test(s), 807 passed, 0 failed; ./ros validate: validation passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T17:29:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T172947664Z-f28384cb"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:29:20.000Z",
+  "updatedAt": "2026-10-07T17:29:47.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -211,6 +211,16 @@ type GroupDeclarationRequest =
       Actor: Actor
       Reason: string option }
 
+/// What `work group add` and `work group remove` ask for.
+type MembershipRequest =
+    { GroupId: string
+      WorkItemId: string
+      /// Where the item executes, when the caller declares it explicitly.
+      ExecutionRepository: string option
+      OccurredAt: string
+      Actor: Actor
+      Reason: string option }
+
 /// A structural problem in stored groups, reported by `validate`.
 type GroupFinding =
     { GroupId: string
@@ -292,6 +302,46 @@ module WorkGroups =
                         Reason = request.Reason } ]
                   Checkpoints = [] }
         | rejections -> Error rejections
+
+    let private existing (groups: StoredWorkGroup list) (groupId: string) =
+        match tryFind groups groupId with
+        | Some group -> Ok group
+        | None when isValidId groupId -> Error [ GroupRejection.GroupNotFound groupId ]
+        | None -> Error [ GroupRejection.InvalidGroupId groupId ]
+
+    /// `work group add`: the group with one more member, recorded with who
+    /// added it, when and why. The item itself is never part of the result,
+    /// so its lifecycle state cannot change.
+    let add (catalog: WorkCatalog) (groups: StoredWorkGroup list) (request: MembershipRequest) : Result<StoredWorkGroup, GroupRejection list> =
+        existing groups request.GroupId
+        |> Result.bind (fun group ->
+            let located =
+                match request.ExecutionRepository with
+                | None -> catalog
+                | Some repository ->
+                    { catalog with
+                        Items = catalog.Items |> Map.map (fun id item -> if id = request.WorkItemId then { item with ExecutionRepository = repository } else item) }
+
+            if List.contains request.WorkItemId (memberIds group) then
+                Error [ GroupRejection.AlreadyMember(group.Id, request.WorkItemId) ]
+            else
+                admit located group.ExecutionRepository group.CrossRepository request.WorkItemId
+                |> Result.mapError List.singleton
+                |> Result.map (fun item ->
+                    { group with
+                        Members =
+                            group.Members
+                            @ [ { WorkItemId = item.Id
+                                  ExecutionRepository = item.ExecutionRepository
+                                  AddedAt = request.OccurredAt
+                                  AddedBy = request.Actor
+                                  Reason = request.Reason } ]
+                        History =
+                            group.History
+                            @ [ { Change = GroupChange.MemberAdded item.Id
+                                  OccurredAt = request.OccurredAt
+                                  Actor = request.Actor
+                                  Reason = request.Reason } ] }))
 
     /// The planner's view of a stored group: exactly a `grouping.groups`
     /// declaration (PRX-GRP-073).

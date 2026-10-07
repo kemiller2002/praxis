@@ -314,13 +314,17 @@ ros work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIM
                       [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository]
                       [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT]
                       [--config FILE] [--dry-run] [--json] [IDENTITY]
+ros work group add    --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME]
+                      [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]
 ```
 
 Durable, human-declared execution groups (phase two of the work-group
 requirements, PRX-GRP-073), stored in `.ros/work/groups.json` with provenance.
 `show` is read-only: members with their own recorded and planning states,
 partial-completion progress, blocked members and what they gate; an unknown
-group exits `1`. A group command never changes a member's lifecycle state, evidence or
+group exits `1`. `add` refuses unknown or terminal items, items already present,
+and items executing in another repository unless the group is
+cross-repository, and records who added the member. A group command never changes a member's lifecycle state, evidence or
 attribution, and the planner reads a stored group exactly as a
 `grouping.groups` declaration. `validate` checks stored groups. See
 [`planning.md`](planning.md) ("Declared work groups").

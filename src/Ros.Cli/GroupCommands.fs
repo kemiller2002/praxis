@@ -19,7 +19,7 @@ open Ros.Infrastructure.Planning
 [<RequireQualifiedAccess>]
 module GroupCommands =
     let usage =
-        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -91,9 +91,9 @@ module GroupCommands =
                       Catalog = catalog
                       Configuration = configuration })))
 
-    /// The stored groups with one group added or replaced.
+    /// The stored groups with one existing group replaced in place.
     let replace (groups: StoredWorkGroup list) (changed: StoredWorkGroup) =
-        (groups |> List.filter (fun group -> group.Id <> changed.Id)) @ [ changed ]
+        groups |> List.map (fun group -> if group.Id = changed.Id then changed else group)
 
     // ---- rendering ----
 
@@ -238,6 +238,41 @@ module GroupCommands =
                         @ [ "Members' lifecycle states, evidence and attribution are unchanged." ]
                       Fields = [] }))
 
+    // ---- work group add ----
+
+    let private membershipRequest (arguments: string list) (actor: Actor) : MembershipRequest =
+        { GroupId = (optionValue "--id" arguments).Value
+          WorkItemId = (optionValue "--member" arguments).Value
+          ExecutionRepository = optionValue "--execution-repository" arguments
+          OccurredAt = (optionValue "--occurred-at" arguments).Value
+          Actor = actor
+          Reason = optionValue "--reason" arguments }
+
+    let private memberErrors (command: string) (valued: string list) (switches: string list) (arguments: string list) =
+        commonErrors command ([ "--member"; "--reason" ] @ valued) switches arguments
+        @ [ match optionValues "--member" arguments with
+            | [ _ ] -> ()
+            | [] -> yield $"{command} requires --member ID"
+            | _ -> yield $"{command} names exactly one member; pass --member once" ]
+
+    let add (root: string) (arguments: string list) (actor: Actor) =
+        match memberErrors "work group add" [ "--execution-repository"; "--config" ] [] arguments with
+        | _ :: _ as errors -> reportUsage errors
+        | [] ->
+            let request = membershipRequest arguments actor
+
+            mutate root "work group add" arguments (fun context ->
+                WorkGroups.add context.Catalog context.Stored request
+                |> Result.map (fun group ->
+                    let added = group.Members |> List.last
+
+                    { Group = group
+                      Groups = replace context.Stored group
+                      Lines =
+                        [ $"{added.WorkItemId} added to {group.Id} (now {group.Members.Length} member(s)), executing in {added.ExecutionRepository}, by {Actor.describe added.AddedBy}"
+                          $"{added.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
+                      Fields = [ "workItemId", WorkGroupJson.text added.WorkItemId ] }))
+
     // ---- work group show ----
 
     let private showLines (view: GroupView) =
@@ -328,4 +363,5 @@ module GroupCommands =
         match arguments with
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
         | "show" :: rest -> show root rest
+        | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
         | _ -> reportUsage [ "unknown work group command" ]

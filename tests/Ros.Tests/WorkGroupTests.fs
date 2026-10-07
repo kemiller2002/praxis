@@ -55,6 +55,14 @@ module WorkGroupFixtures =
         | Ok group -> group
         | Error rejections -> failwith $"%A{rejections}"
 
+    let membership groupId workItemId =
+        { GroupId = groupId
+          WorkItemId = workItemId
+          ExecutionRepository = None
+          OccurredAt = "2026-10-02T00:00:00.000Z"
+          Actor = actorB
+          Reason = Some "shares the store" }
+
     let codes (result: Result<'a, GroupRejection list>) =
         match result with
         | Ok _ -> []
@@ -175,6 +183,39 @@ module WorkGroupTests =
               Assert.equal 1 view.Progress.Unknown
               Assert.equal 2 view.Progress.Remaining)
 
+          t "add appends one member with who added it, when and why" (fun () ->
+              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
+
+              match WorkGroups.add standard [ group ] (membership "GROUP-FIXTURE-001" "W-2") with
+              | Error rejections -> failwith $"%A{rejections}"
+              | Ok changed ->
+                  Assert.equal [ "W-1"; "W-2" ] (WorkGroups.memberIds changed)
+                  let added = changed.Members |> List.last
+                  Assert.equal actorB added.AddedBy
+                  Assert.equal "2026-10-02T00:00:00.000Z" added.AddedAt
+                  Assert.equal (Some "shares the store") added.Reason
+                  Assert.equal actorA (changed.Members |> List.head).AddedBy
+                  Assert.equal [ GroupChange.Created; GroupChange.MemberAdded "W-2" ] (changed.History |> List.map (fun entry -> entry.Change))
+                  Assert.equal actorB (changed.History |> List.last).Actor)
+
+          t "add refuses unknown, terminal and present items, unknown groups, and another repository's item unless cross-repository" (fun () ->
+              let elsewhere = { ready "X-1" with ExecutionRepository = "other-repo" }
+              let known = catalog [ ready "W-1"; ready "W-2"; complete "W-4"; elsewhere ]
+              let group = created known "GROUP-FIXTURE-001" [ "W-1" ]
+              let add workItemId = WorkGroups.add known [ group ] (membership "GROUP-FIXTURE-001" workItemId)
+              Assert.equal [ "unknown-member" ] (codes (add "W-404"))
+              Assert.equal [ "terminal-member" ] (codes (add "W-4"))
+              Assert.equal [ "already-member" ] (codes (add "W-1"))
+              Assert.equal [ "repository-mismatch" ] (codes (add "X-1"))
+              Assert.equal [ "repository-mismatch" ] (codes (WorkGroups.add known [ group ] { membership "GROUP-FIXTURE-001" "W-2" with ExecutionRepository = Some "third-repo" }))
+              Assert.equal [ "group-not-found" ] (codes (WorkGroups.add known [ group ] (membership "GROUP-FIXTURE-404" "W-2")))
+              Assert.equal [ "invalid-group-id" ] (codes (WorkGroups.add known [ group ] (membership "nope" "W-2")))
+              let crossing = { group with CrossRepository = true }
+
+              match WorkGroups.add known [ crossing ] (membership "GROUP-FIXTURE-001" "X-1") with
+              | Ok changed -> Assert.equal "other-repo" (changed.Members |> List.last).ExecutionRepository
+              | Error rejections -> failwith $"%A{rejections}")
+
           t "the stored document round-trips" (fun () ->
               let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
               let json = WorkGroupJson.render (WorkGroupJson.document [ group ])
@@ -290,6 +331,34 @@ module WorkGroupCliTests =
                   Assert.equal 1 missing.ExitCode
                   Assert.isTrue (missing.Error.Contains "GROUP-MISSING-001") missing.Error
                   Assert.equal before (workState clone @ [ File.ReadAllText(groupsFile clone) ])))
+
+          t "add records the member with its own provenance and leaves every member's records byte-identical" (fun () ->
+              withRepository (fun clone ->
+                  capture clone "FEAT-1"
+                  capture clone "FEAT-2"
+                  start clone "FEAT-3"
+                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1" ] [] |> ok |> ignore
+                  let before = workState clone
+                  let agentB = agent "example/agent-b" "example" "agent-b" "session-b"
+
+                  let add who (id: string) (extra: string list) =
+                      run clone (Some who) ([ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-001"; "--member"; id; "--occurred-at"; now (); "--json" ] @ extra)
+
+                  let dry = add agentB "FEAT-2" [ "--dry-run" ] |> ok
+                  Assert.equal "dry-run" (text dry.Json["status"])
+                  Assert.equal 1 ((run clone None [ "work"; "group"; "show"; "GROUP-FIXTURE-001"; "--json" ] |> ok).Json["members"].AsArray().Count)
+                  let added = add agentB "FEAT-2" [ "--reason"; "same store" ] |> ok
+                  Assert.equal "recorded" (text added.Json["status"])
+                  let members = added.Json["group"].["members"].AsArray()
+                  Assert.equal "example/agent-b" (text members[1].["addedBy"].["id"])
+                  Assert.equal "example/agent-a" (text members[0].["addedBy"].["id"])
+                  Assert.equal "same store" (text members[1].["reason"])
+                  Assert.equal "member-added" (text (added.Json["group"].["history"].AsArray() |> Seq.last).["change"])
+                  Assert.equal [ "already-member" ] (rejectionCodes (add agentA "FEAT-2" []))
+                  Assert.equal [ "unknown-member" ] (rejectionCodes (add agentA "FEAT-404" []))
+                  Assert.equal [ "repository-mismatch" ] (rejectionCodes (add agentA "FEAT-3" [ "--execution-repository"; "other-repo" ]))
+                  Assert.equal before (workState clone)
+                  run clone None [ "validate" ] |> ok |> ignore))
 
           t "validate checks stored groups" (fun () ->
               withRepository (fun clone ->
