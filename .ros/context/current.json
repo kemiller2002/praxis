@@ -6594,33 +6594,51 @@
     {
       "id": "PRAXIS-FND-01",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Execution/Governance.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionGovernanceTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "docs/groups/GROUP-FND-ORDO.group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "docs/groups/GROUP-FND-ORDO.group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:36.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T203928979Z-8000c1f2"
       ],
       "latestCheckpoint": {
-        "id": "63732bcf8fcf20dccaae3004",
-        "recordedAt": "2026-10-06T20:39:43.000Z",
+        "id": "949e131c4c7c7b7c3ff0e143",
+        "recordedAt": "2026-10-07T04:56:27.000Z",
         "executionId": "EXE-20261006T203928979Z-8000c1f2",
         "repository": "repository-operating-system",
-        "branch": "fnd/work-items",
-        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "branch": "fnd/ordo-core",
+        "commit": "475fc814a230be714069a7c4b48d9d52f9eb0838",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "fnd/work-items",
-        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
-        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
-        "nextAction": "Implement per docs/groups order",
+        "remoteBranch": "fnd/ordo-core",
+        "remoteCommit": "475fc814a230be714069a7c4b48d9d52f9eb0838",
+        "summary": "Ordo.Core consumed (01) / contract input (02); full suite 1479/1479",
+        "nextAction": "Merge the PR",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T04:56:36.000Z"
     },
     {
       "id": "PRAXIS-FND-04",
@@ -6776,18 +6794,56 @@
     {
       "id": "PRAXIS-FND-02",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T00:09:59.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Execution/ExecutionContracts.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ExecutionGovernanceTests.fs"
+        },
+        {
+          "type": "group-analysis",
+          "path": "docs/groups/GROUP-FND-ORDO.group-analysis.json"
+        },
+        {
+          "type": "group-verification",
+          "path": "docs/groups/GROUP-FND-ORDO.group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T04:56:40.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T001002443Z-6b012f4c"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "ff0061324da5007d10896069",
+        "recordedAt": "2026-10-07T04:56:32.000Z",
+        "executionId": "EXE-20261007T001002443Z-6b012f4c",
+        "repository": "repository-operating-system",
+        "branch": "fnd/ordo-core",
+        "commit": "475fc814a230be714069a7c4b48d9d52f9eb0838",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fnd/ordo-core",
+        "remoteCommit": "475fc814a230be714069a7c4b48d9d52f9eb0838",
+        "summary": "Ordo.Core consumed (01) / contract input (02); full suite 1479/1479",
+        "nextAction": "Merge the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T04:56:40.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T00:09:59.000Z",
+  "updatedAt": "2026-10-07T04:56:40.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
