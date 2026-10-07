@@ -5006,10 +5006,10 @@
         "identity"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:26.996Z",
-      "updatedAt": "2026-10-07T05:04:08.058Z",
+      "updatedAt": "2026-10-07T05:04:54.726Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5076,10 +5076,10 @@
         "identity"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.106Z",
-      "updatedAt": "2026-10-06T20:38:51.971Z",
+      "updatedAt": "2026-10-07T05:04:57.698Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5099,10 +5099,10 @@
         "identity"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.429Z",
-      "updatedAt": "2026-10-06T20:38:52.301Z",
+      "updatedAt": "2026-10-07T05:05:00.522Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5122,10 +5122,10 @@
         "identity"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:28.753Z",
-      "updatedAt": "2026-10-06T20:38:52.614Z",
+      "updatedAt": "2026-10-07T05:05:03.598Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
