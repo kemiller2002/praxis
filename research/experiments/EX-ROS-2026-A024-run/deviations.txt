@@ -138,3 +138,13 @@ treatments, thresholds, blinding or stop rules.
 - Frozen classification: "ref-name exposure without content inspection ... is
   a deviation (recorded, not invalidating)". The session is valid, and this is
   noted as a threat to validity.
+
+## Audit classification — arm-2-04 `FETCH_HEAD` events (allowed; no deviation)
+
+- Two `main-ref` audit events in `arm-2-04` match the literal `FETCH_HEAD`.
+  The only fetch in the session was `git fetch origin experiment/a024-arm-2`,
+  the session's own branch, which the harness note permits. `FETCH_HEAD`
+  therefore named the session's own branch. Verified from the platform event
+  record: `platform/arm-2-04.list_events-assistant.txt`.
+- Classification: allowed operation. The audit rule is deliberately broad,
+  so this is a false positive, not a deviation.

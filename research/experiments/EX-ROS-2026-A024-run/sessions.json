@@ -398,7 +398,22 @@
         "START_SHA": "5d33bb52a638a29244f697c985142cb2f1f06f50"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "52340e40fc5f6f42bc43fe47207bc1077648eafe",
+      "terminalAt": "2026-10-07T21:39:26.707351Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.652276,
+        "input_tokens": 608,
+        "output_tokens": 24879,
+        "cache_read_tokens": 6268600,
+        "cache_write_tokens": 112318,
+        "context_used_tokens": 149971,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "audit 2 events: FETCH_HEAD of own-branch fetch (allowed; false positive)"
     },
     {
       "label": "arm-3-03",
