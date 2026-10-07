@@ -4919,18 +4919,54 @@
     {
       "id": "PRAXIS-GROUP-04",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T17:36:29.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/WorkGroups.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/GroupCommands.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-07T17:42:32.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T173630766Z-ec085e64"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b0f8f31c8da6d7f2472cf69d",
+        "recordedAt": "2026-10-07T17:42:29.000Z",
+        "executionId": "EXE-20261007T173630766Z-ec085e64",
+        "stepId": "remove",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-1",
+        "commit": "559a47478cb8ecb7cac489130f01fb4c8cb558f0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-1",
+        "remoteCommit": "559a47478cb8ecb7cac489130f01fb4c8cb558f0",
+        "summary": "work group remove implemented (WorkGroups.remove with provenance, non-member and last-member refusals, --allow-empty); 4 tests; build clean, 814/814 F# tests, validate passed",
+        "nextAction": "Complete PRAXIS-GROUP-04, then start PRAXIS-GROUP-05 (work group checkpoint)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T17:42:32.000Z",
+      "conclusion": "work group remove removes one member with provenance, never touching the item's own records; the last member only with --allow-empty. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 814 test(s), 814 passed, 0 failed; ./ros validate: validation passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:36:29.000Z",
+  "updatedAt": "2026-10-07T17:42:32.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
