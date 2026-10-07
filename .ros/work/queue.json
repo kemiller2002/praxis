@@ -4743,10 +4743,10 @@
         "ordo"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "abandoned",
       "attachments": [],
       "createdAt": "2026-10-06T20:36:25.000Z",
-      "updatedAt": "2026-10-06T21:31:23.000Z",
+      "updatedAt": "2026-10-07T00:36:20.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4756,7 +4756,8 @@
         "runtime": "claude-code"
       },
       "source": "manual",
-      "sourceReference": null
+      "sourceReference": null,
+      "abandonedReason": "duplicate of PRAXIS-FND-01 and PRAXIS-FND-02 (shared-foundations track, PR #181)"
     },
     {
       "id": "PRAXIS-QUAL-01",

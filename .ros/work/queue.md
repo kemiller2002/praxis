@@ -69,14 +69,15 @@
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
 | PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
-| PRAXIS-EXEC-01 | Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041) | ready | execution, binding | high |
+| PRAXIS-EXEC-01 | Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041) | active | execution, binding | high |
 | PRAXIS-EXEC-02 | Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007) | active | execution, evaluation | high |
-| PRAXIS-EXEC-03 | Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010) | ready | execution, launchers | medium |
-| PRAXIS-EXEC-04 | Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014) | ready | execution, containment | medium |
-| PRAXIS-EXEC-05 | Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008) | ready | execution, control-plane | high |
-| PRAXIS-EXEC-06 | Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026) | ready | execution, operator-ui | high |
-| PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | ready | execution, docs | medium |
-| PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | captured | execution, ordo | low |
+| PRAXIS-EXEC-03 | Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010) | active | execution, launchers | medium |
+| PRAXIS-EXEC-04 | Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014) | active | execution, containment | medium |
+| PRAXIS-EXEC-05 | Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008) | active | execution, control-plane | high |
+| PRAXIS-EXEC-06 | Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026) | active | execution, operator-ui | high |
+| PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | active | execution, docs | medium |
+| PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | abandoned | execution, ordo | low |
+| PRAXIS-EXEC-09 | Link execution step ledger to telemetry and analyse cost and reliability by role (PRX-STEP-006, PRX-STEP-008) | captured | execution, telemetry | medium |
 | PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | active | ordo, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | ready | ordo, execution, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | ready | foundations, group:GROUP-FND-FOUNDATIONS | high |
@@ -115,7 +116,7 @@
 | PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |
 | PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
 | PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | complete | pr92 | high |
-| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | ready | quality, pacing | high |
+| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | active | quality, pacing | high |
 | PRAXIS-QUAL-02 | Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005) | ready | quality, pacing | high |
 | PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | ready | quality, pacing | medium |
 | PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | ready | quality, pacing | high |
