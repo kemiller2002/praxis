@@ -310,7 +310,48 @@
         "session_context_model": "claude-opus-5-5"
       },
       "note": "completed after the D2 resync note; telemetry verified (sha256 abd08b3f...); headAtCapture 659b433; isolation audit 0 events. Usage includes the pre-resync stale-start turn."
+    },
+    {
+      "label": "arm-3-02r2",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01Aw2fUVg9dnqrQLciSmUaD8",
+      "createdAt": "2026-10-07T20:49:21.857973Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870",
+      "prompt": "prompts/arm-3-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
+      },
+      "attempt": 3,
+      "status": "running",
+      "launcher": "no outcome_branch (amendment A1, D5)",
+      "note": "attempt 3 permitted by owner amendment A1: attempts 1-2 were pre-start launcher failures"
+    },
+    {
+      "label": "arm-2-03",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-03"
+      ],
+      "session": "session_01DHSD58W29upiQhuywL6QVT",
+      "createdAt": "2026-10-07T20:49:22.988558Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "386297b7bc30253f01d88ae8a3dbc203793d62e0",
+      "prompt": "prompts/arm-2-03.txt",
+      "promptSubstitution": {
+        "START_SHA": "386297b7bc30253f01d88ae8a3dbc203793d62e0"
+      },
+      "attempt": 1,
+      "status": "running",
+      "launcher": "no outcome_branch (amendment A1, D5)"
     }
   ],
-  "status": "blocked: arm-C item-02 retry exhausted by a platform launcher defect (BLOCKER.txt)"
+  "status": "active: resumed under owner amendment A1"
 }
