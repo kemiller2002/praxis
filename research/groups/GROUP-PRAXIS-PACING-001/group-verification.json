@@ -1,0 +1,207 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-PACING-001",
+  "groupExecutionId": null,
+  "rows": [
+    {
+      "member": "PRAXIS-QUAL-01",
+      "criterion": "WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage.",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "src/Praxis.Application/Pacing/Contracts.fs",
+        "result": "WindowStatus has Observed, Missing, Invalid, Stale, Unsupported; statusCode maps each"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-01",
+      "criterion": "A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: carried hard windows are reported stale in coverage; a Codex window that already reset is stale, not observed; an unknown window-shaped Codex slot is unsupported, not ignored",
+        "result": "passed (PRAXIS_TEST_FILTER='pacing hardening', 55/55)"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-01",
+      "criterion": "Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: an unknown Claude usage window and limit kind are unsupported; status JSON projects stale and unsupported coverage codes",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-01",
+      "criterion": "Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider window reference) in hold.json as an additive schema-2 field that older readers ignore; holds without it read as unrecorded, never invented.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: a hard hold records the reading that created it; creation evidence round-trips through hold.json; a hold persisted without evidence reads as unrecorded, never invented",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-01",
+      "criterion": "Tests cover each state and the migration.",
+      "status": "met",
+      "evidence": {
+        "kind": "command",
+        "reference": "dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll",
+        "result": "1525 test(s); 1525 passed; 0 failed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-02",
+      "criterion": "ProviderId, ModelId and QuotaBucket are typed values at the Application/Domain boundary; QuotaScope matching uses typed model-family identity with no String.Contains substring matching in policy.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: a model is recognized only by a whole family token; unknown and unrecognized models are checked against every scoped window",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-02",
+      "criterion": "Codex Spark bucket selection and Claude scope mapping are explicit, versioned adapter rules (one table each) with fixtures.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: Codex quota-bucket selection is an explicit token rule; Claude scope display names map to one family or none; the Claude scoped top-level windows map through the rule table",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-02",
+      "criterion": "Unknown models have a declared conservative behaviour: every scoped window applies.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: unknown and unrecognized models are checked against every scoped window; pacing: unknown model checks scoped windows conservatively",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-02",
+      "criterion": "Adapter id, rule-set version and capabilities are observable in pacing status (text and JSON).",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: status reports the adapter, its rules version, capabilities and model identity",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-02",
+      "criterion": "An architecture/guard test refuses Contains-based model matching in the pacing domain and application.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: guard: pacing policy and adapters never match models by substring",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-03",
+      "criterion": "The gate emits typed PacingEvent values with stable codes: hold-started, hold-retained, hold-released, hard-limit, provider-unavailable, override-enabled, override-disabled, state-fault.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: every event code is stable and round-trips; hold transitions are derived from persisted state; state faults and indeterminate state are recorded as state-fault; override changes are recorded only when the state changes",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-03",
+      "criterion": "Events carry provider, scope, reason kind, reset time and observedAt, never credentials, tokens or raw provider payloads.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: events never carry credentials or provider payloads",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-03",
+      "criterion": "Repeated polling with an unchanged hold emits no duplicate transition events (deduplicated by transition identity).",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: the gate records hard-limit then hold-released once, however often it polls; a provider outage is recorded once per gate, not per poll; a second process does not repeat a transition the first recorded",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-03",
+      "criterion": "Events persist as praxis.pacing-event/1 JSON lines (events.jsonl) and pace.log remains as a human-readable rendering of the same events; readers (docs, status) are migrated.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: the event log stores typed JSON lines and a readable pace.log; status reports the last recorded event (docs/usage-pacing.md Telemetry section)",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-03",
+      "criterion": "Tests cover codes, redaction and deduplication.",
+      "status": "met",
+      "evidence": {
+        "kind": "command",
+        "reference": "PRAXIS_TEST_FILTER='pacing hardening' dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll",
+        "result": "55 passed, 0 failed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-04",
+      "criterion": "Claude credential decoding is testable without a real Keychain: Keychain unavailable, missing entry, expired credential and malformed credential are explicit errors and the snapshot is unavailable, never fresh.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: an unavailable Keychain is an explicit error; a Keychain entry without Claude OAuth credentials; an expired credential is refused; a malformed credential is refused without echoing it; an expired credential makes the Claude snapshot unavailable, never fresh",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-04",
+      "criterion": "The Claude usage query is testable through an injected HTTP handler: a 3xx redirect is refused without following it, 4xx/5xx are explicit errors.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: a redirect from the usage endpoint is refused and not followed; HTTP errors from the usage endpoint are explicit; a transport failure from the usage endpoint is explicit",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-04",
+      "criterion": "The provider process protocol is testable with a scripted stand-in: timeout, EOF before reply, error reply and malformed JSON are explicit errors.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: a Codex process that times out / closes before replying / error reply / malformed JSON is an explicit error",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-04",
+      "criterion": "Recorded live hook payload fixtures for Claude Code and Codex (PreToolUse and Stop events) drive the gate end to end and produce the provider's documented deny shape.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "pacing hardening: Claude Code PreToolUse and Stop fixtures, Codex PreToolUse and UserPromptSubmit fixtures (tests/fixtures/pacing/hooks)",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-04",
+      "criterion": "No test uses the live network or a real credential store.",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "tests/Praxis.Tests/PacingHardeningTests.fs",
+        "result": "credential, HTTP handler and protocol channel are injected; no network, Keychain or real provider process"
+      }
+    }
+  ]
+}

@@ -33,8 +33,8 @@
       "effects": 1
     },
     "EnvelopeReconciliationCommands.fs": {
-      "lines": 121,
-      "effects": 5
+      "lines": 109,
+      "effects": 3
     },
     "ExecutionCommands.fs": {
       "lines": 613,
@@ -48,6 +48,10 @@
       "lines": 747,
       "effects": 12
     },
+    "IdentityCommands.fs": {
+      "lines": 186,
+      "effects": 0
+    },
     "InstallationCommands.fs": {
       "lines": 217,
       "effects": 1
@@ -57,20 +61,16 @@
       "effects": 1
     },
     "PacingCommands.fs": {
-      "lines": 175,
+      "lines": 156,
       "effects": 1
-    },
-    "PacingStatus.fs": {
-      "lines": 129,
-      "effects": 0
     },
     "PlanCommands.fs": {
       "lines": 582,
       "effects": 3
     },
     "Program.fs": {
-      "lines": 3108,
-      "effects": 23
+      "lines": 3067,
+      "effects": 22
     },
     "ProvenanceCommands.fs": {
       "lines": 556,
@@ -85,7 +85,7 @@
       "effects": 0
     },
     "RemoteCommands.fs": {
-      "lines": 835,
+      "lines": 803,
       "effects": 7
     },
     "StepCommands.fs": {

@@ -65,6 +65,27 @@ provenance:
         runtime: codex
       reason: "Post-merge correction: PR #79 normalized the file's EOF whitespace during integration; record that responsible contribution so base-aware validation remains truthful."
       evidence: [https://github.com/kemiller2002/praxis/actions/runs/36826902106/job/110254499248]
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:43.996Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+    EXE-20261006T204120763Z-b0001e2e:
+      operations: [modified]
+      at: 2026-10-06T20:42:24.471Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
+      evidence: [EV-ROS-2026-A073]
 ---
 
 # Requirement
@@ -313,10 +334,13 @@ recorded in `EV-ROS-2026-A055`.
 | CONT-030..035, 070, 071 | PRAXIS-CONT-03, 04 | `CheckpointPersistenceTests`, `CheckpointCliTests` |
 | CONT-040..043 | PRAXIS-CONT-05 | `CheckpointGuardTests`, `CheckpointDomainTests` |
 | CONT-050..053 | PRAXIS-CONT-06 | `ContinuationCliTests`, `RecoveryProofTests` |
-| CONT-060, 061 | PRAXIS-CONT-07 | `tests/remote-checkpoint.test.mjs`, `RemoteProtocolTests` |
+| CONT-060, 061 | PRAXIS-CONT-07 | `RemoteProtocolTests` ("remote 1.3: work.checkpoint maps to the local command ..."), `RemoteExecuteCliTests` ("a successor agent continues in its own execution ...", "a stale request ... refused"); the original Node test `tests/remote-checkpoint.test.mjs` was deleted (historical) with the Node suites (`RQ-ROS-2026-A024`) |
 | CONT-072 | PRAXIS-CONT-09 | `CheckpointGuardTests` (starter and upgrade) |
 | Acceptance | PRAXIS-CONT-08, PRAXIS-CONT-11 | `RecoveryProofTests` |
 | CONT-080..086 | PRAXIS-CONT-11 | `TelemetrySegmentationTests`, `CheckpointPersistenceTests`, `RecoveryProofTests` |
 
 **Remaining.** Protocol 1.3 has not run live through GitHub Actions. That
 needs a release containing it, pinned in `.echelon/toolchain.json`.
+(Update 2026-10-06: protocol 1.3 `work.continue` and `work.checkpoint` ran
+live through GitHub Actions with Praxis 3.6.0 in the cross-provider proof,
+runs `36605336068` and `36677659037`; see `EV-ROS-2026-A073`.)

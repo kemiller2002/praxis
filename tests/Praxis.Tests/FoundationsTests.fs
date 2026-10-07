@@ -51,8 +51,38 @@ module FoundationsTests =
     let private limenResult root =
         (report root).Capabilities |> List.find (fun item -> item.Name = "limen")
 
+    let rec private praxisRoot (directory: DirectoryInfo) =
+        if File.Exists(Path.Combine(directory.FullName, "release.json")) && File.Exists(Path.Combine(directory.FullName, ".echelon", "foundations.json")) then
+            directory.FullName
+        else
+            match directory.Parent with
+            | null -> failwith "repository root with .echelon/foundations.json not found"
+            | parent -> praxisRoot parent
+
     let tests =
-        [ { Name = "foundation verifier accepts pinned Forma with canonical usage"
+        [ { Name = "foundation verifier: Praxis's own repository passes its declared foundations (SAF-DEP-1, SAF-DEP-2)"
+            Run =
+              fun () ->
+                  let root = praxisRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let result = report root
+                  Assert.empty result.Findings
+
+                  let required = result.Capabilities |> List.filter _.Required |> List.map _.Name
+                  Assert.equal [ "aegis"; "forma"; "ordo" ] required
+                  Assert.isTrue (result.Capabilities |> List.forall (fun c -> not c.Required || (c.Installed && c.Pinned && c.Used && c.EvidencePresent))) "every required foundation is installed, pinned, used and evidenced" }
+          { Name = "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use"
+            Run =
+              fun () ->
+                  withTemp (fun root ->
+                      write root ".echelon/foundations.json" (config "Example" "\"ordo\": { \"required\": true, \"version\": \"1.5.0\" }")
+                      write root "src/App/App.fsproj" "<Project><ItemGroup><PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"1.5.0\" /></ItemGroup></Project>"
+                      write root "src/App/Rules.fs" "module Rules\nlet authority = Ordo.Core.ExecutionRole.RoleAuthority.defaultFor"
+                      let ordo = (report root).Capabilities |> List.find (fun item -> item.Name = "ordo")
+                      Assert.isTrue ordo.Passed $"pinned Ordo.Core package passes: {ordo}"
+                      write root "src/App/App.fsproj" "<Project><ItemGroup><PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"1.4.2\" /></ItemGroup></Project>"
+                      let stale = (report root).Capabilities |> List.find (fun item -> item.Name = "ordo")
+                      Assert.isTrue (not stale.Passed) "a different Ordo.Core version is not the declared pin") }
+          { Name = "foundation verifier accepts pinned Forma with canonical usage"
             Run =
               fun () ->
                   withTemp (fun root ->

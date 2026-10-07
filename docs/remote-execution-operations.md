@@ -224,6 +224,7 @@ Identity recorded this way is provenance, not authentication.
 | `validation-failed` | The mutation would have introduced validation errors. | Fix the repository or the request. Nothing was kept. |
 | `concurrency-conflict` | The push lost a race. | Re-read the branch and form a new request. |
 | `bootstrap-failed` | The pinned Praxis could not be installed. | See Troubleshooting. |
+| `incompatible-state` | The pinned Praxis does not read a state-schema version the repository's committed state uses (for example a group store written by a newer Praxis). Refused before any mutation. | Pin a published release whose declared compatibility covers the state (`scripts/praxis-remote-enable.sh --version X.Y.Z --skip-release`). |
 | `internal` | An executor defect. Praxis reported it, and nothing was kept. | Retry with the same request ID. If it persists, report it with the run's artifact. |
 | `timeout`, `cancelled`, `transport-failed`, `rate-limited`, `repository-write-failed` | The outcome is unconfirmed. | Retry with the same request ID, or ask `request.status`. |
 

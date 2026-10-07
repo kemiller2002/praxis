@@ -15,11 +15,12 @@ module PacingSafetyTests =
     let private t name run = { Name = $"pacing safety: {name}"; Run = run }
 
     let private now = DateTimeOffset(2026, 10, 3, 17, 0, 0, TimeSpan.Zero)
+    let private fable = (ModelFamily.tryCreate "Fable").Value
     let private week = TimeSpan.FromDays 7.0
     let private sessionLength = TimeSpan.FromHours 5.0
 
     let private window key used duration reset =
-        { Provider = "codex"
+        { Provider = ProviderId.Codex
           Key = key
           Label = key
           Scope = QuotaScope.Global
@@ -39,8 +40,8 @@ module PacingSafetyTests =
 
     let private request at state integrity freshness windows overridden =
         { Now = at
-          Provider = "codex"
-          Model = None
+          Provider = ProviderId.Codex
+          Model = ModelIdentity.Unspecified
           Windows = windows
           Freshness = freshness
           Existing = state
@@ -68,7 +69,8 @@ module PacingSafetyTests =
             if Directory.Exists directory then Directory.Delete(directory, true)
 
     let private snapshotOf windows freshness =
-        { Provider = "codex"
+        { Provider = ProviderId.Codex
+          Adapter = PacingAdapterRules.codexInfo (QuotaBucket "codex")
           ObservedAt = now
           Windows = windows
           Coverage = []
@@ -76,10 +78,11 @@ module PacingSafetyTests =
 
     let private hardHold used reset =
         { Key = "codex/session"
-          Provider = "codex"
+          Provider = ProviderId.Codex
           Scope = QuotaScope.Global
           Since = now
-          Basis = HoldBasis.HardLimit(used, reset) }
+          Basis = HoldBasis.HardLimit(used, reset)
+          Evidence = HoldEvidence.Observed(now, "codex/session@test") }
 
     let private domainTests =
         [ t "hard threshold below, at and above 98 percent" (fun () ->
@@ -136,10 +139,11 @@ module PacingSafetyTests =
               let legacy =
                   PacingState.ofHolds
                       [ { Key = "codex/weekly"
-                          Provider = "codex"
+                          Provider = ProviderId.Codex
                           Scope = QuotaScope.Global
                           Since = now
-                          Basis = HoldBasis.WeeklyLead None } ]
+                          Basis = HoldBasis.WeeklyLead None
+                          Evidence = HoldEvidence.Unrecorded } ]
 
               let retained = evaluate legacy fresh [ weekly 6.0 ]
               Assert.isTrue (not retained.MayProceed) "a legacy latch keeps hysteresis"
@@ -176,7 +180,7 @@ module PacingSafetyTests =
         [ t "a Codex response missing the weekly window is incomplete" (fun () ->
               let json = """{"rateLimitsByLimitId":{"codex":{"primary":{"usedPercent":42,"windowDurationMins":300,"resetsAt":1791050400}}}}"""
 
-              match PacingNormalization.normalizeCodexResult "codex" now json with
+              match PacingNormalization.normalizeCodexResult (QuotaBucket "codex") now json with
               | Error message -> failwith message
               | Ok reading ->
                   Assert.isTrue (not (WindowObservation.isComplete reading.Coverage)) "the primary window cannot vouch for the weekly one"
@@ -186,7 +190,7 @@ module PacingSafetyTests =
           t "a malformed Codex window is invalid, not ignored" (fun () ->
               let json = """{"rateLimitsByLimitId":{"codex":{"primary":{"usedPercent":42,"windowDurationMins":300,"resetsAt":1791050400},"secondary":{"usedPercent":140,"windowDurationMins":10080,"resetsAt":1791655200}}}}"""
 
-              match PacingNormalization.normalizeCodexResult "codex" now json with
+              match PacingNormalization.normalizeCodexResult (QuotaBucket "codex") now json with
               | Error message -> failwith message
               | Ok reading ->
                   let secondary = reading.Coverage |> List.find (fun observation -> observation.Key = "codex:secondary")
@@ -206,7 +210,7 @@ module PacingSafetyTests =
                   Assert.equal WindowStatus.Missing scoped.Status)
 
           t "malformed provider JSON is an explicit error" (fun () ->
-              match PacingNormalization.normalizeCodexResult "codex" now "{\"rateLimits\":" with
+              match PacingNormalization.normalizeCodexResult (QuotaBucket "codex") now "{\"rateLimits\":" with
               | Ok _ -> failwith "truncated JSON must not normalize"
               | Error _ -> ()) ]
 
@@ -241,10 +245,11 @@ module PacingSafetyTests =
                   PacingState.ofHolds
                       [ hardHold 99.5m (now + TimeSpan.FromHours 1.0)
                         { Key = "codex/weekly"
-                          Provider = "codex"
-                          Scope = QuotaScope.Model "Fable"
+                          Provider = ProviderId.Codex
+                          Scope = QuotaScope.Model fable
                           Since = now
-                          Basis = HoldBasis.WeeklyLead None } ]
+                          Basis = HoldBasis.WeeklyLead None
+                          Evidence = HoldEvidence.Unrecorded } ]
 
               Assert.equal (PacingStateRead.Current(state, 7L)) (PacingStateDocument.parse (PacingStateDocument.serialize state 7L)))
 
@@ -256,14 +261,14 @@ module PacingSafetyTests =
               | StateIntegrity.Intact -> failwith "unreadable state must be indeterminate"
 
               let transaction =
-                  PacingOperations.decide "codex" None (snapshotOf [] fresh) now false (PacingStateRead.Unreadable "corrupt")
+                  PacingOperations.decide ProviderId.Codex None (snapshotOf [] fresh) now false (PacingStateRead.Unreadable "corrupt")
 
               Assert.equal None transaction.Write
               Assert.isTrue (not transaction.Decision.MayProceed) "unreadable state must not authorize work") ]
 
     let private storeTests =
         let decideWith (snapshot: ProviderSnapshot) read =
-            PacingOperations.decide "codex" None snapshot now false read
+            PacingOperations.decide ProviderId.Codex None snapshot now false read
 
         [ t "a corrupt state file blocks work and is preserved as evidence" (fun () ->
               withDirectory (fun directory ->
@@ -308,10 +313,11 @@ module PacingSafetyTests =
 
                       let hold =
                           { Key = $"codex/w{index}"
-                            Provider = "codex"
+                            Provider = ProviderId.Codex
                             Scope = QuotaScope.Global
                             Since = now
-                            Basis = HoldBasis.WeeklyLead None }
+                            Basis = HoldBasis.WeeklyLead None
+                            Evidence = HoldEvidence.Unrecorded }
 
                       let state = { Holds = existing.Holds |> Map.add (PacingHold.id hold) hold }
 
@@ -322,7 +328,9 @@ module PacingSafetyTests =
                             State = state
                             LeadByWindow = Map.empty }
                         Integrity = integrity
-                        Write = Some state }
+                        Write = Some state
+                        Model = ModelIdentity.Unspecified
+                        Events = [] }
 
                   [ 1..workers ]
                   |> List.map (fun index ->
@@ -389,7 +397,7 @@ module PacingSafetyTests =
                     fun delay ->
                         sleeps.Value <- delay :: sleeps.Value
                         clock.Value <- clock.Value + delay }
-              Events = { Write = ignore }
+              Events = { Record = ignore; Last = fun () -> None }
               Context = { ResolveModel = fun _ explicitModel _ -> explicitModel }
               MaxGateWait = fun _ -> TimeSpan.FromHours 2.0 }
 
@@ -400,7 +408,7 @@ module PacingSafetyTests =
               let runtime, sleeps =
                   fakeRuntime (fun _ -> Error(PacingStoreFault.WriteFailed "disk full")) (fun _ -> snapshotOf [] fresh)
 
-              match PacingOperations.gate runtime "codex" None with
+              match PacingOperations.gate runtime ProviderId.Codex None with
               | PacingGateOutcome.Faulted(PacingStoreFault.WriteFailed _) -> Assert.equal [] sleeps.Value
               | other -> failwith $"expected a faulted gate, got {other}")
 
@@ -410,7 +418,7 @@ module PacingSafetyTests =
                       (fun action -> Ok(action (PacingStateRead.Unreadable "corrupt")))
                       (fun _ -> snapshotOf [] fresh)
 
-              match PacingOperations.gate runtime "codex" None with
+              match PacingOperations.gate runtime ProviderId.Codex None with
               | PacingGateOutcome.Denied reason ->
                   Assert.equal PacingReasonKind.StateIndeterminate reason.Kind
                   Assert.equal [] sleeps.Value
@@ -435,7 +443,7 @@ module PacingSafetyTests =
 
               let runtime, sleeps = fakeRuntime transact observe
 
-              match PacingOperations.gate runtime "codex" None with
+              match PacingOperations.gate runtime ProviderId.Codex None with
               | PacingGateOutcome.Proceed ->
                   Assert.equal [ 5.0; 5.0; 2.0 ] (sleeps.Value |> List.rev |> List.map _.TotalSeconds)
               | other -> failwith $"expected release after reset, got {other}") ]

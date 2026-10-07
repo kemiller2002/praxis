@@ -14,7 +14,7 @@
         "WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage.",
         "A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped.",
         "Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic.",
-        "Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider snapshot reference) in hold.json schema 3; schema 2 holds migrate with the evidence marked unrecorded, never invented.",
+        "Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider window reference) in hold.json as an additive schema-2 field that older readers ignore; holds without it read as unrecorded, never invented.",
         "Tests cover each state and the migration."
       ]
     },
@@ -182,6 +182,7 @@
   ],
   "decisions": [
     "Pacing events are written next to pace.log in the pacing state directory, not into repository .ros state, because the gate runs from agent hooks across repositories",
-    "Unknown models stay conservative: every scoped window of the provider applies"
+    "Unknown models stay conservative: every scoped window of the provider applies",
+    "PRAXIS-QUAL-01 criterion 4 amended before completion: creation evidence is an additive schema-2 field rather than schema 3, so older Praxis releases on the same machine keep reading the state instead of treating it as unsupported and blocking"
   ]
 }

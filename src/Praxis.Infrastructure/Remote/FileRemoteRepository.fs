@@ -29,6 +29,26 @@ module FileRemoteRepository =
             | Ok(fingerprint, response) -> Ok(JournalLookup.Recorded fingerprint, Some response)
             | Error message -> Error $"the journal entry for this request ID is unreadable ({message})"
 
+    /// Before a remote mutation (PRX-QUAL-010): the repository's state must
+    /// use schema versions this executor reads, then the journal is consulted.
+    /// An incompatible or unreadable state is refused before any effect.
+    let preflight (root: string) (requestId: string) : Result<JournalLookup * string option, RemoteFailure> =
+        match FileStateCompatibility.assess root with
+        | Error message ->
+            Error(RemoteFailure.create FailureCode.IncompatibleState $"the repository state cannot be checked for compatibility: {message}" [])
+        | Ok(_ :: _ as incompatible) ->
+            let detail = incompatible |> List.map StateCompatibility.describe |> String.concat "; "
+
+            Error(
+                RemoteFailure.create
+                    FailureCode.IncompatibleState
+                    $"this executor does not read the repository's state ({detail}); pin a Praxis release whose declared compatibility covers it"
+                    []
+            )
+        | Ok [] ->
+            lookup root requestId
+            |> Result.mapError (fun message -> RemoteFailure.create FailureCode.Internal message [])
+
     let write (root: string) (entry: RemoteJournal.Entry) : Result<string, string> =
         let relative = RemotePersistence.journalPath entry.Request.RequestId
         let file = fullPath root relative

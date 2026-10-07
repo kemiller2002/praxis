@@ -387,10 +387,7 @@ let environment: LifecycleEnvironment<Payload> =
                 let projectName =
                     match request.Project with
                     | Some name when name.Trim().Length > 0 -> Ok(name.Trim())
-                    | _ ->
-                        match Installation.readManifest request.Root with
-                        | Ok(Some _) -> Payload.deriveProjectName request.Root
-                        | _ -> Payload.deriveProjectName request.Root
+                    | _ -> Payload.deriveProjectName request.Root
 
                 match projectName with
                 | Error message -> Some(Error message)
@@ -402,7 +399,8 @@ let environment: LifecycleEnvironment<Payload> =
       Observe = Installation.observe
       Apply = fun _ _ -> Error "apply is bound per-request"
       RecordManifest = fun _ -> ()
-      RecordLegacyInstallation = fun _ _ -> () }
+      RecordLegacyInstallation = fun _ _ -> ()
+      EnsureInstanceIdentity = fun () -> Error "the instance identity is bound per-request" }
 
 /// The environment above is request-independent except for the three effects
 /// that need the repository root, which is supplied here.
@@ -410,7 +408,8 @@ let private environmentFor (root: string) =
     { environment with
         Apply = fun payload installation -> Installation.execute root payload installation
         RecordManifest = fun manifest -> Installation.writeInstallationManifest root manifest
-        RecordLegacyInstallation = fun payload observed -> Installation.writeLegacyInstallationIfAbsent root payload observed }
+        RecordLegacyInstallation = fun payload observed -> Installation.writeLegacyInstallationIfAbsent root payload observed
+        EnsureInstanceIdentity = fun () -> Praxis.Infrastructure.Identity.InstanceIdentityLifecycle.ensure root Version }
 
 let private requestFor root (common: CommonOptions) profile project =
     { Root = root
@@ -453,7 +452,7 @@ let private failureExit command (failure: LifecycleFailure) =
 let private renderOutcome command (options: CommonOptions) dryRun (outcome: ExecutionOutcome) =
     match options.Output with
     | OutputMode.Json ->
-        printf "%s" (LifecycleContract.renderPlan command PackageName Version dryRun outcome.Applied outcome.Installation)
+        printf "%s" (LifecycleContract.renderPlan command PackageName Version dryRun outcome.Applied outcome.InstanceIdentity outcome.Installation)
     | OutputMode.Text ->
         let plan = outcome.Installation.Plan
 
@@ -474,6 +473,7 @@ let private renderOutcome command (options: CommonOptions) dryRun (outcome: Exec
 
             if not options.Verbose then
                 printfn "run with --verbose to list them, or --json for the full plan"
+        outcome.InstanceIdentity |> Option.iter (printfn "instance identity: %s")
 
 /// The `installation` block `status` merges into its existing document. Parsed
 /// back from the contract renderer so the schema has exactly one definition.
@@ -506,7 +506,7 @@ let private runInit root (options: InitOptions) =
             let outcome =
                 { Installation = installation
                   Applied = false
-                  AppliedPaths = [] }
+                  AppliedPaths = []; InstanceIdentity = None }
 
             renderOutcome "init" options.Common true outcome
 
@@ -532,7 +532,7 @@ let private runUpgrade root (options: UpgradeOptions) =
             let outcome =
                 { Installation = installation
                   Applied = false
-                  AppliedPaths = [] }
+                  AppliedPaths = []; InstanceIdentity = None }
 
             renderOutcome "upgrade" options.Common true outcome
 

@@ -61,7 +61,7 @@ module EnvelopeReconciliationOperations =
             store.WriteReceipt value
             Rejected value
         | EnvelopeReconciliationDecision.Accept ->
-            match effects.ApplyRequests envelope with
+            match effects.ApplyRequests(EnvelopeReconciliation.withLocalInstance observed envelope) with
             | Ok () ->
                 let value = receipt EnvelopeReconciliationReceiptStatus.Applied []
                 store.WriteReceipt value

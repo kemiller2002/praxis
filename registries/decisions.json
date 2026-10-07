@@ -1133,6 +1133,23 @@
             "created"
           ],
           "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:25.165Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },

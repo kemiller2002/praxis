@@ -60,6 +60,16 @@ delivery that never happened.
 - `--reason` is required, and completed or already abandoned work cannot be
   abandoned.
 
+### Branch policy
+
+`workProtocol.branchPolicy` in `ros.json` is `none` (the default) or
+`work-item-id`. With `work-item-id`, `./praxis validate` fails when meaningful
+changes exist on a branch whose name is not the ID of a work item in the work
+context, so each work item runs on a branch named for its ID (DER-01 of
+`requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md`). Pull-request CI uses
+`GITHUB_HEAD_REF`; a detached HEAD with meaningful work fails. See
+[`identity.md`](identity.md#branch-policy-der-01).
+
 ## Quality evidence at completion
 
 Praxis owns the work lifecycle; it does not measure code quality. A repository

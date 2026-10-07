@@ -93,7 +93,9 @@ type EnvelopeReconciliationObservation = {
     BaseCommitIsAncestor: bool
     TransactionAlreadyApplied: bool
     TransactionReplayMatches: bool
-    LocalPraxisInstanceId: string option
+    /// The locally authoritative instance (`.praxis/instance.json`), as the
+    /// executor observed it (DER-16, 23, 24).
+    LocalInstance: Praxis.Domain.Identity.LocalInstance
 }
 
 type EnvelopeReconciliationFinding =
@@ -114,6 +116,11 @@ type EnvelopeReconciliationFinding =
     | UnsupportedRequestType of string
     | DuplicateTransaction of string
     | InstanceIdentityMismatch of claimed: string * local: string
+    /// The envelope claims an instance, but this repository has none.
+    | InstanceIdentityUnestablished of claimed: string
+    /// The envelope claims an instance, but the local record belongs to
+    /// another repository (a template, fork or copy) or cannot be read.
+    | InstanceIdentityUnverifiable of claimed: string * reason: string
     | InvalidStepStructure of string
 
 type EnvelopeReconciliationDecision =
@@ -144,9 +151,15 @@ module EnvelopeReconciliation =
                 elif not observed.BaseCommitExists then BaseCommitUnavailable envelope.BaseCommit
                 elif not observed.BaseCommitIsAncestor then BaseCommitNotAncestor(envelope.BaseCommit, observed.HeadCommit)
                 if envelope.Requests.IsEmpty then EmptyRequests
-                match envelope.PraxisInstanceId, observed.LocalPraxisInstanceId with
-                | Some claimed, Some local when claimed <> local -> InstanceIdentityMismatch(claimed, local)
-                | _ -> ()
+                match envelope.PraxisInstanceId, observed.LocalInstance with
+                | None, _ -> ()
+                | Some claimed, Praxis.Domain.Identity.LocalInstance.Missing -> InstanceIdentityUnestablished claimed
+                | Some claimed, Praxis.Domain.Identity.LocalInstance.Unreadable reason -> InstanceIdentityUnverifiable(claimed, reason)
+                | Some claimed, Praxis.Domain.Identity.LocalInstance.Present(_, Praxis.Domain.Identity.InstanceBinding.Foreign _) ->
+                    InstanceIdentityUnverifiable(claimed, "the local instance identity belongs to another repository")
+                | Some claimed, Praxis.Domain.Identity.LocalInstance.Present(record, _) ->
+                    let local = Praxis.Domain.Identity.InstanceId.value record.InstanceId
+                    if claimed <> local then InstanceIdentityMismatch(claimed, local)
                 let expected = [1 .. envelope.Timeline.Length]
                 let actual = envelope.Timeline |> List.map _.Sequence
                 if actual <> expected then InvalidTimelineSequence
@@ -304,4 +317,18 @@ module EnvelopeReconciliation =
         | UnsupportedRequestType value -> "unsupported-request-type:" + value
         | DuplicateTransaction _ -> "duplicate-transaction"
         | InstanceIdentityMismatch _ -> "instance-identity-mismatch"
+        | InstanceIdentityUnestablished _ -> "instance-identity-unestablished"
+        | InstanceIdentityUnverifiable _ -> "instance-identity-unverifiable"
         | InvalidStepStructure detail -> "invalid-step-structure:" + detail
+
+    /// Accepted canonical history carries the locally authoritative instance
+    /// (DER-22): an envelope that did not claim one is stamped with it,
+    /// never with a foreign one. A claim was already checked by `decide`.
+    let withLocalInstance (observed: EnvelopeReconciliationObservation) (envelope: EnvelopeReconciliationInput) =
+        match envelope.PraxisInstanceId with
+        | Some _ -> envelope
+        | None ->
+            { envelope with
+                PraxisInstanceId =
+                    Praxis.Domain.Identity.LocalInstance.authoritativeId observed.LocalInstance
+                    |> Option.map Praxis.Domain.Identity.InstanceId.value }

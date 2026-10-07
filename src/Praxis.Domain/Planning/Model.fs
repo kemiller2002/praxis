@@ -733,6 +733,58 @@ module PlannerConfiguration =
 
 /// Everything a plan is computed from. Identical inputs produce identical
 /// plans (PRX-PLAN-002).
+/// Provider capacity as planning evidence (PRX-QUAL-009). Provider-neutral:
+/// the provider is an opaque name and no provider-specific rule lives in the
+/// planner. `Unknown` is uncertainty, never zero capacity.
+[<RequireQualifiedAccess>]
+type CapacityState =
+    | Available
+    | Constrained of until: string option * reason: string
+    | Exhausted of until: string option * reason: string
+    | Unknown of reason: string
+
+[<RequireQualifiedAccess>]
+module CapacityState =
+    let code state =
+        match state with
+        | CapacityState.Available -> "available"
+        | CapacityState.Constrained _ -> "constrained"
+        | CapacityState.Exhausted _ -> "exhausted"
+        | CapacityState.Unknown _ -> "unknown"
+
+    /// Constrained or exhausted: provider work is better deferred.
+    let isLimited state =
+        match state with
+        | CapacityState.Constrained _
+        | CapacityState.Exhausted _ -> true
+        | CapacityState.Available
+        | CapacityState.Unknown _ -> false
+
+    let describe state =
+        let until value = value |> Option.map (fun at -> $" until {at}") |> Option.defaultValue ""
+
+        match state with
+        | CapacityState.Available -> "available"
+        | CapacityState.Constrained(at, reason) -> $"constrained{until at} ({reason})"
+        | CapacityState.Exhausted(at, reason) -> $"exhausted{until at} ({reason})"
+        | CapacityState.Unknown reason -> $"unknown ({reason})"
+
+type ProviderCapacity =
+    { Provider: string
+      State: CapacityState
+      Provenance: Provenance }
+
+/// How provider capacity bears on this plan.
+type CapacityAssessment =
+    { Providers: ProviderCapacity list
+      /// Some provider is constrained or exhausted.
+      Limited: bool
+      /// Runnable items that need no model provider (tag `provider-free`).
+      ProviderFreeItems: string list
+      /// Whether capacity changed the order the strategies use.
+      AffectsOrdering: bool
+      Statement: string }
+
 type PlanningInput =
     { Repository: string
       Commit: string option
@@ -743,6 +795,9 @@ type PlanningInput =
       Live: PlanningLiveItem list
       Executions: HistoricalExecution list
       Observations: Observation list
+      /// Provider capacity read through the planning port; empty when none
+      /// was observed (unknown, not zero).
+      Capacity: ProviderCapacity list
       Configuration: PlannerConfiguration }
 
 [<RequireQualifiedAccess>]
@@ -760,6 +815,8 @@ type FindingCode =
     | PraxisStateCollision
     | PlanningConfidenceLimited
     | ResumableExecution
+    | ProviderCapacityLimited
+    | ProviderCapacityUnknown
 
 [<RequireQualifiedAccess>]
 module FindingCode =
@@ -776,7 +833,9 @@ module FindingCode =
           FindingCode.UnknownCollision
           FindingCode.PraxisStateCollision
           FindingCode.PlanningConfidenceLimited
-          FindingCode.ResumableExecution ]
+          FindingCode.ResumableExecution
+          FindingCode.ProviderCapacityLimited
+          FindingCode.ProviderCapacityUnknown ]
 
     let code finding =
         match finding with
@@ -793,6 +852,8 @@ module FindingCode =
         | FindingCode.PraxisStateCollision -> "praxis-state-collision"
         | FindingCode.PlanningConfidenceLimited -> "planning-confidence-limited"
         | FindingCode.ResumableExecution -> "resumable-execution"
+        | FindingCode.ProviderCapacityLimited -> "provider-capacity-limited"
+        | FindingCode.ProviderCapacityUnknown -> "provider-capacity-unknown"
 
     let tryParse value = all |> List.tryFind (fun finding -> code finding = value)
 
@@ -851,6 +912,8 @@ type ReasonCode =
     | InProgress
     | StrategyUnavailable
     | DependenciesSatisfied
+    | ProviderFreeFirst
+    | ProviderCapacityDeferred
 
 [<RequireQualifiedAccess>]
 module ReasonCode =
@@ -876,7 +939,9 @@ module ReasonCode =
           ReasonCode.DependencyCycle
           ReasonCode.InProgress
           ReasonCode.StrategyUnavailable
-          ReasonCode.DependenciesSatisfied ]
+          ReasonCode.DependenciesSatisfied
+          ReasonCode.ProviderFreeFirst
+          ReasonCode.ProviderCapacityDeferred ]
 
     let code reason =
         match reason with
@@ -902,6 +967,8 @@ module ReasonCode =
         | ReasonCode.InProgress -> "in-progress"
         | ReasonCode.StrategyUnavailable -> "strategy-unavailable"
         | ReasonCode.DependenciesSatisfied -> "dependencies-satisfied"
+        | ReasonCode.ProviderFreeFirst -> "provider-free-first"
+        | ReasonCode.ProviderCapacityDeferred -> "provider-capacity-deferred"
 
     let tryParse value = all |> List.tryFind (fun reason -> code reason = value)
 
@@ -1165,7 +1232,8 @@ type PlanningAnalysis =
       History: HistorySummary
       Confidence: EvidenceConfidence
       ConfidenceStatement: string
-      EvidenceRecommendations: string list }
+      EvidenceRecommendations: string list
+      Capacity: CapacityAssessment }
 
 /// PRX-PLAN-090..094.
 [<RequireQualifiedAccess>]
