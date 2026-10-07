@@ -37,6 +37,7 @@ let main _ =
     @ TelemetryLifecycleTests.tests
     @ TelemetrySummaryTests.tests
     @ TutelaTelemetryTests.tests
+    @ TutelaMetricsTests.tests
     @ TelemetryFinalizeTargetTests.tests
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests
@@ -59,6 +60,7 @@ let main _ =
     @ WorkReconciliationTests.tests
     @ WorkReconciliationEffectTests.tests
     @ ImplementationLanguagePolicyTests.tests
+    @ RequirementCitationTests.tests
     @ WebInterfaceTests.tests
     @ HubTests.tests
     @ WorkDecisionCliTests.tests
@@ -116,4 +118,7 @@ let main _ =
     @ InternalNamingTests.tests
     @ TelemetryCostUnitTests.tests
     @ QualityEvidenceTests.tests
+    @ FormaPresentationTests.tests
+    @ AegisBoundaryTests.tests
+    @ IdentityTests.tests
     |> TestRunner.run

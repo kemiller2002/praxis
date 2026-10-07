@@ -53,3 +53,75 @@ preserves the difference between "not applicable" and "implemented correctly."
 
 The JSON schema is `schemas/echelon-foundations-v1.schema.json`, and a starting
 manifest is `templates/application-foundations.json`.
+
+## Praxis's own foundations
+
+Praxis is itself an Echelon application and is bound by
+[`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](../requirements/SHARED-APPLICATION-FOUNDATIONS.md).
+
+### Aegis (SAF-AEGIS-1..6)
+
+- One boundary module, `src/Praxis.Infrastructure/Boundary/AegisBoundary.fs`,
+  configures Aegis (released `EchelonFoundry.Aegis.Core` 1.0.0, blocking
+  delivery, standard-error sink) and classifies every escaped failure.
+- The command line runs each command inside one capture. A failure is
+  attributed to the boundary that raised it: thrown inside
+  `Praxis.Infrastructure.Git` is `PRAXIS.GIT.FAILURE`; network, process,
+  filesystem and repository-state failures are classified by type; anything
+  else is `PRAXIS.CLI.UNEXPECTED`.
+- `praxis web serve` and `praxis hub serve` capture each request and each
+  connection (`PRAXIS.WEB.FAILURE` when nothing more specific applies) and
+  answer HTTP 500 with the safe message and an `AG-` reference. The
+  exception text never reaches the browser.
+- Expected outcomes (refused transitions, failed verification, policy
+  refusals) stay typed results with documented exit codes (SAF-AEGIS-2).
+  Programming defects and cancellation are re-raised, not disguised.
+- Redaction (SAF-AEGIS-5): Aegis's credential rules plus
+  `praxis-repository-data` and `praxis-work-content` key rules; credentials
+  in exception text (URL user-info, GitHub tokens, bearer/basic headers,
+  `token=`/`password=`/`secret=` values) are replaced before the fault is
+  recorded; only command words are public context and the repository root is
+  masked.
+- [`aegis-boundaries.json`](../aegis-boundaries.json) declares the codes;
+  `tests/Praxis.Tests/AegisBoundaryTests.fs` drives the boundary with a
+  replaceable collector sink and asserts the manifest equals the module
+  (SAF-AEGIS-6).
+
+### Requirement status
+
+| Requirement | Status | Evidence or open item |
+|---|---|---|
+| SAF-AEGIS-1 | Met | Boundary module; CLI, web and hub captures; `AegisBoundaryTests` |
+| SAF-AEGIS-2 | Met | Typed exit codes unchanged; "a completed command keeps its exit code and records nothing" |
+| SAF-AEGIS-3 | Met | Shell launchers return non-zero diagnostics (no JavaScript edges, RQ-ROS-2026-A024) |
+| SAF-AEGIS-4 | Met | Idempotent remote and reconcile paths (RemoteProtocolTests, WorkReconciliationTests) |
+| SAF-AEGIS-5 | Met | Redaction rules and scrubber; "credentials, repository data and work content never reach a sink" |
+| SAF-AEGIS-6 | Met | Released 1.0.0 pin; collector-sink tests |
+| SAF-FORMA-1 | Met | `vendor/forma/forma.lock` pins the Forma 0.4.1 release tarball by URL and sha256; "forma: the vendored tarball is the pinned immutable release artifact" |
+| SAF-FORMA-2 | Met | Web and hub markup use Forma patterns; shipped `styles.css` files carry no rules (guarded by test) |
+| SAF-FORMA-3 | Met | No Forma CSS is copied; the stylesheet is extracted at runtime from the verified release tarball |
+| SAF-FORMA-4 | Met | Native forms, tables, landmarks; Forma only presents |
+| SAF-FORMA-5 | Met | Forma skip link, focus, responsive data grids; status lozenges carry the status word, not color alone |
+| SAF-FORMA-6 | Met | Faults use Forma's inline fault and fault-banner patterns with the Aegis reference |
+| PRX-UI-030 | Met | As SAF-FORMA-1..6 |
+| PRX-UI-031 | Not applicable (decision) | Script-free, server-rendered UI has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
+| SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
+| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
+| SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
+
+### Forma (SAF-FORMA-1..6)
+
+`praxis web serve` and `praxis hub serve` consume the pinned Forma release
+in `vendor/forma/` (see [`web-interface.md`](web-interface.md)). Praxis has no
+npm, so the verifier accepts that lock as Forma's pin when the tarball's
+sha256 matches it.
+
+### Declaration
+
+`.echelon/foundations.json` requires Aegis, Forma and Ordo. Folio is not
+applicable: Praxis has no printable or PDF surface (SAF-FOLIO-1 is
+conditional). Limen is not applicable: the web and hub UIs are script-free
+and server-rendered (PRX-UI-031, see `web-interface.md`). Praxis is not
+required of itself: this repository is Praxis's source and runs its own
+build. The suite runs `foundations verify` against this repository, so a
+missing pin, unused dependency or absent boundary manifest fails CI.

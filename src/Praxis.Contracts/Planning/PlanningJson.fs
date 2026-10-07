@@ -21,6 +21,19 @@ module PlanningJson =
 
     let render (node: JsonNode) = node.ToJsonString(options) + "\n"
 
+    /// Every `praxis.plan` document names the repository it was computed in
+    /// (`{provider, repositoryId, repository}`, or `null` when no identity can
+    /// be established), so each work-item ID in it is a canonical,
+    /// repository-qualified identity without a second identity scheme
+    /// (PRX-PLAN-182, PRX-REMOTE-047). Parsers ignore it; documents without it
+    /// stay valid.
+    let withRepository (identity: Praxis.Domain.Identity.RepositoryIdentity option) (node: JsonNode) : JsonNode =
+        match node with
+        | :? JsonObject as document when isNull document["repository"] ->
+            document["repository"] <- Praxis.Contracts.Identity.IdentityJson.renderOptionalRepository identity
+            document :> JsonNode
+        | other -> other
+
     let private text (value: string) : JsonNode = JsonValue.Create value
     let private optionalText (value: string option) : JsonNode = value |> Option.map text |> Option.toObj
     let private integer (value: int) : JsonNode = JsonValue.Create value

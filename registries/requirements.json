@@ -36,6 +36,20 @@
             "modified"
           ],
           "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:39.377Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -92,6 +106,20 @@
             "modified"
           ],
           "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:40.078Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -162,6 +190,20 @@
             "modified"
           ],
           "reason": "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:40.826Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -924,6 +966,20 @@
             "created"
           ],
           "reason": "Captured from GitHub issue #80 (work item GH-80): post-hoc Git-evidenced attribution reconciliation"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:41.536Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -1018,6 +1074,37 @@
             "modified"
           ],
           "reason": "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:43.202Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261007T053405002Z-37591719": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T05:34:26.023Z",
+          "evidence": [
+            "docs/identity.md"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Adopt PRX-REMOTE-045..050 and the order amendment; record their implementation (GROUP-PRAXIS-IDENTITY-001); correct the deleted Node test citations and the abandoned PRAXIS-NPM-BIN deferral"
         }
       }
     },
@@ -1042,8 +1129,8 @@
       "gh-90"
     ],
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
-    "updated": "2026-09-29",
-    "version": "1.3.0"
+    "updated": "2026-10-07",
+    "version": "1.4.0"
   },
   {
     "created": "2026-09-29",
@@ -1126,6 +1213,37 @@
             "modified"
           ],
           "reason": "Post-merge correction: PR #79 normalized the file's EOF whitespace during integration; record that responsible contribution so base-aware validation remains truthful."
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:43.996Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:24.471Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },
@@ -1185,6 +1303,37 @@
             "created"
           ],
           "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:44.700Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:23.740Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },
@@ -1271,6 +1420,20 @@
             "migrated"
           ],
           "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:45.363Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: fix the tests/Praxis.Tests path and correct the status to accepted while Python automation remains (PRAXIS-MISC-08)"
         }
       }
     },
@@ -1280,7 +1443,7 @@
       "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "implemented",
+    "status": "accepted",
     "tags": [
       "architecture",
       "fsharp",
@@ -1290,8 +1453,8 @@
       "invariant"
     ],
     "title": "Repository-owned implementation and automation are F#/.NET only",
-    "updated": "2026-09-30",
-    "version": "1.0.1"
+    "updated": "2026-10-06",
+    "version": "1.0.2"
   },
   {
     "created": "2026-09-28",
@@ -1329,6 +1492,20 @@
             "migrated"
           ],
           "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:42.388Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },

@@ -3,7 +3,17 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Ordo's execution semantics, consumed as the pinned release artifact
+         (vendor/nuget/ordo-core.lock; ORDO-CORE-PACKAGE, PRX-ARCH-001). Pure:
+         no I/O, no provider SDK. -->
+    <PackageReference Include="EchelonFoundry.Ordo.Core" Version="1.5.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Identity/Repository.fs" />
+    <Compile Include="Identity/RepositoryStatus.fs" />
+    <Compile Include="Identity/Instance.fs" />
+    <Compile Include="Identity/BranchPolicy.fs" />
     <Compile Include="Git/Model.fs" />
     <Compile Include="Git/Durability.fs" />
     <Compile Include="Git/Synchronization.fs" />
@@ -42,6 +52,7 @@
     <Compile Include="Telemetry/Summary.fs" />
     <Compile Include="Telemetry/Tutela.fs" />
     <Compile Include="Telemetry/TutelaTrend.fs" />
+    <Compile Include="Telemetry/TutelaHistory.fs" />
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
     <Compile Include="Telemetry/Steps.fs" />
@@ -77,5 +88,6 @@
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
+    <Compile Include="Foundations/FormaPin.fs" />
   </ItemGroup>
 </Project>

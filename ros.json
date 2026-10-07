@@ -14,7 +14,12 @@
   "generated": "generated",
   "repository": {
     "id": "repository-operating-system",
-    "type": "tooling"
+    "type": "tooling",
+    "identity": {
+      "provider": "github",
+      "repositoryId": "github:1309152643",
+      "repository": "kemiller2002/praxis"
+    }
   },
   "workProtocol": {
     "version": "1.0.0",

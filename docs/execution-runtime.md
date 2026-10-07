@@ -47,6 +47,25 @@ Gemini or CI performs the same role with the same capabilities.
 - **Work identity** is repository-qualified (`owner/repo:WORK-ID`) from the
   Git remote, so it is globally unambiguous.
 
+### Governing contract
+
+The role, mutation boundary, evaluator closure and human-only transitions come
+from the governing Ordo execution contract (`ordo.execution-contract/1`,
+Ordo `schemas/ordo-execution-contract.v1.schema.json`), read and validated by
+Ordo.Core (PRX-BND-001, PRX-SEQ-003, PRX-VER-010):
+
+```
+praxis execution start --work-item WI-7 --contract contracts/WI-7.json --worktree
+```
+
+`--contract` cannot be combined with `--role`, `--scope`, `--allow`,
+`--evaluator` or `--human-only` (exit 2). Without `--contract` those flags are
+assembled into the same contract document and validated by Ordo identically.
+Either way the execution ledger records a `contract` entry with its `source`
+(`contract-file:PATH` or `operator-flags`) and `sha256` before the start
+transition, and the evaluator identity the contract requires is resolved and
+recorded in the envelope at start.
+
 ## Workspaces
 
 `--worktree` creates branch `praxis/<work-item>/<execution-id>` in a new
@@ -108,11 +127,27 @@ execution or a Forma/Limen UI must consume the same list and never compute
 legality itself. `--human-only execution.complete` makes a transition
 human-required: an agent cannot satisfy it by reporting approval.
 
+## Ordo.Core
+
+Praxis consumes Ordo's execution semantics from the released Ordo.Core
+package rather than a copy (ORDO-CORE-PACKAGE, PRAXIS-FND-01; PRX-ARCH-001,
+PRX-EXEC-002). `EchelonFoundry.Ordo.Core` is the `ordo-core.nupkg` asset of
+the Ordo release named in `vendor/nuget/ordo-core.lock`, vendored unmodified
+with its sha256 and restored only from that folder (`NuGet.config` package
+source mapping). Role capability sets (`RoleAuthority.defaultFor`), the
+evaluator fingerprint, glob matching, mutation-boundary classification and
+scope expansion are Ordo.Core's; `Praxis.Domain.Execution` keeps Praxis's
+persisted wire shapes and translates by wire name. Tests fail when the
+vocabularies diverge, when the vendored package's digest differs from the
+lock, or when Governance.fs re-implements an Ordo rule. To move to a new Ordo
+release, replace the package, the lock and the `PackageReference` version
+together.
+
 ## Not yet implemented
 
 The local control-plane API server (CTL-001..008), the operator UI, host
-enforcement evidence (SEC-*), remote-execution binding of envelopes, and
-consuming Ordo.Core as a package. See work item EXEC-INSTALL-109.
+enforcement evidence (SEC-*) and remote-execution binding of envelopes. See
+work item EXEC-INSTALL-109.
 
 ## Attribution of execution state
 
