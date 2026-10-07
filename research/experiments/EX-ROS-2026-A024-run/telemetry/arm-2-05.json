@@ -1,0 +1,114 @@
+{
+  "branch": "experiment/a024-arm-2",
+  "capturedAt": "2026-10-07T22:02:43.701277+00:00",
+  "headAtCapture": "3cec7f7a5938175c8501c2da6b4e9bfb1172c43d",
+  "label": "arm-2-05",
+  "main": {
+    "builds": 5,
+    "compactions": 0,
+    "distinctFilesEdited": 1,
+    "distinctFilesRead": 17,
+    "endedAt": "2026-10-07T22:02:43.331000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 50
+      },
+      "entrypoint": {
+        "remote": 50
+      },
+      "models": {
+        "claude-opus-5-5": 50
+      },
+      "runtimeVersion": {
+        "2.1.293": 50
+      }
+    },
+    "fileReads": 29,
+    "fileWrites": 18,
+    "governanceReads": {
+      "AGENTS.md": 1,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": null,
+      "lastAt": null,
+      "paths": [],
+      "reads": 0,
+      "toolCalls": 0,
+      "writes": 0
+    },
+    "isolationAudit": {
+      "count": 1,
+      "events": [
+        {
+          "at": "2026-10-07T22:02:26.545000+00:00",
+          "rules": [
+            "main-ref"
+          ],
+          "text": "git fetch origin experiment/a024-arm-2 2>&1 | tail -2; git log --oneline HEAD..FETCH_HEAD | cat; git log --oneline FETCH_HEAD..HEAD | cat; git merge-base HEAD FETCH_HEAD  ",
+          "tool": "Bash"
+        }
+      ]
+    },
+    "modelRequests": 50,
+    "msToFirstCodeMutation": 577161,
+    "peakContextTokens": 205070,
+    "readPaths": [
+      ".ros/events/events.jsonl",
+      "/tmp/claude-0/-home-user-praxis/e9d5d196-4ac3-5fd8-8a25-89c6c51ece33/scratchpad/apt.log",
+      "/tmp/claude-0/-home-user-praxis/e9d5d196-4ac3-5fd8-8a25-89c6c51ece33/scratchpad/tests.log",
+      "AGENTS.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "src/Ros.Application/Work/Checkpoint.fs",
+      "src/Ros.Cli/CheckpointCommands.fs",
+      "src/Ros.Cli/WorkGroupCommands.fs",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "src/Ros.Domain/Work/Checkpoint.fs",
+      "src/Ros.Infrastructure/Git/GitRepository.fs",
+      "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+      "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/Program.fs",
+      "tests/Ros.Tests/WorkGroupTests.fs"
+    ],
+    "repeatedReadExcess": 12,
+    "repeatedReadPaths": 8,
+    "repeatedReadsTop": {
+      "/tmp/claude-0/-home-user-praxis/e9d5d196-4ac3-5fd8-8a25-89c6c51ece33/scratchpad/tests.log": 2,
+      "src/Ros.Application/Work/Checkpoint.fs": 2,
+      "src/Ros.Cli/CheckpointCommands.fs": 3,
+      "src/Ros.Domain/Planning/GroupDeclaration.fs": 3,
+      "src/Ros.Domain/Work/Checkpoint.fs": 2,
+      "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs": 2,
+      "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 2,
+      "tests/Ros.Tests/WorkGroupTests.fs": 4
+    },
+    "searches": 31,
+    "startedAt": "2026-10-07T21:40:31.073000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 2,
+    "tokens": {
+      "cacheCreation": 165934,
+      "cacheRead": 7391492,
+      "input": 100,
+      "output": 43887
+    },
+    "toolCalls": {
+      "Bash": 50,
+      "Edit": 5,
+      "Read": 1
+    },
+    "toolErrors": 1,
+    "wallMs": 1332258
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "e9d5d196-4ac3-5fd8-8a25-89c6c51ece33",
+  "subagents": [],
+  "transcript": "e9d5d196-4ac3-5fd8-8a25-89c6c51ece33.jsonl",
+  "transcriptSha256": {
+    "e9d5d196-4ac3-5fd8-8a25-89c6c51ece33.jsonl": "13d6e44637001e10e4b615de9c8ffaaa0a12b64b08a79a8c716cfbfbc6eb272c"
+  }
+}

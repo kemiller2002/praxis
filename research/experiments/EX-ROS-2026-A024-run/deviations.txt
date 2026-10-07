@@ -148,3 +148,9 @@ treatments, thresholds, blinding or stop rules.
   record: `platform/arm-2-04.list_events-assistant.txt`.
 - Classification: allowed operation. The audit rule is deliberately broad,
   so this is a false positive, not a deviation.
+
+## Audit classification — arm-2-05 `FETCH_HEAD` event (allowed; no deviation)
+
+- `arm-2-05` ran `git fetch origin experiment/a024-arm-2`, its own branch, and
+  compared HEAD with `FETCH_HEAD`. That is allowed: a false positive of the
+  broad `main-ref` rule.

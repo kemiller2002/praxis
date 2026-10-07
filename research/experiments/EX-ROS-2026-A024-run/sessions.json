@@ -534,7 +534,22 @@
         "START_SHA": "52340e40fc5f6f42bc43fe47207bc1077648eafe"
       },
       "attempt": 1,
-      "status": "running"
+      "status": "completed",
+      "headAfter": "680500702291af09ae99ec689494117fd8a5b7ba",
+      "terminalAt": "2026-10-07T22:03:13.518833Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.9303082,
+        "input_tokens": 108,
+        "output_tokens": 46060,
+        "cache_read_tokens": 8219741,
+        "cache_write_tokens": 170591,
+        "context_used_tokens": 209101,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
     }
   ],
   "status": "active: resumed under owner amendment A1"
