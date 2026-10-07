@@ -114,6 +114,7 @@ let main _ =
     @ PremergeReleaseTests.tests
     @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
+    @ GroupGateTests.tests
     @ InternalNamingGuardTests.tests
     @ InternalNamingTests.tests
     @ TelemetryCostUnitTests.tests

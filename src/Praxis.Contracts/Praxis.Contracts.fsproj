@@ -15,6 +15,7 @@
     <Compile Include="Work/PlanJson.fs" />
     <Compile Include="Work/ContextPlanJson.fs" />
     <Compile Include="Work/QualityEvidenceJson.fs" />
+    <Compile Include="Work/GroupEvidenceJson.fs" />
     <Compile Include="Work/BacklogJson.fs" />
     <Compile Include="Work/AttributionJson.fs" />
     <Compile Include="Work/QueueValidationJson.fs" />

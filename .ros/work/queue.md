@@ -92,7 +92,7 @@
 | PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | complete | grouping | medium |
 | PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | complete | grouping | high |
 | PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | ready | grouping | high |
-| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | ready | grouping | high |
+| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | complete | grouping | high |
 | PRAXIS-ID-01 | Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050) | complete | identity | high |
 | PRAXIS-ID-02 | Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment) | complete | identity | high |
 | PRAXIS-ID-03 | Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182) | complete | identity, planning | medium |
