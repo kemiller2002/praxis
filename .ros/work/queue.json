@@ -4476,10 +4476,10 @@
         "group:GROUP-FND-FOUNDATIONS"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:10.000Z",
-      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "updatedAt": "2026-10-07T06:24:45.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -4527,10 +4527,10 @@
         "group:GROUP-FND-FOUNDATIONS"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:38:11.000Z",
-      "updatedAt": "2026-10-06T20:39:27.000Z",
+      "updatedAt": "2026-10-07T06:24:43.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
