@@ -45,6 +45,27 @@ type GroupAddOutcome =
     | Planned of group: StoredGroup * added: AddedMember
     | Recorded of group: StoredGroup * added: AddedMember
 
+type GroupRemoveRequest =
+    { GroupId: string
+      Member: string
+      OccurredAt: string
+      Actor: Actor option
+      DryRun: bool }
+
+/// The removal as recorded and the item's own recorded state, which the
+/// removal leaves as it was (`unknown` when the item is in neither the
+/// backlog nor the live context).
+type RemovedMember =
+    { Change: MembershipChange
+      State: string }
+
+[<RequireQualifiedAccess>]
+type GroupRemoveOutcome =
+    | Rejected of GroupRejection list
+    /// Valid; nothing written (`--dry-run`).
+    | Planned of group: StoredGroup * removed: RemovedMember
+    | Recorded of group: StoredGroup * removed: RemovedMember
+
 [<RequireQualifiedAccess>]
 type GroupShowOutcome =
     | NotFound of id: string
@@ -91,7 +112,7 @@ module WorkGroupOperations =
                 match GroupDeclaration.addMember store known locate request.OccurredAt request.Actor request.GroupId request.Member with
                 | Error rejections -> Ok(GroupAddOutcome.Rejected rejections)
                 | Ok(updated, stored, change) ->
-                    let added =
+                    let added: AddedMember =
                         { Change = change
                           State = known |> Map.find change.Member |> stateCode
                           ExecutionRepository = locate change.Member |> ExecutionLocation.describe }
@@ -100,6 +121,27 @@ module WorkGroupOperations =
                         Ok(GroupAddOutcome.Planned(stored, added))
                     else
                         port.WriteStore updated |> Result.map (fun () -> GroupAddOutcome.Recorded(stored, added))))
+
+    /// `work group remove`: removes one member from a stored group and records
+    /// who removed it. No repository check applies, so the planner is not
+    /// consulted; member states are read only to report the item's own state.
+    /// The only write is the group store.
+    let remove (port: WorkGroupPort) (request: GroupRemoveRequest) : Result<GroupRemoveOutcome, string> =
+        port.ReadStore()
+        |> Result.bind (fun store ->
+            states port
+            |> Result.bind (fun known ->
+                match GroupDeclaration.removeMember store request.OccurredAt request.Actor request.GroupId request.Member with
+                | Error rejections -> Ok(GroupRemoveOutcome.Rejected rejections)
+                | Ok(updated, stored, change) ->
+                    let removed =
+                        { Change = change
+                          State = known |> Map.tryFind change.Member |> Option.map stateCode |> Option.defaultValue "unknown" }
+
+                    if request.DryRun then
+                        Ok(GroupRemoveOutcome.Planned(stored, removed))
+                    else
+                        port.WriteStore updated |> Result.map (fun () -> GroupRemoveOutcome.Recorded(stored, removed))))
 
     /// `work group show`: the stored group, each member's own recorded state
     /// and the planner's view of the same group. Reads only: neither port's

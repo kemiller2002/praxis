@@ -348,6 +348,28 @@ nothing; `--dry-run` writes nothing; an argument error (missing or repeated
 changes the member's lifecycle state, evidence or attribution. `--json` kind is
 `member-added` (`group`, `member{id,state,executionRepository}`, `change`).
 
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ITEM --occurred-at TIMESTAMP
+    [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a stored group (`PRAXIS-GROUP-04`, PRX-GRP-073),
+keeping the other members in order, and appends a `membership` entry
+(`member`, `operation: removed`, `occurredAt`, `actor`) recording who removed
+it. It refuses an unknown group, an item that is not a member, and the group's
+last member (a declared group keeps at least one member; there is no override).
+Any current member may be removed whatever its own state, including one that
+became terminal or is unknown to this repository. Removal never changes the
+item's lifecycle state, evidence or attribution, and a removed item may be
+added again with `work group add`. A refusal exits `1` (`--json` kind
+`member-removal-rejected`) and writes nothing; `--dry-run` writes nothing; an
+argument error (missing or repeated `--id`/`--member`, a bad timestamp,
+`--cross-repository`, `--config`) exits `2`. `--json` kind is `member-removed`
+(`group`, `member{id,state}`, `change`). `validate` reports a member whose latest
+membership change is `removed` but who is still listed in `members`.
+
 ### `work group show`
 
 ```

@@ -8,7 +8,7 @@ open Ros.Domain.Planning
 open Ros.Domain.Provenance
 open Ros.Infrastructure.Planning
 
-/// `work group create|add|show`: declared execution groups in Praxis state
+/// `work group create|add|remove|show`: declared execution groups in Praxis state
 /// (PRX-GRP-073 phase two). Parses, delegates to `WorkGroupOperations`, and
 /// renders; it holds no group policy.
 [<RequireQualifiedAccess>]
@@ -21,7 +21,10 @@ module WorkGroupCommands =
     let addUsage =
         "work group add --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--config FILE] [--dry-run] [--json] [IDENTITY]"
 
-    let usage = createUsage + " | " + addUsage + " | " + showUsage
+    let removeUsage =
+        "work group remove --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]"
+
+    let usage = createUsage + " | " + addUsage + " | " + removeUsage + " | " + showUsage
 
     let private identityFlags =
         [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
@@ -33,6 +36,8 @@ module WorkGroupCommands =
         )
 
     let private addFlags = set ([ "--id"; "--member"; "--occurred-at"; "--config" ] @ identityFlags)
+
+    let private removeFlags = set ([ "--id"; "--member"; "--occurred-at" ] @ identityFlags)
 
     let private switches = set [ "--dry-run"; "--json"; "--cross-repository" ]
 
@@ -183,15 +188,15 @@ module WorkGroupCommands =
                 1
             | Ok outcome -> render (List.contains "--json" arguments) group.Id outcome
 
-    /// The add request the arguments describe (with the optional planner
-    /// configuration file), or every argument error. `--cross-repository`
-    /// belongs to the group's declaration, so add refuses it.
-    let private addRequest (arguments: string list) (parsed: Parsed) : Result<GroupAddRequest * string option, string list> =
+    /// The `--id`, `--member` and `--occurred-at` of a one-member change
+    /// (`work group add|remove`), or every argument error, including
+    /// `--cross-repository` (part of a group's declaration) and stray tokens.
+    let private memberChange (command: string) (arguments: string list) (parsed: Parsed) : Result<string * string * string, string list> =
         let one flag what =
             match valuesOf flag parsed with
             | [ value ] -> Ok value
-            | [] -> Error $"work group add requires {flag} {what}"
-            | _ -> Error $"work group add takes exactly one {flag}; add members one at a time"
+            | [] -> Error $"work group {command} requires {flag} {what}"
+            | _ -> Error $"work group {command} takes exactly one {flag}; change members one at a time"
 
         let groupId = one "--id" "GROUP-ID"
         let memberId = one "--member" "ITEM"
@@ -200,31 +205,44 @@ module WorkGroupCommands =
             match valuesOf "--occurred-at" parsed with
             | [ value ] when isTimestamp value -> Ok value
             | [ value ] -> Error $"--occurred-at '{value}' is not a timestamp"
-            | _ -> Error "work group add requires exactly one --occurred-at TIMESTAMP (the real current time)"
-
-        let configuration = single "--config" parsed
+            | _ -> Error $"work group {command} requires exactly one --occurred-at TIMESTAMP (the real current time)"
 
         let errors =
-            [ for result in [ groupId |> Result.map ignore; memberId |> Result.map ignore; occurredAt |> Result.map ignore; configuration |> Result.map ignore ] do
+            [ for result in [ groupId |> Result.map ignore; memberId |> Result.map ignore; occurredAt |> Result.map ignore ] do
                   match result with
                   | Error message -> yield message
                   | Ok() -> ()
               if List.contains "--cross-repository" arguments then
-                  yield "--cross-repository is part of a group's declaration; work group add does not change it"
+                  yield $"--cross-repository is part of a group's declaration; work group {command} does not change it"
               for token in parsed.Unexpected do
                   yield $"unexpected argument '{token}'" ]
 
-        match errors, groupId, memberId, occurredAt, configuration with
-        | [], Ok groupId, Ok memberId, Ok occurredAt, Ok configuration ->
-            Ok(
+        match errors, groupId, memberId, occurredAt with
+        | [], Ok groupId, Ok memberId, Ok occurredAt -> Ok(groupId, memberId, occurredAt)
+        | errors, _, _, _ -> Error errors
+
+    /// The add request the arguments describe (with the optional planner
+    /// configuration file), or every argument error.
+    let private addRequest (arguments: string list) (parsed: Parsed) : Result<GroupAddRequest * string option, string list> =
+        match memberChange "add" arguments parsed, single "--config" parsed with
+        | Ok(groupId, memberId, occurredAt), Ok configuration ->
+            let request: GroupAddRequest =
                 { GroupId = groupId
                   Member = memberId
                   OccurredAt = occurredAt
                   Actor = None
-                  DryRun = List.contains "--dry-run" arguments },
-                configuration
+                  DryRun = List.contains "--dry-run" arguments }
+
+            Ok(request, configuration)
+        | change, configuration ->
+            Error(
+                (match change with
+                 | Error errors -> errors
+                 | Ok _ -> [])
+                @ (match configuration with
+                   | Error message -> [ message ]
+                   | Ok _ -> [])
             )
-        | errors, _, _, _, _ -> Error errors
 
     let private addText (verb: string) (stored: StoredGroup) (added: AddedMember) =
         let group = stored.Declaration
@@ -287,6 +305,72 @@ module WorkGroupCommands =
                 eprintfn "ERROR %s" message
                 1
             | Ok outcome -> renderAdd (List.contains "--json" arguments) request outcome
+
+    let private removeText (verb: string) (stored: StoredGroup) (removed: RemovedMember) =
+        let group = stored.Declaration
+        let by = removed.Change.Actor |> Option.map (fun actor -> actor.Id) |> Option.defaultValue "unknown"
+        let members = String.concat ", " group.Members
+
+        [ $"{verb} {removed.Change.Member} from group {group.Id} (the item stays {removed.State})"
+          $"removed at {removed.Change.OccurredAt} by {by}"
+          $"members ({group.Members.Length}): {members}"
+          "membership is advisory: the item's lifecycle state, evidence and attribution are unchanged" ]
+        |> List.iter (printfn "%s")
+
+    let private renderRemove asJson (request: GroupRemoveRequest) (outcome: GroupRemoveOutcome) =
+        match outcome with
+        | GroupRemoveOutcome.Rejected rejections ->
+            let messages = rejections |> List.map GroupRejection.message
+
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRemovalRejected request.GroupId request.Member messages)
+            else
+                for message in messages do
+                    eprintfn "ERROR %s" message
+
+                eprintfn "%s was not removed from %s" request.Member request.GroupId
+
+            1
+        | GroupRemoveOutcome.Planned(stored, removed) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRemoved true stored removed.Change removed.State)
+            else
+                removeText "dry run: would remove" stored removed
+                printfn "nothing was recorded"
+
+            0
+        | GroupRemoveOutcome.Recorded(stored, removed) ->
+            if asJson then
+                printf "%s" (PlanningJson.renderMemberRemoved false stored removed.Change removed.State)
+            else
+                removeText "removed" stored removed
+
+            0
+
+    /// `work group remove`: exit 0 removed (or dry run), 1 refusal (not a
+    /// member, last member, unknown group) or IO error (nothing written), 2
+    /// argument error.
+    let remove root (arguments: string list) (actor: Actor) =
+        match memberChange "remove" arguments (parseWith removeFlags { Values = []; Unexpected = [] } arguments) with
+        | Error errors ->
+            for error in errors do
+                eprintfn "ERROR %s" error
+
+            eprintfn "Usage: ros %s" removeUsage
+            2
+        | Ok(groupId, memberId, occurredAt) ->
+            let request: GroupRemoveRequest =
+                { GroupId = groupId
+                  Member = memberId
+                  OccurredAt = occurredAt
+                  Actor = Some actor
+                  DryRun = List.contains "--dry-run" arguments }
+
+            match WorkGroupOperations.remove (FileWorkGroupRepository.create root) request with
+            | Error message ->
+                eprintfn "ERROR %s" message
+                1
+            | Ok outcome -> renderRemove (List.contains "--json" arguments) request outcome
 
     let private showText (plan: PlanSnapshot) (view: GroupView) =
         let group = view.Group.Declaration

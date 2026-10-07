@@ -8,14 +8,16 @@ open Ros.Domain.Work
 [<RequireQualifiedAccess>]
 type MembershipOperation =
     | Added
+    | Removed
 
 [<RequireQualifiedAccess>]
 module MembershipOperation =
     let code operation =
         match operation with
         | MembershipOperation.Added -> "added"
+        | MembershipOperation.Removed -> "removed"
 
-    let all = [ MembershipOperation.Added ]
+    let all = [ MembershipOperation.Added; MembershipOperation.Removed ]
 
     let tryParse value = all |> List.tryFind (fun operation -> code operation = value)
 
@@ -63,6 +65,8 @@ type GroupRejection =
     | UnknownGroup of id: string
     | AlreadyMember of id: string * group: string
     | RepositoryMismatch of id: string * memberRepository: string * groupRepository: string
+    | NotMember of id: string * group: string
+    | LastMember of id: string * group: string
 
 /// A stored-group problem `validate` reports.
 type GroupFinding = { Field: string; Message: string }
@@ -82,6 +86,9 @@ module GroupRejection =
         | GroupRejection.AlreadyMember(id, group) -> $"{id} is already a member of {group}"
         | GroupRejection.RepositoryMismatch(id, memberRepository, groupRepository) ->
             $"{id} executes in {memberRepository} but the group executes in {groupRepository}; only a cross-repository group may mix repositories (PRX-GRP-051)"
+        | GroupRejection.NotMember(id, group) -> $"{id} is not a member of {group}"
+        | GroupRejection.LastMember(id, group) ->
+            $"{id} is the last member of {group}; a declared group keeps at least one member, so the last member cannot be removed"
 
 [<RequireQualifiedAccess>]
 module GroupStore =
@@ -247,6 +254,46 @@ module GroupDeclaration =
         | [], None -> Error [ GroupRejection.UnknownGroup groupId ]
         | found, _ -> Error found
 
+    /// Every reason `memberId` cannot leave group `groupId`, in a fixed order;
+    /// empty when it can. The member's own state is irrelevant: an open,
+    /// terminal or unknown member may leave. An unknown group is the only
+    /// reason reported then; the last member is refused, since a stored
+    /// group without members is invalid.
+    let removeRejections (store: GroupStore) (groupId: string) (memberId: string) =
+        match GroupStore.tryFind groupId store with
+        | None -> [ GroupRejection.UnknownGroup groupId ]
+        | Some stored when not (stored.Declaration.Members |> List.contains memberId) -> [ GroupRejection.NotMember(memberId, groupId) ]
+        | Some stored when stored.Declaration.Members |> List.forall ((=) memberId) -> [ GroupRejection.LastMember(memberId, groupId) ]
+        | Some _ -> []
+
+    /// Removes `memberId` from group `groupId`, keeping the other members in
+    /// order, and records who removed it and when. Only the store changes:
+    /// the item's lifecycle state, evidence and attribution are neither
+    /// inputs nor outputs.
+    let removeMember
+        (store: GroupStore)
+        (removedAt: string)
+        (removedBy: Actor option)
+        (groupId: string)
+        (memberId: string)
+        : Result<GroupStore * StoredGroup * MembershipChange, GroupRejection list> =
+        match removeRejections store groupId memberId, GroupStore.tryFind groupId store with
+        | [], Some stored ->
+            let change =
+                { Member = memberId
+                  Operation = MembershipOperation.Removed
+                  OccurredAt = removedAt
+                  Actor = removedBy }
+
+            let updated =
+                { stored with
+                    Declaration = { stored.Declaration with Members = stored.Declaration.Members |> List.filter ((<>) memberId) }
+                    Membership = stored.Membership @ [ change ] }
+
+            Ok(GroupStore.replace updated store, updated, change)
+        | [], None -> Error [ GroupRejection.UnknownGroup groupId ]
+        | found, _ -> Error found
+
     /// The planner's view: configured declarations first, then stored ones in
     /// ID order. A configured group with the same ID wins, since the
     /// configuration file is the narrower, per-invocation input.
@@ -287,7 +334,13 @@ module GroupDeclaration =
                           yield { Field = at "membership"; Message = $"the membership change for {change.Member} has no occurredAt" }
                   // Only each member's latest change describes current membership.
                   for memberId, changes in stored.Membership |> List.groupBy (fun change -> change.Member) do
-                      if (List.last changes).Operation = MembershipOperation.Added && not (group.Members |> List.contains memberId) then
-                          yield { Field = at "membership"; Message = $"{memberId} is recorded as added but is not a member" } ])
+                      let isMember = group.Members |> List.contains memberId
+
+                      match (List.last changes).Operation with
+                      | MembershipOperation.Added when not isMember ->
+                          yield { Field = at "membership"; Message = $"{memberId} is recorded as added but is not a member" }
+                      | MembershipOperation.Removed when isMember ->
+                          yield { Field = at "membership"; Message = $"{memberId} is recorded as removed but is still a member" }
+                      | _ -> () ])
 
         duplicateIds @ perGroup

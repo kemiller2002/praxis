@@ -805,6 +805,30 @@ module PlanningJson =
               "change", membershipChangeNode change ]
         |> render
 
+    /// The `--json` result of `work group remove`: the group as it is (or,
+    /// with `--dry-run`, would be) stored, the change, and the item's own
+    /// recorded state, which removal does not change.
+    let renderMemberRemoved (dryRun: bool) (stored: StoredGroup) (change: MembershipChange) (state: string) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "member-removed"
+              "dryRun", boolean dryRun
+              "recorded", boolean (not dryRun)
+              "group", storedGroupNode stored
+              "member", record [ "id", text change.Member; "state", text state ]
+              "change", membershipChangeNode change ]
+        |> render
+
+    let renderMemberRemovalRejected (id: string) (memberId: string) (messages: string list) =
+        record
+            [ "schema", text GroupStore.Schema
+              "kind", text "member-removal-rejected"
+              "id", text id
+              "member", text memberId
+              "recorded", boolean false
+              "errors", texts messages ]
+        |> render
+
     let renderMemberRejected (id: string) (memberId: string) (messages: string list) =
         record
             [ "schema", text GroupStore.Schema

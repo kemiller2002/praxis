@@ -3000,6 +3000,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
     | "work" :: "group" :: "create" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.create root rest)
     | "work" :: "group" :: "add" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.add root Version rest)
+    | "work" :: "group" :: "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (WorkGroupCommands.remove root rest)
     | "work" :: "group" :: "show" :: rest -> WorkGroupCommands.show root Version rest
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.runContinue root rest)

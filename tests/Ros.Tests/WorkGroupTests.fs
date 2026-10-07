@@ -372,7 +372,7 @@ module WorkGroupTests =
                     DeclaredGroups = fun () -> Ok(GroupStore.declarations store.Value) }
 
               let run memberId dryRun =
-                  let request =
+                  let request: GroupAddRequest =
                       { GroupId = "GROUP-PRAXIS-A-001"
                         Member = memberId
                         OccurredAt = "2026-10-07T01:00:00.000Z"
@@ -456,6 +456,177 @@ module WorkGroupTests =
               Assert.equal 2 (add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--member"; "TASK-A" ]).ExitCode
               Assert.equal 2 (add [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--cross-repository" ]).ExitCode
               Assert.equal 2 (PraxisCli.run root executor [ "work"; "group"; "add"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B" ]).ExitCode
+              Assert.equal before (fingerprint root)) ]
+
+    // ---- work group remove (PRAXIS-GROUP-04) ------------------------------------
+
+    let private removeFrom store groupId memberId =
+        GroupDeclaration.removeMember store "2026-10-07T02:00:00.000Z" (Some actor) groupId memberId
+
+    let private twoMemberStore = recorded GroupStore.empty (declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-2"; "L-1" ])
+
+    let private removeRejected store groupId memberId =
+        match removeFrom store groupId memberId with
+        | Ok _ -> failwith "expected a rejection"
+        | Error rejections -> rejections
+
+    let private removeTests =
+        [ t "remove: drops the member, keeps the others in order and records who removed it" (fun () ->
+              match removeFrom twoMemberStore "GROUP-PRAXIS-A-001" "A-2" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, change) ->
+                  Assert.equal (declared "GROUP-PRAXIS-A-001" [ "A-1"; "L-1" ]) group.Declaration
+                  Assert.equal
+                      { Member = "A-2"
+                        Operation = MembershipOperation.Removed
+                        OccurredAt = "2026-10-07T02:00:00.000Z"
+                        Actor = Some actor }
+                      change
+                  Assert.equal [ change ] group.Membership
+                  Assert.equal "2026-10-07T00:00:00.000Z" group.DeclaredAt
+                  Assert.equal (Some actor) group.DeclaredBy
+                  Assert.equal (Some group) (GroupStore.tryFind "GROUP-PRAXIS-A-001" store))
+
+          t "remove: refuses non-members and unknown groups" (fun () ->
+              Assert.equal [ GroupRejection.NotMember("A-4", "GROUP-PRAXIS-A-001") ] (removeRejected twoMemberStore "GROUP-PRAXIS-A-001" "A-4")
+              Assert.equal [ GroupRejection.NotMember("NOPE-1", "GROUP-PRAXIS-A-001") ] (removeRejected twoMemberStore "GROUP-PRAXIS-A-001" "NOPE-1")
+              Assert.equal [ GroupRejection.UnknownGroup "GROUP-PRAXIS-NONE-001" ] (removeRejected twoMemberStore "GROUP-PRAXIS-NONE-001" "A-1"))
+
+          t "remove: refuses the last member" (fun () ->
+              Assert.equal [ GroupRejection.LastMember("A-1", "GROUP-PRAXIS-A-001") ] (removeRejected baseStore "GROUP-PRAXIS-A-001" "A-1")
+              Assert.isTrue ((GroupRejection.message (GroupRejection.LastMember("A-1", "GROUP-PRAXIS-A-001"))).Contains "last member") "message names the rule")
+
+          t "remove: terminal and unknown members may leave; member state is not an input" (fun () ->
+              let stored =
+                  { Declaration = declared "GROUP-PRAXIS-A-001" [ "A-1"; "A-4"; "GONE-1" ]
+                    DeclaredAt = "2026-10-07T00:00:00.000Z"
+                    DeclaredBy = None
+                    Membership = [] }
+
+              let store = { Groups = [ stored ] }
+              Assert.isTrue (removeFrom store "GROUP-PRAXIS-A-001" "A-4" |> Result.isOk) "a member that became complete"
+              Assert.isTrue (removeFrom store "GROUP-PRAXIS-A-001" "GONE-1" |> Result.isOk) "a member unknown to this repository")
+
+          t "remove: history round-trips, a re-added member is valid and validate reports a contradiction" (fun () ->
+              match removeFrom twoMemberStore "GROUP-PRAXIS-A-001" "A-2" with
+              | Error rejections -> failwith $"unexpected rejection: {rejections}"
+              | Ok(store, group, _) ->
+                  Assert.equal (Ok store) (PlanningJson.parseGroupStore (PlanningJson.renderGroupStore store))
+                  Assert.equal [ declared "GROUP-PRAXIS-A-001" [ "A-1"; "L-1" ] ] (GroupStore.declarations store)
+                  Assert.empty (GroupDeclaration.findings store addStates)
+
+                  match addTo store "GROUP-PRAXIS-A-001" "A-2" with
+                  | Error rejections -> failwith $"unexpected rejection: {rejections}"
+                  | Ok(readded, regrouped, _) ->
+                      Assert.equal [ MembershipOperation.Removed; MembershipOperation.Added ] (regrouped.Membership |> List.map (fun change -> change.Operation))
+                      Assert.empty (GroupDeclaration.findings readded addStates)
+
+                  let broken = GroupStore.replace { group with Declaration = { group.Declaration with Members = [ "A-1"; "L-1"; "A-2" ] } } store
+                  let finding = Assert.single (GroupDeclaration.findings broken addStates)
+                  Assert.equal "groups[GROUP-PRAXIS-A-001].membership" finding.Field
+                  Assert.isTrue (finding.Message.Contains "removed") finding.Message)
+
+          t "remove operation: reports the item's own state and writes only the store, never on dry run" (fun () ->
+              let store = ref twoMemberStore
+              let writes = ref 0
+
+              let groups: WorkGroupPort =
+                  { ReadStore = fun () -> Ok store.Value
+                    Queue = fun () -> Ok queue
+                    Live = fun () -> Ok liveItems
+                    WriteStore =
+                      fun updated ->
+                          writes.Value <- writes.Value + 1
+                          store.Value <- updated
+                          Ok() }
+
+              let run memberId dryRun =
+                  let request: GroupRemoveRequest =
+                      { GroupId = "GROUP-PRAXIS-A-001"
+                        Member = memberId
+                        OccurredAt = "2026-10-07T02:00:00.000Z"
+                        Actor = Some actor
+                        DryRun = dryRun }
+
+                  match WorkGroupOperations.remove groups request with
+                  | Ok outcome -> outcome
+                  | Error message -> failwith message
+
+              match run "A-4" false with
+              | GroupRemoveOutcome.Rejected [ GroupRejection.NotMember("A-4", "GROUP-PRAXIS-A-001") ] -> ()
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              match run "L-1" true with
+              | GroupRemoveOutcome.Planned(group, removed) ->
+                  Assert.equal "active" removed.State
+                  Assert.equal [ "A-1"; "A-2" ] group.Declaration.Members
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 0 writes.Value
+
+              match run "A-2" false with
+              | GroupRemoveOutcome.Recorded(group, removed) ->
+                  Assert.equal "captured" removed.State
+                  Assert.equal [ "A-1"; "L-1" ] group.Declaration.Members
+              | outcome -> failwith $"unexpected outcome {outcome}"
+
+              Assert.equal 1 writes.Value
+              Assert.equal [ "A-1"; "L-1" ] (GroupStore.tryFind "GROUP-PRAXIS-A-001" store.Value).Value.Declaration.Members)
+
+          t "cli: remove records provenance and changes no member's state" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A"; "TASK-B" ] [])).ExitCode
+              let before = memberFiles root
+              let removeArguments = [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--occurred-at"; PraxisCli.now (); "--json" ]
+              let result = PraxisCli.run root executor removeArguments
+              Assert.equal 0 result.ExitCode
+              Assert.equal "member-removed" (text (result.Json["kind"]))
+              Assert.isTrue (result.Json["recorded"].GetValue<bool>()) "recorded"
+              Assert.equal "ready" (text (result.Json.["member"].["state"]))
+              Assert.equal "removed" (text (result.Json.["change"].["operation"]))
+              Assert.equal "test/agent" (text (result.Json.["change"].["actor"].["id"]))
+              Assert.equal before (memberFiles root)
+
+              match PlanningJson.parseGroupStore (File.ReadAllText(storePath root)) with
+              | Ok store ->
+                  let group = Assert.single store.Groups
+                  Assert.equal [ "TASK-A" ] group.Declaration.Members
+                  let change = Assert.single group.Membership
+                  Assert.equal ("TASK-B", MembershipOperation.Removed) (change.Member, change.Operation)
+                  Assert.equal (Some "test/agent") (change.Actor |> Option.map (fun recordedActor -> recordedActor.Id))
+              | Error message -> failwith message
+
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-CORE-001"; "--json" ]
+              Assert.equal [ "TASK-A" ] (shown.Json["members"].AsArray() |> Seq.map (fun entry -> text (entry["id"])) |> List.ofSeq)
+              Assert.isTrue (not ((PraxisCli.run root None [ "validate"; "--json" ]).Output.Contains ".ros/work/groups.json")) "no group finding")
+
+          t "cli: remove refusals and --dry-run write nothing; argument errors exit 2" (fun () ->
+              let root = fixture ()
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-CORE-001" [ "TASK-A"; "TASK-B" ] [])).ExitCode
+              Assert.equal 0 (PraxisCli.run root executor (createArguments "GROUP-FIXTURE-SOLO-001" [ "TASK-A" ] [])).ExitCode
+              let before = fingerprint root
+              let remove (extra: string list) = PraxisCli.run root executor ([ "work"; "group"; "remove"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+              for groupId, memberId, kind in
+                  [ "GROUP-FIXTURE-CORE-001", "TASK-X", "member-removal-rejected"
+                    "GROUP-FIXTURE-CORE-001", "NOPE-9", "member-removal-rejected"
+                    "GROUP-FIXTURE-NONE-001", "TASK-A", "member-removal-rejected"
+                    "GROUP-FIXTURE-SOLO-001", "TASK-A", "member-removal-rejected" ] do
+                  let result = remove [ "--id"; groupId; "--member"; memberId; "--json" ]
+                  Assert.equal 1 result.ExitCode
+                  Assert.equal kind (text (result.Json["kind"]))
+
+              let last = remove [ "--id"; "GROUP-FIXTURE-SOLO-001"; "--member"; "TASK-A" ]
+              Assert.isTrue (last.Error.Contains "last member") last.Error
+
+              let dryRun = remove [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--dry-run"; "--json" ]
+              Assert.equal 0 dryRun.ExitCode
+              Assert.isTrue (not (dryRun.Json["recorded"].GetValue<bool>())) "not recorded"
+              Assert.equal [ "TASK-A" ] (dryRun.Json.["group"].["members"].AsArray() |> Seq.map text |> List.ofSeq)
+              Assert.equal 2 (remove [ "--id"; "GROUP-FIXTURE-CORE-001" ]).ExitCode
+              Assert.equal 2 (remove [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--member"; "TASK-A" ]).ExitCode
+              Assert.equal 2 (remove [ "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B"; "--config"; "x.json" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root executor [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-CORE-001"; "--member"; "TASK-B" ]).ExitCode
               Assert.equal before (fingerprint root)) ]
 
     let tests =
@@ -621,3 +792,4 @@ module WorkGroupTests =
               Assert.isTrue (result.Output.Contains ".ros/work/groups.json" && result.Output.Contains "GONE-1") "the unknown member is reported") ]
         @ showTests
         @ addTests
+        @ removeTests
