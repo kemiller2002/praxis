@@ -7796,38 +7796,39 @@
     {
       "id": "EX-ROS-2026-A024",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-10-07T16:26:52.000Z",
+      "updatedAt": "2026-10-07T18:49:26.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T162653169Z-f15a70b7"
       ],
       "latestCheckpoint": {
-        "id": "0c0fb48c3c8f2e09a9acfa5a",
-        "recordedAt": "2026-10-07T17:05:12.000Z",
+        "id": "fd39ebe01cb67d686cb070ca",
+        "recordedAt": "2026-10-07T18:49:24.000Z",
         "executionId": "EXE-20261007T162653169Z-f15a70b7",
         "repository": "repository-operating-system",
         "branch": "claude/ex-ros-2026-a024-f5elvt",
-        "commit": "55e71825cfe815b97bc6f043d0d31c6cb0c8fcbe",
+        "commit": "82b836118a9cc5e562d67eb7244fe4b7e8adf9e4",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/ex-ros-2026-a024-f5elvt",
-        "remoteCommit": "55e71825cfe815b97bc6f043d0d31c6cb0c8fcbe",
-        "summary": "A024 harness frozen (91745d9); start ddda837 identical on arm branches; arm sessions arm-2-01, arm-3-01, arm-1 launched",
-        "nextAction": "Wait for arm-2-01 and arm-3-01, retrieve telemetry, launch item 02 sessions",
+        "remoteCommit": "82b836118a9cc5e562d67eb7244fe4b7e8adf9e4",
+        "summary": "A024 blocked: arm A complete, B through 02, C through 01; launcher defect spent the arm-C item-02 retry; blocker package, EV-A074, JR-A024 committed; validate passes",
+        "nextAction": "Owner decides BLOCKER.txt option 1/2/3; on option 1 resume with the probe-validated launcher per BLOCKER.txt",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "blockReason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T16:26:52.000Z",
+  "updatedAt": "2026-10-07T18:49:26.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

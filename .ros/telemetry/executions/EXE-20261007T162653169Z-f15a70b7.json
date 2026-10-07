@@ -615,14 +615,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-07T16:26:53.169Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-10-07T18:49:26.000Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-claude-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-10-07T18:49:26.000Z",
+      "recordedAt": "2026-10-07T18:49:26.000Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-claude-environment"
+          },
+          "discoveredAt": "2026-10-07T16:26:53.169Z",
+          "lastAssessedAt": "2026-10-07T16:26:53.169Z",
+          "recordedAt": "2026-10-07T16:26:53.169Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1464,6 +1480,26 @@
       },
       "collectedAt": "2026-10-07T16:26:53.169Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-5bc98ab2fa3fbceee2139cca",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-10-07T18:49:26.000Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1510,6 +1546,17 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-10-07T18:49:26.000Z",
+      "reason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-2daef7652f35e1072aeebcf5"
     }
   ],
   "repository": {
