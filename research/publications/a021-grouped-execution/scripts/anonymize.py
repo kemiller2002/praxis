@@ -310,6 +310,11 @@ class CompiledDenylist:
     advisory: tuple[tuple[str, re.Pattern[str]], ...]
     real_shas: frozenset[str] = frozenset()
     sha_prefixes: frozenset[str] = frozenset()
+    allow: tuple[str, ...] = ()  # protected literals, blanked before the review scan
+
+
+def blank_allowed(text: str, allow: tuple[str, ...]) -> str:
+    return reduce(lambda t, a: t.replace(a, " " * len(a)), allow, text)
 
 
 def compile_denylist(denylist: Mapping, review: bool = False) -> CompiledDenylist:
@@ -325,7 +330,8 @@ def compile_denylist(denylist: Mapping, review: bool = False) -> CompiledDenylis
         (p, re.compile(p, re.IGNORECASE)) for p in denylist.get("review_regexes", ()))
     shas = frozenset(denylist.get("review_shas", ()))
     return CompiledDenylist(blocking=literal + words + regexes + product, advisory=(),
-                            real_shas=shas, sha_prefixes=frozenset(s[:7] for s in shas))
+                            real_shas=shas, sha_prefixes=frozenset(s[:7] for s in shas),
+                            allow=tuple(denylist.get("review_allow", ())))
 
 
 def decode_for_scan(data: bytes) -> str:
@@ -369,6 +375,7 @@ class AliasConfig:
     tokens: tuple[tuple[str, str], ...]  # (real, alias), same length, matched as substrings
     phrases: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]  # word-wise, same lengths
     bounded: tuple[tuple[str, str], ...] = ()  # (real, alias): Capitalised/UPPER anywhere, lower only after a non-letter
+    protected: tuple[str, ...] = ()  # literals never renamed (wire-format constants of external systems)
 
 
 def alias_config(raw: Mapping) -> AliasConfig:
@@ -380,7 +387,8 @@ def alias_config(raw: Mapping) -> AliasConfig:
         if len(r) != len(a) or any(len(x) != len(y) for x, y in zip(r, a)))
     if bad:
         raise ValueError(f"aliases must preserve length (byte offsets, padding, hunk geometry): {bad}")
-    return AliasConfig(tokens, phrases, bounded)
+    protected = tuple(sorted(raw.get("protected_literals", ()), key=lambda t: (-len(t), t)))
+    return AliasConfig(tokens, phrases, bounded, protected)
 
 
 def bounded_regex(real: str) -> str:
@@ -462,11 +470,26 @@ def review_rules(cfg: AliasConfig, smap: ShaMap) -> tuple[Rule, ...]:
     return alias_rules(cfg) + (sha_rule(smap),)
 
 
+def _shield(text: str, protected: tuple[str, ...]) -> str:
+    return reduce(lambda t, ip: t.replace(ip[1], f"\x00{ip[0]}\x00"), enumerate(protected), text)
+
+
+def _unshield(text: str, protected: tuple[str, ...]) -> str:
+    return reduce(lambda t, ip: t.replace(f"\x00{ip[0]}\x00", ip[1]), enumerate(protected), text)
+
+
+def apply_review(text: str, cfg: AliasConfig, rules: tuple[Rule, ...]) -> Redacted:
+    """Review rename with protected literals shielded from every rule."""
+    shielded = apply_rules(_shield(text, cfg.protected), rules)
+    return Redacted(_unshield(shielded.text, cfg.protected), shielded.counts)
+
+
 def review_denylist(cfg: AliasConfig, real_shas: Iterable[str]) -> dict:
     return {
         "review_literals": sorted({r for r, _ in cfg.tokens}),
         "review_regexes": sorted({phrase_regex(r) for r, _ in cfg.phrases} | {bounded_regex(r) for r, _ in cfg.bounded}),
         "review_shas": sorted(set(real_shas)),
+        "review_allow": list(cfg.protected),
     }
 
 

@@ -130,6 +130,17 @@ These are enforced by a case-insensitive denylist scan of every file's contents 
 - **Same length keeps byte offsets, padding and patch hunk geometry unchanged.** The patches therefore apply to the aliased baseline without being regenerated. The verifier checks `git apply --check` for all four.
 - **The build refuses to run if any alias form already occurs in the faithful corpus**, so the rename is invertible.
 
+**Protected literal.** One literal is never renamed: `ordo.evaluator-identity/1`, a schema identifier shared with the sibling tool's separately published implementation.
+
+- The subject system hashes this literal into an evaluator fingerprint. A baseline test pins that fingerprint to a conformance vector computed by the external implementation.
+- Renaming the literal made exactly that test fail (791/792), so it is shielded from every rule and allowed by the scanner.
+
+**External dependency.** The organisation-scoped NuGet id `EchelonFoundry.Aegis.Core` 1.0.0 is aliased like every other occurrence, so the review edition cannot restore it from the public feed.
+
+- `verify_artifact.py --behavior` builds the review targets against a temporary local feed. In it, the public package is repacked under the alias id; only the nuspec id and the file name change, and the binaries are untouched. The feed is never shipped.
+- The bundle README tells reviewers how to supply the package.
+- The package's own binaries name the organisation and the owner's repository URL. That is why they cannot be shipped.
+
 **Object ids.** Every lowercase hex token of 7–40 characters that resolves in the repository (`git cat-file --batch-check`) is replaced by a same-length pseudonym. This covers commits, trees and blobs: patch `index` lines, `FILES.tsv`, protocol text, evaluator reports, datasets and the manifest.
 
 - Pseudonyms are prefixes of one 40-hex pseudonym per object, so `8b4ffa3` and its full SHA stay consistent.
@@ -176,14 +187,26 @@ The faithful edition keeps product names and SHAs. The verifier reports their co
 
 Run by `verify_artifact.py --behavior` with .NET SDK 10.0.112 (`dotnet build Ros.slnx -c Release -p:FSharpCoreImplicitPackageVersion=10.1.400`, then the F# test runner). Results are in `internal/behavior-verification.json`.
 
-BEHAVIOR_PLACEHOLDER
+Result of the final run (2026-10-07): every target builds, and per-test outcomes are identical between the faithful and review editions. Outcomes are compared as multisets, because three test names occur twice in the suite; test names are compared through the review rename.
+
+| Target | Faithful | Review | Expected |
+|--------|----------|--------|----------|
+| baseline | 792/792 | 792/792 | 792 |
+| A021 arm-x | 811/811 | 811/811 | 811 |
+| A021 arm-y | 829/829 | 829/829 | 829 |
+| R2 arm-M | 839/839 | 839/839 | 839 |
+| R2 arm-N | 819/819 | 819/819 | 819 |
+
+The R2 counts equal those the R2 evaluator recorded from the original neutral-label branches. Without the protected literal, the review baseline gave 791/792: the one failure was the conformance-vector test.
 
 ## Identifying content that could not be removed
 
 1. **Verbatim code and prose.** Every distinctive identifier, string or comment of a public repository can, in principle, be found with a code-search engine. Record ids such as `EX-ROS-2026-A021`, F# type names and test names all remain verbatim. Aliasing reduces casual exposure and removes every direct pointer (names, URLs, object ids), but it cannot make public code unsearchable without rewriting the evidence. The submission therefore relies on the venue's rule that reviewers do not search for authors.
 2. **GitHub Actions run numbers** cited by the R2 evaluator. The account is redacted but the run ids remain. They are not object ids, so they are not pseudonymised.
 3. **Free-text style**: agent-written prose and comments.
-4. **The `r2/SHA256SUMS` values in the review edition** refer to the pre-rename patches. They are kept unchanged because they are evaluator-facing evidence.
+4. **The protected schema literal** `ordo.evaluator-identity/1` in one source file and one doc comment. Renaming it changes behaviour (see above).
+5. **The external dependency's namespace `Aegis` and assembly name `Aegis.Core`.** They are compiled into the published binary, so they cannot be renamed. Only the organisation-scoped package id is aliased. Building the review edition therefore needs a locally supplied package.
+6. **The `r2/SHA256SUMS` values in the review edition** refer to the pre-rename patches. They are kept unchanged because they are evaluator-facing evidence.
 
 ## Required reproducibility checks
 

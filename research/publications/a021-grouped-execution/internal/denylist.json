@@ -278,5 +278,8 @@
     "fe9487b17958c69ee4afb64ae89860c26545486d",
     "ff47c6987a766d30b19935a095cb707063f18da6",
     "fff9c032044c267287e033ccb948f6b67218fa76"
+  ],
+  "review_allow": [
+    "ordo.evaluator-identity/1"
   ]
 }

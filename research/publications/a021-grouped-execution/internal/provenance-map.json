@@ -88,6 +88,9 @@
     "retained_tokens": {
       "ros / Ros / ROS": "Kept. A generic three-letter acronym shared with unrelated well-known software (and the record-id prefix EX-ROS-*), so it does not identify the system once its expansions 'repository operating system' (the system's former public repository name) and 'research operating system' (an earlier name) are aliased. Renaming it would touch every project, namespace and assembly name (Ros.Cli, Ros.Domain, Ros.Tests.dll) for no anonymity gain over the aliases above."
     },
+    "protected_literals": [
+      "ordo.evaluator-identity/1"
+    ],
     "object_pseudonyms": {
       "00001c00001c00001c00001c00001c00001c0000": "00f421e874f97840c68a4b7b7572c855de65de17",
       "00002c00002c00002c00002c00002c00002c0000": "010c38fbf0a73c7ffa9e2842f9ec773411a6387b",
@@ -1274,7 +1277,7 @@
       },
       "baseline/source/src/Ros.Domain/Execution/Governance.fs": {
         "alias-token:1": 2,
-        "alias-bounded:1": 12
+        "alias-bounded:1": 10
       },
       "baseline/source/src/Ros.Domain/Git/Durability.fs": {
         "alias-token:1": 1

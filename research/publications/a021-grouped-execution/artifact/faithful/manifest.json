@@ -49,8 +49,8 @@
       "path": "README.md",
       "status": "included",
       "profile": "authored",
-      "sha256": "473329a766f6c2103f75da28743a2d854a45b4cd0b3439a43d70b946da0b0ba2",
-      "bytes": 8564
+      "sha256": "b2ecc92b26298ff5ff6d92179a2a3831f8b4a7d1e60999de6b74c340b1dab9a0",
+      "bytes": 8607
     },
     {
       "path": "a021/arm-x.patch",
@@ -438,8 +438,8 @@
       "path": "analysis/anonymize.py",
       "status": "included",
       "profile": "record",
-      "sha256": "e73c3f50c1e70dcfbe6287b20ace1a5a99e441fee6a37922aa2ef8230b6cc0d8",
-      "bytes": 19269,
+      "sha256": "5168897282be7e022360b6a1dbeeda781ad3eaf7d09c4674665c824bf1686869",
+      "bytes": 20442,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -451,8 +451,8 @@
       "path": "analysis/build_anonymous_artifact.py",
       "status": "included",
       "profile": "record",
-      "sha256": "4b5b98265e7463b694d64c334970d87b6bc61e8d92aab1271351eeb58af14796",
-      "bytes": 34114,
+      "sha256": "976707996fa60c2ab2d3b0642094cd1260d3cb9f3022e638877417442de65e60",
+      "bytes": 34181,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -516,8 +516,8 @@
       "path": "analysis/verify_artifact.py",
       "status": "included",
       "profile": "record",
-      "sha256": "64fe2fb0907a58e1bb9830a74bc1c83c0102e652a983206d96e808030a1691d4",
-      "bytes": 20399,
+      "sha256": "cd45dff994f5221405ec53cf74189747b2d6bdf8ffaadc92fec6735ab923645f",
+      "bytes": 24026,
       "redactions": {},
       "transform": "none",
       "origin": {

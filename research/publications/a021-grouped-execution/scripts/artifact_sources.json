@@ -456,6 +456,10 @@
         "ordo",
         "nexa"
       ]
-    ]
+    ],
+    "protected_literals": [
+      "ordo.evaluator-identity/1"
+    ],
+    "protected_note": "Wire-format constants shared with an external, separately published implementation are never renamed: the evaluator-identity schema string is hashed into a fingerprint that a test pins to a conformance vector computed by that external implementation, so renaming it changes behaviour. The scanner allows exactly these literals."
   }
 }

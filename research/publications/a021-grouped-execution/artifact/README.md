@@ -127,6 +127,15 @@ of 829; R2 arm-M 839 of 839, arm-N 819 of 819 (the R2 counts equal those the
 R2 evaluator recorded).
 
 <!-- mode:review -->
+One external NuGet dependency of the subject system is published under the
+organisation's name, so in this edition its package id is aliased
+(`EchelonFoundry.Aegis.Core` 1.0.0) and cannot be restored from the public
+feed. To build the review edition, supply that id from a local package source
+(`-p:RestoreAdditionalProjectSources=<dir>`). The authors' parity check did
+so by repacking the public package under the alias id, changing only the
+package id and leaving the binaries untouched. The faithful edition restores
+it from the public feed as is.
+
 `r2/SHA256SUMS` lists the checksums the R2 evaluator verified; they refer to
 the patches before the review rename and therefore match the faithful
 edition, not the renamed `r2/*.patch` in this bundle. `manifest.json`
@@ -167,7 +176,9 @@ links are removed.
 * **Product, organisation and sibling-tool names** are replaced by
   same-length aliases in contents and paths, and **Git object ids** by
   same-length pseudonyms. Equal lengths keep byte offsets, column padding and
-  patch hunks intact.
+  patch hunks intact. One schema identifier shared with an external
+  implementation is left unchanged, because a test pins a hash computed over
+  it.
 
 Retained: the three-letter project prefix used in namespaces, assembly names
 and record ids (a generic acronym), and the names of the AI tools, which the

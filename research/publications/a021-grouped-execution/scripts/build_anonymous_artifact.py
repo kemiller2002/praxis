@@ -516,8 +516,8 @@ def plan(src: Mapping, raw: Mapping, st: Stage, resolved: Mapping[str, str]) -> 
     cfg = an.alias_config(src["review"])
     smap = an.sha_map(resolved)
     rules = an.review_rules(cfg, smap)
-    review_text = lambda t: an.apply_rules(t, rules).text  # noqa: E731
-    review_counts = lambda t: dict(an.apply_rules(t, rules).counts)  # noqa: E731
+    review_text = lambda t: an.apply_review(t, cfg, rules).text  # noqa: E731
+    review_counts = lambda t: dict(an.apply_review(t, cfg, rules).counts)  # noqa: E731
     modes = {m: bundle_for_mode(src, raw, st, m, review_text, review_counts) for m in MODES}
     terms = st.terms
     patch_specs = {p["bundle_path"]: p for p in src["patches"]}
@@ -550,6 +550,7 @@ def plan(src: Mapping, raw: Mapping, st: Stage, resolved: Mapping[str, str]) -> 
             "token_aliases": {a: r for r, a in cfg.tokens + cfg.bounded},
             "phrase_aliases": {" ".join(a): " ".join(r) for r, a in cfg.phrases},
             "retained_tokens": src["review"]["retained_tokens"],
+            "protected_literals": list(cfg.protected),
             "object_pseudonyms": {p: real for real, p in sorted(smap.pseudo.items())},
             "object_tokens": {t: smap.pseudo[k][:len(t)] for t, k in sorted(smap.resolved.items())},
             "renamed_paths": dict(sorted(modes["review"].renamed_paths.items())),
