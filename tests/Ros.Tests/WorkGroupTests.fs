@@ -216,6 +216,40 @@ module WorkGroupTests =
               | Ok changed -> Assert.equal "other-repo" (changed.Members |> List.last).ExecutionRepository
               | Error rejections -> failwith $"%A{rejections}")
 
+          t "remove drops one member, records who removed it and why, and refuses non-members" (fun () ->
+              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
+              Assert.equal [ "not-member" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-3")))
+              Assert.equal [ "group-not-found" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-404" "W-1")))
+
+              match WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-2") with
+              | Error rejections -> failwith $"%A{rejections}"
+              | Ok changed ->
+                  Assert.equal [ "W-1" ] (WorkGroups.memberIds changed)
+                  let entry = changed.History |> List.last
+                  Assert.equal (GroupChange.MemberRemoved "W-2") entry.Change
+                  Assert.equal actorB entry.Actor
+                  Assert.equal (Some "shares the store") entry.Reason
+                  Assert.equal group.Members.Head changed.Members.Head)
+
+          t "removing the last member is refused unless explicit, and an emptied group keeps its history" (fun () ->
+              let group = created standard "GROUP-FIXTURE-001" [ "W-1" ]
+              Assert.equal [ "last-member" ] (codes (WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-1")))
+
+              match WorkGroups.remove [ group ] true (membership "GROUP-FIXTURE-001" "W-1") with
+              | Error rejections -> failwith $"%A{rejections}"
+              | Ok emptied ->
+                  Assert.empty emptied.Members
+                  Assert.equal [ GroupChange.Created; GroupChange.MemberRemoved "W-1" ] (emptied.History |> List.map (fun entry -> entry.Change))
+                  Assert.empty (WorkGroups.validate standard [ emptied ]))
+
+          t "a member that is no longer tracked can still be removed" (fun () ->
+              let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
+              Assert.isTrue (not (WorkGroups.validate (catalog [ ready "W-1" ]) [ group ]).IsEmpty) "the untracked member is reported"
+
+              match WorkGroups.remove [ group ] false (membership "GROUP-FIXTURE-001" "W-2") with
+              | Ok changed -> Assert.empty (WorkGroups.validate (catalog [ ready "W-1" ]) [ changed ])
+              | Error rejections -> failwith $"%A{rejections}")
+
           t "the stored document round-trips" (fun () ->
               let group = created standard "GROUP-FIXTURE-001" [ "W-1"; "W-2" ]
               let json = WorkGroupJson.render (WorkGroupJson.document [ group ])
@@ -359,6 +393,37 @@ module WorkGroupCliTests =
                   Assert.equal [ "repository-mismatch" ] (rejectionCodes (add agentA "FEAT-3" [ "--execution-repository"; "other-repo" ]))
                   Assert.equal before (workState clone)
                   run clone None [ "validate" ] |> ok |> ignore))
+
+          t "remove never touches the member's records, refuses non-members, and empties a group only when told" (fun () ->
+              withRepository (fun clone ->
+                  capture clone "FEAT-1"
+                  start clone "FEAT-2"
+                  createGroup clone "GROUP-FIXTURE-001" [ "FEAT-1"; "FEAT-2" ] [] |> ok |> ignore
+                  let before = workState clone
+
+                  let remove (id: string) (extra: string list) =
+                      run clone (Some agentA) ([ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-001"; "--member"; id; "--occurred-at"; now (); "--json" ] @ extra)
+
+                  Assert.equal [ "not-member" ] (rejectionCodes (remove "FEAT-404" []))
+                  let dry = remove "FEAT-2" [ "--dry-run" ] |> ok
+                  Assert.equal "dry-run" (text dry.Json["status"])
+                  let removed = remove "FEAT-2" [ "--reason"; "split out" ] |> ok
+                  Assert.equal "recorded" (text removed.Json["status"])
+                  let last = (removed.Json["group"].["history"].AsArray() |> Seq.last)
+                  Assert.equal "member-removed" (text last["change"])
+                  Assert.equal "FEAT-2" (text last["subject"])
+                  Assert.equal "example/agent-a" (text last["actor"].["id"])
+                  Assert.equal "split out" (text last["reason"])
+                  Assert.equal before (workState clone)
+                  let refused = remove "FEAT-1" []
+                  Assert.equal 1 refused.ExitCode
+                  Assert.equal [ "last-member" ] (rejectionCodes refused)
+                  let emptied = remove "FEAT-1" [ "--allow-empty" ] |> ok
+                  Assert.equal 0 (emptied.Json["group"].["members"].AsArray().Count)
+                  Assert.equal before (workState clone)
+                  run clone None [ "validate" ] |> ok |> ignore
+                  let groups = run clone None [ "plan"; "groups"; "--json" ] |> ok
+                  Assert.isTrue (groups.Json["groups"].AsArray() |> Seq.forall (fun node -> text node["id"] <> "GROUP-FIXTURE-001")) "an empty group declares nothing"))
 
           t "validate checks stored groups" (fun () ->
               withRepository (fun clone ->

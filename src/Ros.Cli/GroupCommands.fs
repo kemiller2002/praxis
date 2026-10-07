@@ -19,7 +19,7 @@ open Ros.Infrastructure.Planning
 [<RequireQualifiedAccess>]
 module GroupCommands =
     let usage =
-        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY]"
+        "work group show GROUP-ID [--json] [--config FILE] | work group create --id GROUP-ID --member ID [--member ID]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--execution-repository NAME] [--cross-repository] [--shared-context TEXT]* [--architecture-note TEXT]* [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--execution-repository NAME] [--reason TEXT] [--config FILE] [--dry-run] [--json] [IDENTITY] | work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--allow-empty] [--dry-run] [--json] [IDENTITY]"
 
     // ---- arguments ----
 
@@ -273,6 +273,26 @@ module GroupCommands =
                           $"{added.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
                       Fields = [ "workItemId", WorkGroupJson.text added.WorkItemId ] }))
 
+    // ---- work group remove ----
+
+    let remove (root: string) (arguments: string list) (actor: Actor) =
+        match memberErrors "work group remove" [] [ "--allow-empty" ] arguments with
+        | _ :: _ as errors -> reportUsage errors
+        | [] ->
+            let request = membershipRequest arguments actor
+
+            mutate root "work group remove" arguments (fun context ->
+                WorkGroups.remove context.Stored (List.contains "--allow-empty" arguments) request
+                |> Result.map (fun group ->
+                    let remaining = if group.Members.IsEmpty then "no members; it stays declared, and its history is kept" else $"{group.Members.Length} member(s)"
+
+                    { Group = group
+                      Groups = replace context.Stored group
+                      Lines =
+                        [ $"{request.WorkItemId} removed from {group.Id} by {Actor.describe actor} (now {remaining})"
+                          $"{request.WorkItemId}'s lifecycle state, evidence and attribution are unchanged." ]
+                      Fields = [ "workItemId", WorkGroupJson.text request.WorkItemId ] }))
+
     // ---- work group show ----
 
     let private showLines (view: GroupView) =
@@ -364,4 +384,5 @@ module GroupCommands =
         | "create" :: rest -> ProvenanceCommands.withResolvedActor rest (create root rest)
         | "show" :: rest -> show root rest
         | "add" :: rest -> ProvenanceCommands.withResolvedActor rest (add root rest)
+        | "remove" :: rest -> ProvenanceCommands.withResolvedActor rest (remove root rest)
         | _ -> reportUsage [ "unknown work group command" ]

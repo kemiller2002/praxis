@@ -4915,11 +4915,22 @@
       },
       "completedAt": "2026-10-07T17:36:07.000Z",
       "conclusion": "work group add adds one member with provenance, refusing unknown/terminal/present items and cross-repository mixing. Verification: npm run build:fsharp (FSharpCoreImplicitPackageVersion=10.1.400) 0 warnings 0 errors; dotnet Ros.Tests.dll 810 test(s), 810 passed, 0 failed; ./ros validate: validation passed."
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T17:36:29.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T173630766Z-ec085e64"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T17:36:07.000Z",
+  "updatedAt": "2026-10-07T17:36:29.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

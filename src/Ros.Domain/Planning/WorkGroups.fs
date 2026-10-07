@@ -343,6 +343,28 @@ module WorkGroups =
                                   Actor = request.Actor
                                   Reason = request.Reason } ] }))
 
+    /// `work group remove`: the group without one member, with a
+    /// `member-removed` history entry naming who removed it and why. Removal
+    /// reads nothing about the item, so its lifecycle state, evidence and
+    /// attribution cannot change; an item no longer tracked can still be
+    /// removed. Emptying a group must be explicit (`allowEmpty`).
+    let remove (groups: StoredWorkGroup list) (allowEmpty: bool) (request: MembershipRequest) : Result<StoredWorkGroup, GroupRejection list> =
+        existing groups request.GroupId
+        |> Result.bind (fun group ->
+            match memberIds group with
+            | ids when not (List.contains request.WorkItemId ids) -> Error [ GroupRejection.NotMember(group.Id, request.WorkItemId) ]
+            | [ _ ] when not allowEmpty -> Error [ GroupRejection.LastMember(group.Id, request.WorkItemId) ]
+            | _ ->
+                Ok
+                    { group with
+                        Members = group.Members |> List.filter (fun entry -> entry.WorkItemId <> request.WorkItemId)
+                        History =
+                            group.History
+                            @ [ { Change = GroupChange.MemberRemoved request.WorkItemId
+                                  OccurredAt = request.OccurredAt
+                                  Actor = request.Actor
+                                  Reason = request.Reason } ] })
+
     /// The planner's view of a stored group: exactly a `grouping.groups`
     /// declaration (PRX-GRP-073).
     let declared (group: StoredWorkGroup) : DeclaredGroup =

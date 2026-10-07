@@ -375,6 +375,19 @@ the group, an unknown group, and an item whose execution repository
 differs from the group's unless the group is cross-repository. The item's own
 records are untouched.
 
+```
+praxis work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP
+                         [--reason TEXT] [--allow-empty] [--dry-run] [--json]
+```
+
+`remove` removes one member and appends a `member-removed` history entry
+naming who removed it, when and why; the `member-added` entry stays. It
+refuses a non-member and an unknown group. It reads nothing about the item,
+so its lifecycle state, evidence and attribution cannot change, and an item no
+longer tracked can still be removed. Removing the last member is refused
+unless `--allow-empty`: the group then stays declared with its history and
+declares nothing to the planner.
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
