@@ -123,6 +123,8 @@
         "schemas/journal.schema.json",
         "schemas/mission.schema.json",
         "schemas/praxis-completion-readiness.schema.json",
+        "schemas/praxis-group-analysis.schema.json",
+        "schemas/praxis-group-verification.schema.json",
         "schemas/praxis-remote-request.schema.json",
         "schemas/praxis-remote-response.schema.json",
         "schemas/rep.schema.json",
