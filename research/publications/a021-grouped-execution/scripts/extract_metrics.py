@@ -927,9 +927,30 @@ def derive(rows: Sequence[Row]) -> tuple[Mapping[str, Any], ...]:
 # Assembly
 # --------------------------------------------------------------------------
 
+def cross_check(blobs: Mapping[str, str], sessions: Sequence[Session]) -> None:
+    """Fail if the redundant R2 copies disagree with the sources used."""
+    log_rows = re.findall(r"^\| (C\d) \| ([\d,]+) \| ([\d,]+) \| ([\d,]+) \| ([\d,]+) \| ([\d.]+) \|$",
+                          blobs["r2_control_log"], re.M)
+    by_label = {s.label: s for s in sessions if s.study == "R2"}
+    for code, inp, out, cr, cw, cost in log_rows:
+        u = by_label[R2_LABEL[code]].usage
+        got = (u["input_tokens"], u["output_tokens"], u["cache_read_tokens"], u["cache_write_tokens"], u["cost_usd"])
+        want = (int(inp.replace(",", "")), int(out.replace(",", "")), int(cr.replace(",", "")),
+                int(cw.replace(",", "")), Decimal(cost))
+        if got != want:
+            raise ValueError(f"R2 {code}: run record {got} != control run log {want}")
+    if len(log_rows) != 5:
+        raise ValueError(f"control run log: expected 5 worker usage rows, found {len(log_rows)}")
+    raw, summary = jdict(blobs["r2_t_grouped"]), jdict(blobs["r2_t_grouped_summary"])
+    pairs = (("input", "input"), ("output", "output"), ("cacheRead", "cacheRead"), ("cacheCreation", "cacheCreated"))
+    if any(raw["tokens"][a] != summary["tokens"][b] for a, b in pairs) or raw["modelRequests"] != summary["modelRequests"]:
+        raise ValueError("R2 grouped: session-metrics-raw.json and grouped.json disagree")
+
+
 def build(inputs: Inputs) -> Mapping[str, Any]:
     blobs = inputs.blobs
     sessions = a021_sessions(blobs) + r2_sessions(blobs)
+    cross_check(blobs, sessions)
     per_session = tuple(r for s in sessions for r in session_rows(s) + transcript_rows(s, blobs))
     per_session = per_session + r2_subagent_note_rows(blobs, sessions)
     common = r2_common_start(blobs)
