@@ -36,6 +36,29 @@ module WorkGroupTests =
               "ELSE-1", MemberStanding.Open "ready"
               "AWAY-1", MemberStanding.Open "ready" ]
 
+    /// Observations of other repositories: `owner/other` is readable,
+    /// `owner/offline` is not.
+    let private observation (repository: string) (id: string) (outcome: ObservedMember) (asOf: string) : MemberObservation =
+        { Member = $"{repository}:{id}"
+          Repository = repository
+          WorkItemId = id
+          Method = "git-ref"
+          Ref = Some "origin/main"
+          Commit = Some(String.replicate 40 "e")
+          ObservedAt = asOf
+          SourceAsOf = Some asOf
+          Outcome = outcome
+          LatestCheckpoint = None
+          Linked = Some true }
+
+    let private remoteStates =
+        Map.ofList [ "OPEN-1", "ready"; "OPEN-2", "active"; "SHUT-1", "complete" ]
+
+    let private observe (repository: string) (id: string) =
+        match repository with
+        | "owner/other" -> observation repository id (ObservedMember.Read(remoteStates |> Map.tryFind id)) "2026-10-06T12:00:00.000Z"
+        | _ -> observation repository id (ObservedMember.Unobservable(Unobservable.Unreachable "no observation source")) "2026-10-06T12:00:00.000Z"
+
     let private context (groups: StoredWorkGroup list) : GroupContext =
         { Groups = groups
           Standing = fun id -> standings |> Map.tryFind id |> Option.defaultValue MemberStanding.Unknown
@@ -44,7 +67,9 @@ module WorkGroupTests =
                 match id with
                 | "ELSE-1" -> ExecutionLocation.Repository "other-repository"
                 | "AWAY-1" -> ExecutionLocation.UnknownExternal
-                | _ -> ExecutionLocation.Repository "this-repository" }
+                | _ -> ExecutionLocation.Repository "this-repository"
+          ThisRepository = Some "owner/this"
+          Observe = observe }
 
     let private request (groupId: string) (members: string list) : GroupCreateRequest =
         { GroupId = groupId
@@ -58,7 +83,9 @@ module WorkGroupTests =
           OccurredAt = "2026-09-30T12:00:00.000Z"
           Actor = human
           Reason = Some "they share one API surface"
-          ExecutionId = None }
+          ExecutionId = None
+          HomeRepository = None
+          Dependencies = [] }
 
     let private created (groupId: string) (members: string list) =
         match WorkGroups.create (context []) (request groupId members) with
@@ -133,7 +160,7 @@ module WorkGroupTests =
               Assert.equal [ "duplicate-group"; "no-members" ] (codes (WorkGroups.create (context [ existing ]) (request "GROUP-AREA-001" [])))
               Assert.equal [ "invalid-member-id" ] (codes (WorkGroups.create (context []) (request "GROUP-AREA-002" [ "not an id" ])))
 
-              let crossRepository = { request "GROUP-AREA-003" [ "ITEM-1"; "ELSE-1" ] with CrossRepository = true }
+              let crossRepository = { request "GROUP-ECHELON-AREA-003" [ "ITEM-1"; "ELSE-1" ] with CrossRepository = true }
               Assert.equal [] (codes (WorkGroups.create (context []) crossRepository)))
 
           t "a created group records its declaration and a creation entry, and nothing about any member's lifecycle" (fun () ->
@@ -233,10 +260,10 @@ module WorkGroupTests =
 
               let facts =
                   Map.ofList
-                      [ "ITEM-1", { State = Some "complete"; PlanningState = Some "complete"; WaitsOn = []; WaitsOnBlocked = [] }
-                        "ITEM-2", { State = Some "blocked"; PlanningState = Some "blocked"; WaitsOn = []; WaitsOnBlocked = [] }
-                        "ITEM-3", { State = Some "ready"; PlanningState = Some "waiting-on-dependency"; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ] }
-                        "ITEM-4", { State = None; PlanningState = None; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ] } ]
+                      [ "ITEM-1", { State = Some "complete"; PlanningState = Some "complete"; WaitsOn = []; WaitsOnBlocked = []; Observation = None; Stale = false }
+                        "ITEM-2", { State = Some "blocked"; PlanningState = Some "blocked"; WaitsOn = []; WaitsOnBlocked = []; Observation = None; Stale = false }
+                        "ITEM-3", { State = Some "ready"; PlanningState = Some "waiting-on-dependency"; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ]; Observation = None; Stale = false }
+                        "ITEM-4", { State = None; PlanningState = None; WaitsOn = [ "ITEM-2" ]; WaitsOnBlocked = [ "ITEM-2" ]; Observation = None; Stale = false } ]
 
               let progress = WorkGroups.progress group (fun id -> facts[id])
               Assert.equal [ "ITEM-1" ] progress.Completed
@@ -295,7 +322,8 @@ module WorkGroupTests =
                     Actor = human
                     Reason = Some "same module"
                     AllowEmpty = false
-                    ExecutionId = Some "EXE-CALLER" }
+                    ExecutionId = Some "EXE-CALLER"
+                    Dependencies = [] }
 
               let add groups id groupId = WorkGroups.add (context groups) (change id groupId)
               Assert.equal [ "unknown-group" ] (codes (add [ group ] "ITEM-2" "GROUP-AREA-404"))
@@ -310,8 +338,8 @@ module WorkGroupTests =
               // The planner infers an external repository from the description;
               // the join rule applies the same inference (PRX-GRP-051).
               Assert.equal [ "repository-mismatch" ] (codes (add [ group ] "AWAY-1" "GROUP-AREA-001"))
-              let crossRepository = { group with Declaration = { group.Declaration with CrossRepository = true } }
-              Assert.equal [] (codes (add [ crossRepository ] "ELSE-1" "GROUP-AREA-001"))
+              let crossRepository = { group with Declaration = { group.Declaration with Id = "GROUP-ECHELON-AREA-001"; CrossRepository = true } }
+              Assert.equal [] (codes (add [ crossRepository ] "ELSE-1" "GROUP-ECHELON-AREA-001"))
 
               match add [ group ] "ITEM-2" "GROUP-AREA-001" with
               | Error rejections -> failwith $"{rejections}"
@@ -362,12 +390,12 @@ module WorkGroupTests =
                   let configuration = Path.Combine(clone, "..", "planner.json")
                   File.WriteAllText(configuration, """{"grouping":{"executionRepositories":{"ITEM-3":"conditor"}}}""")
                   createGroup clone "GROUP-FIXTURE-001" [ "ITEM-1" ] [] |> ok |> ignore
-                  createGroup clone "GROUP-FIXTURE-002" [ "ITEM-2" ] [ "--cross-repository" ] |> ok |> ignore
+                  createGroup clone "GROUP-ECHELON-FIXTURE-002" [ "ITEM-2" ] [ "--cross-repository"; "--home-repository"; "owner/home" ] |> ok |> ignore
                   let add groupId = cli clone [ "work"; "group"; "add"; "--group"; groupId; "--member"; "ITEM-3"; "--config"; configuration; "--occurred-at"; now (); "--json" ]
                   let refused = add "GROUP-FIXTURE-001"
                   Assert.equal 1 refused.ExitCode
                   Assert.equal [ "repository-mismatch" ] (rejectionCodes refused)
-                  add "GROUP-FIXTURE-002" |> ok |> ignore))
+                  add "GROUP-ECHELON-FIXTURE-002" |> ok |> ignore))
 
           t "remove refuses non-members and the last member unless explicit; any member's state may leave; history records who removed it" (fun () ->
               let joined = created "GROUP-AREA-001" [ "ITEM-1" ]
@@ -381,7 +409,8 @@ module WorkGroupTests =
                     Actor = human
                     Reason = Some "not part of this design"
                     AllowEmpty = allowEmpty
-                    ExecutionId = None }
+                    ExecutionId = None
+                    Dependencies = [] }
 
               let remove (target: StoredWorkGroup) id allowEmpty = WorkGroups.remove (context [ target ]) (change id allowEmpty)
               Assert.equal [ "not-member" ] (codes (remove group "ITEM-2" false))
@@ -563,7 +592,7 @@ module WorkGroupTests =
               let statusOf (states: (string option * string list) list) =
                   let facts =
                       List.zip [ "ITEM-1"; "ITEM-2" ] states
-                      |> List.map (fun (id, (state, waitsOnBlocked)) -> id, { State = state; PlanningState = None; WaitsOn = waitsOnBlocked; WaitsOnBlocked = waitsOnBlocked })
+                      |> List.map (fun (id, (state, waitsOnBlocked)) -> id, { State = state; PlanningState = None; WaitsOn = waitsOnBlocked; WaitsOnBlocked = waitsOnBlocked; Observation = None; Stale = false })
                       |> Map.ofList
 
                   GroupStatus.code (WorkGroups.summarize group (fun id -> facts[id])).Status
@@ -592,7 +621,8 @@ module WorkGroupTests =
                     Actor = human
                     Reason = Some $"{id} moved elsewhere"
                     AllowEmpty = false
-                    ExecutionId = None }
+                    ExecutionId = None
+                    Dependencies = [] }
 
               let removeFrom (target: StoredWorkGroup) id =
                   match WorkGroups.remove (context [ target ]) (change id) with
@@ -618,7 +648,7 @@ module WorkGroupTests =
               Assert.equal [ "duplicate-group" ] (codes (WorkGroups.create (context [ group ]) { request "GROUP-AREA-001" [ "ITEM-1"; "ITEM-2" ] with Origin = GroupOrigin.ArchitectureDeclared }))
 
               let removal: GroupMemberRequest =
-                  { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None }
+                  { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = [] }
 
               let once =
                   match WorkGroups.remove (context [ group ]) removal with
@@ -635,7 +665,7 @@ module WorkGroupTests =
               let group = created "GROUP-AREA-001" [ "ITEM-1" ]
 
               let added =
-                  match WorkGroups.add (context [ group ]) { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None } with
+                  match WorkGroups.add (context [ group ]) { GroupId = "GROUP-AREA-001"; WorkItemId = "ITEM-2"; OccurredAt = "2026-09-30T13:00:00.000Z"; Actor = human; Reason = None; AllowEmpty = false; ExecutionId = None; Dependencies = [] } with
                   | Ok change -> change.Group
                   | Error rejections -> failwith $"{rejections}"
 
@@ -673,7 +703,8 @@ module WorkGroupTests =
               | Error problems -> failwith $"{problems}"
               | Ok read ->
                   Assert.equal ("GROUP-AREA-001", GroupStatus.PartiallyComplete, [ "DONE-1" ], 2, None) (read.Id, read.GroupStatus, read.Completed, read.MemberCount, read.ExecutionMode)
-                  Assert.equal (Some "this-repository") read.HomeRepository)
+                  Assert.equal (Some "owner/this") read.HomeRepository
+                  Assert.equal (Some "this-repository") read.ExecutionRepository)
 
           t "cli list is read-only, sorted by ID, reports derived status and progress, and filters by status, member and repository" (fun () ->
               withRepository (fun clone ->
@@ -778,6 +809,213 @@ module WorkGroupTests =
                   Assert.equal 1 truncated.ExitCode
                   Assert.isTrue (truncated.Error.Contains "truncated") truncated.Error
                   File.WriteAllText(file, committed)
+                  run clone None [ "validate" ] |> ok |> ignore))
+
+          // ---- PRX-GRP-100..109 (PRAXIS-GROUP-07; PRX-GRP-190 cases 21-26) ----
+
+          t "a cross-repository group needs GROUP-ECHELON- and a home; a local group may not use it or name another repository's item" (fun () ->
+              let cross id members = { request id members with CrossRepository = true; HomeRepository = Some "owner/this" }
+              Assert.equal [ "cross-repository-id" ] (codes (WorkGroups.create (context []) (cross "GROUP-AREA-001" [ "ITEM-1" ])))
+              Assert.equal [ "reserved-area" ] (codes (WorkGroups.create (context []) (request "GROUP-ECHELON-AREA-001" [ "ITEM-1" ])))
+              Assert.equal [ "foreign-member" ] (codes (WorkGroups.create (context []) (request "GROUP-AREA-001" [ "ITEM-1"; "owner/other:OPEN-1" ])))
+              Assert.equal [ "home-repository-unknown" ] (codes (WorkGroups.create { context [] with ThisRepository = None } { cross "GROUP-ECHELON-AREA-001" [ "ITEM-1" ] with HomeRepository = None }))
+              Assert.equal [ "invalid-member-id" ] (codes (WorkGroups.create (context []) (cross "GROUP-ECHELON-AREA-001" [ "owner/other:not an id" ])))
+
+              match WorkGroups.create (context []) (cross "GROUP-ECHELON-AREA-001" [ "owner/this:ITEM-1"; "owner/other:OPEN-1" ]) with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok change ->
+                  // A qualified name of the home is the bare ID: one spelling per member.
+                  Assert.equal [ "ITEM-1"; "owner/other:OPEN-1" ] change.Group.Declaration.Members
+                  Assert.equal (Some "owner/this") change.Group.HomeRepository
+                  let verification = Assert.single change.Group.Verifications
+                  Assert.equal (ObservedMember.Read(Some "ready")) verification.Outcome
+                  Assert.empty change.Warnings
+                  let rendered = WorkGroupJson.renderStore [ change.Group ]
+                  Assert.equal (Ok [ change.Group ]) (WorkGroupJson.readStore rendered))
+
+          t "a qualified member is checked by observation: terminal or unknown there is refused, unobservable joins verified false with a warning" (fun () ->
+              let cross members = { request "GROUP-ECHELON-AREA-001" members with CrossRepository = true; HomeRepository = Some "owner/this" }
+              Assert.equal [ "terminal-member"; "unknown-member" ] (codes (WorkGroups.create (context []) (cross [ "owner/other:SHUT-1"; "owner/other:NOPE-1" ])))
+
+              match WorkGroups.create (context []) (cross [ "ITEM-1"; "owner/offline:WORK-1" ]) with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok change ->
+                  Assert.isTrue (change.Warnings.Head.Contains "verified: false") $"{change.Warnings}"
+                  let node = (WorkGroupJson.groupNode change.Group).ToJsonString()
+                  Assert.isTrue (node.Contains "\"verified\":false" && node.Contains "\"code\":\"unreachable\"") node)
+
+          t "status is derived from dated observations; an unobservable or stale member is unknown, never complete" (fun () ->
+              let group =
+                  match WorkGroups.create (context []) { request "GROUP-ECHELON-AREA-001" [ "owner/other:OPEN-1" ] with CrossRepository = true; HomeRepository = Some "owner/this" } with
+                  | Ok change -> { change.Group with Declaration = { change.Group.Declaration with Members = [ "owner/other:SHUT-1"; "owner/offline:WORK-1" ] } }
+                  | Error rejections -> failwith $"{rejections}"
+
+              let now = DateTimeOffset.Parse "2026-10-06T13:00:00.000Z"
+              let facts (observer: string -> string -> MemberObservation) (memberId: string) =
+                  match MemberReference.parse memberId with
+                  | MemberReference.Qualified(repository, id) -> MemberFacts.ofObservation now 1440 (observer repository id)
+                  | MemberReference.Local id -> MemberFacts.ofStanding (context []).Standing id
+
+              let summary = WorkGroups.summarize group (facts observe)
+              Assert.equal GroupStatus.Unknown summary.Status
+              let offline = summary.Progress.Members |> List.find (fun row -> row.WorkItemId = "owner/offline:WORK-1")
+              Assert.equal (MemberCategory.Unknown, Some "owner/offline") (offline.Category, offline.Repository)
+
+              // Every member observed complete, but one observation is stale.
+              let allComplete = { group with Declaration = { group.Declaration with Members = [ "owner/other:SHUT-1" ] } }
+              Assert.equal GroupStatus.Complete (WorkGroups.summarize allComplete (facts observe)).Status
+              let old repository id = { observe repository id with SourceAsOf = Some "2026-10-01T00:00:00.000Z" }
+              let stale = WorkGroups.summarize allComplete (facts old)
+              Assert.equal GroupStatus.Unknown stale.Status
+              Assert.isTrue (stale.Progress.Members.Head.Stale) "a stale observation was not marked stale"
+              Assert.equal [ { Repository = "owner/other"; Completed = 0; Total = 1; Unknown = 1 } ] (WorkGroups.repositoryProgress stale.Progress))
+
+          t "dependency edges order members across repositories, unmet or unobservable producers leave consumers waiting or unknown, and cycles are refused" (fun () ->
+              let cross deps = { request "GROUP-ECHELON-AREA-001" [ "ITEM-1"; "owner/other:OPEN-1"; "owner/other:OPEN-2" ] with CrossRepository = true; HomeRepository = Some "owner/this"; Dependencies = deps }
+              let edge text' = (MemberDependency.tryParse text').Value
+              Assert.equal (Some { Consumer = "ITEM-1"; Producer = "owner/other:OPEN-1"; Milestone = ProducerMilestone.Released "v0.8.0" }) (MemberDependency.tryParse "ITEM-1=owner/other:OPEN-1@released:v0.8.0")
+              Assert.equal None (MemberDependency.tryParse "ITEM-1=owner/other:OPEN-1@shipped")
+              let cycle = [ edge "ITEM-1=owner/other:OPEN-1"; edge "owner/other:OPEN-1=owner/other:OPEN-2@merged"; edge "owner/other:OPEN-2=ITEM-1" ]
+              Assert.equal [ "dependency-cycle" ] (codes (WorkGroups.create (context []) (cross cycle)))
+              Assert.equal [ "dependency-not-member" ] (codes (WorkGroups.create (context []) (cross [ edge "ITEM-2=ITEM-1" ])))
+
+              match WorkGroups.create (context []) (cross [ edge "ITEM-1=owner/other:OPEN-1@released:v0.8.0"; edge "owner/other:OPEN-2=ITEM-1@merged"; edge "owner/other:OPEN-2=owner/other:OPEN-1" ]) with
+              | Error rejections -> failwith $"{rejections}"
+              | Ok change ->
+                  let reached producer milestone =
+                      match producer, milestone with
+                      | "owner/other:OPEN-1", ProducerMilestone.Released _ -> Ok true
+                      | "ITEM-1", ProducerMilestone.Merged -> Ok false
+                      | _ -> Error "owner/other could not be observed"
+
+                  let order = WorkGroups.order change.Group reached
+                  Assert.equal [ "satisfied"; "waiting"; "unknown" ] (order |> List.map (fun row -> EdgeState.code row.State))
+                  Assert.equal None (WorkGroups.consumerState order "ITEM-1")
+                  Assert.equal (Some "waiting") (WorkGroups.consumerState order "owner/other:OPEN-2"))
+
+          t "link records only an immutable reference on the member's own item; repeats are unchanged and a different home is refused" (fun () ->
+              let store = { Groups = []; References = [] }
+
+              let linkRequest home : GroupLinkRequest =
+                  { GroupId = "GROUP-ECHELON-AREA-001"; HomeRepository = home; WorkItemId = "ITEM-1"; OccurredAt = "2026-10-06T12:00:00.000Z"; Actor = human; ExecutionId = None }
+
+              let linked =
+                  match WorkGroups.link (context []) store (linkRequest "owner/home") with
+                  | Ok change -> Assert.isTrue change.Changed "the first link did not change the store"; change.Store
+                  | Error rejections -> failwith $"{rejections}"
+
+              Assert.equal ([], 1) (linked.Groups, linked.References.Length)
+
+              match WorkGroups.link (context []) linked (linkRequest "owner/home") with
+              | Ok change -> Assert.equal (false, linked) (change.Changed, change.Store)
+              | Error rejections -> failwith $"{rejections}"
+
+              let refused request = codes (WorkGroups.link (context []) linked request |> Result.map (fun change -> change.Store))
+              Assert.equal [ "conflicting-reference" ] (refused (linkRequest "owner/elsewhere"))
+              Assert.equal [ "home-is-this-repository" ] (refused { linkRequest "owner/this" with WorkItemId = "ITEM-2" })
+              Assert.equal [ "cross-repository-id" ] (refused { linkRequest "owner/home" with GroupId = "GROUP-AREA-001" })
+              Assert.equal [ "unknown-member" ] (refused { linkRequest "owner/home" with WorkItemId = "NOPE-1" })
+              let unlinked = WorkGroups.unlinkedReferences linked.References (Some "owner/this") (fun _ -> Some false)
+              Assert.isTrue ((snd unlinked.Head).Contains "unlinked") $"{unlinked}"
+              Assert.empty (WorkGroups.unlinkedReferences linked.References (Some "owner/this") (fun _ -> None))
+              let rendered = WorkGroupJson.renderGroupStore linked
+              Assert.equal (Ok linked) (WorkGroupJson.readGroupStore rendered))
+
+          t "cli cross-repository group observes a member repository read-only, reports unlinked until link, and never writes there" (fun () ->
+              let homeParent = GitFixture.temporaryDirectory "work-group-home"
+              let memberParent = GitFixture.temporaryDirectory "work-group-member"
+
+              try
+                  let _, home = installedRepository homeParent "home"
+                  let _, memberClone = installedRepository memberParent "member"
+                  let repositoryOf clone = (RepositoryName.ofRemoteUrl (GitFixture.git clone [ "remote"; "get-url"; "origin" ])).Value
+                  let homeName, memberName = repositoryOf home, repositoryOf memberClone
+
+                  for clone, id in [ home, "HOME-1"; memberClone, "MEMB-1"; memberClone, "MEMB-2" ] do
+                      cli clone [ "add"; $"Work {id}"; "--id"; id ] |> ok |> ignore
+                      cli clone [ "work"; "backlog-transition"; "--id"; id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
+
+                  pushAll memberClone "member work" |> ignore
+                  let rosJson = Path.Combine(home, "ros.json")
+                  let config = JsonNode.Parse(File.ReadAllText rosJson) :?> JsonObject
+                  config["planner"] <- JsonNode.Parse($"""{{"grouping":{{"crossRepository":{{"repositories":{{"{memberName}":{{"path":"{memberClone}","ref":"origin/feature/x"}}}}}}}}}}""")
+                  File.WriteAllText(rosJson, config.ToJsonString())
+                  pushAll home "home work" |> ignore
+
+                  let memberState () =
+                      [ ".ros/work/queue.json"; ".ros/context/current.json"; ".ros/events/events.jsonl"; ".ros/work/groups.json" ]
+                      |> List.map (fun relative -> let file = Path.Combine(memberClone, relative) in if File.Exists file then File.ReadAllText file else "absent"),
+                      GitFixture.git memberClone [ "status"; "--porcelain"; "--untracked-files=all" ],
+                      GitFixture.git memberClone [ "for-each-ref" ]
+
+                  let before = memberState ()
+                  let groupId = "GROUP-ECHELON-SWEEP-001"
+
+                  let created =
+                      cli home [ "work"; "group"; "create"; "--group"; groupId; "--cross-repository"; "--member"; "HOME-1"; "--member"; $"{memberName}:MEMB-1"; "--dependency"; $"HOME-1={memberName}:MEMB-1@released:v1.0.0"; "--occurred-at"; now (); "--json" ] |> ok
+
+                  Assert.equal homeName (text created.Json["group"].["homeRepository"])
+                  Assert.equal true (created.Json["group"].["verifications"].[0].["verified"].GetValue<bool>())
+                  Assert.equal 1 (cli home [ "work"; "group"; "add"; "--group"; groupId; "--member"; $"{memberName}:NOPE-1"; "--occurred-at"; now () ]).ExitCode
+
+                  let show () = run home None [ "work"; "group"; "show"; groupId; "--json" ] |> ok
+                  let first = show ()
+                  let memberRow = first.Json["members"].AsArray() |> Seq.find (fun node -> text node["workItemId"] = $"{memberName}:MEMB-1")
+                  Assert.equal "ready" (text memberRow["state"])
+                  Assert.equal memberName (text memberRow["repository"])
+                  Assert.equal "observation" (text memberRow["observation"].["kind"])
+                  Assert.equal false (memberRow["observation"].["linked"].GetValue<bool>())
+                  Assert.equal $"{memberName}:MEMB-1" (text first.Json["unlinked"].[0])
+                  Assert.equal "waiting" (text first.Json["order"].[0].["state"])
+                  Assert.equal 2 (first.Json["repositories"].AsArray().Count)
+                  let warned = run home None [ "validate" ]
+                  Assert.isTrue (warned.Error.Contains "unlinked") warned.Error
+
+                  // The member repository links its own item, then releases the producer.
+                  let linked = cli memberClone [ "work"; "group"; "link"; "--group"; groupId; "--home"; homeName; "--member"; "MEMB-1"; "--occurred-at"; now (); "--json" ] |> ok
+                  Assert.equal true (linked.Json["changed"].GetValue<bool>())
+                  let again = cli memberClone [ "work"; "group"; "link"; "--group"; groupId; "--home"; homeName; "--member"; "MEMB-1"; "--occurred-at"; now (); "--json" ] |> ok
+                  Assert.equal false (again.Json["changed"].GetValue<bool>())
+                  let stored = JsonNode.Parse(File.ReadAllText(Path.Combine(memberClone, ".ros", "work", "groups.json")))
+                  Assert.equal 0 (stored["groups"].AsArray().Count)
+                  Assert.equal "MEMB-1" (text stored["references"].[0].["workItemId"])
+                  pushAll memberClone "link MEMB-1 to its group" |> ignore
+                  GitFixture.git memberClone [ "tag"; "v1.0.0" ] |> ignore
+                  let second = show ()
+                  Assert.equal 0 (second.Json["unlinked"].AsArray().Count)
+                  Assert.equal "satisfied" (text second.Json["order"].[0].["state"])
+
+                  // The member repository sees its reference; the home lists it.
+                  let referenced = run memberClone None [ "work"; "group"; "show"; groupId; "--json" ] |> ok
+                  Assert.equal "referenced" (text referenced.Json["status"])
+                  let afterLink = memberState ()
+
+                  // Nothing the home ran wrote anything in the member repository.
+                  for args in [ [ "work"; "group"; "list" ]; [ "work"; "group"; "show"; groupId ]; [ "validate" ]; [ "plan"; "explain-group"; groupId ] ] do
+                      run home None args |> ignore
+                  Assert.equal afterLink (memberState ())
+                  Assert.isTrue (before <> afterLink) "the link did not change the member repository"
+                  let explained = run home None [ "plan"; "explain-group"; groupId; "--json" ] |> ok
+                  Assert.isTrue (explained.Output.Contains "executes-elsewhere" && explained.Output.Contains $"{memberName}:MEMB-1 executes in {memberName}") explained.Output
+                  let members = explained.Json["group"].["members"].AsArray() |> Seq.map (fun node -> text node["workItem"]) |> Seq.toList
+                  Assert.equal [ "HOME-1" ] members
+              finally
+                  GitFixture.cleanup homeParent
+                  GitFixture.cleanup memberParent)
+
+          t "cli an unconfigured or missing member repository is unknown with a reason and the rest of the group still renders" (fun () ->
+              withRepository (fun clone ->
+                  let created =
+                      createGroup clone "GROUP-ECHELON-FIXTURE-001" [ "ITEM-1"; "owner/elsewhere:WORK-1" ] [ "--cross-repository"; "--home-repository"; "owner/home" ] |> ok
+
+                  Assert.equal false (created.Json["group"].["verifications"].[0].["verified"].GetValue<bool>())
+                  Assert.isTrue (text created.Json["warnings"].[0] |> fun warning -> warning.Contains "unreachable") (created.Json.ToJsonString())
+                  let shown = run clone None [ "work"; "group"; "show"; "GROUP-ECHELON-FIXTURE-001"; "--json" ] |> ok
+                  Assert.equal "unknown" (text shown.Json["groupStatus"])
+                  let row = shown.Json["members"].AsArray() |> Seq.find (fun node -> text node["workItemId"] = "owner/elsewhere:WORK-1")
+                  Assert.equal "unreachable" (text row["observation"].["unobservable"].["code"])
+                  Assert.equal "remaining" (text (shown.Json["members"].AsArray() |> Seq.find (fun node -> text node["workItemId"] = "ITEM-1")).["category"])
+                  run clone None [ "work"; "group"; "list"; "--repository"; "owner/elsewhere" ] |> ok |> ignore
                   run clone None [ "validate" ] |> ok |> ignore))
 
           t "cli validate reports a stored group whose member is not a recorded work item" (fun () ->
