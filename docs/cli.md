@@ -348,13 +348,13 @@ praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-c
                       [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
 praxis plan compare   [--max-concurrency N] [--json]
 praxis plan explain   ID [--json]
-praxis plan replay    [--details] [--json]
+praxis plan replay    [--record] [--details] [--json]
 praxis plan freshness --plan FILE [--json]
 praxis plan groups    [--json]
 praxis plan explain-group GROUP-ID [--json]
 praxis plan simulate --groups [--max-concurrency N] [--json]
 praxis plan compare  --groups [--max-concurrency N] [--json]
-     common: [--observations FILE] [--config FILE] [--as-of TIMESTAMP]
+     common: [--observations FILE] [--observe-ci] [--config FILE] [--as-of TIMESTAMP]
 ```
 
 The advisory planner: read-only, deterministic, and never changes work state
@@ -367,8 +367,12 @@ use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
 saved plan is stale. `groups` recommends evidence-based work groups (items to
 reason about together, with the evidence, collision risk and recommended
 execution for each) without changing any item; `explain-group` answers why a
-group exists and what would change it (`DF-ROS-2026-A047`). See
-[`planning.md`](planning.md).
+group exists and what would change it (`DF-ROS-2026-A047`). `--observe-ci`
+reads GitHub check runs (through `gh`) for checkpoints that wait on CI; it is
+the only network read and is off by default, and a source it cannot read is
+reported unavailable. `replay --record` appends the replay result to
+`.ros/planning/calibration.jsonl` (once per work state and planner version);
+it is the only planning write. See [`planning.md`](planning.md).
 
 ### `work reconcile`
 

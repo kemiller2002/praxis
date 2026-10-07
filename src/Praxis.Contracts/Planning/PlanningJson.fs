@@ -165,6 +165,8 @@ module PlanningJson =
               "remainingDuration", duration value.RemainingDuration
               "remainingCost", moneyEstimate value.RemainingCost
               "costEvidence", text (CostEvidenceKind.code value.CostEvidence)
+              "changedPaths", texts value.ChangedPaths
+              "contestedPaths", value.ContestedPaths |> List.map (fun (path, merges) -> record [ "path", text path; "merges", integer merges ]) |> array
               "provenance", value.Provenance |> List.map provenance |> array ]
 
     let private collision (value: Collision) =
@@ -454,7 +456,38 @@ module PlanningJson =
               "estimateBasis", texts value.EstimateBasis
               "findings", value.Findings |> List.map finding |> array ]
 
-    let replay (value: ReplayReport) : JsonNode =
+    let calibrationTrend (trend: CalibrationTrend) : JsonNode =
+        record
+            [ "entries", integer trend.Entries
+              "firstCoverage", optionalNumber trend.FirstCoverage
+              "latestCoverage", optionalNumber trend.LatestCoverage
+              "firstMedianAbsoluteErrorMs", optionalLong trend.FirstMedianAbsoluteErrorMs
+              "latestMedianAbsoluteErrorMs", optionalLong trend.LatestMedianAbsoluteErrorMs
+              "statement", text trend.Statement ]
+
+    let private costAccuracy (value: CostReplay) : JsonNode =
+        record
+            [ "observed", integer value.Observed
+              "predicted", integer value.Predicted
+              "withinRange", integer value.WithinRange
+              "medianAbsoluteError", optionalNumber value.MedianAbsoluteError
+              "currency", optionalText value.Currency
+              "statement", text value.Statement
+              "predictions",
+              value.Predictions
+              |> List.map (fun prediction ->
+                  record
+                      [ "executionId", text prediction.ExecutionId
+                        "workItem", text prediction.WorkItemId
+                        "trainingSamples", integer prediction.TrainingSamples
+                        "predicted", moneyEstimate prediction.Predicted
+                        "actual", money prediction.Actual
+                        "withinRange", prediction.WithinRange |> Option.map boolean |> Option.toObj
+                        "absoluteError", optionalNumber prediction.AbsoluteError ])
+              |> array ]
+
+    /// `recorded`: Some changed when `--record` ran, None otherwise.
+    let replay (value: ReplayReport) (trend: CalibrationTrend) (recorded: bool option) : JsonNode =
         record
             [ "schema", text schema
               "kind", text "replay"
@@ -489,6 +522,9 @@ module PlanningJson =
                     "agreement", optionalNumber value.Ordering.Agreement
                     "statement", text value.Ordering.Statement ]
               "cost", costSummary value.Cost
+              "costAccuracy", costAccuracy value.CostAccuracy
+              "calibration",
+              record [ "recorded", recorded |> Option.map boolean |> Option.toObj; "trend", calibrationTrend trend ]
               "predictions",
               value.Predictions
               |> List.map (fun prediction ->
@@ -525,7 +561,57 @@ module PlanningJson =
                         "lifecycleThen", text outcome.LifecycleThen
                         "lifecycleNow", text outcome.LifecycleNow
                         "outcome", text outcome.Outcome ])
-              |> array ]
+              |> array
+              "followUp",
+              record
+                  [ "recommended", integer value.FollowUp.Recommended
+                    "started", integer value.FollowUp.Started
+                    "completed", integer value.FollowUp.Completed
+                    "orderedPairs", integer value.FollowUp.OrderedPairs
+                    "pairsInRecommendedOrder", integer value.FollowUp.PairsInRecommendedOrder
+                    "durations",
+                    value.FollowUp.Durations
+                    |> List.map (fun entry ->
+                        record
+                            [ "workItem", text entry.WorkItem
+                              "predicted", duration entry.Predicted
+                              "observedMs", optionalLong entry.ObservedMs
+                              "withinRange", entry.WithinRange |> Option.map boolean |> Option.toObj ])
+                    |> array
+                    "statement", text value.FollowUp.Statement ] ]
+
+    // ---- calibration history (PRX-PLAN-170) ------------------------------------
+
+    [<Literal>]
+    let CalibrationSchema = "praxis.plan-calibration/1"
+
+    /// One history line (JSON Lines, compact).
+    let calibrationLine (entry: CalibrationEntry) : string =
+        (record
+            [ "schema", text CalibrationSchema
+              "recordedAt", text entry.RecordedAt
+              "plannerVersion", text entry.PlannerVersion
+              "workStateFingerprint", text entry.WorkStateFingerprint
+              "executions", integer entry.Executions
+              "predicted", integer entry.Predicted
+              "withinRange", integer entry.WithinRange
+              "coverage", optionalNumber entry.Coverage
+              "medianAbsoluteErrorMs", optionalLong entry.MedianAbsoluteErrorMs
+              "medianRelativeError", optionalNumber entry.MedianRelativeError
+              "byClass",
+              entry.ByClass
+              |> List.map (fun accuracy ->
+                  record
+                      [ "taskClass", text accuracy.TaskClass
+                        "predictions", integer accuracy.Predictions
+                        "withinRange", integer accuracy.WithinRange
+                        "medianAbsoluteErrorMs", optionalLong accuracy.MedianAbsoluteErrorMs ])
+              |> array
+              "costPredicted", integer entry.CostPredicted
+              "costWithinRange", integer entry.CostWithinRange
+              "costMedianAbsoluteError", optionalNumber entry.CostMedianAbsoluteError
+              "costCurrency", optionalText entry.CostCurrency ])
+            .ToJsonString()
 
     // ---- parsing (round trip of the plan document) ------------------------------
 
@@ -920,6 +1006,41 @@ module PlanningJson =
         | Malformed message -> Error $"malformed planner configuration: {message}"
         | :? JsonException as error -> Error $"malformed planner configuration: {error.Message}"
 
+    let parseCalibration (origin: string) (lines: string list) : Result<CalibrationEntry list, string> =
+        try
+            lines
+            |> List.mapi (fun index line -> index + 1, line)
+            |> List.filter (fun (_, line) -> line.Trim().Length > 0)
+            |> List.map (fun (number, line) ->
+                let node = JsonNode.Parse line |> asObject $"{origin}:{number}"
+
+                if readText node "schema" <> CalibrationSchema then fail $"{origin}:{number} is not {CalibrationSchema}"
+
+                { RecordedAt = readText node "recordedAt"
+                  PlannerVersion = readText node "plannerVersion"
+                  WorkStateFingerprint = readText node "workStateFingerprint"
+                  Executions = readRequired<int> node "executions"
+                  Predicted = readRequired<int> node "predicted"
+                  WithinRange = readRequired<int> node "withinRange"
+                  Coverage = readNumber<decimal> node "coverage"
+                  MedianAbsoluteErrorMs = readNumber<int64> node "medianAbsoluteErrorMs"
+                  MedianRelativeError = readNumber<decimal> node "medianRelativeError"
+                  ByClass =
+                    objects node "byClass"
+                    |> List.map (fun item ->
+                        { TaskClass = readText item "taskClass"
+                          Predictions = readRequired<int> item "predictions"
+                          WithinRange = readRequired<int> item "withinRange"
+                          MedianAbsoluteErrorMs = readNumber<int64> item "medianAbsoluteErrorMs" })
+                  CostPredicted = readRequired<int> node "costPredicted"
+                  CostWithinRange = readRequired<int> node "costWithinRange"
+                  CostMedianAbsoluteError = readNumber<decimal> node "costMedianAbsoluteError"
+                  CostCurrency = readOptionalText node "costCurrency" })
+            |> Ok
+        with
+        | Malformed message -> Error $"malformed calibration history: {message}"
+        | :? JsonException as error -> Error $"malformed calibration history: {error.Message}"
+
     /// External evidence supplied by a caller that can see CI or GitHub
     /// (an agent or a workflow). The planner itself never contacts either.
     let parseObservations (origin: string) (json: string) : Result<Observation list, string> =
@@ -944,6 +1065,8 @@ module PlanningJson =
                     | "commit-merged" -> ObservationKind.CommitMerged(readText node "commit", readOptionalText node "into" |> Option.defaultValue "default branch")
                     | "ci-passed" -> ObservationKind.ContinuousIntegrationPassed(readText node "subject")
                     | "ci-failed" -> ObservationKind.ContinuousIntegrationFailed(readText node "subject")
+                    | "ci-pending" -> ObservationKind.ContinuousIntegrationPending(readText node "subject")
+                    | "ci-unavailable" -> ObservationKind.ContinuousIntegrationUnavailable(readText node "subject", readOptionalText node "reason" |> Option.defaultValue "not stated")
                     | "release-exists" -> ObservationKind.ReleaseExists(readText node "tag")
                     | "context-pressure" ->
                         let indicators =

@@ -88,6 +88,7 @@
     <Compile Include="Planning/Scheduling.fs" />
     <Compile Include="Planning/Comparison.fs" />
     <Compile Include="Planning/Replay.fs" />
+    <Compile Include="Planning/Calibration.fs" />
     <Compile Include="Planning/Planner.fs" />
     <Compile Include="Planning/Pricing.fs" />
     <Compile Include="Planning/Grouping.fs" />

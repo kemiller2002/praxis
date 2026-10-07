@@ -12,11 +12,12 @@ open Praxis.Infrastructure.Planning
 /// `praxis plan ...`: the advisory, read-only planner
 /// (requirements/PLANNING-OPTIMIZATION.md). This module parses, delegates to
 /// the Application/Domain planner over a read-only port, and renders. No
-/// plan command writes anything: output goes to stdout only.
+/// plan command writes anything except `plan replay --record`, which appends
+/// only to the calibration history (PRX-PLAN-170).
 [<RequireQualifiedAccess>]
 module PlanCommands =
     let usage =
-        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
+        "plan analyze|simulate [--groups]|compare [--groups]|explain ID|groups|explain-group GROUP-ID|replay [--record]|freshness --plan FILE [--for {baseline|speed|balanced|cost|max-parallel}] [--max-concurrency N] [--budget AMOUNT [--currency CODE]] [--deadline DURATION] [--observations FILE] [--observe-ci] [--config FILE] [--as-of TIMESTAMP] [--details] [--json]"
 
     type private Options =
         { Json: bool
@@ -31,6 +32,8 @@ module PlanCommands =
           Configuration: string option
           AsOf: string option
           Plan: string option
+          ObserveCi: bool
+          Record: bool
           Positional: string list
           Unexpected: string list }
 
@@ -47,6 +50,8 @@ module PlanCommands =
           Configuration = None
           AsOf = None
           Plan = None
+          ObserveCi = false
+          Record = false
           Positional = []
           Unexpected = [] }
 
@@ -56,6 +61,8 @@ module PlanCommands =
         | "--json" :: rest -> parse { options with Json = true } rest
         | "--details" :: rest -> parse { options with Details = true } rest
         | "--groups" :: rest -> parse { options with Groups = true } rest
+        | "--observe-ci" :: rest -> parse { options with ObserveCi = true } rest
+        | "--record" :: rest -> parse { options with Record = true } rest
         | flag :: value :: rest when flag.StartsWith "--" && not (value.StartsWith "--") ->
             let next =
                 match flag with
@@ -141,7 +148,7 @@ module PlanCommands =
         | _, Error message -> fail 2 message
         | _, Ok timestamp ->
             let port =
-                FilePlanningRepository.create root (options.Observations |> Option.map (resolve root)) (options.Configuration |> Option.map (resolve root))
+                FilePlanningRepository.createObserving root (options.Observations |> Option.map (resolve root)) (options.Configuration |> Option.map (resolve root)) options.ObserveCi
 
             match PlanningOperations.analyze port timestamp version with
             | Error message -> fail 1 message
@@ -320,40 +327,6 @@ module PlanCommands =
               yield ""
               yield "Findings:"
               yield! findingLines explanation.Findings ]
-
-    let private replayText (details: bool) (report: ReplayReport) =
-        let minutes (value: int64 option) = value |> Option.map (fun ms -> $"{ms / 60_000L} min") |> Option.defaultValue "unknown"
-        let percent (value: decimal option) = value |> Option.map (fun ratio -> $"{Math.Round(ratio * 100m, 1)}%%") |> Option.defaultValue "unknown"
-
-        [ yield report.Statement
-          yield ""
-          yield $"Executions replayed: {report.Executions}; predicted {report.Predicted}; unpredictable (no prior evidence) {report.Unpredictable}"
-          yield $"Actual within predicted range: {report.WithinRange} of {report.Predicted} ({percent report.Coverage})"
-          yield $"Median absolute error {minutes report.MedianAbsoluteErrorMs}; median relative error {percent report.MedianRelativeError}"
-          yield!
-              report.ByClass
-              |> List.map (fun accuracy ->
-                  $"  {accuracy.TaskClass}: {accuracy.WithinRange}/{accuracy.Predictions} within range, median abs error {minutes accuracy.MedianAbsoluteErrorMs}, median relative {percent accuracy.MedianRelativeError}")
-          yield $"Observed overlap: peak {report.Overlap.PeakConcurrency} concurrent execution(s), {report.Overlap.OverlappingMs / 60_000L} min overlapping over {report.Overlap.CalendarSpanMs / 3_600_000L} h (baseline models 1)"
-          yield report.Ordering.Statement
-          yield report.Cost.Statement
-          if details then
-              yield ""
-
-              yield!
-                  report.Predictions
-                  |> List.map (fun prediction ->
-                      $"  {prediction.ExecutionId} {prediction.WorkItemId} [{prediction.TaskClass}] predicted {duration prediction.Predicted}, actual {prediction.ActualMs / 60_000L} min") ]
-
-    let private reviewText (review: PlanReview) =
-        [ (if review.Freshness.Stale then "The plan is STALE: material state changed since it was computed." else "The plan is current: no material state change since it was computed.")
-          yield! review.Freshness.Changes |> List.map (fun change -> $"  {PlanChangeKind.code change.Kind}: {change.Message}")
-          ""
-          review.Statement
-          yield!
-              review.Outcomes
-              |> List.map (fun outcome ->
-                  $"  wave {outcome.RecommendedWave} {RecommendedAction.code outcome.RecommendedAction} {outcome.WorkItem}: {outcome.Outcome} ({outcome.LifecycleThen} -> {outcome.LifecycleNow})") ]
 
     // ---- work groups ------------------------------------------------------------
 
@@ -558,9 +531,16 @@ module PlanCommands =
         | "replay" :: rest ->
             let options = parse empty rest
 
-            withAnalysis root version options (fun input _ ->
+            withAnalysis root version options (fun input analysis ->
                 let report = Replay.replay input.Configuration input.Queue input.Executions
-                emit root options (fun () -> PlanningJson.replay report) (fun () -> replayText options.Details report))
+                // --record is the one plan write: the calibration history only (PRX-PLAN-170).
+                let recorded = if options.Record then FilePlanningRepository.recordCalibration root (Calibration.entry input.PlannedAt analysis.Snapshot report) |> Result.map Some else Ok None
+
+                match recorded, FilePlanningRepository.readCalibration root with
+                | Error message, _ | _, Error message -> fail 1 message
+                | Ok recorded, Ok history ->
+                    let trend = Calibration.trend history
+                    emit root options (fun () -> PlanningJson.replay report trend recorded) (fun () -> PlanEvidenceText.replay options.Details report trend recorded))
         | "freshness" :: rest ->
             let options = parse empty rest
 
@@ -575,8 +555,8 @@ module PlanCommands =
                     match PlanningJson.parsePlan (File.ReadAllText path) with
                     | Error message -> fail 2 message
                     | Ok previous ->
-                        withAnalysis root version options (fun _ analysis ->
-                            let review = Comparison.review previous analysis.Snapshot
-                            emit root options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> reviewText review) |> ignore
+                        withAnalysis root version options (fun input analysis ->
+                            let review = Comparison.review previous analysis.Snapshot input.Executions
+                            emit root options (fun () -> PlanningJson.review analysis.Snapshot review) (fun () -> PlanEvidenceText.review review) |> ignore
                             if review.Freshness.Stale then 3 else 0)
         | _ -> fail 2 $"usage: {usage}"

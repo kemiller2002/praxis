@@ -38,9 +38,31 @@ type OutcomeEntry =
       LifecycleNow: string
       Outcome: string }
 
+/// A completed recommended item: its predicted remaining duration at plan
+/// time against the productive time its executions started after the plan
+/// recorded.
+type DurationFollowUp =
+    { WorkItem: string
+      Predicted: Estimate<int64>
+      ObservedMs: int64 option
+      WithinRange: bool option }
+
+/// PRX-PLAN-162: how what happened compares with what was recommended.
+type RecommendationFollowUp =
+    { Recommended: int
+      Started: int
+      Completed: int
+      /// Pairs of started items in different waves, and how many started in
+      /// the recommended order.
+      OrderedPairs: int
+      PairsInRecommendedOrder: int
+      Durations: DurationFollowUp list
+      Statement: string }
+
 type PlanReview =
     { Freshness: PlanFreshness
       Outcomes: OutcomeEntry list
+      FollowUp: RecommendationFollowUp
       Statement: string }
 
 /// PRX-PLAN-100..102 and 162: comparing alternatives without claiming a
@@ -133,7 +155,76 @@ module Comparison =
 
     /// PRX-PLAN-162: what happened to each recommended item since the plan,
     /// stated as observation, never as the planner's effect.
-    let review (document: PlanDocument) (current: PlanSnapshot) : PlanReview =
+    /// PRX-PLAN-162: start order and durations after the plan, against its
+    /// waves and estimates. Only executions that started after the plan was
+    /// computed count; nothing here is attributed to the plan.
+    let followUp (document: PlanDocument) (outcomes: OutcomeEntry list) (executions: HistoricalExecution list) : RecommendationFollowUp =
+        let plannedAt = Text.tryTimestamp document.Snapshot.PlannedAt
+
+        let after =
+            executions
+            |> List.filter (fun execution ->
+                match plannedAt, Text.tryTimestamp execution.StartedAt with
+                | Some planned, Some started -> started >= planned
+                | _ -> false)
+
+        let entries = document.Plan.Waves |> List.collect (fun wave -> wave.Entries |> List.map (fun entry -> wave.Number, entry))
+
+        let firstStart id =
+            after |> List.filter (fun execution -> execution.WorkItemId = id) |> List.choose (fun execution -> Text.tryTimestamp execution.StartedAt) |> List.sort |> List.tryHead
+
+        let started = entries |> List.choose (fun (wave, entry) -> firstStart entry.WorkItem |> Option.map (fun start -> entry.WorkItem, wave, start))
+
+        let pairs =
+            started
+            |> List.mapi (fun index left -> started |> List.skip (index + 1) |> List.map (fun right -> left, right))
+            |> List.concat
+            |> List.filter (fun ((_, leftWave, _), (_, rightWave, _)) -> leftWave <> rightWave)
+
+        let inOrder =
+            pairs
+            |> List.filter (fun ((_, leftWave, leftStart), (_, rightWave, rightStart)) -> (leftWave < rightWave) = (leftStart <= rightStart))
+            |> List.length
+
+        let completed = outcomes |> List.filter (fun outcome -> outcome.Outcome = "completed") |> List.map (fun outcome -> outcome.WorkItem) |> Set.ofList
+
+        let durations =
+            entries
+            |> List.filter (fun (_, entry) -> completed.Contains entry.WorkItem)
+            |> List.map (fun (_, entry) ->
+                let observed =
+                    after
+                    |> List.filter (fun execution -> execution.WorkItemId = entry.WorkItem && execution.Status = ExecutionStatus.Finalized)
+                    |> List.choose History.productiveMs
+                    |> function
+                        | [] -> None
+                        | values -> Some(List.sum values)
+
+                { WorkItem = entry.WorkItem
+                  Predicted = entry.Remaining
+                  ObservedMs = observed
+                  WithinRange =
+                    match entry.Remaining.Lower, entry.Remaining.Upper, observed with
+                    | Some lower, Some upper, Some value -> Some(value >= lower && value <= upper)
+                    | _ -> None })
+
+        let within = durations |> List.filter (fun entry -> entry.WithinRange = Some true) |> List.length
+        let measured = durations |> List.filter (fun entry -> entry.WithinRange.IsSome) |> List.length
+
+        let order =
+            if pairs.IsEmpty then "no two items from different waves have started since the plan, so its order cannot be compared"
+            else $"{inOrder} of {pairs.Length} started pair(s) from different waves started in the recommended order"
+
+        { Recommended = entries.Length
+          Started = started.Length
+          Completed = completed.Count
+          OrderedPairs = pairs.Length
+          PairsInRecommendedOrder = inOrder
+          Durations = durations
+          Statement =
+            $"Since the plan: {started.Length} of {entries.Length} recommended item(s) started and {completed.Count} completed; {order}; {within} of {measured} completed item(s) with measured time finished within the predicted range. These are observations, not effects of the plan." }
+
+    let review (document: PlanDocument) (current: PlanSnapshot) (executions: HistoricalExecution list) : PlanReview =
         let now = current.Items |> List.map (fun item -> item.WorkItem, item) |> Map.ofList
         let before = document.Snapshot.Items |> List.map (fun item -> item.WorkItem, item) |> Map.ofList
 
@@ -163,4 +254,5 @@ module Comparison =
 
         { Freshness = Snapshot.compare document.Snapshot current
           Outcomes = outcomes
+          FollowUp = followUp document outcomes executions
           Statement = "Outcomes are observed changes since the plan was computed; the planner does not claim to have caused them." }
