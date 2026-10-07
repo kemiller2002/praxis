@@ -86,6 +86,30 @@ module FormaRelease =
         | Ok assets -> assets.StylesheetPath
         | Error _ -> "/forma/unavailable/all.css"
 
+    /// Where a repository without npm pins its Forma release.
+    [<Literal>]
+    let LockPath = "vendor/forma/forma.lock"
+
+    /// A repository's own Forma pin, for `foundations verify`: the lock and
+    /// the tarball it names, verified against the lock's digest. None when the
+    /// repository has no lock.
+    let repositoryLock (root: string) : Result<FormaLock, string> option =
+        let lockFile = Path.Combine(root, LockPath.Replace('/', Path.DirectorySeparatorChar))
+
+        if not (File.Exists lockFile) then
+            None
+        else
+            FormaPin.parse (File.ReadAllText lockFile)
+            |> Result.mapError FormaPin.describe
+            |> Result.bind (fun lock ->
+                let tarball = Path.Combine(Path.GetDirectoryName lockFile |> Option.ofObj |> Option.defaultValue root, $"echelon-foundry-design-system-{lock.Version}.tgz")
+
+                if File.Exists tarball then
+                    FormaPin.verify lock (sha256Hex (File.ReadAllBytes tarball)) |> Result.mapError FormaPin.describe
+                else
+                    Error $"the Forma tarball named by {LockPath} is missing")
+            |> Some
+
     /// Serve the pinned stylesheet for `GET /forma/<version>/all.css`.
     let tryServe (httpMethod: string) (segments: string list) =
         match httpMethod, segments, current () with

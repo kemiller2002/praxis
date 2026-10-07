@@ -10,6 +10,7 @@ open System.Text.Json.Nodes
 open System.Threading
 open System.Threading.Tasks
 open Praxis.Infrastructure.Boundary
+open Praxis.Infrastructure.Foundations
 
 /// A request as the web adapters see it: already read off the wire, so every
 /// routing and parsing decision below is a pure function of this value.
@@ -91,27 +92,26 @@ module Html =
         let pick name =
             query |> List.tryFind (fst >> (=) name) |> Option.map snd |> Option.filter (String.IsNullOrWhiteSpace >> not)
 
-        [ pick "notice" |> Option.map (fun text -> $"<p class=\"notice\" role=\"status\">{escape text}</p>")
-          pick "error" |> Option.map (fun text -> $"<p class=\"error\" role=\"alert\">{escape text}</p>") ]
+        [ pick "notice" |> Option.map FormaMarkup.notice
+          pick "error" |> Option.map FormaMarkup.alert ]
         |> List.choose id
         |> String.concat "\n"
 
-    /// An operational fault: the safe message and its reference only.
-    let fault (message: string) (reference: string) = $"<main><h1>Something went wrong</h1><p role=\"alert\">{escape message}</p><p>Reference <code>{escape reference}</code></p></main>"
+    /// An operational fault: the safe message and its reference only (Forma fault banner).
+    let fault (message: string) (reference: string) = FormaMarkup.faultBanner message reference
     let page (title: string) (body: string) =
-        String.concat
-            "\n"
+        String.concat "\n"
             [ "<!doctype html>"
               "<html lang=\"en\">"
               "<head>"
               "<meta charset=\"utf-8\" />"
               "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
               $"<title>{escape title}</title>"
-              "<link rel=\"stylesheet\" href=\"/styles.css\" />"
+              yield! FormaMarkup.head (FormaRelease.stylesheetPath ())
               "</head>"
-              "<body>"
+              FormaMarkup.BodyOpen
               body
-              "</body>"
+              FormaMarkup.BodyClose
               "</html>"
               "" ]
 
@@ -449,7 +449,7 @@ module HttpHost =
     /// One request's answer; an unexpected failure is recorded at the web
     /// boundary (SAF-AEGIS-1) and answered with a safe message and reference.
     let respond (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (data: HttpRequestData) =
-        match AegisBoundary.capture aegis OperationalBoundary.WebRequest $"web.{data.Method.ToLowerInvariant()}" None "could not answer the request" (fun () -> handler data) with
+        match AegisBoundary.capture aegis OperationalBoundary.WebRequest $"web.{data.Method.ToLowerInvariant()}" None "could not answer the request" (fun () -> FormaRelease.tryServe data.Method data.Segments |> Option.map (HttpMessages.response 200 "text/css; charset=utf-8") |> Option.defaultWith (fun () -> handler data)) with
         | Ok response -> response
         | Error fault -> HttpMessages.html 500 (Html.page "Error" (Html.fault fault.UserMessage (Aegis.Presentation.reference fault)))
     let private handle (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (context: HttpListenerContext) =
