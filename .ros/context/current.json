@@ -8703,18 +8703,39 @@
     {
       "id": "RELEASE-3-8-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-10-07T19:44:50.475Z",
+      "updatedAt": "2026-10-07T19:44:57.392Z",
       "telemetryExecutionIds": [
         "EXE-20261007T194451429Z-d217b77d"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "bab0847bc7a25eea1cc10f08",
+        "recordedAt": "2026-10-07T19:44:55.431Z",
+        "executionId": "EXE-20261007T194451429Z-d217b77d",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "48bb3ba5a2f59ba817826221a519384aaefa8b46",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "48bb3ba5a2f59ba817826221a519384aaefa8b46",
+        "summary": "Bumped the package version from 3.7.2 to 3.8.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T19:44:57.392Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T19:44:50.475Z",
+  "updatedAt": "2026-10-07T19:44:57.392Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
