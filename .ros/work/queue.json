@@ -3183,10 +3183,10 @@
         "cli"
       ],
       "priority": "low",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-09-30T11:00:33.806Z",
-      "updatedAt": "2026-09-30T11:34:16.000Z",
+      "updatedAt": "2026-10-07T21:39:04.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

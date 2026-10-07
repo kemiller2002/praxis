@@ -4932,18 +4932,69 @@
     {
       "id": "PRAXIS-GROUP-04",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-07T21:35:36.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Ros.Domain/Planning/GroupDeclaration.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Cli/WorkGroupCommands.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Ros.Contracts/Planning/PlanningJson.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Ros.Tests/WorkGroupTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/planning.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/cli.md"
+        }
+      ],
+      "updatedAt": "2026-10-07T21:39:04.000Z",
       "telemetryExecutionIds": [
         "EXE-20261007T213536838Z-1c91d27a"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "8e156ca9c65c5ea0f08eb59c",
+        "recordedAt": "2026-10-07T21:38:54.000Z",
+        "executionId": "EXE-20261007T213536838Z-1c91d27a",
+        "repository": "repository-operating-system",
+        "branch": "experiment/a024-arm-2",
+        "commit": "5e39a846f14588eb01d93e4956fb3406b1a6bace",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "experiment/a024-arm-2",
+        "remoteCommit": "5e39a846f14588eb01d93e4956fb3406b1a6bace",
+        "summary": "work group remove implemented (domain decision, removals provenance, CLI, docs, 12 tests); build ok, 845/845 F# tests pass, ros validate passes",
+        "nextAction": "complete PRAXIS-GROUP-04; PRAXIS-GROUP-05 (group checkpoint) is next in the cohort",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T21:39:04.000Z",
+      "conclusion": "work group remove implemented at 5e39a84: refuses non-members, undeclared groups and removals that would leave fewer than two members; records removedBy/removedAt/reason; writes only .ros/work/groups.json, so lifecycle, evidence and attribution are untouched. Verification: npm run build:fsharp -p:FSharpCoreImplicitPackageVersion=10.1.400 succeeded; dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 845 tests, 845 passed, 0 failed; ./ros validate: validation passed."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:35:36.000Z",
+  "updatedAt": "2026-10-07T21:39:04.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
