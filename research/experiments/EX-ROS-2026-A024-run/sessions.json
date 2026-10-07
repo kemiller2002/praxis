@@ -552,7 +552,7 @@
       "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
     }
   ],
-  "status": "all arms terminal; blinded acceptance scoring running",
+  "status": "blind architecture evaluation running",
   "scorers": [
     {
       "label": "scorer-K",
@@ -565,7 +565,8 @@
         "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-K",
         "LABEL": "snapshot-K"
       },
-      "status": "running"
+      "status": "completed",
+      "resultCommit": "e7d9036f22367f3760615e8627c4282002942038"
     },
     {
       "label": "scorer-P",
@@ -578,7 +579,8 @@
         "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-P",
         "LABEL": "snapshot-P"
       },
-      "status": "running"
+      "status": "completed",
+      "resultCommit": "4255fe279d96ed274647d2f3e2fac8099320ca9d"
     },
     {
       "label": "scorer-W",
@@ -591,7 +593,20 @@
         "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-W",
         "LABEL": "snapshot-W"
       },
-      "status": "running"
+      "status": "completed",
+      "resultCommit": "e16fc1be5e31d6aa67ca7b8554959273c4d2cabc"
     }
-  ]
+  ],
+  "evaluator": {
+    "session": "session_011eiwEeybGsSrBnpQGEKaKM",
+    "branch": "experiment/a024-blind-eval",
+    "packageCommit": "8936074aced7c8718e2b2d867972050cd4600f12",
+    "prompt": "prompts/evaluator.txt",
+    "substitutions": {
+      "EVAL_BRANCH": "experiment/a024-blind-eval",
+      "LABELS": "snapshot-K/, snapshot-P/, snapshot-W/"
+    },
+    "createdAt": "2026-10-07T22:25:43.601108Z",
+    "status": "running"
+  }
 }
