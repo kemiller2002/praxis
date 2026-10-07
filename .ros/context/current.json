@@ -6863,18 +6863,52 @@
     {
       "id": "PRAXIS-MISC-01",
       "type": "development",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T21:19:21.733Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/InputInboxOperations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/InputInboxTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-MISC-01.verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T08:32:40.469Z",
       "telemetryExecutionIds": [
         "EXE-20261006T211922889Z-b070f0b6"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "feb2b9159a11b46006c44c11",
+        "recordedAt": "2026-10-07T08:32:37.710Z",
+        "executionId": "EXE-20261006T211922889Z-b070f0b6",
+        "repository": "repository-operating-system",
+        "branch": "misc/inbox",
+        "commit": "c9028dd3ad76a04cd1568b531ec00349581249b5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "misc/inbox",
+        "remoteCommit": "c9028dd3ad76a04cd1568b531ec00349581249b5",
+        "summary": "Inbox claim/derive/complete/release/reject/recover implemented and tested; docs updated; PR #199",
+        "nextAction": "Complete PRAXIS-MISC-01",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T08:32:40.469Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-06T23:56:00.705Z",
+  "updatedAt": "2026-10-07T08:32:40.469Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

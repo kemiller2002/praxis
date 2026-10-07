@@ -5007,10 +5007,10 @@
         "reconciliation"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:07.952Z",
-      "updatedAt": "2026-10-06T21:19:21.139Z",
+      "updatedAt": "2026-10-07T08:32:40.469Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
