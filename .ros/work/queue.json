@@ -5245,10 +5245,10 @@
         "identity"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:27.375Z",
-      "updatedAt": "2026-10-06T20:38:51.244Z",
+      "updatedAt": "2026-10-07T05:54:46.469Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5269,10 +5269,10 @@
         "planning"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T20:37:27.755Z",
-      "updatedAt": "2026-10-07T05:54:32.958Z",
+      "updatedAt": "2026-10-07T05:54:48.741Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
