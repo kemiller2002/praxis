@@ -77,14 +77,22 @@ analysis/                          redaction, verification and analysis scripts 
 `manifest.json` lists any expected dataset that was not yet available when the
 bundle was built with `"status": "pending"`.
 
-The scripts in `analysis/` are copies of the publication scripts.
-`verify_artifact.py --bundle` runs from this bundle alone. The metric
-extraction and checking scripts (`extract_metrics.py`, `verify_metrics.py`,
-`check_architecture_findings.py`, `build_tables.py`) read pinned Git objects
-of the full study repository and cannot run from the bundle; their outputs
-are in `data/`, and the raw per-session records they read are in
-`a021/metrics-raw/`, `a021/harness/sessions.json` and `r2/metrics-raw/`, so
-every figure can be recomputed by hand.
+The scripts in `analysis/` are copies of the publication scripts. These run
+from this bundle alone:
+
+- `verify_artifact.py --bundle .` checks checksums, the manifest and the
+  identifier scan;
+- `build_tables.py` and `build_architecture_table.py` regenerate every paper
+  table and number macro from `data/` (write them to `manuscript/tables/`);
+- `check_architecture_findings.py --no-git` validates the architecture
+  findings and checks every probe-based claim against `data/probes/`;
+- `run_probes.py` re-runs the runtime probes against a built arm.
+
+`extract_metrics.py` and `verify_metrics.py` read pinned Git objects of the
+full study repository and cannot run from the bundle. The raw per-session
+records they read are in `a021/metrics-raw/`, `a021/harness/sessions.json`
+and `r2/metrics-raw/`, so every figure in `data/metrics.json` can be
+recomputed by hand.
 
 ## Arm mapping
 

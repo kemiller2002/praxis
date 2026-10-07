@@ -9,6 +9,7 @@
       "grouped_category": "unified",
       "independent_category": "duplicated-compatible",
       "rationale": "One file versus two new files plus the pre-existing event log. Organization difference; the behavioral consequence (non-atomic two-file write) is scored in D6.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -18,7 +19,15 @@
       "direction": "grouped_more_unified",
       "grouped_category": "unified",
       "independent_category": "divergent",
-      "rationale": "Probe P9/P10: independent create accepts what its add refuses. Grouped is unified but uses a weaker repository rule than the planner (P2), and no arm enforces the planner's inferred location at create (P3).",
+      "rationale": "Probe P9/P10: independent create accepts what its add refuses. Grouped is unified but uses a weaker repository rule than the planner (P2), and no arm enforces the planner's inferred location at create (P3). Both independent create-time omissions violate PRX-GRP-051 (R2: confirmed defect M-D2); both grouped rules are the required general rule, implemented without the planner's external inference (P2 at add, P3 at create).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "study": "A021"
     },
     {
@@ -29,6 +38,7 @@
       "grouped_category": "unified",
       "independent_category": "divergent",
       "rationale": "Grouped show and checkpoint share one classification on one state source; independent checkpoint uses a separate live-only classification. Stale-sensitive: the independent divergence is in item 05, which started from the baseline.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -39,6 +49,7 @@
       "grouped_category": "missing",
       "independent_category": "unified",
       "rationale": "Independent reuses work checkpoint's ownership half and re-validates stored checkpoints; grouped shares only the Git rule and stores blank decisions. Stale-sensitive: the independent code is from the stale item 05.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -49,6 +60,7 @@
       "grouped_category": "unified",
       "independent_category": "divergent",
       "rationale": "Probes P4-P7 reproduce independent's mixed envelopes, rejection shapes and exit codes; survives excluding item 05.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -58,17 +70,19 @@
       "direction": "grouped_more_unified",
       "grouped_category": "unified",
       "independent_category": "divergent",
-      "rationale": "Independent create/add/remove are unlocked (8 concurrent creates exit 0, 1 stored); grouped serializes all group writes (on its own lock, not work-protocol).",
+      "rationale": "Independent create/add/remove are unlocked (CC: 40/40 exit 0, 8 stored over 5 runs); grouped serializes all group writes (on its own lock, not work-protocol).",
+      "spec_refs": [],
       "study": "A021"
     },
     {
       "behavioral_difference": true,
       "confidence": "high",
       "dimension": "D7",
-      "direction": "mixed",
+      "direction": "independent_more_unified",
       "grouped_category": "divergent",
       "independent_category": "unified",
-      "rationale": "Baseline reuse favors independent (parser, executionLocation, event log; P2 shows the behavioral cost in grouped). Feature-internal shared helpers favor grouped (one parser, pipeline, renderer).",
+      "rationale": "Scored on reuse of baseline rules: independent extracted and reused the grouping.groups reader, Grouping.executionLocation, the event log and journal and the durability rule; grouped re-derived the location rule (P2 shows the behavioral cost) and duplicated the reader. Grouped's advantage in feature-internal helpers (one parser, pipeline, renderer) is already scored under D5 and D6, so counting it here again would double-count; the earlier 'mixed' label is withdrawn.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -79,6 +93,7 @@
       "grouped_category": "unified",
       "independent_category": "duplicated-compatible",
       "rationale": "Two nested group-ID grammars in independent, applied to different domains; no contradictory behavior for stored groups. Introduced by stale item 05; does not survive the sensitivity analysis.",
+      "spec_refs": [],
       "study": "A021"
     },
     {
@@ -89,6 +104,7 @@
       "grouped_category": "unified",
       "independent_category": "duplicated-compatible",
       "rationale": "One file versus groups.json plus group-checkpoints.json for two separate concepts; membership provenance is not split in either arm. Organization only.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
@@ -98,7 +114,15 @@
       "direction": "grouped_more_unified",
       "grouped_category": "unified",
       "independent_category": "divergent",
-      "rationale": "Probe P9/P10 reproduce M-D2. Grouped's unified rule is weaker than the planner's (P2 accepted in grouped, refused in independent), which the R2 evaluator missed.",
+      "rationale": "Probe P9/P10 reproduce M-D2. Grouped's unified rule is weaker than the planner's (P2 accepted in grouped, refused in independent), which the R2 evaluator missed. Both independent create-time omissions violate PRX-GRP-051 (R2: confirmed defect M-D2); both grouped rules are the required general rule, implemented without the planner's external inference (P2 at add, P3 at create).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "study": "R2"
     },
     {
@@ -109,6 +133,7 @@
       "grouped_category": "divergent",
       "independent_category": "divergent",
       "rationale": "Both arms' show and checkpoint disagree for abandoned and blocked members; grouped shares one view value but derives checkpoint lists inconsistently (abandoned members vanish), independent uses two sources but keeps abandoned explicit. Not evidence for either execution mode.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
@@ -119,6 +144,7 @@
       "grouped_category": "missing",
       "independent_category": "unified",
       "rationale": "Independent requires active member and own execution, rejects blank decisions and validates checkpoint ownership; grouped does none. Not stale-sensitive in R2.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
@@ -129,6 +155,7 @@
       "grouped_category": "unified",
       "independent_category": "divergent",
       "rationale": "Grouped has one envelope and one coded rejection type; independent has one envelope family but uncoded string rejections with exit 1 for create/add/remove, coded ones for checkpoint, and a planner-style show with no JSON on not-found. The gap is clearly smaller than in A021.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
@@ -138,17 +165,19 @@
       "direction": "grouped_more_unified",
       "grouped_category": "unified",
       "independent_category": "divergent",
-      "rationale": "Runtime probe confirms independent lost updates (8 exit 0, 1 stored); grouped serializes writes but reads lifecycle facts outside the lock.",
+      "rationale": "Runtime probe confirms independent lost updates (CC: 40/40 exit 0, 7 stored over 5 runs); grouped serializes writes but reads lifecycle facts outside the lock.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
       "behavioral_difference": true,
       "confidence": "high",
       "dimension": "D7",
-      "direction": "mixed",
+      "direction": "independent_more_unified",
       "grouped_category": "divergent",
       "independent_category": "unified",
-      "rationale": "Independent reuses executionLocation, the declaration reader and effectiveStatus; grouped re-derives location (P2) and terminal standing. Feature-internal helpers favor grouped (one pipeline, one codec).",
+      "rationale": "Scored on reuse of baseline rules: independent reuses executionLocation, the declaration reader and effectiveStatus; grouped re-derives location (P2) and terminal standing. Feature-internal helpers (one pipeline, one codec) are scored under D5 and D6; the earlier 'mixed' label is withdrawn.",
+      "spec_refs": [],
       "study": "R2"
     },
     {
@@ -159,12 +188,13 @@
       "grouped_category": "unified",
       "independent_category": "unified",
       "rationale": "Each arm has one group-ID grammar; the arms differ from each other (one vs two segments), which is not an intra-arm duplication.",
+      "spec_refs": [],
       "study": "R2"
     }
   ],
   "executed": {
     "builds": "dotnet build src/Ros.Cli/Ros.Cli.fsproj -c Release -p:FSharpCoreImplicitPackageVersion=10.1.400 (SDK 10.0.112) in detached worktrees of all four heads: 0 warnings, 0 errors",
-    "probes": "P1-P10 and an 8-process concurrent create, on throwaway local clones of each head, using each arm's own ros-fs.dll; see architecture-findings.md",
+    "probes": "P1-P10 (P8 included) and the concurrent-create probe CC (8 processes, 5 runs), run by scripts/run_probes.py on throwaway clones of each head with each arm's own ros-fs.dll; normalized raw outputs in data/probes/<implementation>.json. P1-P10 are deterministic; CC is not (counts per run are recorded).",
     "tests": "not run by this audit; test counts are the evaluators'"
   },
   "falsification_attempts": [
@@ -206,9 +236,9 @@
     },
     {
       "claim": "R2 independent lost-update risk is only a design risk (R2-eval M-R1)",
-      "evidence": "probe: 8 concurrent creates on 8bb8f78adbaa67273ac507d1d14ad475e46fedd3 all exit 0, 1 group stored",
-      "note": "Strengthened to an observed defect.",
-      "result": "upheld"
+      "evidence": "probe CC on 8bb8f78adbaa67273ac507d1d14ad475e46fedd3: 40 of 40 exit 0, 7 groups stored over 5 runs (data/probes/R2-independent.json)",
+      "note": "Refuted as stated: the risk is an observed defect (lost updates in every concurrency run, data/probes/R2-independent.json). The underlying evaluator concern is thereby strengthened.",
+      "result": "refuted"
     },
     {
       "claim": "Grouped show and checkpoint share one classification (R2, by replication)",
@@ -231,7 +261,7 @@
     {
       "claim": "Grouped produced substantially more unified cross-item architecture in both executions",
       "evidence": "comparisons D1-D8 for A021 and R2",
-      "note": "A021: grouped more unified on 6 of 8 dimensions (4 with behavioral difference), independent on 1, mixed 1. R2: grouped on 4 (3 with behavioral difference: D2, D5, D6), independent on 1, mixed 1, equivalent 2. The R2 margin is narrower; 'substantially' fits A021 better than R2.",
+      "note": "A021: grouped more unified on 6 of 8 dimensions (4 with behavioral difference: D2, D3, D5, D6), independent on 2 (D4, D7). R2: grouped on 4 (3 with behavioral difference: D2, D5, D6), independent on 2 (D4, D7), equivalent 2. The R2 margin is narrower; 'substantially' fits A021 better than R2.",
       "result": "weakened"
     },
     {
@@ -283,6 +313,7 @@
         "40abb9f254747e236ab0d877d3c4352a16fbd303"
       ],
       "notes": "Group checkpoints are embedded in groups.json rather than in the pre-existing event log, so they are consistent with the feature but not with the baseline work-checkpoint persistence pattern (EV1 notes this).",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -346,6 +377,7 @@
         "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
       ],
       "notes": "Ledger introduced by 13e26f4 (item 03, correct start); event-log checkpoint by 8d435cb (item 05, stale start). Excluding item 05 the arm still has two group files, so the organization difference survives; it is organization, not behavior.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "A021"
     },
@@ -384,6 +416,7 @@
         "cc65ee198c92fecd28dac84753782478e1eefd8d"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -427,6 +460,7 @@
         "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
       ],
       "notes": "Introduced by 2d55157 (item 05, correct start). The R2 store difference is organizational only.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -487,7 +521,15 @@
       "introducing_commits": [
         "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
       ],
-      "notes": "Probe P3: create with an external-by-description member also exits 0, so the unified rule is unified but weaker than the planner's rule; P9 (explicit --execution-repository elsewhere) is refused at create, consistent with add.",
+      "notes": "Probe P3: create with an external-by-description member also exits 0, so the unified rule is unified but weaker than the planner's rule; P9 (explicit --execution-repository elsewhere) is refused at create, consistent with add. Specification: every PRAXIS-GROUP item cites requirements/PLANNING-WORK-GROUPS.md, whose PRX-GRP-051 requires every group to identify where implementation occurs and forbids mixing repositories unless the group is cross-repository. The generalized create+add rule is therefore required, not a generalization beyond the specification; the arm always stores an execution repository (WorkGroups.fs:361). It implements the invariant without the planner's description-based external inference, so an item the planner treats as external joins a local group at add (P2) and at create (P3), which falls short of PRX-GRP-051's second sentence.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -543,7 +585,15 @@
         "51086ac0ad9216cc08f0508a468d763832d2c8b0",
         "13e26f4caeab2c4468a65365fa2ad389d9542820"
       ],
-      "notes": "Introduced when item 03 (13e26f4, started from the correct head 9c17936) added the repository check to add without retrofitting create (51086ac). Survives excluding item 05. Note: create also admits external-by-description items (P3), exactly like both grouped arms.",
+      "notes": "Introduced when item 03 (13e26f4, started from the correct head 9c17936) added the repository check to add without retrofitting create (51086ac). Survives excluding item 05. Note: create also admits external-by-description items (P3), exactly like both grouped arms. Specification: the create-time omission is a violation of the cited PRX-GRP-051 (the invariant applies to every group, not only at add), not literal compliance with the item text. create also accepts no --execution-repository and stores none (the CLI then describes it as 'this repository'), which is the same shape as R2's M-D1. Neither A021 evaluator scored it against PRX-GRP-051; EV1 reports the create/add inconsistency itself.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "stale_start_sensitive": false,
       "study": "A021"
     },
@@ -598,7 +648,15 @@
       "introducing_commits": [
         "b09aaecd24c5d519046047155b155537ee4194e4"
       ],
-      "notes": "Same weaker-but-unified pattern as A021-grouped; P3 (create with external member) exits 0, P9 refused.",
+      "notes": "Same weaker-but-unified pattern as A021-grouped; P3 (create with external member) exits 0, P9 refused. Specification: as F-A021-G-D2. The rule is required by PRX-GRP-051 and the group always has an execution repository (toDeclared, WorkGroups.fs:526), but without the planner's external inference (P2 add and P3 create both accept the inferred-external item).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -643,7 +701,15 @@
         "5a034526eb1f60d94929b4d8420e1664639cc52c",
         "dae978843237721a8679d51c112473b66ce569a4"
       ],
-      "notes": "Item 03 started stale (b05fd8b parented on the baseline) but merged items 01-02 (5a03452) before its implementation commit dae9788, so it saw create's code; staleness is an implausible cause. Survives excluding item 02. Excluding item 03 removes add and so the comparison itself.",
+      "notes": "Item 03 started stale (b05fd8b parented on the baseline) but merged items 01-02 (5a03452) before its implementation commit dae9788, so it saw create's code; staleness is an implausible cause. Survives excluding item 02. Excluding item 03 removes add and so the comparison itself. Specification: R2's blind evaluator classed this exact behavior as confirmed acceptance defect M-D2 (and the stored ExecutionRepository = None as M-D1), both against PRX-GRP-051. This audit agrees: it is a requirement violation, not literal compliance.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "114-118",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-051"
+        }
+      ],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -705,6 +771,7 @@
         "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -755,6 +822,7 @@
         "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
       ],
       "notes": "GroupMemberStanding was written in 8d435cb, the item-05 commit that started from the baseline without items 01-04. Excluding item 05 there is no checkpoint, so D3 becomes not-assessable for the independent arm: the divergence does not survive the sensitivity analysis.",
+      "spec_refs": [],
       "stale_start_sensitive": true,
       "study": "A021"
     },
@@ -804,6 +872,7 @@
         "cc65ee198c92fecd28dac84753782478e1eefd8d"
       ],
       "notes": "A grouped-arm internal inconsistency. Organizationally unified (one view value), behaviorally divergent.",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -848,6 +917,7 @@
         "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
       ],
       "notes": "show was designed in 962b1f4 on a stale checkout as a planner view (Grouping.show in PlanCommands). Excluding item 02 there is no show, so D3 is not-assessable without it. Both R2 arms disagree between show and checkpoint for abandoned and blocked members; N's disagreement additionally drops abandoned members from the checkpoint.",
+      "spec_refs": [],
       "stale_start_sensitive": true,
       "study": "R2"
     },
@@ -909,6 +979,20 @@
         "40abb9f254747e236ab0d877d3c4352a16fbd303"
       ],
       "notes": "Ownership validation is missing; durability verification itself is shared with work checkpoint (unified with the baseline).",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -965,6 +1049,20 @@
         "2bb713f36a593fa7936e98c6803b990cce81a870"
       ],
       "notes": "Written in 8d435cb, the stale-start item. The independent arm's A021 advantage on this dimension comes entirely from the stale item; it is real code, but excluding item 05 makes D4 not-assessable for this arm.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
       "stale_start_sensitive": true,
       "study": "A021"
     },
@@ -1020,6 +1118,20 @@
         "cc65ee198c92fecd28dac84753782478e1eefd8d"
       ],
       "notes": "Same omission as A021-grouped: the grouped pattern replicates.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -1063,6 +1175,20 @@
         "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
       ],
       "notes": "Item 05 started from the correct head (c28009f on d728cd6); not stale-sensitive.",
+      "spec_refs": [
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "98-101",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-043"
+        },
+        {
+          "commit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+          "lines": "102-106",
+          "path": "requirements/PLANNING-WORK-GROUPS.md",
+          "symbol": "PRX-GRP-044"
+        }
+      ],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -1112,6 +1238,7 @@
         "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
       ],
       "notes": "The envelope matches the baseline work checkpoint convention ({command, schemaVersion}).",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -1169,6 +1296,7 @@
         "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
       ],
       "notes": "Both envelope families exist in the baseline (planner {schema, kind}; work commands {command, schemaVersion}), so each choice copies a baseline convention. The checkpoint envelope and exit-2 come from stale item 05; excluding it, create (strings) vs add/remove (codes) still diverge, so the finding survives.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "A021"
     },
@@ -1212,6 +1340,7 @@
         "b09aaecd24c5d519046047155b155537ee4194e4"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -1263,6 +1392,7 @@
         "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
       ],
       "notes": "show's planner placement comes from stale item 02 (962b1f4). Excluding item 02, string-vs-coded rejections and exit-code rules between 01/03/04 and 05 still diverge, so the finding survives.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -1282,7 +1412,7 @@
           "agrees": true,
           "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
           "locator": "findings.json defects arm-X",
-          "note": "Probe: 8 concurrent creates, 5 exit 0 and 5 stored; 3 fail with 'unexpected operational failure' (pre-existing lock module)."
+          "note": "Probe CC (5 runs x 8 concurrent creates, data/probes/A021-grouped.json): 17 of 40 exit 0, 17 stored, 0 lost; 23 fail with 'unexpected operational failure' (pre-existing lock module). Counts vary per run; the absence of lost updates is the claim."
         }
       ],
       "evidence": [
@@ -1300,6 +1430,7 @@
         "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -1313,7 +1444,7 @@
           "agrees": true,
           "evaluation": "A021-eval-2 (research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json; EV-ROS-2026-A067; blinding compromised)",
           "locator": "findings.json defects arm-Y (8 concurrent creates exit 0, 2 stored)",
-          "note": "Probe here: 8 concurrent creates all exit 0, 1 stored."
+          "note": "Probe CC (5 runs x 8, data/probes/A021-independent.json): 40 of 40 exit 0, 8 stored (1-2 per run), 32 lost updates."
         },
         {
           "agrees": true,
@@ -1352,6 +1483,7 @@
         "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
       ],
       "notes": "Introduced in 51086ac (item 01) and copied by 13e26f4/881a34d. Excluding stale item 05 the arm has no lock anywhere (category would be 'missing'); the deficit survives.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "A021"
     },
@@ -1365,7 +1497,7 @@
           "agrees": "partial",
           "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
           "locator": "N-F09 ('keeps read-decide-write inside the lease')",
-          "note": "Lost-update protection agreed (probe: 8 concurrent creates, 6 exit 0 and 6 stored). The code comment and the evaluator's implication that a membership decision 'cannot race a lifecycle transition' is not supported: facts are read outside the lease (WorkGroupCommands.fs 194-210, 266-268, 410-422)."
+          "note": "Lost-update protection agreed (probe CC, 5 runs x 8: 31 of 40 exit 0, 31 stored, 0 lost; data/probes/R2-grouped.json). The code comment and the evaluator's implication that a membership decision 'cannot race a lifecycle transition' is not supported: facts are read outside the lease (WorkGroupCommands.fs 194-210, 266-268, 410-422)."
         }
       ],
       "evidence": [
@@ -1395,6 +1527,7 @@
         "b09aaecd24c5d519046047155b155537ee4194e4"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -1408,7 +1541,7 @@
           "agrees": true,
           "evaluation": "R2-eval (research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt, findings.json)",
           "locator": "M-F09/M-R1 ('design-risk', runtime not confirmed)",
-          "note": "Now runtime-confirmed: probe ran 8 concurrent creates, all exit 0, 1 group stored. The design risk is an observed lost-update defect."
+          "note": "Now runtime-confirmed: probe CC (5 runs x 8, data/probes/R2-independent.json) had 40 of 40 exit 0 and 7 stored (1-2 per run), 33 lost updates. The design risk is an observed lost-update defect."
         }
       ],
       "evidence": [
@@ -1441,6 +1574,7 @@
         "2d55157dc1a37d1cae28a52b8bcf1c6322df0285"
       ],
       "notes": "Not stale-related: item 01 started correctly. Same pattern as A021-independent.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -1497,6 +1631,7 @@
         "40abb9f254747e236ab0d877d3c4352a16fbd303"
       ],
       "notes": "Divergent with respect to the baseline location rule; duplicated-compatible with respect to the parser.",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -1559,6 +1694,7 @@
         "13e26f4caeab2c4468a65365fa2ad389d9542820"
       ],
       "notes": "Parser reuse from 51086ac and executionLocation from 13e26f4, both non-stale; survives excluding item 05.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "A021"
     },
@@ -1608,6 +1744,7 @@
         "b09aaecd24c5d519046047155b155537ee4194e4"
       ],
       "notes": "The grouped arm's analysis (group-analysis.txt, cited as 'analysis D4' in the code comment) chose explicit-or-derived location deliberately; it is still a departure from the baseline rule.",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -1652,6 +1789,7 @@
         "dae978843237721a8679d51c112473b66ce569a4"
       ],
       "notes": "executionLocation extraction in dae9788 (item 03, merged before implementing); not stale-caused.",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "R2"
     },
@@ -1683,6 +1821,7 @@
         "312e236f8e47bd4534e2f9d2f3386cab95d30f21"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "A021"
     },
@@ -1732,6 +1871,7 @@
         "8d435cb7f6c8b76e16c9a4e732d60658947ad4fc"
       ],
       "notes": "Introduced by 8d435cb (stale start); EV1 itself attributes it to 'that independent start'. Excluding item 05 the independent arm has one grammar, so this finding does not survive the sensitivity analysis.",
+      "spec_refs": [],
       "stale_start_sensitive": true,
       "study": "A021"
     },
@@ -1763,6 +1903,7 @@
         "b09aaecd24c5d519046047155b155537ee4194e4"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": null,
       "study": "R2"
     },
@@ -1794,6 +1935,7 @@
         "7e01fb9638ba299e0f5202e6770db9378d2d23e6"
       ],
       "notes": "",
+      "spec_refs": [],
       "stale_start_sensitive": false,
       "study": "R2"
     }
@@ -1861,7 +2003,8 @@
       "implementations": [
         "A021-grouped",
         "R2-grouped"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "observed",
@@ -1873,7 +2016,8 @@
         "A021-independent",
         "R2-grouped",
         "R2-independent"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "observed",
@@ -1883,17 +2027,19 @@
       "implementations": [
         "A021-independent",
         "R2-independent"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "observed",
       "behavior": "concurrent creates lose updates while every process exits 0",
-      "evidence": "8 concurrent creates: 1 stored (both independent arms); grouped arms stored every exit-0 run (5 and 6)",
+      "evidence": "CC, 5 runs x 8 processes (nondeterministic counts): independent arms 40/40 exit 0 with 8 and 7 groups stored (32 and 33 lost updates); grouped arms stored every exit-0 run (17/17 and 31/31)",
       "id": "LC-04",
       "implementations": [
         "A021-independent",
         "R2-independent"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "observed",
@@ -1902,7 +2048,8 @@
       "id": "LC-05",
       "implementations": [
         "A021-grouped"
-      ]
+      ],
+      "method": "code-reading"
     },
     {
       "basis": "observed",
@@ -1911,7 +2058,8 @@
       "id": "LC-06",
       "implementations": [
         "R2-grouped"
-      ]
+      ],
+      "method": "code-reading"
     },
     {
       "basis": "observed",
@@ -1920,17 +2068,19 @@
       "id": "LC-07",
       "implementations": [
         "R2-independent"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "observed",
       "behavior": "under lock contention some concurrent creates fail with 'unexpected operational failure' (pre-existing RegistryLock)",
-      "evidence": "probe: 3 of 8 (A021-grouped), 2 of 8 (R2-grouped) exit 1",
+      "evidence": "CC, 5 runs x 8: 23 of 40 (A021-grouped) and 9 of 40 (R2-grouped) exit 1; independent arms 0 of 40",
       "id": "LC-08",
       "implementations": [
         "A021-grouped",
         "R2-grouped"
-      ]
+      ],
+      "method": "probe"
     },
     {
       "basis": "evaluated",
@@ -1942,9 +2092,513 @@
         "A021-independent",
         "R2-grouped",
         "R2-independent"
+      ],
+      "method": "evaluator-report"
+    }
+  ],
+  "probe_claims": [
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P1",
+      "implementation": "A021-grouped",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P2",
+      "implementation": "A021-grouped",
+      "probe": "P2",
+      "supports": [
+        "F-A021-G-D2",
+        "F-A021-G-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-G-P3",
+      "implementation": "A021-grouped",
+      "probe": "P3",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P9",
+      "implementation": "A021-grouped",
+      "probe": "P9",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P10",
+      "implementation": "A021-grouped",
+      "note": "P9 refused to create the group, so P10 fails as unknown-group; it does not test admission.",
+      "probe": "P10",
+      "supports": [
+        "F-A021-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_max": 0
+      },
+      "id": "PC-A021-G-CC",
+      "implementation": "A021-grouped",
+      "probe": "CC",
+      "supports": [
+        "F-A021-G-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P1",
+      "implementation": "A021-independent",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P2",
+      "implementation": "A021-independent",
+      "probe": "P2",
+      "supports": [
+        "F-A021-I-D2",
+        "F-A021-I-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P3",
+      "implementation": "A021-independent",
+      "probe": "P3",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-A021-I-P9",
+      "implementation": "A021-independent",
+      "probe": "P9",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P10",
+      "implementation": "A021-independent",
+      "probe": "P10",
+      "supports": [
+        "F-A021-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_min": 1
+      },
+      "id": "PC-A021-I-CC",
+      "implementation": "A021-independent",
+      "probe": "CC",
+      "supports": [
+        "F-A021-I-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P1",
+      "implementation": "R2-grouped",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P2",
+      "implementation": "R2-grouped",
+      "probe": "P2",
+      "supports": [
+        "F-R2-G-D2",
+        "F-R2-G-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-G-P3",
+      "implementation": "R2-grouped",
+      "probe": "P3",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P9",
+      "implementation": "R2-grouped",
+      "probe": "P9",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P10",
+      "implementation": "R2-grouped",
+      "note": "P9 refused to create the group, so P10 fails as unknown-group; it does not test admission.",
+      "probe": "P10",
+      "supports": [
+        "F-R2-G-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_max": 0
+      },
+      "id": "PC-R2-G-CC",
+      "implementation": "R2-grouped",
+      "probe": "CC",
+      "supports": [
+        "F-R2-G-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P1",
+      "implementation": "R2-independent",
+      "probe": "P1",
+      "supports": []
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P2",
+      "implementation": "R2-independent",
+      "probe": "P2",
+      "supports": [
+        "F-R2-I-D2",
+        "F-R2-I-D7"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P3",
+      "implementation": "R2-independent",
+      "probe": "P3",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 0
+      },
+      "id": "PC-R2-I-P9",
+      "implementation": "R2-independent",
+      "probe": "P9",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P10",
+      "implementation": "R2-independent",
+      "probe": "P10",
+      "supports": [
+        "F-R2-I-D2"
+      ]
+    },
+    {
+      "expect": {
+        "lost_updates_total_min": 1
+      },
+      "id": "PC-R2-I-CC",
+      "implementation": "R2-independent",
+      "probe": "CC",
+      "supports": [
+        "F-R2-I-D6"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"code\": \"invalid-group-id\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-G-P4",
+      "implementation": "A021-grouped",
+      "probe": "P4",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"kind\": \"work-group-create\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-I-P4",
+      "implementation": "A021-independent",
+      "probe": "P4",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"remedy\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-G-P4",
+      "implementation": "R2-grouped",
+      "probe": "P4",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"errors\"",
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-I-P4",
+      "implementation": "R2-independent",
+      "probe": "P4",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-G-P5",
+      "implementation": "A021-grouped",
+      "probe": "P5",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-A021-I-P5",
+      "implementation": "A021-independent",
+      "probe": "P5",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P5",
+      "implementation": "R2-grouped",
+      "probe": "P5",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P5",
+      "implementation": "R2-independent",
+      "probe": "P5",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-group\""
+      },
+      "id": "PC-A021-G-P6",
+      "implementation": "A021-grouped",
+      "probe": "P6",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 2,
+        "stdout_contains": "\"group-not-declared\""
+      },
+      "id": "PC-A021-I-P6",
+      "implementation": "A021-independent",
+      "probe": "P6",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-G-P6",
+      "implementation": "R2-grouped",
+      "probe": "P6",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1
+      },
+      "id": "PC-R2-I-P6",
+      "implementation": "R2-independent",
+      "probe": "P6",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-G-P7",
+      "implementation": "A021-grouped",
+      "probe": "P7",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-A021-I-P7",
+      "implementation": "A021-independent",
+      "probe": "P7",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": true
+      },
+      "id": "PC-R2-G-P7",
+      "implementation": "R2-grouped",
+      "probe": "P7",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_is_json": false
+      },
+      "id": "PC-R2-I-P7",
+      "implementation": "R2-independent",
+      "probe": "P7",
+      "supports": [
+        "F-R2-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-member\""
+      },
+      "id": "PC-A021-G-P8",
+      "implementation": "A021-grouped",
+      "probe": "P8",
+      "supports": [
+        "F-A021-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"kind\": \"work-group-create\""
+      },
+      "id": "PC-A021-I-P8",
+      "implementation": "A021-independent",
+      "probe": "P8",
+      "supports": [
+        "F-A021-I-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"unknown-work-item\""
+      },
+      "id": "PC-R2-G-P8",
+      "implementation": "R2-grouped",
+      "probe": "P8",
+      "supports": [
+        "F-R2-G-D5"
+      ]
+    },
+    {
+      "expect": {
+        "exit_code": 1,
+        "stdout_contains": "\"errors\""
+      },
+      "id": "PC-R2-I-P8",
+      "implementation": "R2-independent",
+      "probe": "P8",
+      "supports": [
+        "F-R2-I-D5"
       ]
     }
   ],
+  "probe_data": "data/probes/<implementation>.json (scripts/run_probes.py)",
   "rubric": {
     "basis_values": {
       "evaluated": "evaluator judgment, cited",
@@ -2039,9 +2693,9 @@
           "not-assessable",
           "unified"
         ],
-        "definition": "shared abstractions and reuse of baseline rules",
+        "definition": "reuse of baseline rules and abstractions (feature-internal shared helpers are scored under D5 and D6)",
         "id": "D7",
-        "name": "shared abstractions and reuse of baseline rules"
+        "name": "reuse of baseline rules and abstractions (feature-internal shared helpers are scored under D5 and D6)"
       },
       {
         "categories": [

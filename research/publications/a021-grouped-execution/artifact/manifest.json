@@ -50,8 +50,8 @@
       "path": "README.md",
       "status": "included",
       "profile": "authored",
-      "sha256": "00e7853b2f18b1eb99aba7d310c81899330a7db5a86aaa0c95cb0941f268df11",
-      "bytes": 9992
+      "sha256": "fa6058a1560bd16e5fa0f0febb545c21f4b4a1c63c499ca95b4603de977ad8d9",
+      "bytes": 10315
     },
     {
       "path": "a021/arm-x.patch",
@@ -547,8 +547,8 @@
       "path": "analysis/build_architecture_table.py",
       "status": "included",
       "profile": "record",
-      "sha256": "8291010fe2ff033298044366147a8316bbb03102a016ca569a6906ffa7b25e24",
-      "bytes": 17681,
+      "sha256": "b4b4b5120038c51128e0881bf85705e41f1e01e41c75aea450bdae3f91ea72c6",
+      "bytes": 17903,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -561,8 +561,8 @@
       "path": "analysis/build_tables.py",
       "status": "included",
       "profile": "record",
-      "sha256": "f7584c96447b8aabc470b0e12c8cd0ed84163de13468e62faaac4770f6304d37",
-      "bytes": 27949,
+      "sha256": "c98d2a3c011cac60ee67e12b93f25eadef40a1033eff6cf453748d82b01dd9d3",
+      "bytes": 32000,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -575,8 +575,8 @@
       "path": "analysis/check_architecture_findings.py",
       "status": "included",
       "profile": "record",
-      "sha256": "cb8ac8568e3687e966fee13319611c377b12dc96b974a6928674007746a0b20d",
-      "bytes": 8444,
+      "sha256": "82462d482155dbe73d3e1a0ab542fb83be4d47552a7c6e241d2a91c8dc13f545",
+      "bytes": 12017,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -589,8 +589,8 @@
       "path": "analysis/extract_metrics.py",
       "status": "included",
       "profile": "record",
-      "sha256": "3d77dec4dc9cb005ec4a04dc2a78ca9cc77339c7f8bd862e0e890cfc5641e2b2",
-      "bytes": 59312,
+      "sha256": "f5eca18778a9fb97e7ce318d926975b46cf5da2f6883e59fff2699dbd8570cf8",
+      "bytes": 59541,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -600,6 +600,22 @@
       "review_changes": {
         "alias-token:1": 2,
         "commit-sha": 8
+      }
+    },
+    {
+      "path": "analysis/run_probes.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "4808b201f4d97f70aedd8c27641fcc82f355364f53ec029c048d9f7969ba58c3",
+      "bytes": 8869,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/run_probes.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      },
+      "review_changes": {
+        "alias-token:1": 19
       }
     },
     {
@@ -666,8 +682,8 @@
       "path": "data/architecture-findings.json",
       "status": "included",
       "profile": "record",
-      "sha256": "c6d177de7de95b4abe57481982ad360cf5ca0d392e1a66ebbaebf87878a68c6b",
-      "bytes": 94598,
+      "sha256": "b2a75c5e088737ef41ae7da19f80ab2786830f2f45b476151b0951769d333964",
+      "bytes": 112174,
       "redactions": {},
       "transform": "json-strip-internal",
       "origin": {
@@ -675,8 +691,8 @@
         "role": "qualitative architecture findings with source locations for both arms"
       },
       "review_changes": {
-        "alias-token:1": 45,
-        "commit-sha": 200
+        "alias-token:1": 46,
+        "commit-sha": 214
       }
     },
     {
@@ -700,8 +716,8 @@
       "path": "data/metrics.csv",
       "status": "included",
       "profile": "record",
-      "sha256": "c8502bf6c897ea3d3b211e107b79ab53b8dd75d919d4328259859799145c5986",
-      "bytes": 244910,
+      "sha256": "fdbe408cb6b6f38753d2398d08a2a9705a5d1935ae3cb8ef36da6c16a364c4f1",
+      "bytes": 245947,
       "redactions": {},
       "transform": "csv-strip-internal",
       "origin": {
@@ -710,15 +726,15 @@
       },
       "review_changes": {
         "alias-token:1": 5,
-        "commit-sha": 686
+        "commit-sha": 698
       }
     },
     {
       "path": "data/metrics.json",
       "status": "included",
       "profile": "record",
-      "sha256": "b273af3572d17d9a593ee1462cb65a558c926adc3852cc023115e6f8168baaf8",
-      "bytes": 460069,
+      "sha256": "65d0d75628a8f5bb2de6f4d33b73285fc2dddd6df9b24e50c668c836ac3095b3",
+      "bytes": 462414,
       "redactions": {},
       "transform": "json-strip-internal",
       "origin": {
@@ -727,15 +743,87 @@
       },
       "review_changes": {
         "alias-token:1": 5,
-        "commit-sha": 723
+        "commit-sha": 735
+      }
+    },
+    {
+      "path": "data/probes/A021-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "7b705fb58110413366783d28107498eb0d3a89fc3df61aae2ee03d3e94dbd32e",
+      "bytes": 8927,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-grouped, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 4,
+        "alias-token:1": 36,
+        "commit-sha": 2
+      }
+    },
+    {
+      "path": "data/probes/A021-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "06b91da4745b840018cd17842a85949c1d7bc0df319237e4ddac89a6726ef3d5",
+      "bytes": 10497,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-independent, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 3,
+        "alias-token:1": 42,
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "data/probes/R2-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "000109b73d866aec8611801451f9fcb4ebcb13a219d99c54f0947cc2c4e2fe69",
+      "bytes": 9840,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-grouped, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 5,
+        "alias-token:1": 36,
+        "commit-sha": 1
+      }
+    },
+    {
+      "path": "data/probes/R2-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "ac8f3bf1ddd7a35ed4cbe8776534b2b741a4878cf459813e605de024e1d942bf",
+      "bytes": 9405,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-independent, produced by analysis/run_probes.py"
+      },
+      "review_changes": {
+        "alias-phrase:1": 2,
+        "alias-token:1": 33,
+        "commit-sha": 3
       }
     },
     {
       "path": "data/threats.json",
       "status": "included",
       "profile": "record",
-      "sha256": "19afcd69bddb5417e410593c5fe31086d649ee18692f8420670672b2885c78a4",
-      "bytes": 36761,
+      "sha256": "6fa00e9c3fd51a5ae484e1637abd5ce97eb9811294c2882db239a3aa745c84ce",
+      "bytes": 36900,
       "redactions": {
         "session-id": 3,
         "account": 1
@@ -1176,6 +1264,26 @@
       "review_changes": {
         "alias-token:1": 1,
         "commit-sha": 4
+      }
+    },
+    {
+      "path": "validity-audit.md",
+      "status": "included",
+      "profile": "record",
+      "sha256": "15021adb30c473e6f5125ddf8ba454bffa282bec95deb678eda1793dc4c99214",
+      "bytes": 24897,
+      "redactions": {
+        "session-id": 2,
+        "account": 1
+      },
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/validity-audit.md",
+        "role": "threat list and protocol-deviations register referenced by the paper's deviations table"
+      },
+      "review_changes": {
+        "alias-token:1": 6,
+        "commit-sha": 37
       }
     }
   ]

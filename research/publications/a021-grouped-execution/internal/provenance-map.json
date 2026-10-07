@@ -450,6 +450,7 @@
       "5face88": "00056c0",
       "5face886": "00056c00",
       "5face8861": "00056c000",
+      "5face8861768": "00056c00056c",
       "5face886176839da30805c07fa893d2c18f3b5d2": "00056c00056c00056c00056c00056c00056c0005",
       "5fe3fae": "00057c0",
       "6042d64": "00058c0",
@@ -463,6 +464,7 @@
       "67d55bd": "00060c0",
       "68dfa72cb799cf12adc2404776f83f929823597a": "00061c00061c00061c00061c00061c00061c0006",
       "6a5c971": "00062c0",
+      "6b53851": "00063c0",
       "6b538516": "00063c00",
       "6cf6cfb": "00064c0",
       "6d7b300": "00065c0",
@@ -502,7 +504,9 @@
       "8b4ffa39": "00080c00",
       "8b4ffa392e93": "00080c00080c",
       "8b4ffa392e93b19bf39f6672a608954c934cb815": "00080c00080c00080c00080c00080c00080c0008",
+      "8bb8f78": "00081c0",
       "8bb8f78ad": "00081c000",
+      "8bb8f78adbaa": "00081c00081c",
       "8bb8f78adbaa67273ac507d1d14ad475e46fedd3": "00081c00081c00081c00081c00081c00081c0008",
       "8c175d5": "00082c0",
       "8d435cb": "00083c0",
@@ -573,6 +577,7 @@
       "bc5a8d8": "000b6c0",
       "bc5a8d8e99306264c77436d313c5d0caba1d9f32": "000b6c000b6c000b6c000b6c000b6c000b6c000b",
       "be0f4e3": "000b7c0",
+      "bf8baec": "000b8c0",
       "bf8baece": "000b8c00",
       "c040a0c": "000b9c0",
       "c28009f": "000bac0",
@@ -755,6 +760,9 @@
       "analysis/extract_metrics.py": {
         "alias-token:1": 2,
         "commit-sha": 8
+      },
+      "analysis/run_probes.py": {
+        "alias-token:1": 19
       },
       "analysis/verify_metrics.py": {
         "commit-sha": 9
@@ -1667,8 +1675,8 @@
         "alias-token:1": 16
       },
       "data/architecture-findings.json": {
-        "alias-token:1": 45,
-        "commit-sha": 200
+        "alias-token:1": 46,
+        "commit-sha": 214
       },
       "data/metric-conflicts.json": {
         "alias-token:1": 1,
@@ -1676,11 +1684,31 @@
       },
       "data/metrics.csv": {
         "alias-token:1": 5,
-        "commit-sha": 686
+        "commit-sha": 698
       },
       "data/metrics.json": {
         "alias-token:1": 5,
-        "commit-sha": 723
+        "commit-sha": 735
+      },
+      "data/probes/A021-grouped.json": {
+        "alias-phrase:1": 4,
+        "alias-token:1": 36,
+        "commit-sha": 2
+      },
+      "data/probes/A021-independent.json": {
+        "alias-phrase:1": 3,
+        "alias-token:1": 42,
+        "commit-sha": 1
+      },
+      "data/probes/R2-grouped.json": {
+        "alias-phrase:1": 5,
+        "alias-token:1": 36,
+        "commit-sha": 1
+      },
+      "data/probes/R2-independent.json": {
+        "alias-phrase:1": 2,
+        "alias-token:1": 33,
+        "commit-sha": 3
       },
       "data/threats.json": {
         "alias-token:1": 4,
@@ -1776,6 +1804,10 @@
       "r2/metrics-raw/session-metrics-raw.json": {
         "alias-token:1": 1,
         "commit-sha": 4
+      },
+      "validity-audit.md": {
+        "alias-token:1": 6,
+        "commit-sha": 37
       }
     }
   },
@@ -1944,6 +1976,10 @@
       "worktree": "research/publications/a021-grouped-execution/scripts/extract_metrics.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
     },
+    "analysis/run_probes.py": {
+      "worktree": "research/publications/a021-grouped-execution/scripts/run_probes.py",
+      "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+    },
     "analysis/verify_artifact.py": {
       "worktree": "research/publications/a021-grouped-execution/scripts/verify_artifact.py",
       "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
@@ -1972,6 +2008,22 @@
     "data/metrics.json": {
       "worktree": "research/publications/a021-grouped-execution/data/metrics.json",
       "role": "paper metric dataset, JSON form"
+    },
+    "data/probes/A021-grouped.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/probes/A021-grouped.json",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-grouped, produced by analysis/run_probes.py"
+    },
+    "data/probes/A021-independent.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/probes/A021-independent.json",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-independent, produced by analysis/run_probes.py"
+    },
+    "data/probes/R2-grouped.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/probes/R2-grouped.json",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-grouped, produced by analysis/run_probes.py"
+    },
+    "data/probes/R2-independent.json": {
+      "worktree": "research/publications/a021-grouped-execution/data/probes/R2-independent.json",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-independent, produced by analysis/run_probes.py"
     },
     "data/threats.json": {
       "worktree": "research/publications/a021-grouped-execution/data/threats.json",
@@ -2088,6 +2140,10 @@
       "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
       "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/session-metrics-raw.json",
       "role": "R2 grouped-arm raw transcript metrics"
+    },
+    "validity-audit.md": {
+      "worktree": "research/publications/a021-grouped-execution/validity-audit.md",
+      "role": "threat list and protocol-deviations register referenced by the paper's deviations table"
     }
   },
   "redacted_baseline_files": {

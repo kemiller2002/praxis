@@ -49,8 +49,8 @@
       "path": "README.md",
       "status": "included",
       "profile": "authored",
-      "sha256": "b2ecc92b26298ff5ff6d92179a2a3831f8b4a7d1e60999de6b74c340b1dab9a0",
-      "bytes": 8607
+      "sha256": "e30169d346f246dce422f1864b7a9c87f2fa093e0874f5a85a916b26346a1012",
+      "bytes": 8930
     },
     {
       "path": "a021/arm-x.patch",
@@ -464,8 +464,8 @@
       "path": "analysis/build_architecture_table.py",
       "status": "included",
       "profile": "record",
-      "sha256": "8291010fe2ff033298044366147a8316bbb03102a016ca569a6906ffa7b25e24",
-      "bytes": 17681,
+      "sha256": "b4b4b5120038c51128e0881bf85705e41f1e01e41c75aea450bdae3f91ea72c6",
+      "bytes": 17903,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -477,8 +477,8 @@
       "path": "analysis/build_tables.py",
       "status": "included",
       "profile": "record",
-      "sha256": "f7584c96447b8aabc470b0e12c8cd0ed84163de13468e62faaac4770f6304d37",
-      "bytes": 27949,
+      "sha256": "c98d2a3c011cac60ee67e12b93f25eadef40a1033eff6cf453748d82b01dd9d3",
+      "bytes": 32000,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -490,8 +490,8 @@
       "path": "analysis/check_architecture_findings.py",
       "status": "included",
       "profile": "record",
-      "sha256": "cb8ac8568e3687e966fee13319611c377b12dc96b974a6928674007746a0b20d",
-      "bytes": 8444,
+      "sha256": "82462d482155dbe73d3e1a0ab542fb83be4d47552a7c6e241d2a91c8dc13f545",
+      "bytes": 12017,
       "redactions": {},
       "transform": "none",
       "origin": {
@@ -503,12 +503,25 @@
       "path": "analysis/extract_metrics.py",
       "status": "included",
       "profile": "record",
-      "sha256": "62d344adc0762d9c42cc9d6866492443296f242772f8d2d51a310c54d914f444",
-      "bytes": 59312,
+      "sha256": "b211208f20cb22ae86f757b398e5469fb79cbf88d9dfa0453d4ea7e69eea24b1",
+      "bytes": 59541,
       "redactions": {},
       "transform": "none",
       "origin": {
         "worktree": "research/publications/a021-grouped-execution/scripts/extract_metrics.py",
+        "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
+      }
+    },
+    {
+      "path": "analysis/run_probes.py",
+      "status": "included",
+      "profile": "record",
+      "sha256": "d31172854aeca9c0836c995a4f32a6d2aafdd873de541a472db1d2c53be36112",
+      "bytes": 8869,
+      "redactions": {},
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/scripts/run_probes.py",
         "role": "publication scripts (redaction, verification, and any metric extraction scripts present at build time)"
       }
     },
@@ -569,8 +582,8 @@
       "path": "data/architecture-findings.json",
       "status": "included",
       "profile": "record",
-      "sha256": "26621b691b3ca7662e777087204dd48254ea940c4d0440e9efebd35b496db27a",
-      "bytes": 94598,
+      "sha256": "fd37654f8aebfa221ec72d09555db28f72af1e29c7d852a525dcb1cc93c5af80",
+      "bytes": 112174,
       "redactions": {},
       "transform": "json-strip-internal",
       "origin": {
@@ -595,8 +608,8 @@
       "path": "data/metrics.csv",
       "status": "included",
       "profile": "record",
-      "sha256": "4d9ac6f64a5faa67abcc212f2cb67436916d316d05651b055aedc496992009b3",
-      "bytes": 244910,
+      "sha256": "00d425841f2b2b5705cdc96999eb00a492069e25a1ee9060d42b25dcd2f0d6e9",
+      "bytes": 245947,
       "redactions": {},
       "transform": "csv-strip-internal",
       "origin": {
@@ -608,8 +621,8 @@
       "path": "data/metrics.json",
       "status": "included",
       "profile": "record",
-      "sha256": "1d266465048b51c683627c43dcce099615650f2ea695e06f22aaea1d5db9f07d",
-      "bytes": 460069,
+      "sha256": "d2b978600b91bd7a79918c640088d334bd91d2c95699d46086f80a1506cad21c",
+      "bytes": 462414,
       "redactions": {},
       "transform": "json-strip-internal",
       "origin": {
@@ -618,11 +631,63 @@
       }
     },
     {
+      "path": "data/probes/A021-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "40ecebcf9695673747e708b7d10bbea01b3829dc001c7f0661212d268670823c",
+      "bytes": 8927,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-grouped, produced by analysis/run_probes.py"
+      }
+    },
+    {
+      "path": "data/probes/A021-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "2797963d0474b9ee4867814417c40b9c11bcc0f3dea96bd40210cbd49edef303",
+      "bytes": 10497,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/A021-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-independent, produced by analysis/run_probes.py"
+      }
+    },
+    {
+      "path": "data/probes/R2-grouped.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "cd839fcc165de450ef9534bdab2bb0aa6f138e5c01bf4a2338700d3e276b4bac",
+      "bytes": 9840,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-grouped.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-grouped, produced by analysis/run_probes.py"
+      }
+    },
+    {
+      "path": "data/probes/R2-independent.json",
+      "status": "included",
+      "profile": "record",
+      "sha256": "5f15f158ef0318599e3888232429cd2adcc52723ef2dd27c759aee12d5a31f00",
+      "bytes": 9405,
+      "redactions": {},
+      "transform": "json-strip-internal",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/data/probes/R2-independent.json",
+        "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-independent, produced by analysis/run_probes.py"
+      }
+    },
+    {
       "path": "data/threats.json",
       "status": "included",
       "profile": "record",
-      "sha256": "f3c388cadaa80573550a83a2bf9cf3cfe390e462fed49d4914e3b6a5b3e22835",
-      "bytes": 36761,
+      "sha256": "69d61a19c933cf4d08ce146ec0c9d69318573490f7066bea5893120d8c9ca0ff",
+      "bytes": 36900,
       "redactions": {
         "session-id": 3,
         "account": 1
@@ -966,6 +1031,22 @@
         "commit": "0b5284c37482d16bceafac214fa81f93417e2987",
         "path": "research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/session-metrics-raw.json",
         "role": "R2 grouped-arm raw transcript metrics"
+      }
+    },
+    {
+      "path": "validity-audit.md",
+      "status": "included",
+      "profile": "record",
+      "sha256": "e0fddc57a1ea02f46841feed3da2677a9abfaba83ea6ac8a2cc884fa6ca30bb1",
+      "bytes": 24897,
+      "redactions": {
+        "session-id": 2,
+        "account": 1
+      },
+      "transform": "none",
+      "origin": {
+        "worktree": "research/publications/a021-grouped-execution/validity-audit.md",
+        "role": "threat list and protocol-deviations register referenced by the paper's deviations table"
       }
     }
   ]

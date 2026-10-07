@@ -366,10 +366,40 @@
       "role": "paper metric dataset, JSON form"
     },
     {
+      "bundle_path": "data/probes/A021-grouped.json",
+      "path": "research/publications/a021-grouped-execution/data/probes/A021-grouped.json",
+      "transform": "json-strip-internal",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-grouped, produced by analysis/run_probes.py"
+    },
+    {
+      "bundle_path": "data/probes/A021-independent.json",
+      "path": "research/publications/a021-grouped-execution/data/probes/A021-independent.json",
+      "transform": "json-strip-internal",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for A021-independent, produced by analysis/run_probes.py"
+    },
+    {
+      "bundle_path": "data/probes/R2-grouped.json",
+      "path": "research/publications/a021-grouped-execution/data/probes/R2-grouped.json",
+      "transform": "json-strip-internal",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-grouped, produced by analysis/run_probes.py"
+    },
+    {
+      "bundle_path": "data/probes/R2-independent.json",
+      "path": "research/publications/a021-grouped-execution/data/probes/R2-independent.json",
+      "transform": "json-strip-internal",
+      "role": "raw runtime probe outputs (P1-P10, concurrent create) for R2-independent, produced by analysis/run_probes.py"
+    },
+    {
       "bundle_path": "data/threats.json",
       "path": "research/publications/a021-grouped-execution/data/threats.json",
       "transform": "json-strip-internal",
       "role": "threats to validity and protocol deviations"
+    },
+    {
+      "bundle_path": "validity-audit.md",
+      "path": "research/publications/a021-grouped-execution/validity-audit.md",
+      "transform": "none",
+      "role": "threat list and protocol-deviations register referenced by the paper's deviations table"
     }
   ],
   "analysis_glob": {
