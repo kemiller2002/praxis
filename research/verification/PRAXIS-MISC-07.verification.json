@@ -1,0 +1,14 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "rows": [
+    { "member": "PRAXIS-MISC-07", "criterion": "an evidence record on main cites the branch, commits, journals, workflow runs and events, verified with git and the GitHub API, and states what is asserted versus observed", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/evidence/EV-ROS-2026-A073--cross-provider-continuation-completed-through-the-inbox.md", "result": "git ls-remote, git show of journals/events/telemetry on proof/chatgpt-continuation and gh api actions/runs for 36604696840, 36606135380, 36677647667, 36605336068, 36607681292, 36677659037; 'Assurance and limits' section" } },
+    { "member": "PRAXIS-MISC-07", "criterion": "it shows the successor's own identity, the successor execution's parent and the predecessor's interrupted disposition as recorded by Praxis", "status": "met",
+      "evidence": { "kind": "command", "reference": "git show origin/proof/chatgpt-continuation:.ros/events/events.jsonl (work.continued) and .ros/telemetry/executions/EXE-20260929T173543602Z-75ccd1b9.json identity", "result": "actor openai/chatgpt, parentExecutionId EXE-20260929T121754955Z-09207ab8, predecessor disposition interrupted" } },
+    { "member": "PRAXIS-MISC-07", "criterion": "RQ-A023's status table and DF-ROS-2026-A045 cite that evidence", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/requirements/RQ-ROS-2026-A023--remote-requests-without-actions-dispatch.md:95", "result": "Continuation completes: Met, EV-ROS-2026-A073; DF-A045 Verification 'Shown later'; RQ-A022 protocol 1.3 note" } },
+    { "member": "PRAXIS-MISC-07", "criterion": "the proof branch's Praxis state is not hand-copied into main's .ros state", "status": "met",
+      "evidence": { "kind": "command", "reference": "git diff origin/main...misc/work-items -- .ros | grep XPROVIDER", "result": "the only matches are PRAXIS-MISC-07's own title and description; no PRAXIS-XPROVIDER-PROOF-01 work state, event or execution was added" } }
+  ]
+}
