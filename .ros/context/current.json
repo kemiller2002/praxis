@@ -6625,33 +6625,47 @@
     {
       "id": "PRAXIS-FND-04",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-06T20:39:28.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Boundary/AegisBoundary.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AegisBoundaryTests.fs"
+        },
+        {
+          "type": "group-verification",
+          "path": "docs/groups/GROUP-FND-FOUNDATIONS.group-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T01:04:43.000Z",
       "telemetryExecutionIds": [
         "EXE-20261006T203929690Z-5e05ecd4"
       ],
       "latestCheckpoint": {
-        "id": "e652c2643e30c98917a3be0a",
-        "recordedAt": "2026-10-06T20:39:46.000Z",
+        "id": "e7842d63eed39355a8a9e2f7",
+        "recordedAt": "2026-10-07T01:04:39.000Z",
         "executionId": "EXE-20261006T203929690Z-5e05ecd4",
         "repository": "repository-operating-system",
-        "branch": "fnd/work-items",
-        "commit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
+        "branch": "fnd/aegis-boundaries",
+        "commit": "c5132178b9eb1d0a18d994a30696fe353cde8d62",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "fnd/work-items",
-        "remoteCommit": "8e2a3cbd7cc7fe308e1ca35043258b928769bbd9",
-        "summary": "Captured PRAXIS-FND-01..06 and committed the group analyses",
-        "nextAction": "Implement per docs/groups order",
+        "remoteBranch": "fnd/aegis-boundaries",
+        "remoteCommit": "c5132178b9eb1d0a18d994a30696fe353cde8d62",
+        "summary": "Aegis boundary, redaction, web/hub capture, tests; full suite 1479/1479",
+        "nextAction": "Merge PR #187",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-07T01:04:43.000Z"
     },
     {
       "id": "PRAXIS-GROUP-08",
@@ -6761,8 +6775,19 @@
         }
       },
       "completedAt": "2026-10-06T21:49:23.000Z"
-      },
-      {
+    },
+    {
+      "id": "PRAXIS-QUAL-01",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-06T23:56:00.705Z",
+      "telemetryExecutionIds": [
+        "EXE-20261006T235601611Z-b5b6f4e0"
+      ]
+    },
+    {
       "id": "PRAXIS-FND-05",
       "type": "task",
       "state": "active",
@@ -6776,7 +6801,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T00:19:11.000Z",
+  "updatedAt": "2026-10-07T01:04:43.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -1,0 +1,187 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-PRAXIS-PACING-001",
+  "groupExecutionId": null,
+  "repository": "kemiller2002/praxis",
+  "baseCommit": "f242aae664b4601e106b6e33ebce2b95bedfae35",
+  "members": [
+    {
+      "workItemId": "PRAXIS-QUAL-01",
+      "repository": null,
+      "obligation": "Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "WindowStatus has Observed, Missing, Invalid, Stale and Unsupported, each with a stable code in status JSON coverage.",
+        "A window carried from a cached reading (not in the current response) is Stale, never Observed; a window kind the adapter does not support (unknown Claude limit kind, unknown Codex slot) is Unsupported with a diagnostic, never silently dropped.",
+        "Stale and Unsupported expected windows make the reading incomplete (freshness stale), with response-shape drift reported as an explicit diagnostic.",
+        "Hard-limit holds persist creation evidence (observedAt of the triggering reading and the provider snapshot reference) in hold.json schema 3; schema 2 holds migrate with the evidence marked unrecorded, never invented.",
+        "Tests cover each state and the migration."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-02",
+      "repository": null,
+      "obligation": "Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "ProviderId, ModelId and QuotaBucket are typed values at the Application/Domain boundary; QuotaScope matching uses typed model-family identity with no String.Contains substring matching in policy.",
+        "Codex Spark bucket selection and Claude scope mapping are explicit, versioned adapter rules (one table each) with fixtures.",
+        "Unknown models have a declared conservative behaviour: every scoped window applies.",
+        "Adapter id, rule-set version and capabilities are observable in pacing status (text and JSON).",
+        "An architecture/guard test refuses Contains-based model matching in the pacing domain and application."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-03",
+      "repository": null,
+      "obligation": "Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008)",
+      "dependsOn": [
+        "PRAXIS-QUAL-01"
+      ],
+      "acceptanceCriteria": [
+        "The gate emits typed PacingEvent values with stable codes: hold-started, hold-retained, hold-released, hard-limit, provider-unavailable, override-enabled, override-disabled, state-fault.",
+        "Events carry provider, scope, reason kind, reset time and observedAt, never credentials, tokens or raw provider payloads.",
+        "Repeated polling with an unchanged hold emits no duplicate transition events (deduplicated by transition identity).",
+        "Events persist as praxis.pacing-event/1 JSON lines (events.jsonl) and pace.log remains as a human-readable rendering of the same events; readers (docs, status) are migrated.",
+        "Tests cover codes, redaction and deduplication."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-04",
+      "repository": null,
+      "obligation": "Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011)",
+      "dependsOn": [
+        "PRAXIS-QUAL-01",
+        "PRAXIS-QUAL-02"
+      ],
+      "acceptanceCriteria": [
+        "Claude credential decoding is testable without a real Keychain: Keychain unavailable, missing entry, expired credential and malformed credential are explicit errors and the snapshot is unavailable, never fresh.",
+        "The Claude usage query is testable through an injected HTTP handler: a 3xx redirect is refused without following it, 4xx/5xx are explicit errors.",
+        "The provider process protocol is testable with a scripted stand-in: timeout, EOF before reply, error reply and malformed JSON are explicit errors.",
+        "Recorded live hook payload fixtures for Claude Code and Codex (PreToolUse and Stop events) drive the gate end to end and produce the provider's documented deny shape.",
+        "No test uses the live network or a real credential store."
+      ]
+    }
+  ],
+  "order": [
+    {
+      "consumer": "PRAXIS-QUAL-03",
+      "producer": "PRAXIS-QUAL-01",
+      "milestone": "merged"
+    },
+    {
+      "consumer": "PRAXIS-QUAL-04",
+      "producer": "PRAXIS-QUAL-02",
+      "milestone": "merged"
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "WindowStatus / WindowObservation",
+      "location": "src/Praxis.Application/Pacing/Contracts.fs:9",
+      "disposition": "extended",
+      "reason": "the one per-window observation vocabulary; Stale and Unsupported are added as cases so every projection keeps one source"
+    },
+    {
+      "element": "PacingNormalization.coverage",
+      "location": "src/Praxis.Infrastructure/Pacing/Normalization.fs:27",
+      "disposition": "extended",
+      "reason": "already classifies expected keys as Observed/Invalid/Missing; unsupported limit kinds and cache-carried windows are classified here too"
+    },
+    {
+      "element": "PacingAdapters.mergeMissingHard and observe",
+      "location": "src/Praxis.Infrastructure/Pacing/Runtime.fs:12",
+      "disposition": "extended",
+      "reason": "the place windows are carried from the cache; carried windows are marked Stale instead of being merged silently"
+    },
+    {
+      "element": "HoldBasis.HardLimit and PacingStateDocument (schema 2)",
+      "location": "src/Praxis.Domain/Pacing/Model.fs:62",
+      "disposition": "extended",
+      "reason": "hard holds gain creation evidence; the document gains schema 3 with schema-2 migration in the existing parse function"
+    },
+    {
+      "element": "QuotaScope.appliesTo (Contains matching)",
+      "location": "src/Praxis.Domain/Pacing/Model.fs:12",
+      "disposition": "not-reused",
+      "reason": "the substring heuristic is what PRX-QUAL-005 removes; replaced by typed model-family matching"
+    },
+    {
+      "element": "codex Spark bucket selection by substring",
+      "location": "src/Praxis.Infrastructure/Pacing/Runtime.fs:95",
+      "disposition": "not-reused",
+      "reason": "moved into one versioned adapter rule table"
+    },
+    {
+      "element": "PacingEventSink { Write: string -> unit } and writeLog (pace.log)",
+      "location": "src/Praxis.Application/Pacing/Contracts.fs:118",
+      "disposition": "extended",
+      "reason": "the sink becomes typed; writeLog stays as the human rendering of the typed events"
+    },
+    {
+      "element": "PacingProviders.processCapture, queryCodex, queryClaude",
+      "location": "src/Praxis.Infrastructure/Pacing/Providers.fs:13",
+      "disposition": "extended",
+      "reason": "the existing adapters gain injectable seams (process runner, HTTP handler, credential reader) for adversarial tests; no second adapter is written"
+    },
+    {
+      "element": "PacingStatusProjection / PacingStatus.renderJson",
+      "location": "src/Praxis.Application/Pacing/Status.fs:7",
+      "disposition": "extended",
+      "reason": "the one typed status model; adapter id/version/capabilities and new coverage codes project through it"
+    },
+    {
+      "element": "PacingSafetyTests helpers (window, snapshotOf, fakeRuntime)",
+      "location": "tests/Praxis.Tests/PacingSafetyTests.fs:16",
+      "disposition": "reused",
+      "reason": "deterministic runtime and fixtures for the new adversarial cases"
+    },
+    {
+      "element": "Work event log (.ros/events/events.jsonl, FileEventLogRepository)",
+      "location": "src/Praxis.Infrastructure/Work/FileEventLogRepository.fs:1",
+      "disposition": "not-reused",
+      "reason": "it is repository-scoped work-transition history; pacing events are per-user state under the pacing directory and must not write repository state from a hook"
+    },
+    {
+      "element": "Execution telemetry metrics (Domain/Telemetry)",
+      "location": "src/Praxis.Domain/Telemetry/Usage.fs:1",
+      "disposition": "not-reused",
+      "reason": "metric observations of an execution, not state-transition events; pacing transitions are recorded as their own typed event contract"
+    }
+  ],
+  "searches": [
+    {
+      "command": "grep -rn \"Contains(\" src/Praxis.Domain/Pacing src/Praxis.Application/Pacing src/Praxis.Infrastructure/Pacing",
+      "finding": "QuotaScope.appliesTo and the Spark bucket rule are the only substring model matches"
+    },
+    {
+      "command": "grep -rn \"Events.Write\\|writeLog\" src",
+      "finding": "PacingOperations.gate and PacingAdapters.observe are the only writers of pace.log"
+    },
+    {
+      "command": "grep -rn \"WindowStatus\" src tests",
+      "finding": "Contracts.fs, Normalization.fs, Status.fs, Runtime.fs and PacingSafetyTests are the only users"
+    }
+  ],
+  "newAbstractions": [
+    {
+      "name": "ProviderId / ModelId / QuotaBucket typed identities",
+      "consideredExisting": "string Provider fields and QuotaScope.Model name",
+      "whyNotReused": "strings allowed substring heuristics; PRX-QUAL-005 requires typed values at the boundary"
+    },
+    {
+      "name": "PacingEvent (typed telemetry event)",
+      "consideredExisting": "PacingEventSink string writes and the work event log",
+      "whyNotReused": "free text has no stable codes or dedupe identity; the work log is repository state"
+    },
+    {
+      "name": "PacingAdapterRules (versioned mapping table)",
+      "consideredExisting": "inline match in PacingAdapters.observe and normalizeClaudeUsage",
+      "whyNotReused": "inline rules are not observable or versioned; the table is the same rules made explicit"
+    }
+  ],
+  "decisions": [
+    "Pacing events are written next to pace.log in the pacing state directory, not into repository .ros state, because the gate runs from agent hooks across repositories",
+    "Unknown models stay conservative: every scoped window of the provider applies"
+  ]
+}
