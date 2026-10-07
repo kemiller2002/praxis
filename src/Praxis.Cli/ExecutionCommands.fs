@@ -65,29 +65,16 @@ module ExecutionCommands =
             3
         | None -> 0
 
-    /// The governing contract: a contract file, or the operator's flags
-    /// assembled into the same Ordo contract (PRX-BND-001, PRX-SEQ-003).
-    let private contractFrom (root: string) (arguments: string list) =
-        match optionValue "--contract" arguments with
-        | Some path ->
-            match ExecutionContracts.contractFlags |> List.filter (fun flag -> List.contains flag arguments) with
-            | [] -> ExecutionContracts.fromFile root path
-            | flags -> Error $"""--contract supplies the role, boundary, evaluator and human-only transitions; remove {String.Join(", ", flags)}"""
-        | None ->
-            ExecutionContracts.fromFlags (optionValue "--role" arguments) (optionValues "--scope" arguments) (optionValues "--allow" arguments) (optionValues "--evaluator" arguments) (optionValues "--human-only" arguments)
-
     let private start (ports: ExecutionPorts) (requester: Requester) actorKind (arguments: string list) =
-        match optionValue "--work-item" arguments, contractFrom ports.Workspace.Root arguments with
+        match optionValue "--work-item" arguments, ExecutionContracts.resolve ports.Workspace.Root (optionValue "--contract" arguments) arguments (optionValue "--role" arguments) (optionValues "--scope" arguments) (optionValues "--allow" arguments) (optionValues "--evaluator" arguments) (optionValues "--human-only" arguments) with
         | None, _ -> Error(ExecutionFailure.Invalid "--work-item ID is required")
         | _, Error e -> Error(ExecutionFailure.Invalid e)
         | Some workItem, Ok contract ->
-            let role = contract.Role
-
             ExecutionService.start
                 ports
                 requester
                 { WorkItem = workItem
-                  Role = role
+                  Role = contract.Role
                   Baseline = optionValue "--baseline" arguments
                   Worktree = hasFlag "--worktree" arguments
                   WorktreeRoot = optionValue "--worktree-root" arguments
@@ -108,7 +95,7 @@ module ExecutionCommands =
                     envelope.Workspace |> Option.bind _.Branch |> Option.iter (printfn "branch:      %s")
                     envelope.Workspace |> Option.iter (fun w -> printfn "workspace:   %s%s" w.Id (w.Path |> Option.map (fun p -> $" ({p})") |> Option.defaultValue ""))
                     printfn "actor:       %s (%s)" envelope.Actor.Id envelope.Actor.Kind
-                    printfn "role:        %s" (ExecutionRole.toWire role)
+                    printfn "role:        %s" (ExecutionRole.toWire contract.Role)
                     printfn "containment: %s%s" (Containment.toWire envelope.Containment) (if Containment.isSecuritySandbox envelope.Containment then "" else " (not a security sandbox)")
                     envelope.Evaluator |> Option.iter (fun e -> printfn "evaluator:   %s" e.Fingerprint)
 
