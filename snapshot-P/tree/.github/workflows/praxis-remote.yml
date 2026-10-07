@@ -1,0 +1,145 @@
+# Praxis remote execution adapter for GitHub Actions (PRAXIS-REMOTE-06,
+# DF-ROS-2026-A041 section 10, docs/remote-protocol.md).
+#
+# A cloud agent with GitHub access but no .NET or Praxis dispatches this
+# workflow on the branch it targets, with a praxis.remote request. The
+# workflow is a thin host: it bootstraps the Praxis release the repository
+# pins, lets Praxis classify, authorize, bind, and execute the request, and
+# persists exactly the Praxis-owned state Praxis reports. It contains no
+# Praxis domain rules.
+#
+# Trust boundary: only workflow_dispatch (which requires write access to the
+# repository) and workflow_call can start it; no pull_request trigger exists,
+# so forks can neither run it nor obtain its credentials. No secrets are
+# passed to Praxis, which runs its commands in a scrubbed environment.
+name: Praxis remote
+run-name: praxis remote ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request:
+        description: praxis.remote request document (JSON)
+        required: true
+        type: string
+      request_id:
+        description: The request's requestId (used only to name and find this run)
+        required: true
+        type: string
+      persistence:
+        description: push, or pull-request for protected branches
+        required: false
+        default: push
+        type: choice
+        options: [push, pull-request]
+  workflow_call:
+    inputs:
+      request:
+        required: true
+        type: string
+      request_id:
+        required: true
+        type: string
+      persistence:
+        required: false
+        default: push
+        type: string
+
+# Nothing by default; each job states exactly what it needs.
+permissions: {}
+
+jobs:
+  # Read-only: Praxis classifies the request, and executes it here when it
+  # only reads.
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      attestations: read
+    outputs:
+      mutating: ${{ steps.classify.outputs.mutating }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up the pinned Praxis release
+        id: praxis
+        uses: ./.github/actions/praxis-setup
+
+      - name: Classify the request
+        id: classify
+        shell: bash
+        env:
+          PRAXIS: ${{ steps.praxis.outputs.praxis }}
+          PRAXIS_REQUEST: ${{ inputs.request }}
+        run: |
+          printf '%s' "$PRAXIS_REQUEST" > "$RUNNER_TEMP/request.json"
+          if "$PRAXIS" remote classify --request "$RUNNER_TEMP/request.json" > "$RUNNER_TEMP/classification.json"; then
+            python3 -c 'import json,sys; print("mutating=" + str(json.load(open(sys.argv[1]))["mutating"]).lower())' "$RUNNER_TEMP/classification.json" >> "$GITHUB_OUTPUT"
+          else
+            # Not a request Praxis can classify: execute it read-only so the
+            # caller receives Praxis's own structured rejection.
+            echo "mutating=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Execute a read request
+        if: steps.classify.outputs.mutating != 'true'
+        uses: ./.github/actions/praxis-remote
+        with:
+          request: ${{ inputs.request }}
+          grants: read
+
+  # Writes: only for requests Praxis classified as mutating, serialized per
+  # ref. Praxis still binds each request to its expected commit; this group
+  # merely avoids pointless races. Direct push needs contents: write only.
+  write:
+    needs: read
+    if: needs.read.outputs.mutating == 'true' && inputs.persistence != 'pull-request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: praxis-remote-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Execute and persist a mutating request
+        uses: ./.github/actions/praxis-remote
+        with:
+          request: ${{ inputs.request }}
+          grants: read mutate complete reconcile
+          persistence: push
+
+  # Protected branches: the state is proposed as a pull request instead of
+  # pushed, which is the only case that needs pull-requests: write.
+  write-pull-request:
+    needs: read
+    if: needs.read.outputs.mutating == 'true' && inputs.persistence == 'pull-request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: praxis-remote-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      attestations: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Execute a mutating request and propose its state
+        uses: ./.github/actions/praxis-remote
+        with:
+          request: ${{ inputs.request }}
+          grants: read mutate complete reconcile
+          persistence: pull-request

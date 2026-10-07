@@ -1,0 +1,171 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-cont-b-continue-1",
+  "fingerprint": "sha256:07c5d3198a9f1dee06ad79614b12b08f3316aeeb55f385d871330bf1f73c74e7",
+  "protocolVersion": "1.3",
+  "operation": "work.continue",
+  "recordedAt": "2026-09-29T11:43:31.045Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "4138e88912ddab42c47d6d0c30b5edcdc578f985"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "<session redacted>",
+    "execution": null
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-cont-b-continue-1",
+  "operation": "work.continue",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "4138e88912ddab42c47d6d0c30b5edcdc578f985",
+    "observedSha": "4138e88912ddab42c47d6d0c30b5edcdc578f985"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36563476060",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl",
+      ".ros/remote/requests/req-cont-b-continue-1.json",
+      ".ros/telemetry/executions/EXE-20260929T114329995Z-cebed9a0.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "command": "work continue",
+    "schemaVersion": 1,
+    "workItemId": "PRAXIS-REMOTE-12-CONTINUE-PROOF",
+    "status": "continued",
+    "executionId": "EXE-20260929T114329995Z-cebed9a0",
+    "event": "520b13e21079e270bd46a7db",
+    "predecessor": {
+      "executionId": "EXE-20260929T113043360Z-32d06972",
+      "disposition": "interrupted",
+      "steps": [
+        {
+          "stepId": "continue-proof-a",
+          "name": "Agent A starts the work and leaves a durable checkpoint",
+          "status": "completed"
+        }
+      ]
+    },
+    "otherActiveExecutions": [],
+    "continuity": {
+      "workItemId": "PRAXIS-REMOTE-12-CONTINUE-PROOF",
+      "state": "active",
+      "freshness": "current",
+      "checkpoint": {
+        "id": "00815d508da07d99f37731fa",
+        "recordedAt": "2026-09-29T11:33:45.167Z",
+        "executionId": "EXE-20260929T113043360Z-32d06972",
+        "stepId": "continue-proof-a",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "023eeeccb6663bf924deb6f514522c91087e45dc",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "023eeeccb6663bf924deb6f514522c91087e45dc",
+        "summary": "Agent A started the item remotely and completed step continue-proof-a; no repository code was changed",
+        "nextAction": "A successor continues with work.continue, records its own step, and completes the item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        },
+        "status": "verified",
+        "freshness": "current",
+        "currentRecoverability": {
+          "status": "contained-without-meaningful-change",
+          "recoverable": true,
+          "verifiesCheckpoint": true,
+          "remoteHead": "4138e88912ddab42c47d6d0c30b5edcdc578f985",
+          "commitsAfter": 1
+        }
+      },
+      "local": {
+        "position": "only-non-meaningful-commits-after",
+        "commitsAfter": 1
+      },
+      "workingTree": {
+        "state": "clean",
+        "meaningfulPaths": [],
+        "excludedBaselinePaths": []
+      },
+      "warnings": [],
+      "recovery": [
+        {
+          "kind": "note",
+          "text": "this checkout already holds checkpoint 023eeeccb666 of branch main"
+        },
+        {
+          "kind": "verify",
+          "command": "git merge-base --is-ancestor 023eeeccb6663bf924deb6f514522c91087e45dc HEAD",
+          "text": "HEAD contains checkpoint 023eeeccb666"
+        }
+      ],
+      "telemetry": {
+        "executions": [
+          {
+            "executionId": "EXE-20260929T113043360Z-32d06972",
+            "status": "active",
+            "startedAt": "2026-09-29T11:30:43.360Z",
+            "segmentation": "step-level-adopted",
+            "stepTrackingStartedAt": "2026-09-29T11:32:04.823Z",
+            "executionScopedBefore": {
+              "from": "2026-09-29T11:30:43.360Z",
+              "until": "2026-09-29T11:32:04.823Z"
+            },
+            "historicalStepAttribution": "unavailable",
+            "measurements": {
+              "executionScopedBeforeSteps": 1,
+              "executionScopedOutsideSteps": 0,
+              "stepScoped": 1
+            }
+          },
+          {
+            "executionId": "EXE-20260929T114329995Z-cebed9a0",
+            "status": "active",
+            "startedAt": "2026-09-29T11:43:29.995Z",
+            "segmentation": "execution-level",
+            "stepTrackingStartedAt": null,
+            "executionScopedBefore": null,
+            "historicalStepAttribution": "unavailable",
+            "measurements": {
+              "executionScopedBeforeSteps": 1,
+              "executionScopedOutsideSteps": 0,
+              "stepScoped": 0
+            }
+          }
+        ]
+      }
+    },
+    "obligations": {
+      "requiredEvidenceForCompletion": [],
+      "validationEvidence": []
+    }
+  }
+}
+
+}

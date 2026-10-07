@@ -1,0 +1,60 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-cont-a-step-start-1",
+  "fingerprint": "sha256:bf5c9f8ec35581a4c6ff81e1783a80b31a419e9b2d792074c8cc99ea48b9900c",
+  "protocolVersion": "1.3",
+  "operation": "step.start",
+  "recordedAt": "2026-09-29T11:32:07.733Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "<session redacted>",
+    "execution": "EXE-20260929T113043360Z-32d06972"
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-cont-a-step-start-1",
+  "operation": "step.start",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f",
+    "observedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36562293832",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/remote/requests/req-cont-a-step-start-1.json",
+      ".ros/telemetry/executions/EXE-20260929T113043360Z-32d06972.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "executionId": "EXE-20260929T113043360Z-32d06972",
+    "stepId": "continue-proof-a",
+    "event": "step.started",
+    "recorded": true
+  }
+}
+
+}

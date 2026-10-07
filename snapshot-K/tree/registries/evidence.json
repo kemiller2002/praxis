@@ -1,0 +1,1434 @@
+[
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "repository-observation",
+    "id": "EV-FE-2026-B003",
+    "path": "research/evidence/EV-FE-2026-B003--framework-engineering-current-maturity.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "framework-engineering-research-program",
+    "source_date": "2026-07-28",
+    "source_title": "Framework Engineering repository and 2026-07-23 evaluation",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-EVAL-2026-07-23/",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "HY-FE-2026-B006",
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "maturity",
+      "repository-observation"
+    ],
+    "title": "Framework Engineering current repository maturity"
+  },
+  {
+    "confidence": "medium",
+    "contradicts": [
+      "HY-FE-2026-B006"
+    ],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "comparative-synthesis",
+    "id": "EV-FE-2026-B004",
+    "path": "research/evidence/EV-FE-2026-B004--adjacent-fields-functional-coverage.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "openai-codex",
+    "source_date": "2026-07-28",
+    "source_title": "Framework Engineering Boundary Source Registry and Comparison Matrix",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-BOUNDARY-2026-07-28/",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "boundary",
+      "subsumption",
+      "comparative-study"
+    ],
+    "title": "Adjacent fields substantially cover current Framework Engineering mechanisms"
+  },
+  {
+    "confidence": "medium",
+    "contradicts": [],
+    "created_by_agent": "openai-codex",
+    "evidence_type": "comparative-institutional-observation",
+    "id": "EV-FE-2026-B005",
+    "path": "research/evidence/EV-FE-2026-B005--framework-engineering-institutional-maturity-gap.md",
+    "related_theories": [],
+    "research_area": "framework-engineering-boundary",
+    "retrieved": "2026-07-28",
+    "source_author": "openai-codex",
+    "source_date": "2026-07-28",
+    "source_title": "Engineering accreditation, bodies of knowledge, competency, and ethics comparison",
+    "source_uri": "../Framework-engineering/research/evaluations/FE-BOUNDARY-2026-07-28/comparison-matrix.md",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-FE-2026-B008"
+    ],
+    "tags": [
+      "framework-engineering",
+      "discipline",
+      "maturity",
+      "profession"
+    ],
+    "title": "Framework Engineering lacks established-discipline institutional maturity"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created_by_agent": "codex",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A003",
+    "path": "research/evidence/EV-ROS-2026-A003--validator-completion-test.md",
+    "related_theories": [],
+    "research_area": "ros-executable-contract",
+    "retrieved": "2026-07-24",
+    "source_author": "codex",
+    "source_date": "2026-07-24",
+    "source_title": "Local unittest and CLI execution",
+    "source_uri": "tests/test_ros_cli.py",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-ROS-2026-A005"
+    ],
+    "tags": [
+      "validation",
+      "registry",
+      "cli"
+    ],
+    "title": "Validator completion test results"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A011",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A011--execution-telemetry-architecture-and-provider-survey.md",
+    "related_documents": [
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A010"
+    ],
+    "tags": [
+      "telemetry",
+      "provider-survey",
+      "repository-archaeology",
+      "data-quality"
+    ],
+    "title": "ROS execution-telemetry architecture and provider capability survey",
+    "updated": "2026-09-05",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-05",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A014",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A014--iterative-telemetry-architecture-challenge.md",
+    "related_documents": [
+      "docs/development-telemetry.md",
+      "tools/ros_persistence.mjs",
+      "tools/ros_telemetry.mjs",
+      "tests/telemetry.test.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A010"
+    ],
+    "tags": [
+      "telemetry",
+      "adversarial-review",
+      "concurrency",
+      "persistence",
+      "provenance",
+      "storage"
+    ],
+    "title": "Iterative telemetry architecture challenge and reliability revisions",
+    "updated": "2026-09-05",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A015",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A015--operational-architecture-inventory-baseline.md",
+    "related_documents": [
+      "JR-ROS-2026-A016",
+      "tools/ros_cli.mjs",
+      "tools/ros_telemetry.mjs",
+      "lib/bootstrap.mjs",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RP-ROS-2026-A017"
+    ],
+    "tags": [
+      "architecture",
+      "inventory",
+      "scripts",
+      "fsharp",
+      "migration",
+      "baseline"
+    ],
+    "title": "ROS operational architecture inventory and migration baseline",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-07",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A018",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A018--fsharp-migration-execution-inventory.md",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "RP-ROS-2026-A017",
+      "JR-ROS-2026-A019",
+      "DF-ROS-2026-A027"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "EX-ROS-2026-A020"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "inventory",
+      "execution",
+      "baseline",
+      "sde"
+    ],
+    "title": "ROS F# migration execution inventory at immutable baseline",
+    "updated": "2026-09-08",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A028",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A028--fsharp-artifact-shadow-results.md",
+    "related_documents": [
+      "EV-ROS-2026-A018",
+      "JR-ROS-2026-A019",
+      "RP-ROS-2026-A029",
+      "DF-ROS-2026-A027"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "EX-ROS-2026-A020",
+      "HY-ROS-2026-A021",
+      "HY-ROS-2026-A022",
+      "HY-ROS-2026-A023"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "artifacts",
+      "differential-testing",
+      "verification",
+      "sde"
+    ],
+    "title": "F# artifact shadow migration implementation and verification results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A030",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A030--artifact-registry-persistence-shadow-results.md",
+    "related_documents": [
+      "EV-ROS-2026-A028",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "persistence",
+      "recovery",
+      "transaction",
+      "lock",
+      "migration"
+    ],
+    "title": "Artifact registry cross-runtime lease and recovery results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A031",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A031--typed-git-provenance-shadow-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A030"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "git",
+      "provenance",
+      "boundary",
+      "differential-testing",
+      "migration"
+    ],
+    "title": "Typed Git provenance shadow results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A032",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A032--typed-live-work-decision-shadow-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A031"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work-lifecycle",
+      "state-machine",
+      "evidence",
+      "differential-testing",
+      "migration"
+    ],
+    "title": "Typed live-work decision shadow results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A033",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A033--work-state-recovery-shadow-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A032"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work-lifecycle",
+      "persistence",
+      "recovery",
+      "concurrency",
+      "migration"
+    ],
+    "title": "Work-state recovery shadow results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A034",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A034--production-work-state-recovery-integration.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A033"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "node",
+      "work-lifecycle",
+      "persistence",
+      "recovery",
+      "differential-testing",
+      "migration"
+    ],
+    "title": "Production work-state recovery integration results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A035",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A035--backlog-state-recovery-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A034"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "node",
+      "backlog",
+      "persistence",
+      "recovery",
+      "concurrency",
+      "migration"
+    ],
+    "title": "Backlog state recovery and concurrency results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A036",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A036--telemetry-link-recovery-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A035"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "node",
+      "telemetry",
+      "persistence",
+      "recovery",
+      "idempotency",
+      "migration"
+    ],
+    "title": "Telemetry execution-link recovery results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A037--production-git-consumer-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A031"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "node",
+      "git",
+      "provenance",
+      "telemetry",
+      "work",
+      "migration"
+    ],
+    "title": "Production Git consumer consolidation results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A038",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A038--work-orchestration-plan-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A032",
+      "EV-ROS-2026-A033",
+      "EV-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "orchestration",
+      "state",
+      "telemetry",
+      "differential-testing"
+    ],
+    "title": "F# work orchestration plan results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A039",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A039--typed-work-evidence-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A038"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "evidence",
+      "filesystem",
+      "boundary",
+      "differential-testing"
+    ],
+    "title": "Typed work evidence observation results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-08",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A040",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A040--typed-work-context-plan-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A039"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "context",
+      "planning",
+      "state",
+      "differential-testing"
+    ],
+    "title": "Typed multi-item work context planning results",
+    "updated": "2026-09-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A041",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A041--typed-backlog-promotion-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A008",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A040"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "backlog",
+      "promotion",
+      "state",
+      "differential-testing"
+    ],
+    "title": "Typed backlog transition and promotion results",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A042",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A042--verified-work-context-results.md",
+    "related_documents": [
+      "DF-ROS-2026-A006",
+      "DF-ROS-2026-A027",
+      "JR-ROS-2026-A019",
+      "EV-ROS-2026-A040",
+      "EV-ROS-2026-A041"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "work",
+      "context",
+      "evidence",
+      "orchestration"
+    ],
+    "title": "Verified work context composition results",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A043",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A043--fsharp-node-command-parity-inventory.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A018",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "superseded",
+    "superseded_by": [
+      "EV-ROS-2026-A045"
+    ],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "parity",
+      "cli",
+      "distribution",
+      "sde"
+    ],
+    "title": "F# shadow CLI versus production ./ros command-surface parity inventory",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-09",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A044",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A044--telemetry-domain-model-inventory.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "research/journals/JR-ROS-2026-A019--fsharp-application-migration.md",
+      "docs/migrations/fsharp/ROADMAP.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "telemetry",
+      "mig-08",
+      "scope",
+      "sde"
+    ],
+    "title": "ROS telemetry domain model inventory and MIG-08 scope correction",
+    "updated": "2026-09-09",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A045",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A045--fsharp-node-command-parity-inventory-rerun.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A043",
+      "EV-ROS-2026-A044",
+      "EV-ROS-2026-A046",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "docs/migrations/fsharp/TRACEABILITY.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "superseded",
+    "superseded_by": [
+      "EV-ROS-2026-A046"
+    ],
+    "supersedes": [
+      "EV-ROS-2026-A043"
+    ],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "parity",
+      "cli",
+      "distribution",
+      "sde"
+    ],
+    "title": "F# shadow CLI versus production ./ros command-surface parity inventory (re-run)",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A046",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A046--fsharp-node-command-parity-inventory-rerun-2.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A043",
+      "EV-ROS-2026-A044",
+      "EV-ROS-2026-A045",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "docs/migrations/fsharp/TRACEABILITY.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "superseded",
+    "superseded_by": [
+      "EV-ROS-2026-A047"
+    ],
+    "supersedes": [
+      "EV-ROS-2026-A045"
+    ],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "parity",
+      "cli",
+      "distribution",
+      "sde"
+    ],
+    "title": "F# shadow CLI versus production ./ros command-surface parity inventory (second re-run)",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A047",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A047--fsharp-node-command-parity-inventory-closure.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A043",
+      "EV-ROS-2026-A045",
+      "EV-ROS-2026-A046",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/ROADMAP.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "docs/migrations/fsharp/TRACEABILITY.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "EV-ROS-2026-A046"
+    ],
+    "supports": [
+      "DF-ROS-2026-A028"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "parity",
+      "cli",
+      "distribution",
+      "sde"
+    ],
+    "title": "F# shadow CLI versus production ./ros command-surface parity inventory (closure)",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-10",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A048",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A048--fsharp-npm-distribution-shape-evidence.md",
+    "related_documents": [
+      "DF-ROS-2026-A027",
+      "EV-ROS-2026-A047",
+      "docs/migrations/fsharp/ARCHITECTURE.md",
+      "docs/migrations/fsharp/STATUS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "DF-ROS-2026-A028",
+      "DF-ROS-2026-A029"
+    ],
+    "tags": [
+      "fsharp",
+      "migration",
+      "distribution",
+      "npm",
+      "sde"
+    ],
+    "title": "Consumer distribution evidence for the F# CLI (DF-ROS-2026-A028 Phase B)",
+    "updated": "2026-09-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A049",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A049--ci-empty-output-failures-root-caused-to-actions-billing.md",
+    "related_documents": [
+      "DF-ROS-2026-A033",
+      ".github/workflows/ros-validation.yml",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "infrastructure",
+      "github-actions",
+      "billing",
+      "sde"
+    ],
+    "title": "The session-long \"empty-output\" CI failure pattern is GitHub Actions billing, not repository or workflow defect",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A050",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A050--2-0-0-was-never-actually-published.md",
+    "related_documents": [
+      "EV-ROS-2026-A049",
+      ".github/workflows/publish.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ci",
+      "release",
+      "npm",
+      "publish",
+      "sde"
+    ],
+    "title": "2.0.0 was never actually published to npm or released on GitHub; publish.yml's version-changed detection cannot retry it",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A051",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A051--ros-fs-launcher-unhandled-404-for-main-snapshot-versions.md",
+    "related_documents": [
+      "PACKAGE-USAGE.md",
+      "lib/ros-fs-launcher.mjs",
+      "starter/greenfield/tools/ros_fs_launcher.mjs",
+      "lib/bootstrap.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "ros-fs",
+      "bootstrap",
+      "launcher",
+      "npm",
+      "bug",
+      "sde"
+    ],
+    "title": "The ros-fs launcher gave a raw 404 instead of a clear error for a main-branch snapshot rosVersion; fixed with a fail-fast version check",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-11",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A052",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A052--queue-json-status-never-tracked-live-completion.md",
+    "related_documents": [
+      "src/Ros.Domain/Work/QueuePresentation.fs",
+      "src/Ros.Infrastructure/Work/FileBacklogQueueRepository.fs",
+      "src/Ros.Cli/Program.fs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [],
+    "tags": [
+      "work-protocol",
+      "backlog",
+      "sde",
+      "bug"
+    ],
+    "title": "queue.json's own status field never tracked a promoted item's completion, relying on an unrelated later backlog write to self-heal in queue.md",
+    "updated": "2026-09-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A053",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A053--remote-execution-requirements-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T073932249Z-d48161b9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T07:44:27.575Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Reconciliation of issue #90 PRX-REMOTE-001..044 against the implementation (work item GH-90)"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "https://github.com/kemiller2002/praxis/issues/80",
+      "RQ-ROS-2026-A020",
+      "DF-ROS-2026-A007",
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A040",
+      "docs/work-adapter-contract.md",
+      "docs/agent-provenance.md",
+      "docs/development-telemetry.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "reconciliation",
+      "requirements",
+      "gh-90",
+      "security",
+      "provenance",
+      "telemetry"
+    ],
+    "title": "Issue #90 (PRX-REMOTE-001..044) reconciled against the current Praxis implementation",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A054",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A054--live-remote-execution-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T054321231Z-0f9f1e9a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T05:44:04.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live end-to-end proof of remote Praxis execution (PRAXIS-REMOTE-11, PRX-REMOTE-042), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A021",
+      "EV-ROS-2026-A053",
+      "DF-ROS-2026-A041",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md",
+      "docs/remote-execution-operations.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "provenance",
+      "telemetry",
+      "idempotency",
+      "gh-90"
+    ],
+    "title": "Live end-to-end proof: cloud agents with only GitHub access governed through remote Praxis 3.5.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A055",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A055--durable-checkpoint-recovery-verification.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T075409917Z-4a1d9b5a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T08:02:39.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Verification and two-clone recovery evidence for durable checkpoints (PRAXIS-CONT-10-HARDEN)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "DF-ROS-2026-A042",
+      "tests/Ros.Tests/RecoveryProofTests.fs",
+      "tests/remote-checkpoint.test.mjs"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "checkpoints",
+      "recovery",
+      "verification"
+    ],
+    "title": "Durable checkpoints and agent continuity: two-clone agent-loss recovery and verification results",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A056",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A056--live-remote-continuation-proof.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T120718709Z-8c483346": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T12:08:01.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/90"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Live proof of praxis.remote 1.3 executor continuation (PRAXIS-REMOTE-12-CONTINUE-PROOF), verified against main and the GitHub Actions API"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/90",
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A041",
+      "EV-ROS-2026-A054",
+      "docs/remote-agent-contract.md",
+      "docs/remote-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A021"
+    ],
+    "tags": [
+      "remote-execution",
+      "e2e",
+      "continuity",
+      "checkpoint",
+      "provenance",
+      "telemetry",
+      "gh-90"
+    ],
+    "title": "Live proof: a runtime-less successor continues active work with praxis.remote 1.3 work.continue on Praxis 3.6.0",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "derived_from": [
+      "RQ-ROS-2026-A022"
+    ],
+    "evidence_type": "secondary",
+    "id": "EV-ROS-2026-A057",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A057--openai-successor-attempt-could-not-invoke-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T162324008Z-39bbe593": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:23:37.680Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A023"
+    ],
+    "tags": [
+      "continuity",
+      "cross-provider",
+      "remote-execution",
+      "openai"
+    ],
+    "title": "Cross-provider continuation attempt 1: an OpenAI successor reconstructed the [record] from repository state but could not invoke Praxis",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A046",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A046"
+    ],
+    "tags": [
+      "planning",
+      "telemetry",
+      "shadow-experiment",
+      "replay"
+    ],
+    "title": "Advisory planner shadow experiment 1: Praxis's own nonterminal work and a no-hindsight replay of 155 executions",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A059",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:11.207Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:15.195Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A047",
+      "HY-ROS-2026-A027"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "shadow-experiment",
+      "baseline"
+    ],
+    "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  }
+]

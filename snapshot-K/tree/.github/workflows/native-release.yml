@@ -1,0 +1,419 @@
+name: Native Praxis release
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/native-release.yml"
+      - "scripts/**"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
+      - "src/**"
+      - "starter/**"
+      - "templates/**"
+      - "tests/**"
+      - "package.json"
+      - "package-lock.json"
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - ".github/workflows/native-release.yml"
+      - "scripts/**"
+      - "bin/praxis-native.sh"
+      - "bin/praxis-native.cmd"
+      - "bin/echelon.sh"
+      - "bin/echelon.ps1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  # Build-provenance attestations for the published native assets
+  # (PRAXIS-REMOTE-05): consumers such as scripts/praxis-bootstrap.sh verify
+  # them with `gh attestation verify`.
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: praxis-native-release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.package.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Test and validate
+        run: |
+          npm run test:all
+          ./ros registry check
+          ./ros validate
+
+      - name: Build package payload
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          rm -rf dist/native dist/native-stage dist/native-package
+          mkdir -p dist/native dist/native-stage dist/native-package
+          npm pack --ignore-scripts --json > /tmp/praxis-pack.json
+          TARBALL="$(node -e "const x=require('/tmp/praxis-pack.json'); process.stdout.write(x[0].filename)")"
+          tar -xzf "$TARBALL" -C dist/native-package
+
+      - name: Build self-contained Praxis binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish_one() {
+            rid="$1"
+            out="dist/publish/${rid}"
+            rm -rf "$out"
+            dotnet publish src/Ros.Cli/Ros.Cli.fsproj               -c Release -r "$rid" --self-contained true               -p:PublishSingleFile=true               -p:IncludeNativeLibrariesForSelfExtract=true               -o "$out"
+          }
+
+          publish_one linux-x64
+          publish_one linux-musl-x64
+          publish_one linux-arm64
+          publish_one osx-x64
+          publish_one osx-arm64
+          publish_one win-x64
+
+      # The .NET global tool (DF-ROS-2026-A044). Packed and exercised on every
+      # run, including pull requests, so a packaging regression is caught
+      # before release; pushed to NuGet below only for a new version.
+      - name: Pack and smoke test the .NET global tool
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist/nuget
+          dotnet pack src/Ros.Cli/Ros.Cli.fsproj -c Release -o dist/nuget
+          ls dist/nuget
+          tool_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$tool_root" "$project_root"' EXIT
+          dotnet tool install EchelonFoundry.Praxis --version "$VERSION" \
+            --add-source dist/nuget --tool-path "$tool_root"
+          [ "$("$tool_root/praxis" --version)" = "ros-fs ${VERSION}" ]
+          (
+            cd "$project_root"
+            git init -q
+            "$tool_root/praxis" init
+            "$tool_root/praxis" verify
+          )
+
+      - name: Assemble native bundles
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          make_posix_bundle() {
+            rid="$1"
+            name="praxis-${rid}"
+            root="dist/native-stage/${name}"
+            mkdir -p "$root"
+            cp -R dist/native-package/package "$root/package"
+            cp "dist/publish/${rid}/ros-fs" "$root/praxis-bin"
+            cp bin/praxis-native.sh "$root/praxis"
+            cp bin/echelon.sh "$root/echelon"
+            chmod +x "$root/praxis-bin" "$root/praxis" "$root/echelon"
+            printf '%s\n' "${VERSION}" > "$root/VERSION"
+            tar -czf "dist/native/${name}.tar.gz" -C dist/native-stage "$name"
+          }
+
+          make_posix_bundle linux-x64
+          make_posix_bundle linux-musl-x64
+          make_posix_bundle linux-arm64
+          make_posix_bundle osx-x64
+          make_posix_bundle osx-arm64
+
+          root="dist/native-stage/praxis-win-x64"
+          mkdir -p "$root"
+          cp -R dist/native-package/package "$root/package"
+          cp dist/publish/win-x64/ros-fs.exe "$root/praxis-bin.exe"
+          cp bin/praxis-native.cmd "$root/praxis.cmd"
+          cp bin/echelon.ps1 "$root/echelon.ps1"
+          printf '%s\n' "${VERSION}" > "$root/VERSION"
+          (cd dist/native-stage && zip -qr "../native/praxis-win-x64.zip" praxis-win-x64)
+
+          (cd dist/native && sha256sum praxis-* > native-checksums.txt)
+          cat dist/native/native-checksums.txt
+
+      # Machine-readable release metadata (Echelon Registry
+      # schemas/release-manifest.schema.json, echelon.release/v1) so installers
+      # such as Conditor and inventories such as Project Administration can
+      # resolve this release without scraping. Canonical executable: praxis.
+      - name: Generate release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          {
+            printf '{\n  "schema": "echelon.release/v1",\n  "systemId": "praxis",\n  "version": "%s",\n' "$VERSION"
+            printf '  "repository": "%s",\n  "tag": "v%s",\n  "commit": "%s",\n' "$GITHUB_REPOSITORY" "$VERSION" "$GITHUB_SHA"
+            printf '  "executable": "praxis",\n  "compatibilityAliases": ["ros"],\n'
+            printf '  "provides": [ { "id": "agent.identity", "contractVersion": 1 }, { "id": "engineering.metrics", "contractVersion": 1 } ],\n'
+            printf '  "distributions": [ { "channel": "github-release", "package": null, "url": "https://github.com/%s/releases/tag/v%s" } ],\n' "$GITHUB_REPOSITORY" "$VERSION"
+            printf '  "artifacts": [\n'
+            first=1
+            while read -r sha name; do
+              rid="${name#praxis-}"; rid="${rid%.tar.gz}"; rid="${rid%.zip}"
+              [[ $first -eq 1 ]] || printf ',\n'
+              first=0
+              printf '    { "name": "%s", "platform": "%s", "sha256": "%s" }' "$name" "$rid" "$sha"
+            done < dist/native/native-checksums.txt
+            printf '\n  ]\n}\n'
+          } > dist/native/echelon-release.json
+          python3 -m json.tool dist/native/echelon-release.json
+
+      - name: Smoke test native installer and installed Praxis
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          install_root="$(mktemp -d)"
+          project_root="$(mktemp -d)"
+          trap 'rm -rf "$install_root" "$project_root"' EXIT
+
+          ECHELON_RELEASE_BASE_URL="file://$PWD/dist/native"             sh scripts/install-native.sh --version "$VERSION" --install-base "$install_root"
+
+          "$install_root/bin/praxis" --version
+          "$install_root/bin/ros" --version
+          "$install_root/bin/echelon" --help
+          (
+            cd "$project_root"
+            "$install_root/bin/praxis" init
+            "$install_root/bin/praxis" verify
+          )
+          sh -n scripts/install-native.sh
+          sh -n bin/praxis-native.sh
+          sh -n bin/echelon.sh
+
+      # A published version's assets are immutable (PRAXIS-REMOTE-05,
+      # EV-ROS-2026-A053 S2): consumers pin a version and verify its digest,
+      # so the same version must never change underneath them. This workflow
+      # also runs for pushes that do not bump the version; those publish
+      # nothing rather than replacing an existing release's assets.
+      - name: Decide whether this version still needs publishing
+        id: release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing="$(mktemp -d)"
+          if gh release download "v${VERSION}" --pattern native-checksums.txt --dir "$existing" >/dev/null 2>&1; then
+            if cmp -s "$existing/native-checksums.txt" dist/native/native-checksums.txt; then
+              echo "v${VERSION} already publishes these exact native assets."
+            else
+              echo "::warning::v${VERSION} already publishes different native assets. Released versions are immutable; bump the version to publish a new build. Nothing was uploaded."
+            fi
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Attest build provenance
+        if: github.event_name != 'pull_request' && steps.release.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: |
+            dist/native/praxis-*
+            dist/native/native-checksums.txt
+            dist/native/echelon-release.json
+
+      - name: Publish GitHub release assets
+        if: github.event_name != 'pull_request' && steps.release.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(dist/native/praxis-* dist/native/native-checksums.txt dist/native/echelon-release.json)
+
+          # Uploads never overwrite: an asset that already exists is never replaced.
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            gh release upload "v${VERSION}" "${assets[@]}"
+          else
+            gh release create "v${VERSION}" "${assets[@]}" \
+              --target "${GITHUB_SHA}" \
+              --title "Praxis v${VERSION}" \
+              --notes "Native Praxis/ROS bundles plus the Echelon bootstrap command. No Node.js or .NET runtime is required on the consuming machine. Assets carry GitHub build-provenance attestations. With .NET 10 installed, the same version is also available as a global tool: dotnet tool install -g EchelonFoundry.Praxis."
+          fi
+
+      # NuGet trusted publishing: NuGet/login exchanges this run's OIDC token
+      # for a short-lived API key, so no long-lived key is stored. It needs a
+      # trusted-publishing policy for this repository and workflow on
+      # nuget.org, the account name in vars.NUGET_USER, and
+      # vars.NUGET_PUBLISH_ENABLED set to 'true'.
+      - name: Check whether this version is already on NuGet
+        id: nuget
+        if: github.event_name != 'pull_request' && vars.NUGET_PUBLISH_ENABLED == 'true'
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if curl -fsS https://api.nuget.org/v3-flatcontainer/echelonfoundry.praxis/index.json 2>/dev/null \
+              | node -e 'const v=JSON.parse(require("fs").readFileSync(0,"utf8")).versions; process.exit(v.includes(process.argv[1]) ? 0 : 1)' "$VERSION"; then
+            echo "EchelonFoundry.Praxis ${VERSION} is already on NuGet."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to NuGet
+        id: nuget-login
+        if: steps.nuget.outputs.publish == 'true'
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish the .NET global tool to NuGet
+        if: steps.nuget.outputs.publish == 'true'
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet nuget push dist/nuget/EchelonFoundry.Praxis.*.nupkg \
+            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  # The `ros-fs-<rid>` binaries scaffolded projects' ./ros downloads
+  # (formerly built by the retired npm publish workflow).
+  ros-fs-assets:
+    needs: release
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/ros-fs-assets.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+
+
+  windows-powershell-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse installer scripts with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $files = @("scripts/install-native.ps1", "scripts/install-toolchain.ps1", "bin/echelon.ps1")
+          foreach ($file in $files) {
+            [scriptblock]::Create((Get-Content -Raw $file)) | Out-Null
+            Write-Host "parsed $file"
+          }
+
+      - name: Exercise Echelon Doctor with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $doctor = (Resolve-Path "bin/echelon.ps1").Path
+          $root = Join-Path $env:RUNNER_TEMP "echelon-doctor-smoke"
+          $echelonHome = Join-Path $root "home"
+          $bin = Join-Path $echelonHome "bin"
+          $tools = Join-Path $echelonHome "tools"
+          $project = Join-Path $root "project"
+
+          Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $bin, $project | Out-Null
+
+          foreach ($tool in @(@("ordo", "1.4.0"), @("praxis", "3.4.0"))) {
+            $name = $tool[0]
+            $version = $tool[1]
+            $toolRoot = Join-Path $tools $name
+            $versionRoot = Join-Path $toolRoot $version
+            New-Item -ItemType Directory -Force -Path $versionRoot | Out-Null
+            Set-Content -Encoding Ascii -Path (Join-Path $versionRoot "VERSION") -Value $version
+            Set-Content -Encoding Ascii -Path (Join-Path $toolRoot "current-version") -Value $version
+          }
+
+          foreach ($command in @(@("ordo", "1.4.0"), @("sde", "1.4.0"), @("praxis", "3.4.0"), @("ros", "3.4.0"))) {
+            $name = $command[0]
+            $version = $command[1]
+            $reported = if ($name -eq "praxis" -or $name -eq "ros") { "ros-fs $version" } else { $version }
+            $cmd = Join-Path $bin ($name + ".cmd")
+            "@echo off`r`necho $reported`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii $cmd
+          }
+          "@echo off`r`nexit /b 0`r`n" | Set-Content -Encoding Ascii (Join-Path $bin "echelon.cmd")
+
+          New-Item -ItemType Directory -Force -Path (Join-Path $project ".echelon") | Out-Null
+          '{"schemaVersion":1,"ordo":"1.4.0","praxis":"3.4.0"}' |
+            Set-Content -Encoding Ascii (Join-Path $project ".echelon\toolchain.json")
+          '{"schemaVersion":1,"tool":"visual-engineering","installedVersion":"1.0.0"}' |
+            Set-Content -Encoding Ascii (Join-Path $project ".echelon\visual-engineering.json")
+          '{"schemaVersion":1,"tool":"limen","installedVersion":"0.6.2"}' |
+            Set-Content -Encoding Ascii (Join-Path $project ".echelon\limen.json")
+
+          $npmLimen = Join-Path $project "node_modules\@echelon-foundry\typescript-wasm-kernel"
+          New-Item -ItemType Directory -Force -Path $npmLimen | Out-Null
+          '{"name":"@echelon-foundry/typescript-wasm-kernel","version":"0.6.2"}' |
+            Set-Content -Encoding Ascii (Join-Path $npmLimen "package.json")
+
+          git -C $project init -q
+
+          $env:ECHELON_HOME = $echelonHome
+          $env:PATH = $bin + ";" + $env:PATH
+          $env:ECHELON_ORDO_LATEST_VERSION = "1.5.0"
+          $env:ECHELON_PRAXIS_LATEST_VERSION = "3.4.0"
+          Push-Location $project
+          try {
+            & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor
+            if ($LASTEXITCODE -ne 0) {
+              throw "Echelon Doctor smoke test failed with exit code $LASTEXITCODE."
+            }
+
+            $doctorJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor doctor --json --updates
+            if ($LASTEXITCODE -ne 0) {
+              throw "Echelon Doctor JSON smoke test failed with exit code $LASTEXITCODE."
+            }
+            $doctorReport = $doctorJson | ConvertFrom-Json
+            if ($doctorReport.schemaVersion -ne 1 -or $doctorReport.health -ne "healthy") {
+              throw "Unexpected Doctor JSON health contract."
+            }
+            if ($doctorReport.repository.components.tool -notcontains "visual-engineering") {
+              throw "Doctor JSON did not discover Visual Engineering."
+            }
+            if ($doctorReport.repository.npmPackages.package -notcontains "@echelon-foundry/typescript-wasm-kernel") {
+              throw "Doctor JSON did not discover the installed Limen npm package."
+            }
+            if (-not $doctorReport.updates.ordo.available -or $doctorReport.updates.praxis.available) {
+              throw "Doctor JSON update-awareness state was incorrect."
+            }
+
+            $inventoryJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $doctor inventory --json
+            if ($LASTEXITCODE -ne 0) {
+              throw "Echelon inventory JSON smoke test failed with exit code $LASTEXITCODE."
+            }
+            $inventoryReport = $inventoryJson | ConvertFrom-Json
+            if ($inventoryReport.schemaVersion -ne 1 -or $inventoryReport.command -ne "inventory") {
+              throw "Unexpected inventory JSON contract."
+            }
+          }
+          finally {
+            Pop-Location
+          }

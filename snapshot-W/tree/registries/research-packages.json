@@ -1,0 +1,262 @@
+[
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "medium",
+    "created": "2026-07-28",
+    "discipline": [
+      "framework-engineering",
+      "research-systems-architecture"
+    ],
+    "id": "RP-FE-2026-B008",
+    "keywords": [
+      "subsumption",
+      "method-engineering",
+      "systems-engineering",
+      "design-science",
+      "incremental-utility"
+    ],
+    "path": "research/packages/RP-FE-2026-B008--framework-engineering-boundary-[record].md",
+    "priority": "high",
+    "related_documents": [
+      "MS-FE-2026-B001",
+      "EV-FE-2026-B003",
+      "EV-FE-2026-B004",
+      "EV-FE-2026-B005",
+      "HY-FE-2026-B006",
+      "DF-FE-2026-B007"
+    ],
+    "related_projects": [
+      "Framework Engineering"
+    ],
+    "research_area": "framework-engineering-boundary",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "framework-engineering",
+      "boundary",
+      "[record]",
+      "operating-profile"
+    ],
+    "title": "Framework Engineering boundary validation cross-repository [record]",
+    "updated": "2026-07-28",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-07-24",
+    "discipline": [
+      "research-systems",
+      "software-engineering"
+    ],
+    "id": "RP-ROS-2026-A005",
+    "keywords": [
+      "lifecycle",
+      "identifiers",
+      "deterministic-validation",
+      "generated-registries"
+    ],
+    "path": "research/packages/RP-ROS-2026-A005--executable-contract-and-validation-slice.md",
+    "priority": "high",
+    "related_documents": [
+      "JR-ROS-2026-A004",
+      "EV-ROS-2026-A003",
+      "DF-ROS-2026-A001",
+      "DF-ROS-2026-A002"
+    ],
+    "related_projects": [],
+    "research_area": "ros-executable-contract",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "ros",
+      "validation",
+      "registries",
+      "architecture"
+    ],
+    "title": "ROS executable contract and validation slice",
+    "updated": "2026-07-24",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-05",
+    "discipline": [
+      "software-architecture",
+      "software-metrics",
+      "research-systems"
+    ],
+    "id": "RP-ROS-2026-A013",
+    "keywords": [
+      "capability-discovery",
+      "normalized-metrics",
+      "raw-telemetry",
+      "multi-agent",
+      "research-development"
+    ],
+    "path": "research/packages/RP-ROS-2026-A013--adaptive-development-telemetry-[record].md",
+    "priority": "high",
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "EV-ROS-2026-A011",
+      "EV-ROS-2026-A014",
+      "JR-ROS-2026-A012",
+      "docs/development-telemetry.md"
+    ],
+    "related_projects": [
+      "Repository Operating System"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "telemetry",
+      "provider-neutral",
+      "execution",
+      "provenance",
+      "[record]"
+    ],
+    "title": "Provider-neutral adaptive development telemetry implementation and [record]",
+    "updated": "2026-09-05",
+    "version": "1.1.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-07",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "research-systems"
+    ],
+    "id": "RP-ROS-2026-A017",
+    "keywords": [
+      "operational-code",
+      "workflow",
+      "domain-boundary",
+      "interoperability",
+      "characterization"
+    ],
+    "path": "research/packages/RP-ROS-2026-A017--operational-architecture-and-fsharp-migration-plan.md",
+    "priority": "high",
+    "related_documents": [
+      "EV-ROS-2026-A015",
+      "JR-ROS-2026-A016",
+      "DF-ROS-2026-A010",
+      "docs/work-protocol.md",
+      "docs/development-telemetry.md"
+    ],
+    "related_projects": [
+      "Repository Operating System"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "architecture",
+      "inventory",
+      "scripts",
+      "automation",
+      "fsharp",
+      "migration",
+      "sde"
+    ],
+    "title": "ROS operational architecture inventory and staged F# migration plan",
+    "updated": "2026-09-07",
+    "version": "1.0.0"
+  },
+  {
+    "author_agent": "openai-codex",
+    "completion": "complete",
+    "confidence": "medium",
+    "created": "2026-09-07",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "developer-tooling",
+      "empirical-software-engineering"
+    ],
+    "id": "RP-ROS-2026-A029",
+    "keywords": [
+      "typed-domain",
+      "vertical-slice",
+      "differential-testing",
+      "telemetry"
+    ],
+    "path": "research/packages/RP-ROS-2026-A029--fsharp-application-migration-execution.md",
+    "priority": "high",
+    "related_documents": [
+      "RP-ROS-2026-A017",
+      "EV-ROS-2026-A018",
+      "EV-ROS-2026-A028",
+      "EX-ROS-2026-A020",
+      "JR-ROS-2026-A019",
+      "DF-ROS-2026-A027"
+    ],
+    "related_projects": [
+      "repository-operating-system"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "fsharp",
+      "migration",
+      "sde",
+      "application",
+      "execution"
+    ],
+    "title": "ROS F# application migration execution and [record]",
+    "updated": "2026-09-08",
+    "version": "0.2.0"
+  },
+  {
+    "author_agent": "ChatGPT",
+    "completion": "complete",
+    "confidence": "high",
+    "created": "2026-09-20",
+    "discipline": [
+      "software-architecture",
+      "software-engineering",
+      "developer-tooling",
+      "empirical-software-engineering"
+    ],
+    "id": "RP-ROS-2026-A030",
+    "path": "research/packages/RP-ROS-2026-A030--ordo-observation-and-next-pass-requirements.md",
+    "priority": "high",
+    "related_projects": [
+      "repository-operating-system",
+      "state-directed-engineering"
+    ],
+    "research_area": "repository-operating-system",
+    "source_commit": "6f69ad93f5f410d19499cce9d49c5e15888b67aa",
+    "source_document": "research/ordo-foundations/deep-research-program/requirement-candidates/ros-next-pass.md",
+    "source_repository": "kemiller2002/research-documents",
+    "status": "review",
+    "superseded_by": [],
+    "supersedes": [],
+    "tags": [
+      "ordo",
+      "ros",
+      "next-pass",
+      "requirements",
+      "observations",
+      "outcomes",
+      "[record]",
+      "calibration"
+    ],
+    "title": "ROS next-pass Ordo observation and empirical-learning requirements intake",
+    "updated": "2026-09-20",
+    "version": "0.1.0"
+  }
+]

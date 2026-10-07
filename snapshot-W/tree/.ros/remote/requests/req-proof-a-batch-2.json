@@ -1,0 +1,195 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-proof-a-batch-2",
+  "fingerprint": "sha256:6c2f627037a1e85413a3c21a41aa8912ab0cab4e9522f913a33d4bd17d88f071",
+  "protocolVersion": "1.2",
+  "operation": "batch",
+  "recordedAt": "2026-09-29T04:46:59.935Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "ea50711687d218f6df268f860c19525643b584f7"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "<session redacted>",
+    "execution": null
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.2",
+  "requestId": "req-proof-a-batch-2",
+  "operation": "batch",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "ea50711687d218f6df268f860c19525643b584f7",
+    "observedSha": "ea50711687d218f6df268f860c19525643b584f7"
+  },
+  "praxisVersion": "3.5.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36523119339",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.5.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/remote/requests/req-proof-a-batch-2.json",
+      ".ros/remote/requests/req-proof-a-step-complete-1.json",
+      ".ros/remote/requests/req-proof-a-telemetry-1.json",
+      ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "total": 3,
+    "completed": 3,
+    "stoppedAt": null,
+    "notRun": [],
+    "responses": [
+      {
+        "protocol": "praxis.remote",
+        "protocolVersion": "1.2",
+        "requestId": "req-proof-a-step-start-1",
+        "operation": "step.start",
+        "outcome": "succeeded",
+        "replayed": true,
+        "repository": {
+          "ref": "refs/heads/main",
+          "expectedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e",
+          "observedSha": "69f1b6ce9a436a3fa1bd78f69a9534d83a2f3b5e"
+        },
+        "praxisVersion": "3.5.0",
+        "executor": {
+          "kind": "github-actions",
+          "runId": "36523001929",
+          "runAttempt": "1",
+          "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+          "repository": "kemiller2002/praxis",
+          "host": "github-hosted",
+          "principal": "github:kemiller2002",
+          "praxisVersion": "3.5.0",
+          "assurance": "observed-by-executor"
+        },
+        "persistence": {
+          "paths": [
+            ".ros/remote/requests/req-proof-a-step-start-1.json",
+            ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+          ]
+        },
+        "failure": null,
+        "result": {
+          "executionId": "EXE-20260929T044302145Z-078a696b",
+          "stepId": "remote-proof-a",
+          "event": "step.started",
+          "recorded": true
+        }
+      },
+      {
+        "protocol": "praxis.remote",
+        "protocolVersion": "1.2",
+        "requestId": "req-proof-a-telemetry-1",
+        "operation": "telemetry.record",
+        "outcome": "succeeded",
+        "replayed": false,
+        "repository": {
+          "ref": "refs/heads/main",
+          "expectedSha": "ea50711687d218f6df268f860c19525643b584f7",
+          "observedSha": "ea50711687d218f6df268f860c19525643b584f7"
+        },
+        "praxisVersion": "3.5.0",
+        "executor": {
+          "kind": "github-actions",
+          "runId": "36523119339",
+          "runAttempt": "1",
+          "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+          "repository": "kemiller2002/praxis",
+          "host": "github-hosted",
+          "principal": "github:kemiller2002",
+          "praxisVersion": "3.5.0",
+          "assurance": "observed-by-executor"
+        },
+        "persistence": {
+          "paths": [
+            ".ros/remote/requests/req-proof-a-telemetry-1.json",
+            ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+          ]
+        },
+        "failure": null,
+        "result": {
+          "measurementId": "MEAS-eadb92be22b432635b4bb4a1",
+          "id": "tool.calls",
+          "value": 17,
+          "unit": "count",
+          "currency": null,
+          "quality": "observed",
+          "confidence": null,
+          "scope": "execution",
+          "aggregation": "sum",
+          "dimensions": {
+            "step": "remote-proof-a"
+          },
+          "pricing": null,
+          "source": {
+            "type": "agent-report",
+            "name": "agent-a-self-count",
+            "mechanism": "explicit-metric-record"
+          },
+          "collectedAt": "2026-09-29T04:46:55.810Z",
+          "schemaVersion": "1.0.0"
+        }
+      },
+      {
+        "protocol": "praxis.remote",
+        "protocolVersion": "1.2",
+        "requestId": "req-proof-a-step-complete-1",
+        "operation": "step.complete",
+        "outcome": "succeeded",
+        "replayed": false,
+        "repository": {
+          "ref": "refs/heads/main",
+          "expectedSha": "ea50711687d218f6df268f860c19525643b584f7",
+          "observedSha": "ea50711687d218f6df268f860c19525643b584f7"
+        },
+        "praxisVersion": "3.5.0",
+        "executor": {
+          "kind": "github-actions",
+          "runId": "36523119339",
+          "runAttempt": "1",
+          "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+          "repository": "kemiller2002/praxis",
+          "host": "github-hosted",
+          "principal": "github:kemiller2002",
+          "praxisVersion": "3.5.0",
+          "assurance": "observed-by-executor"
+        },
+        "persistence": {
+          "paths": [
+            ".ros/remote/requests/req-proof-a-step-complete-1.json",
+            ".ros/remote/requests/req-proof-a-telemetry-1.json",
+            ".ros/telemetry/executions/EXE-20260929T044302145Z-078a696b.json"
+          ]
+        },
+        "failure": null,
+        "result": {
+          "executionId": "EXE-20260929T044302145Z-078a696b",
+          "stepId": "remote-proof-a",
+          "event": "step.completed",
+          "recorded": true
+        }
+      }
+    ]
+  }
+}
+
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "created": "2026-01-03",
+    "id": "EX-TEST-2026-A003",
+    "inputs": [],
+    "outputs": [],
+    "path": "research/experiments/EX-TEST-2026-A003--linked-experiment.md",
+    "research_area": "artifact-fixtures",
+    "status": "proposed",
+    "tests_hypotheses": [
+      "HY-TEST-2026-A002"
+    ],
+    "title": "Linked fixture experiment"
+  }
+]

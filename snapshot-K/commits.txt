@@ -1,0 +1,5 @@
+001 PRAXIS-GROUP-01: add `work group create` for durable human-declared groups
+002 PRAXIS-GROUP-02: add `work group show`, a read-only view of a declared group
+003 PRAXIS-GROUP-03: add `work group add` to add one member to a declared group
+004 PRAXIS-GROUP-04: add `work group remove` to remove one member from a declared group
+005 PRAXIS-GROUP-05: add `work group checkpoint`, a group checkpoint over members' own checkpoints

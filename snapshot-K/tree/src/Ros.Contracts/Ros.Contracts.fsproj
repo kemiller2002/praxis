@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Ros.Domain/Ros.Domain.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="JsonRendering.fs" />
+    <Compile Include="Git/StatusJson.fs" />
+    <Compile Include="Work/DecisionJson.fs" />
+    <Compile Include="Work/PlanJson.fs" />
+    <Compile Include="Work/ContextPlanJson.fs" />
+    <Compile Include="Work/BacklogJson.fs" />
+    <Compile Include="Work/AttributionJson.fs" />
+    <Compile Include="Work/QueueValidationJson.fs" />
+    <Compile Include="Work/BacklogTransitionJson.fs" />
+    <Compile Include="Work/TelemetryValidationJson.fs" />
+    <Compile Include="Artifacts/RegistryJson.fs" />
+    <Compile Include="Cli/FindingJson.fs" />
+    <Compile Include="Provenance/ActorJson.fs" />
+    <Compile Include="Ordo/ObservationJson.fs" />
+    <Compile Include="Lifecycle/LifecycleJson.fs" />
+    <Compile Include="Work/ReconciliationJson.fs" />
+    <Compile Include="Work/CheckpointJson.fs" />
+    <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
+    <Compile Include="Provenance/ProvenanceReportJson.fs" />
+    <Compile Include="Remote/RemoteJson.fs" />
+    <Compile Include="Execution/ExecutionJson.fs" />
+    <Compile Include="Installation/InstallationJson.fs" />
+    <Compile Include="Planning/PlanningJson.fs" />
+  </ItemGroup>
+</Project>

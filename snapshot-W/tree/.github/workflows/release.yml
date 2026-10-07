@@ -1,0 +1,84 @@
+name: Release
+
+# One-click release: bump the version, then publish it.
+#
+# The bump is an attributed Praxis work item under the GitHub Actions
+# identity (scripts/praxis-release-bump.sh): begin, commit, push, durable
+# checkpoint, complete, push the Praxis state. native-release.yml then
+# publishes the release: native bundles, the ros-fs binaries scaffolded
+# projects download, and the .NET global tool on NuGet (DF-ROS-2026-A044;
+# npm is no longer published). A push made with GITHUB_TOKEN does not
+# trigger push workflows, so it is dispatched explicitly.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "patch, minor, major, or an exact X.Y.Z version"
+        required: true
+        default: patch
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'kemiller2002/praxis' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build Praxis
+        run: npm run build:fsharp
+
+      - name: Use the GitHub Actions bot as the Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # native-release.yml runs the full test suite and validation before
+      # it publishes anything, so a bad release stops there, not here.
+      - name: Bump the version as an attributed work item
+        id: bump
+        # `shell: bash` adds pipefail, so a failed bump is not hidden by tee.
+        shell: bash
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: scripts/praxis-release-bump.sh "$BUMP" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Publish the new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.bump.outputs.base }}
+        run: |
+          [ -n "$BASE" ] || { echo "::error::the bump reported no base commit"; exit 1; }
+          gh workflow run native-release.yml --ref main
+
+      - name: Summarize
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          HEAD_SHA: ${{ steps.bump.outputs.head }}
+        run: |
+          {
+            echo "### Releasing ${VERSION}"
+            echo ""
+            echo "- Version bump pushed to \`main\` at \`${HEAD_SHA}\` as work item \`RELEASE-${VERSION//./-}\`."
+            echo "- Dispatched **Native Praxis release** (native bundles, ros-fs binaries, .NET global tool); follow it in the Actions tab."
+          } >> "$GITHUB_STEP_SUMMARY"

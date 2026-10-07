@@ -1,0 +1,19 @@
+[
+  {
+    "completion": "complete",
+    "confidence": "medium",
+    "created": "2026-01-06",
+    "id": "RP-TEST-2026-A006",
+    "path": "research/packages/RP-TEST-2026-A006--package.md",
+    "related_documents": [
+      "EV-TEST-2026-A001"
+    ],
+    "research_area": "artifact-fixtures",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "title": "Fixture research package",
+    "updated": "2026-01-06",
+    "version": "1.0.0"
+  }
+]

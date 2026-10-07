@@ -1,0 +1,18 @@
+{
+  "label": "snapshot-P",
+  "schema": "ex-ros-2026-a024.checks/1",
+  "buildExit": 0,
+  "testsExit": 0,
+  "validateExit": 0,
+  "tests": {
+    "total": 819,
+    "passed": 819,
+    "failed": 0
+  },
+  "failedTests": [],
+  "command": {
+    "build": "npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400",
+    "tests": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll",
+    "validate": "./ros validate"
+  }
+}

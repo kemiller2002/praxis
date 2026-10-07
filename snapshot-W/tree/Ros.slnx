@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ros.Domain/Ros.Domain.fsproj" />
+    <Project Path="src/Ros.Contracts/Ros.Contracts.fsproj" />
+    <Project Path="src/Ros.Application/Ros.Application.fsproj" />
+    <Project Path="src/Ros.Infrastructure/Ros.Infrastructure.fsproj" />
+    <Project Path="src/Ros.Cli/Ros.Cli.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ros.Tests/Ros.Tests.fsproj" />
+  </Folder>
+</Solution>

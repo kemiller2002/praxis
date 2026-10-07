@@ -1,0 +1,100 @@
+{
+  "name": "@echelon-foundry/repository-operating-system",
+  "private": true,
+  "version": "3.6.0",
+  "description": "Echelon Foundry Repository Operating System: initialization, verification, diagnostics, and upgrade tooling for research and engineering repositories.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kemiller2002/praxis.git"
+  },
+  "homepage": "https://github.com/kemiller2002/praxis#readme",
+  "bugs": {
+    "url": "https://github.com/kemiller2002/praxis/issues"
+  },
+  "type": "module",
+  "bin": {
+    "ros": "./bin/ros.mjs",
+    "ros-bootstrap": "./bin/ros-bootstrap.mjs",
+    "ros-fs": "./bin/ros-fs.mjs"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "starter/",
+    "AGENTS.md",
+    "BOOTSTRAP.md",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    "LICENSE",
+    "docs/00-governance/",
+    "docs/work-protocol.md",
+    "docs/agent-provenance.md",
+    "docs/remote-protocol.md",
+    "docs/remote-agent-contract.md",
+    "docs/work-adapter-contract.md",
+    "docs/work-backlog-guide.md",
+    "docs/cli.md",
+    "docs/installation.md",
+    "docs/upgrading.md",
+    "docs/web-interface.md",
+    "docs/project-administration-hub.md",
+    "docs/development-telemetry.md",
+    "docs/ordo-observation.md",
+    "docs/migrations/",
+    "framework/",
+    "schemas/",
+    "telemetry/",
+    "templates/",
+    "tools/ros_cli.mjs",
+    "tools/ros_git.mjs",
+    "tools/ros_telemetry.mjs",
+    "tools/ros_persistence.mjs",
+    "tools/http_body.mjs",
+    "tools/ros_server.mjs",
+    "tools/ros_hub_cli.mjs",
+    "tools/ros_hub_server.mjs",
+    "web/",
+    "web-hub/",
+    "CLAUDE.md",
+    "GEMINI.md",
+    ".github/copilot-instructions.md",
+    "README.md",
+    "PACKAGE-USAGE.md",
+    "docs/echelon-doctor.md",
+    "docs/native-installation.md",
+    "docs/toolchain-manifest.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "npm run build:fsharp && node --test tests/echelon-doctor.test.mjs tests/npm-bootstrap.test.mjs tests/lifecycle-package.test.mjs tests/ros-fs-launcher.test.mjs tests/ros-server.test.mjs tests/ros-hub.test.mjs tests/artifact-compatibility.test.mjs tests/praxis-bootstrap.test.mjs && python3 -m unittest discover -s tests -v",
+    "build:fsharp": "dotnet build Ros.slnx --configuration Release --disable-build-servers --maxcpucount:1 -p:UseSharedCompilation=false -p:BuildInParallel=false",
+    "test:fsharp": "npm run build:fsharp && dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll && node --test tests/artifact-fsharp-differential.test.mjs tests/git-fsharp-differential.test.mjs tests/work-fsharp-differential.test.mjs tests/work-telemetry-fsharp-differential.test.mjs tests/work-git-paths-fsharp-differential.test.mjs tests/work-attribution-fsharp-differential.test.mjs tests/work-backlog-validate-fsharp-differential.test.mjs tests/work-backlog-transition-fsharp-differential.test.mjs tests/work-capture-fsharp-differential.test.mjs tests/work-update-fsharp-differential.test.mjs tests/work-attach-fsharp-differential.test.mjs tests/work-start-fsharp-differential.test.mjs tests/work-resume-fsharp-differential.test.mjs tests/work-block-fsharp-differential.test.mjs tests/work-complete-fsharp-differential.test.mjs tests/telemetry-show-fsharp-differential.test.mjs tests/work-telemetry-lifecycle-fsharp-differential.test.mjs tests/telemetry-summary-fsharp-differential.test.mjs tests/telemetry-finalize-fsharp-differential.test.mjs tests/telemetry-record-fsharp-differential.test.mjs tests/telemetry-ingest-fsharp-differential.test.mjs tests/telemetry-classify-fsharp-differential.test.mjs tests/telemetry-start-fsharp-differential.test.mjs tests/adapter-call-fsharp-differential.test.mjs tests/adapter-publish-fsharp-differential.test.mjs tests/work-resume-parent-execution-fsharp-differential.test.mjs tests/telemetry-ingest-openai-codex-fsharp-differential.test.mjs tests/telemetry-ingest-hook-fsharp-differential.test.mjs tests/telemetry-ingest-claude-statusline-fsharp-differential.test.mjs tests/telemetry-ingest-otel-fsharp-differential.test.mjs tests/work-context-fsharp-differential.test.mjs tests/work-list-fsharp-differential.test.mjs tests/telemetry-validate-fsharp-differential.test.mjs tests/validate-unified-fsharp-differential.test.mjs tests/status-fsharp-differential.test.mjs tests/provenance-actor-fsharp-differential.test.mjs tests/provenance-followups.test.mjs tests/remote-execute.test.mjs tests/remote-checkpoint.test.mjs tests/praxis-remote-adapter.test.mjs",
+    "test:all": "npm test && npm run test:fsharp",
+    "build:web": "tsc -p web/tsconfig.json",
+    "build:hub": "tsc -p web-hub/tsconfig.json",
+    "web": "npm run build:web && node tools/ros_server.mjs",
+    "hub": "npm run build:hub && node tools/ros_hub_server.mjs",
+    "pack:inspect": "npm pack --dry-run",
+    "release:check": "npm run test:all && npm pack --dry-run && ./ros registry check && ./ros validate",
+    "prepack": "npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "echelon-foundry",
+    "repository-operating-system",
+    "ros",
+    "repository-tooling",
+    "cli",
+    "initialization",
+    "verification",
+    "migration",
+    "research",
+    "engineering"
+  ]
+}

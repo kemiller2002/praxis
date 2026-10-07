@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Praxis — You said it’s done. Prove it.</title>
+<meta name="description" content="Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc='; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f2efe7">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="assets/css/site.css">
+<script src="assets/js/claim.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="#top" aria-label="Praxis, top of page">
+      <span class="brand__name">Praxis</span>
+      <span class="brand__parent">Echelon Foundry</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="#proposition">What is Praxis</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#evidence">Evidence</a></li>
+        <li><a href="#agents">Agents</a></li>
+        <li><a href="#get-started">Get started</a></li>
+        <li><a href="https://github.com/kemiller2002/praxis">GitHub<span class="external" aria-hidden="true">&#8599;</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap hero__grid">
+      <p class="hero__foundry"><span>Echelon</span> <span>Foundry</span></p>
+      <p class="hero__mark">Praxis</p>
+      <h1 class="hero__title" id="hero-title">
+        <span class="hero__claim">You said it&rsquo;s done.</span>
+        <span class="hero__demand">Prove it.</span>
+      </h1>
+      <div class="hero__body">
+        <p class="lede">Praxis connects requirements, execution, agents, changes, tests, evidence, provenance, and cost into a verifiable engineering record.</p>
+        <p class="hero__statement">Trust is not an engineering control. <strong>Evidence is.</strong></p>
+        <div class="actions">
+          <a class="button" href="#evidence">See the evidence</a>
+          <a class="button button--ghost" href="https://github.com/kemiller2002/praxis">View on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="problem" aria-labelledby="problem-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">The problem</p>
+        <h2 id="problem-title">An agent says the work is done. Now answer the questions.</h2>
+      </div>
+      <ol class="questions">
+        <li>Which requirement was this for?</li>
+        <li>Who, or what, did the work?</li>
+        <li>Which provider, runtime and model?</li>
+        <li>What changed, and why?</li>
+        <li>Which tests ran?</li>
+        <li>Where is the evidence?</li>
+        <li>What did it cost?</li>
+        <li>When the work changed hands, where did one agent stop and the next begin?</li>
+      </ol>
+      <p class="questions__answer">A commit message is not an answer. A green check is not an answer. <strong>&ldquo;Done&rdquo; is not an answer.</strong></p>
+    </div>
+  </section>
+
+  <section class="section section--dark" id="proposition" aria-labelledby="proposition-title">
+    <div class="wrap proposition">
+      <p class="kicker">What is Praxis</p>
+      <h2 id="proposition-title">Agents can write code. <span class="proposition__turn">Praxis makes their work accountable.</span></h2>
+      <p class="lede">Praxis is a repository-native work protocol. Work is captured, started, blocked, resumed and completed through one command-line interface, and every step is recorded next to the code it produced: which agent did it, in which execution, against which commits, with which evidence.</p>
+    </div>
+  </section>
+
+  <section class="section" id="verify" aria-labelledby="verify-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Done is a claim</p>
+        <div>
+          <h2 id="verify-title">Praxis interrogates it.</h2>
+          <p class="lede">Below is a real claim from the build of this website. Each answer comes from the Praxis records committed with it. Where the record has no answer, Praxis says so instead of inventing one.</p>
+        </div>
+      </div>
+
+      <figure class="claim" data-claim aria-labelledby="claim-title">
+        <div class="claim__statement">
+          <p class="claim__source">Real record · <a href="data/gh-84.json">snapshot</a></p>
+          <p class="claim__title" id="claim-title"><span class="mono" data-evidence="PRAXIS-SITE-02:id">PRAXIS-SITE-02</span> <span data-evidence="PRAXIS-SITE-02:title">Implement Echelon Foundry design foundation</span></p>
+          <p class="claim__said">&ldquo;Done.&rdquo;</p>
+        </div>
+        <ol class="claim__steps" aria-label="Questions Praxis asks of the claim">
+          <li class="claim__step">
+            <span class="claim__q">For which requirement?</span>
+            <span class="claim__a">GitHub issue <a href="https://github.com/kemiller2002/praxis/issues/84" data-evidence="PRAXIS-SITE-02:sourceReference">https://github.com/kemiller2002/praxis/issues/84</a>, recorded as the work item&rsquo;s source</span>
+            <span class="status status--recorded">Recorded</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">Who did the work?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.runtime">claude-code</span></span>
+            <span class="status status--recorded">Detected</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">Which model?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:identity.model">unknown</span>. The runtime did not report it, so Praxis did not guess.</span>
+            <span class="status status--unknown">Unknown</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">In which execution?</span>
+            <span class="claim__a"><span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:executionId">EXE-20260927T075631195Z-0a515aae</span>, <span data-evidence="EXE-20260927T075631195Z-0a515aae:status">finalized</span></span>
+            <span class="status status--recorded">Recorded</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What changed?</span>
+            <span class="claim__a"><span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.commitsCreated">1</span> commit, <span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:start.commit">02b92e2</span> to <span class="mono" data-evidence="EXE-20260927T075631195Z-0a515aae:end.commit">99f4e6c</span></span>
+            <span class="status status--recorded">Derived</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What was built?</span>
+            <span class="claim__a mono" data-evidence="PRAXIS-SITE-02:evidence.implementation">site/assets/css/site.css</span>
+            <span class="status status--verified">Evidence</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">What tests it?</span>
+            <span class="claim__a mono" data-evidence="PRAXIS-SITE-02:evidence.tests">tests/site/design.test.mjs</span>
+            <span class="status status--verified">Evidence</span>
+          </li>
+          <li class="claim__step">
+            <span class="claim__q">How many tokens? What did it cost?</span>
+            <span class="claim__a">Tokens <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.tokens">unknown</span>, cost <span data-evidence="EXE-20260927T075631195Z-0a515aae:metrics.cost">unknown</span>. No token or cost telemetry reached Praxis for this execution, so neither total is known.</span>
+            <span class="status status--unknown">Unknown</span>
+          </li>
+        </ol>
+        <figcaption class="claim__verdict">
+          <span class="claim__verdict-state">Complete, with evidence.</span>
+          <span class="claim__verdict-note">Unknowns stated, not invented.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+  <section class="section section--stone" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">How it works</p>
+        <div>
+          <h2 id="how-title">From intent, to execution, to evidence.</h2>
+          <p class="lede">Every link in the chain is a record in the repository. Each one points to the next, so a finished piece of work can be followed back to why it started.</p>
+        </div>
+      </div>
+      <ol class="chain">
+        <li class="chain__link">
+          <h3 class="chain__name">Requirement</h3>
+          <p>The intent. An issue, a requirement record, a decision. Praxis records where work came from as its source reference.</p>
+          <p class="chain__cmd"><code>work capture --source-reference</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Work item</h3>
+          <p>A unit of work with a lifecycle: captured, ready, active, blocked, complete. The protocol refuses illegal transitions.</p>
+          <p class="chain__cmd"><code>work capture · work start</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Execution</h3>
+          <p>A record of one attempt at the work. Identity and repository baseline are recorded when it opens; its end and change summary when it is finalized.</p>
+          <p class="chain__cmd"><code>EXE-&hellip;</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Steps</h3>
+          <p>Starting, blocking, resuming and completing are events, appended to a log in the repository. Current versions record the actor that performed each one.</p>
+          <p class="chain__cmd"><code>work block · work resume</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Changes</h3>
+          <p>Changes since the execution&rsquo;s starting baseline, committed or not, are summarized when it is finalized: files, lines, tests touched. If the baseline was dirty, the summary is marked unavailable.</p>
+          <p class="chain__cmd"><code>git</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Tests</h3>
+          <p>By default, completion requires naming an existing test file as evidence. Praxis checks the file exists; whether the tests pass is for CI to show.</p>
+          <p class="chain__cmd"><code>--evidence tests=&hellip;</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Evidence</h3>
+          <p>Completion names the files that prove the claim. The execution is then finalized and its record closed.</p>
+          <p class="chain__cmd"><code>work complete</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Reconciliation</h3>
+          <p>A commit made outside any work item can be assigned to one after the fact, explicitly and with a reason. Reconciliation never invents a work item.</p>
+          <p class="chain__cmd"><code>work reconcile</code></p>
+        </li>
+        <li class="chain__link">
+          <h3 class="chain__name">Verified history</h3>
+          <p>Repository validation checks the records against each other and against Git.</p>
+          <p class="chain__cmd"><code>validate</code></p>
+        </li>
+      </ol>
+
+      <div class="anatomy">
+        <div class="anatomy__text">
+          <h3>Anatomy of an execution record</h3>
+          <p>This is what one execution looks like when every source reports. The values are an example of layout, not a measurement: nothing in it came from a real run, and it is labelled so.</p>
+          <p>Every value carries its quality. <strong>Observed</strong> was reported by the runtime or the agent. <strong>Derived</strong> was calculated by Praxis from other records. <strong>Estimated</strong> is labelled as such, with its source. A value no source supplied is <strong>unknown</strong> or <strong>unavailable</strong>, never zero.</p>
+        </div>
+        <figure class="record" data-record="illustrative" aria-labelledby="illustrative-title">
+          <div class="record__bar">
+            <p class="record__title" id="illustrative-title">Execution record</p>
+            <p class="record__label">Illustrative execution</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Work item</dt><dd>EXAMPLE-142 · Add rate limiting to the export API</dd>
+              <dt>Execution</dt><dd>EXE-20260101T090000000Z-example</dd>
+              <dt>Actor</dt><dd>agent · example-provider / example-runtime</dd>
+              <dt>Model</dt><dd>example-model · observed</dd>
+              <dt>Parent</dt><dd>none</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle">
+              <li><span>work started</span><span class="status status--recorded">Recorded</span></li>
+              <li><span>3 commits against clean baseline</span><span class="status status--recorded">Derived</span></li>
+              <li><span>tests 47/47 passed</span><span class="status status--verified">Evidence</span></li>
+              <li><span>work completed</span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <dl class="record__rows">
+              <dt>Tokens</dt><dd>38,421 · observed</dd>
+              <dt>Cost</dt><dd>$0.1847 · estimated · runtime-reported</dd>
+              <dt>Wall time</dt><dd>14m 06s · derived</dd>
+            </dl>
+            <div class="record__final">
+              <span>Final state</span>
+              <span class="status status--verified">Complete</span>
+            </div>
+          </div>
+          <figcaption class="record__note">Illustrative execution. Example values only; not evidence of any real run.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+  <section class="section" id="git" aria-labelledby="git-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Git and Praxis</p>
+        <div>
+          <h2 id="git-title">Git knows what. <span class="accent">Praxis knows why.</span></h2>
+          <p class="lede">Git is the record of change, and Praxis depends on it. Praxis keeps its own records in the same repository, in files Git versions like any other, and adds the context a diff was never meant to carry.</p>
+        </div>
+      </div>
+      <div class="compare">
+        <table class="compare__table">
+          <caption class="visually-hidden">What Git establishes and what Praxis adds</caption>
+          <thead>
+            <tr>
+              <th scope="col"><span class="visually-hidden">Question</span></th>
+              <th scope="col">Git establishes</th>
+              <th scope="col">Praxis adds</th>
+            </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <th scope="row">What changed</th>
+            <td data-label="Git">The exact content of every change, line by line.</td>
+            <td data-label="Praxis adds">Summarizes the changes each execution made, measured from its starting baseline when that baseline was clean.</td>
+          </tr>
+          <tr>
+            <th scope="row">Who</th>
+            <td data-label="Git">The configured author and committer of each commit.</td>
+            <td data-label="Praxis adds">The actor behind the work: kind, provider, runtime, and model when it is reliably known.</td>
+          </tr>
+          <tr>
+            <th scope="row">Why</th>
+            <td data-label="Git">The commit message, as written.</td>
+            <td data-label="Praxis adds">The work item the change belongs to and the source it came from.</td>
+          </tr>
+          <tr>
+            <th scope="row">When</th>
+            <td data-label="Git">Author and commit timestamps.</td>
+            <td data-label="Praxis adds">When the work started, blocked, resumed and completed, and how long each execution ran.</td>
+          </tr>
+          <tr>
+            <th scope="row">Proof</th>
+            <td data-label="Git">The history itself.</td>
+            <td data-label="Praxis adds">The implementation and test evidence named at completion.</td>
+          </tr>
+          <tr>
+            <th scope="row">[record]</th>
+            <td data-label="Git">Commits in sequence.</td>
+            <td data-label="Praxis adds">Where one execution ended and the next began, and who ran each.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  <section class="section section--dark" id="agents" aria-labelledby="agents-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Agents</p>
+        <div>
+          <h2 id="agents-title">No anonymous work.</h2>
+          <p class="lede">Agents, people and automation work under the same protocol. Each execution records who ran it, and how Praxis knows.</p>
+        </div>
+      </div>
+      <div class="grid-2 agents">
+        <div class="agents__item">
+          <h3>Identity</h3>
+          <p>Actor kind, provider and runtime are detected from the runtime environment for OpenAI Codex, Claude Code, Gemini CLI, GitHub Copilot and GitHub Actions. They can also be declared explicitly, and a declaration takes precedence. The record keeps how provider and runtime were identified: from a known runtime environment, or explicitly or from an unmapped one.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Model</h3>
+          <p>Recorded when the runtime reports it or it is declared. Otherwise it is recorded as unknown. Praxis does not infer a model from a provider.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Execution boundaries</h3>
+          <p>Each execution has a start and a repository baseline, and an end once it is finalized. Blocking work does not close its execution, and resuming rejoins any execution still open. Once an execution is finalized, resuming opens a new one that points to it as its parent.</p>
+        </div>
+        <div class="agents__item">
+          <h3>Telemetry, when it exists</h3>
+          <p>Tokens, cost and runtime measurements are recorded when a runtime stream, hook, OpenTelemetry exporter or the agent itself supplies them. Every value keeps its source. Praxis does not compute cost; a cost calculated elsewhere must name its price table and version, and an estimate is labelled as one.</p>
+        </div>
+        <div class="agents__item agents__item--wide">
+          <h3>Every value says how it is known</h3>
+          <dl class="quality">
+            <dt><span class="status status--recorded">Observed</span></dt><dd>Reported by the runtime, its telemetry, or the agent itself, with that source recorded.</dd>
+            <dt><span class="status status--recorded">Derived</span></dt><dd>Calculated by Praxis from other records, such as wall time from timestamps.</dd>
+            <dt><span class="status status--recorded">Estimated</span></dt><dd>Labelled as an estimate, with a confidence.</dd>
+            <dt><span class="status status--unknown">Unknown</span></dt><dd>No source could say. Recorded as unknown.</dd>
+            <dt><span class="status status--unavailable">Unavailable</span></dt><dd>The runtime can report it, but nothing was supplied for this execution.</dd>
+          </dl>
+          <p class="agents__rule">A missing value is never filled with a zero.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section" id="evidence" aria-labelledby="evidence-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Integrity</p>
+        <div>
+          <h2 id="evidence-title">The work continued. <span class="accent">The identity was not assumed.</span></h2>
+          <p class="lede">GH-84 is the issue for this website. Partway through, its first execution was blocked for a [record] and finalized, and the work was then resumed. These are the two executions exactly as Praxis recorded them, as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+        </div>
+      </div>
+      <div class="[record]">
+        <figure class="record" data-record="real" aria-labelledby="d1d7ea06-title">
+          <div class="record__bar">
+            <p class="record__title" id="d1d7ea06-title">Execution 1</p>
+            <p class="record__label record__label--real">Real record · GH-84</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Execution</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:executionId">EXE-20260927T074026833Z-d1d7ea06</dd>
+              <dt>Work item</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:workItemId">GH-84</dd>
+              <dt>Actor</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.runtime">claude-code</span></dd>
+              <dt>Model</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:identity.model">unknown</dd>
+              <dt>Parent</dt><dd class="none">none</dd>
+              <dt>Started</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:startedAt">2026-09-27T07:40:26.833Z</dd>
+              <dt>Finalized</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:finalizedAt">2026-09-27T07:47:24.532Z</dd>
+              <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.branch">main</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:start.commit">251ac22</span> → <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T074026833Z-d1d7ea06:end.commit">9789e26</span></dd>
+              <dt>Wall time</dt><dd><span data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.wallMs">417699</span> ms · derived</dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.tokens">unknown</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T074026833Z-d1d7ea06:metrics.cost">unknown</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle of execution 1">
+              <li><span><span data-evidence="lifecycle:0.type">work.started</span> at <span data-evidence="lifecycle:0.occurredAt">2026-09-27T07:40:22.000Z</span></span><span class="status status--recorded">Recorded</span></li>
+              <li><span><span data-evidence="lifecycle:1.type">work.blocked</span> at <span data-evidence="lifecycle:1.occurredAt">2026-09-27T07:47:18.000Z</span>: &ldquo;<span data-evidence="lifecycle:1.reason">[record]: Claude session ends; GH-84 continues in a new execution by the next agent</span>&rdquo;</span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <div class="record__final">
+              <span>Status</span>
+              <span class="status status--recorded" data-evidence="EXE-20260927T074026833Z-d1d7ea06:status">finalized</span>
+            </div>
+          </div>
+        </figure>
+        <div class="[record]__join" aria-hidden="true"><span>parent</span></div>
+        <figure class="record" data-record="real" aria-labelledby="fcdf36ca-title">
+          <div class="record__bar">
+            <p class="record__title" id="fcdf36ca-title">Execution 2</p>
+            <p class="record__label record__label--real">Real record · GH-84</p>
+          </div>
+          <div class="record__body">
+            <dl class="record__rows">
+              <dt>Execution</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:executionId">EXE-20260927T075155507Z-fcdf36ca</dd>
+              <dt>Work item</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:workItemId">GH-84</dd>
+              <dt>Actor</dt><dd><span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.actorKind">agent</span> · <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.provider">anthropic</span> / <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.runtime">claude-code</span></dd>
+              <dt>Model</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:identity.model">unknown</dd>
+              <dt>Parent</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:parentExecutionId">EXE-20260927T074026833Z-d1d7ea06</dd>
+              <dt>Started</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:startedAt">2026-09-27T07:51:55.507Z</dd>
+              <dt>Baseline</dt><dd><span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.branch">claude/gh-84</span> @ <span data-evidence="EXE-20260927T075155507Z-fcdf36ca:start.commit">60fea68</span></dd>
+              <dt>Tokens</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.tokens">unknown</dd>
+              <dt>Cost</dt><dd data-evidence="EXE-20260927T075155507Z-fcdf36ca:metrics.cost">unknown</dd>
+            </dl>
+            <ol class="record__steps" aria-label="Lifecycle of execution 2">
+              <li><span><span data-evidence="lifecycle:2.type">work.resumed</span> at <span data-evidence="lifecycle:2.occurredAt">2026-09-27T07:51:54.000Z</span></span><span class="status status--recorded">Recorded</span></li>
+            </ol>
+            <div class="record__final">
+              <span>Status</span>
+              <span class="status status--pending" data-evidence="EXE-20260927T075155507Z-fcdf36ca:status">active</span>
+            </div>
+          </div>
+        </figure>
+      </div>
+      <div class="[record]__read grid-2">
+        <p>Blocking did not close the first execution; it was finalized explicitly, six seconds later. Because it was finalized, resuming did not reopen it. Praxis opened a new execution, linked it to the first as its parent, and identified the actor from the environment of the process that resumed the work, not from the record it continued.</p>
+        <p>The [record] note anticipated a different agent. That is not what happened: the same Claude Code session resumed the work. Both executions carry the same runtime session identifier, which the public snapshot deliberately leaves out. The record says what ran, not what was planned. No model was reported to either execution, and no token or cost telemetry reached either, so those say unknown.</p>
+      </div>
+      <p class="[record]__rule">Praxis will not transfer identity merely because the work continued.</p>
+    </div>
+  </section>
+  <section class="section section--stone" id="reconciliation" aria-labelledby="reconciliation-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Reconciliation</p>
+        <div>
+          <h2 id="reconciliation-title">Every change has to answer for itself.</h2>
+          <p class="lede">With attribution enforcement on, validation names a meaningful change that no work item accounts for and fails. The check is deliberately lenient while work is still open: when any work item is active or blocked, unattributed changes are not reported, and completing an item attributes the changes in the working tree to it.</p>
+        </div>
+      </div>
+      <figure class="terminal-figure">
+        <figcaption class="visually-hidden">Validation output for an unattributed change</figcaption>
+        <pre class="terminal"><code><span class="terminal__prompt">$</span> praxis validate
+ERROR src/report.fs:work_items: meaningful change has no active or completed work-item attribution</code></pre>
+      </figure>
+      <ol class="outcomes">
+        <li class="outcomes__item">
+          <p class="status status--verified">Attributed</p>
+          <h3>While the work happened</h3>
+          <p>The change was made under an active work item and is recorded with it.</p>
+        </li>
+        <li class="outcomes__item">
+          <p class="status status--recorded">Reconciled</p>
+          <h3>After the fact, on the record</h3>
+          <p><code>work reconcile</code> assigns committed changes to a real work item using Git history as the evidence, with a stated reason. The record says permanently that attribution came later. Nothing is backdated.</p>
+        </li>
+        <li class="outcomes__item">
+          <p class="status status--unresolved">Unresolved</p>
+          <h3>Until someone can say</h3>
+          <p>If nobody can honestly name the work item, the change stays unresolved, and validation reports it whenever no work is open.</p>
+        </li>
+      </ol>
+      <div class="grid-2 reconcile__notes">
+        <p>Reconciliation fails closed. It will not create a work item, sweep in unrelated history, assign a merge commit, reach past a shallow clone, or overwrite a change already reconciled elsewhere. When the evidence is not reliable, it records nothing.</p>
+        <p class="reconcile__rule">Manufactured attribution is worse than explicitly unresolved attribution. Touching files to make them look attributed destroys the history of who changed what. Praxis gives no reason to do it.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section" id="resilience" aria-labelledby="resilience-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Resilience</p>
+        <div>
+          <h2 id="resilience-title">The process survives the tool.</h2>
+          <p class="lede">An engineering record that exists only while one program is running is not a record. Praxis keeps the record in files, so the obligation outlives any agent, runtime or version of Praxis itself.</p>
+        </div>
+      </div>
+      <div class="grid-2 availability">
+        <div class="availability__col">
+          <p class="availability__label"><span class="status status--verified">Available now</span></p>
+          <ul class="availability__list">
+            <li>Work state, events, executions and provenance are plain JSON and JSON Lines files in the repository. Any tool can read them; Git versions them.</li>
+            <li>Validation re-checks the records against each other and against Git history, in CI, independent of whoever wrote them.</li>
+            <li>Changes committed without a work item can be reconciled later, from Git history, on the record.</li>
+            <li>A finalized execution is closed. Continuing the work opens a new one rather than reopening the old.</li>
+          </ul>
+        </div>
+        <div class="availability__col availability__col--planned">
+          <p class="availability__label"><span class="status status--pending">Architectural direction</span></p>
+          <ul class="availability__list">
+            <li>Double-entry execution: when the Praxis CLI cannot run, an agent writes a conforming fallback execution record by hand.</li>
+            <li>CI later reconciles fallback records against Git and the protocol, and accepts or rejects them on evidence.</li>
+          </ul>
+          <p class="availability__note">Not implemented. Not scheduled. This is the direction the record format is designed to allow, stated so nobody mistakes it for a feature.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section section--stone" id="records" aria-labelledby="records-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Repository-native</p>
+        <div>
+          <h2 id="records-title">The record lives with the code.</h2>
+          <p class="lede">Praxis records are ordinary files next to the source they describe. Where evidence lives somewhere else, such as an issue, a pull request or a CI run, the record points to it by reference.</p>
+        </div>
+      </div>
+      <div class="records">
+        <figure class="tree-figure">
+          <figcaption class="visually-hidden" id="tree-caption">Where Praxis keeps its records</figcaption>
+          <pre class="tree" role="region" tabindex="0" aria-labelledby="tree-caption"><code>.ros/
+  work/queue.json                   <span class="tree__note">work items and backlog</span>
+  events/events.jsonl               <span class="tree__note">append-only lifecycle and provenance events</span>
+  telemetry/executions/EXE-*.json   <span class="tree__note">one file per execution</span>
+research/                           <span class="tree__note">research records: decisions, evidence, experiments</span>
+registries/                         <span class="tree__note">generated indexes of research records</span></code></pre>
+        </figure>
+        <dl class="props">
+          <div class="props__item">
+            <dt>Versionable</dt>
+            <dd>Every record is a file in the repository. It branches, merges and reverts with the code.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Inspectable</dt>
+            <dd>JSON and JSON Lines. Open them in an editor, diff them in a pull request, query them with anything.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Portable</dt>
+            <dd>No server and no account. Clone the repository and the record comes with it.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Attributable</dt>
+            <dd>Events written by current versions carry the actor that caused them; each execution carries the identity that ran it.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Reviewable</dt>
+            <dd>Changes to the record appear in the same pull request as the changes to the code.</dd>
+          </div>
+          <div class="props__item">
+            <dt>Automatable</dt>
+            <dd>A single CLI with machine-readable output, run the same way by people, agents and CI.</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+  <section class="section" id="independence" aria-labelledby="independence-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Independence</p>
+        <div>
+          <h2 id="independence-title">Useful on its own. Stronger in the foundry.</h2>
+          <p class="lede">Praxis needs a Git repository and nothing else. It is part of Echelon Foundry, and it connects to other Echelon tools where they exist, but none of them is required.</p>
+        </div>
+      </div>
+      <div class="grid-2 availability">
+        <div class="availability__col">
+          <p class="availability__label"><span class="status status--verified">Available now</span></p>
+          <ul class="availability__list">
+            <li><strong>Standalone.</strong> Install it into any Git repository. No server, account or other Echelon tool.</li>
+            <li><strong>External work systems.</strong> A transport-neutral adapter contract through which an adapter reads and transitions work items in an external tracker, reporting conflicts instead of overwriting either side. The contract ships; tracker-specific adapters are yours to write.</li>
+            <li><strong>Ordo.</strong> Praxis can record Ordo decisions and their later outcomes, and package [record] context, without becoming Ordo&rsquo;s authority.</li>
+            <li><strong>Echelon bootstrap.</strong> The native bundle includes <code>echelon</code>, which reports which Echelon tools are present and whether the environment is coherent.</li>
+          </ul>
+        </div>
+        <div class="availability__col availability__col--planned">
+          <p class="availability__label"><span class="status status--pending">Architectural direction</span></p>
+          <ul class="availability__list">
+            <li>Deeper integration with other Echelon Foundry systems. Some have requirements written; none is integrated beyond what is listed as available.</li>
+          </ul>
+          <p class="availability__note">Direction, not a feature list. When an integration ships, it moves to the other column.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section section--dark" id="principles" aria-labelledby="principles-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Principles</p>
+        <h2 id="principles-title">What Praxis holds to.</h2>
+      </div>
+      <ol class="principles">
+        <li class="principles__item">
+          <h3>Done is a claim.</h3>
+          <p>A claim is where verification starts, not where it ends. Completion requires evidence.</p>
+          <p class="principles__link"><a href="#verify">See a claim interrogated</a></p>
+        </li>
+        <li class="principles__item">
+          <h3>Every change has to answer for itself.</h3>
+          <p>Changes are attributed while the work happens, or reconciled later on the record, with a reason. Reconciliation never invents a work item to absorb them.</p>
+          <p class="principles__link"><a href="#reconciliation">How reconciliation works</a></p>
+        </li>
+        <li class="principles__item">
+          <h3>No anonymous work.</h3>
+          <p>Every execution records who ran it and how that is known. What cannot be known is recorded as unknown.</p>
+          <p class="principles__link"><a href="#agents">How identity is recorded</a></p>
+        </li>
+        <li class="principles__item">
+          <h3>Trust is not an engineering control.</h3>
+          <p>Evidence is. A reputation, a green check or a confident summary is not a substitute for a record.</p>
+          <p class="principles__link"><a href="#evidence">A real [record], as recorded</a></p>
+        </li>
+        <li class="principles__item">
+          <h3>The process survives the tool.</h3>
+          <p>The record is files in the repository, so it outlasts any agent, runtime or version of Praxis.</p>
+          <p class="principles__link"><a href="#resilience">What survives, and what is still direction</a></p>
+        </li>
+      </ol>
+    </div>
+  </section>
+  <section class="section" id="get-started" aria-labelledby="get-started-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Get started</p>
+        <div>
+          <h2 id="get-started-title">Put a repository under Praxis.</h2>
+          <p class="lede">Native bundles for macOS, Linux and Windows. No Node.js, npm or machine-wide .NET runtime is required.</p>
+        </div>
+      </div>
+      <div class="start">
+        <div class="start__steps">
+          <h3 class="start__step-title"><span class="mono">1</span> Install</h3>
+          <p>macOS or Linux:</p>
+          <pre class="terminal"><code>curl -fsSL https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.sh | sh</code></pre>
+          <p>Windows PowerShell:</p>
+          <pre class="terminal"><code>irm https://raw.githubusercontent.com/kemiller2002/praxis/main/scripts/install-native.ps1 | iex</code></pre>
+          <p class="start__small">Read the installers before you pipe them to a shell: <a href="https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.sh">install-native.sh</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.ps1">install-native.ps1</a>. Each downloads the latest <a href="https://github.com/kemiller2002/praxis/releases">release bundle</a> and checks it against the published checksums.</p>
+
+          <h3 class="start__step-title"><span class="mono">2</span> Initialize a repository</h3>
+          <pre class="terminal"><code><span class="terminal__prompt">$</span> cd your-repository
+<span class="terminal__prompt">$</span> praxis init
+<span class="terminal__prompt">$</span> praxis status
+<span class="terminal__prompt">$</span> praxis verify</code></pre>
+
+          <h3 class="start__step-title"><span class="mono">3</span> Read the protocol</h3>
+          <p>The work protocol, the CLI reference and the agent contract are in the repository: <a href="https://github.com/kemiller2002/praxis/blob/main/docs/work-protocol.md">work protocol</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/docs/cli.md">CLI reference</a>, <a href="https://github.com/kemiller2002/praxis/blob/main/docs/native-installation.md">native installation</a>.</p>
+        </div>
+        <aside class="start__aside" aria-labelledby="rename-title">
+          <h3 id="rename-title">From ROS to Praxis</h3>
+          <p>Praxis was previously named ROS, the Repository Operating System. The rename is in progress, and both names are in use today:</p>
+          <ul>
+            <li>The native installer provides <code>praxis</code>, and keeps <code>ros</code> as an alias for the same program.</li>
+            <li>With .NET 10 installed, <code>dotnet tool install -g EchelonFoundry.Praxis</code> provides the same <code>praxis</code> command. The npm package <code>@echelon-foundry/repository-operating-system</code> is no longer published.</li>
+            <li><code>init</code> adds a repository-local <code>./ros</code> launcher. It runs on Node.js; the installed <code>praxis</code> command does not need Node.</li>
+            <li>Help text and some output still say ROS.</li>
+          </ul>
+          <p>Same tool, same records. Commands on this page use <code>praxis</code>; wherever you have <code>ros</code>, the arguments are identical.</p>
+          <p class="start__verified"><span class="status status--verified">Checked</span> The commands in step 2 were run against release v3.4.0 on Linux x64, after verifying the bundle&rsquo;s checksum. Other platforms were not tested for this page.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+  <section class="section section--stone" id="case-study" aria-labelledby="case-study-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="kicker">Case study</p>
+        <div>
+          <h2 id="case-study-title">This website was built under Praxis.</h2>
+          <p class="lede">The request was <a href="https://github.com/kemiller2002/praxis/issues/84">issue #84</a>. It was broken into <span data-evidence="count:total">26</span> work items, and each one goes through the protocol described above: started, evidenced, then completed. This ledger is generated from those records, and shows where every item stood as of <span data-evidence="asOf:date">2026-09-27</span>.</p>
+        </div>
+      </div>
+
+      <dl class="tally">
+        <div><dt>Work items complete</dt><dd><span data-evidence="count:complete">25</span> of <span data-evidence="count:total">26</span></dd></div>
+        <div><dt>Executions recorded</dt><dd data-evidence="count:executions">28</dd></div>
+        <div><dt>Executions with a reported model</dt><dd data-evidence="count:models">0</dd></div>
+        <div><dt>Executions with token telemetry</dt><dd data-evidence="count:tokensRecorded">0</dd></div>
+        <div><dt>Executions with cost telemetry</dt><dd data-evidence="count:costRecorded">0</dd></div>
+      </dl>
+      <p class="tally__note">Those zeros are counts of executions, not measurements. The agent that built this site ran in an environment that supplied no model, token or cost telemetry to Praxis, so none was recorded, and no estimate was put in its place.</p>
+
+      <div class="ledger" role="region" tabindex="0" aria-labelledby="ledger-caption">
+        <table class="ledger__table">
+          <caption id="ledger-caption">GH-84 work ledger, from <a href="data/gh-84.json">the public evidence snapshot</a></caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Title</th>
+              <th scope="col">State</th>
+              <th scope="col">Executions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ledger:start -->
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="GH-84:id">GH-84</span></th>
+              <td data-evidence="GH-84:title">Build the public Praxis website</td>
+              <td><span class="status status--unresolved" data-evidence="GH-84:state">blocked</span></td>
+              <td class="mono" data-evidence="GH-84:executions.length">2</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-01:id">PRAXIS-SITE-01</span></th>
+              <td data-evidence="PRAXIS-SITE-01:title">Establish public-site architecture</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-01:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-01:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-02:id">PRAXIS-SITE-02</span></th>
+              <td data-evidence="PRAXIS-SITE-02:title">Implement Echelon Foundry design foundation</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-02:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-02:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-03:id">PRAXIS-SITE-03</span></th>
+              <td data-evidence="PRAXIS-SITE-03:title">Build the hero</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-03:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-03:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-04:id">PRAXIS-SITE-04</span></th>
+              <td data-evidence="PRAXIS-SITE-04:title">Build the &quot;Done is a claim&quot; interaction</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-04:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-04:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-05:id">PRAXIS-SITE-05</span></th>
+              <td data-evidence="PRAXIS-SITE-05:title">Explain the execution chain</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-05:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-05:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-06:id">PRAXIS-SITE-06</span></th>
+              <td data-evidence="PRAXIS-SITE-06:title">Build &quot;Git knows what. Praxis knows why.&quot;</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-06:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-06:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-07:id">PRAXIS-SITE-07</span></th>
+              <td data-evidence="PRAXIS-SITE-07:title">Explain agent accountability</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-07:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-07:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-08:id">PRAXIS-SITE-08</span></th>
+              <td data-evidence="PRAXIS-SITE-08:title">Show the real GH-84 agent [record]</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-08:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-08:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-09:id">PRAXIS-SITE-09</span></th>
+              <td data-evidence="PRAXIS-SITE-09:title">Explain unattributed-change protection</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-09:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-09:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-10:id">PRAXIS-SITE-10</span></th>
+              <td data-evidence="PRAXIS-SITE-10:title">Explain resilient/double-entry execution</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-10:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-10:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-11:id">PRAXIS-SITE-11</span></th>
+              <td data-evidence="PRAXIS-SITE-11:title">Explain repository-native engineering records</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-11:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-11:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-12:id">PRAXIS-SITE-12</span></th>
+              <td data-evidence="PRAXIS-SITE-12:title">Explain independent installation and integrations</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-12:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-12:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-13:id">PRAXIS-SITE-13</span></th>
+              <td data-evidence="PRAXIS-SITE-13:title">Create a realistic execution record component</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-13:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-13:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-14:id">PRAXIS-SITE-14</span></th>
+              <td data-evidence="PRAXIS-SITE-14:title">Build the product principles section</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-14:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-14:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-15:id">PRAXIS-SITE-15</span></th>
+              <td data-evidence="PRAXIS-SITE-15:title">Build installation/get-started surface</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-15:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-15:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-16:id">PRAXIS-SITE-16</span></th>
+              <td data-evidence="PRAXIS-SITE-16:title">Build navigation and footer</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-16:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-16:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-17:id">PRAXIS-SITE-17</span></th>
+              <td data-evidence="PRAXIS-SITE-17:title">Accessibility hardening</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-17:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-17:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-18:id">PRAXIS-SITE-18</span></th>
+              <td data-evidence="PRAXIS-SITE-18:title">Responsive/mobile engineering</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-18:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-18:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-19:id">PRAXIS-SITE-19</span></th>
+              <td data-evidence="PRAXIS-SITE-19:title">Performance and resilience</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-19:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-19:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-20:id">PRAXIS-SITE-20</span></th>
+              <td data-evidence="PRAXIS-SITE-20:title">Security/privacy review</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-20:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-20:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-21:id">PRAXIS-SITE-21</span></th>
+              <td data-evidence="PRAXIS-SITE-21:title">GitHub Actions verification</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-21:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-21:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-22:id">PRAXIS-SITE-22</span></th>
+              <td data-evidence="PRAXIS-SITE-22:title">GitHub Pages deployment</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-22:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-22:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-23:id">PRAXIS-SITE-23</span></th>
+              <td data-evidence="PRAXIS-SITE-23:title">Make the site itself a Praxis case study</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-23:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-23:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-24:id">PRAXIS-SITE-24</span></th>
+              <td data-evidence="PRAXIS-SITE-24:title">Final communication/polish pass</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-24:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-24:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-25:id">PRAXIS-SITE-25</span></th>
+              <td data-evidence="PRAXIS-SITE-25:title">Adversarial claim audit</td>
+              <td><span class="status status--verified" data-evidence="PRAXIS-SITE-25:state">complete</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-25:executions.length">1</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="mono" data-evidence="PRAXIS-SITE-26:id">PRAXIS-SITE-26</span></th>
+              <td data-evidence="PRAXIS-SITE-26:title">Final verification and evidence</td>
+              <td><span class="status status--pending" data-evidence="PRAXIS-SITE-26:state">active</span></td>
+              <td class="mono" data-evidence="PRAXIS-SITE-26:executions.length">1</td>
+            </tr>
+            <!-- ledger:end -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2 case__notes">
+        <div>
+          <h3>What the record caught</h3>
+          <p>Commit <span class="mono">588599e</span> in this site&rsquo;s history is titled as the completion of PRAXIS-SITE-15. The completion had in fact failed on a malformed argument. The Praxis record still showed the item active, and the next commit, <span class="mono">6d7b300</span>, records the real completion and says why. The commit message made a claim; the record did not agree; the record was right.</p>
+        </div>
+        <div>
+          <h3>What this page does not claim</h3>
+          <p>Deployment is not a Praxis record, so it is not in the ledger. When this snapshot was taken the site had not been deployed. If you are reading it on the web, deployment happened afterwards, and its record is the <a href="https://github.com/kemiller2002/praxis/actions">GitHub Actions run</a> that published it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark closing" id="closing" aria-labelledby="closing-title">
+    <div class="wrap closing__inner">
+      <h2 id="closing-title">Don&rsquo;t just ship software. <span class="closing__turn">Know how it came to exist.</span></h2>
+      <p class="closing__litany">Requirements. Execution. Evidence. Provenance.</p>
+      <div class="actions">
+        <a class="button" href="#evidence">Show me the record</a>
+        <a class="button button--ghost" href="#get-started">Get started</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="wrap site-footer__grid">
+    <div class="site-footer__brand">
+      <p class="site-footer__foundry"><span>Echelon</span> <span>Foundry</span></p>
+      <p class="site-footer__name">Praxis</p>
+      <p>Praxis is part of Echelon Foundry. It works on its own, in any Git repository.</p>
+    </div>
+    <nav class="site-footer__nav" aria-label="Project">
+      <ul>
+        <li><a href="https://github.com/kemiller2002/praxis">Source on GitHub</a></li>
+        <li><a href="https://github.com/kemiller2002/praxis/releases">Releases</a></li>
+        <li><a href="https://github.com/kemiller2002/praxis/issues">Issues</a></li>
+        <li><a href="https://github.com/kemiller2002/praxis/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="https://github.com/kemiller2002/praxis/tree/main/site">Source for this page</a></li>
+      </ul>
+    </nav>
+    <p class="site-footer__note">No analytics, no cookies, no tracking. Fonts are served by Google Fonts; the page works without them.</p>
+  </div>
+</footer>
+</body>
+</html>

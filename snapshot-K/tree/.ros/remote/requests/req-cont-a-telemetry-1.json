@@ -1,0 +1,77 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-cont-a-telemetry-1",
+  "fingerprint": "sha256:3e3bf2c98a73c40e38411d36e715059bd416fb79528c8c3e545238e29d97d833",
+  "protocolVersion": "1.3",
+  "operation": "telemetry.record",
+  "recordedAt": "2026-09-29T11:32:10.935Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "<session redacted>",
+    "execution": "EXE-20260929T113043360Z-32d06972"
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-cont-a-telemetry-1",
+  "operation": "telemetry.record",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f",
+    "observedSha": "834a2622c0ddf9d69b67ccc43078908d34a49d3f"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36562293832",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/remote/requests/req-cont-a-step-start-1.json",
+      ".ros/remote/requests/req-cont-a-telemetry-1.json",
+      ".ros/telemetry/executions/EXE-20260929T113043360Z-32d06972.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "measurementId": "MEAS-db1e1240fc70cceabb90e824",
+    "id": "tool.calls",
+    "value": 11,
+    "unit": "count",
+    "currency": null,
+    "quality": "observed",
+    "confidence": null,
+    "scope": "execution",
+    "aggregation": "sum",
+    "dimensions": {
+      "step": "continue-proof-a"
+    },
+    "pricing": null,
+    "source": {
+      "type": "agent-report",
+      "name": "agent-a-self-count",
+      "mechanism": "explicit-metric-record"
+    },
+    "collectedAt": "2026-09-29T11:32:09.486Z",
+    "schemaVersion": "1.0.0"
+  }
+}
+
+}

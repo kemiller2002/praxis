@@ -1,0 +1,284 @@
+# ROS F# migration telemetry
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260907T203141590Z-54f547f8.json`. This document
+is the human projection; it never converts unavailable observations to zero.
+
+## Checkpoints
+
+| Checkpoint | UTC timestamp | State/evidence |
+|---|---|---|
+| T0 experiment start | 2026-09-07T20:31:41.590Z | WI-0011 execution started; clean Git baseline; experiment question/classification recorded |
+| T1 instrumentation/bootstrap complete | 2026-09-08T00:08:50Z | authorities read; capability states inspected; baseline tests/builds recorded |
+| T2 semantic foundation established | 2026-09-08T00:19:38Z | inventory/decomposition frozen; SDE map/manifests; hypotheses/experiment/architecture decision authored |
+| T3 first vertical slice complete | 2026-09-08T06:14:34Z | MIG-03/04 typed artifact shadow, fixture parity, and rejection tests complete |
+| T4 implementation complete | 2026-09-08T06:18:00Z | slice committed; root CI/publish gate provisions .NET; migration docs updated |
+| T5 verification complete | 2026-09-08T06:23:23Z | full unrestricted suite, TypeScript builds, and documented self-review complete |
+| T6 final evidence | 2026-09-08T06:29:33.997Z | WI-0011 complete; execution finalized; generated Git/test/LOC metrics captured |
+
+## Starting measurements
+
+| Metric | Value/capability | Provenance |
+|---|---|---|
+| baseline tests | 91 passed, 0 failed, one execution | Node/Python test output |
+| baseline builds | 2 passed, 0 failed | TypeScript compiler exits |
+| starting dirty files | 0 | ROS Git baseline |
+| subagents spawned | 3 | orchestrator report |
+| parallel execution peak | 4 | orchestrator report |
+| approval requests/denials | 1 / 0 | tool interaction report |
+| provider/runtime/session | openai / codex / recorded session ID | whitelisted runtime identity |
+| model and model version | unavailable | runtime did not expose them |
+| input/output/reasoning/cached tokens | supported-unavailable | runtime family capability; no ingested observation |
+| cache-read/tool-token/current-context details | unknown | not mapped or reported |
+| input/output/cache/tool/total cost | unknown | no billing/pricing observation |
+| context window/utilization | supported-unavailable or unknown per raw execution | runtime capability record |
+| tool-call totals/categories | unknown unless explicitly recorded later | no trustworthy aggregate exposed at T0 |
+| Declared Context Surface/CER/Discovery Expansion baseline | missing | repository had no project SDE map/manifests at T0; not reconstructed retrospectively |
+
+## T3 measurements
+
+| Metric | Value/capability | Provenance |
+|---|---|---|
+| F# production projects | 5 | `Ros.slnx` project graph |
+| F# shadow commands | 3 capability groups: artifact validate, registry build, registry check | `Ros.Cli.Program` |
+| F# test cases | 8 passed, 0 failed | `npm run test:fsharp` output |
+| Node-driven F# differential cases | 3 passed, 0 failed | same command; fixture bytes, current-repository smoke, usage rejection |
+| F# build attempts after slice implementation | 5 invoked: 4 compiler successes, 1 compiler failure; two later Node differential failures repaired | command output: one test syntax issue, one Node strict-mode test issue, and one assertion-shape issue; no production semantic failure |
+| compiler warnings/errors on successful build | 0 / 0 | .NET build output |
+| baseline canonical inputs in F# fixture build | unchanged hashes | F# typed test |
+| new F# external process call sites | 0 in Domain/Application; CLI uses no shell/Git/network operation | source review |
+| unavailable provider token/cost/model measurements | unchanged from T0 | environment did not expose observations |
+
+## Running execution summary before finalization
+
+| Metric | Observed aggregate | Interpretation |
+|---|---:|---|
+| test executions | 4 | baseline, fixture preregistration, listener-restricted complete run, unrestricted complete run |
+| tests passed / failed | 272 / 14 | the 14 failures are retained as sandbox loopback restrictions; unrestricted final run itself was 105 passed / 0 failed |
+| build executions / failures | 9 / 1 | includes baseline, F# slice attempts, and final TypeScript builds; one early F# test syntax failure was repaired |
+| agent self-corrections | 4 | D010–D013 correction categories recorded in the journal |
+| provider token/cost values | unavailable or unknown | not inferred from these engineering aggregates |
+
+## T6 mechanically derived observations
+
+| Metric | Value | Notes |
+|---|---:|---|
+| execution calendar/wall span | 35,872,407 ms | one finalized execution; this is elapsed span, not active agent time |
+| commits created in execution range | 4 | as captured at work finalization |
+| files added / modified / deleted | 78 / 5 / 0 | Git-derived at finalization |
+| lines added / deleted | 4,624 / 4 | Git-derived at finalization; not a success metric |
+| tests added / modified / removed | 32 / 0 / 0 | Git-derived classification |
+| ending dirty files | 0 | at finalization, before closeout metadata commit |
+
+The final closeout commit and push are recorded by Git after this telemetry
+snapshot; they do not retroactively alter the finalized execution record.
+
+The final evidence record will add mechanically derived commits/files/LOC,
+build/test attempts, failures, repair loops, defect counts, migration counts,
+external-call/rule-site observations, and every available checkpoint value.
+
+## MIG-06 continuation execution
+
+Canonical raw execution evidence for this continuation is
+`.ros/telemetry/executions/EXE-20260908T113835529Z-e8d6b91e.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T11:38:35.529Z | ROS work/telemetry transition |
+| starting branch/tree | `migration/ros-fsharp-git-provenance`, clean before work records | Git and `./ros work ready` |
+| F# tests after Git slice | 21 passed, 0 failed | direct `Ros.Tests.dll` execution |
+| Git differential tests | 3 passed, 0 failed | Node test runner over controlled repositories |
+| new shadow command | `ros-fs git status [--json]` | CLI smoke output |
+| Git process call sites added | 1, Infrastructure only | source inspection |
+| compiler attempts | 8: 4 successful, 4 failed | command output; reserved-name, inference, placement, and interpolation repairs followed by narrow and full gates |
+| final complete suite | 124 passed, 0 failed | 89 Node + 7 Python + 21 F# + 7 Node-driven F# differential/smoke tests |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 structural review warnings | `sde status` and `sde verify`; warnings are pre-existing large-file review signals |
+| provider model/token/cache/cost | unavailable/not captured | runtime exposed no new provider observation; no values inferred |
+
+## MIG-06 production Git consumer execution
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T175137758Z-37978fda.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T17:51:37.758Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-git-consumer-integration` / `f6ee5ce` | Git |
+| production Git status helpers | reduced from two caller-local implementations to one installed adapter | source inspection |
+| exact Node/F# observation differential | clean, changed with rename, and unavailable non-repository pass | Node differential runner |
+| caller-specific safeguards | rename attribution, pre-finalization rejection, unavailable-not-zero telemetry pass | work and telemetry tests |
+| complete suite | 163 passed, 0 failed: 104 Node, 7 Python, 40 F#, 12 differential/smoke | `npm run test:all` |
+| failed focused assertions | two expectation/premise corrections; no production regression | direct focused test output |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+This continuation used the existing semantic map and the work-lifecycle and
+execution-telemetry manifests. Source inspection expanded into both Node Git
+helpers because the work manifest declared Git evidence and the telemetry
+manifest declared repository discovery; this was expected dependency fan-out,
+not an undeclared semantic area.
+
+## MIG-07 continuation execution
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T115323101Z-4ccf5eaa.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T11:53:23.101Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-fsharp-work-lifecycle` / `803f2b9` | Git baseline captured by ROS |
+| typed work tests | 4 new; 25 total F# tests passed | `Ros.Tests.dll` output |
+| work differential tests | 3 new; matrix case covers all 16 state/action pairs | Node test runner against real Node transition calls and F# CLI |
+| final complete suite | 131 passed, 0 failed | 89 Node + 7 Python + 25 F# + 10 Node-driven differential/smoke tests |
+| build executions | 2 passed, 0 failed | narrow and complete gates; successful builds had zero warnings/errors |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
+| production mutations | none | source diff; `./ros` remains Node |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 work-persistence continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T120118252Z-e06c199f.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:01:18.252Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-fsharp-work-persistence` / `9785eb6` | ROS Git baseline |
+| new persistence tests | 5; 30 total F# tests pass | direct typed test execution |
+| successful build | 0 warnings, 0 errors | final narrow .NET build |
+| failed build attempts | 2 | compiler exposed unconstrained overloads and record-label ambiguity; both repaired |
+| final complete suite | 136 passed, 0 failed | 89 Node + 7 Python + 30 F# + 10 Node-driven differential/smoke tests |
+| SDE integrity | v1.1.1 verified; 18 managed files; 5 pre-existing structural review warnings | `sde verify` |
+| production state writer changes | 0 | source diff; shadow recovery contract only |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 production work-persistence integration
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T121300882Z-fe89c3e0.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:13:00.882Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-persistence-integration` / `b3a32cf` | ROS Git baseline |
+| new production/cross-runtime tests | 4; 31 total F# and 92 total Node tests pass | focused and complete test output |
+| focused work/telemetry tests | 52 passed, 0 failed | Node test runner; expected rejection diagnostics were asserted |
+| successful build | 0 warnings, 0 errors | final .NET build |
+| execution mistakes | 1 | initial direct test invocation selected an unbuilt Debug output; corrected to Release without a test failure |
+| complete suite before closeout | 140 passed, 0 failed | 92 Node + 7 Python + 31 F# + 10 Node-driven differential/smoke tests |
+| production state writer changes | Node live-work event/context writer adopts shared recovery journal under existing lock | source and cross-runtime tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 backlog-persistence continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T122549568Z-b1bcf1e1.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T12:25:49.568Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-backlog-persistence` / `10f44ef` | ROS Git baseline |
+| new typed/production tests | 3 / 4 | test source and focused runner output |
+| focused gates | 34 F# and 32 Node work tests passed, zero failed | direct typed and Node test execution |
+| concurrency proof | eight concurrent `ros add` processes; eight final unique queue IDs | production test fixture |
+| successful builds before closeout | 1 | .NET build, zero warnings/errors |
+| failed builds before closeout | 1 | nominal F# write-record ambiguity in an unannotated existing test helper; repaired with explicit types |
+| complete test attempts | 2: first 146 passed/1 failed; second 147 passed/0 failed | first read-only smoke detected stale evidence/journal registries; configured rebuild then unchanged rerun passed |
+| final complete suite | 147 passed, 0 failed | 96 Node + 7 Python + 34 F# + 10 Node-driven differential/smoke tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-05 telemetry-link continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T140008179Z-0d130adf.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T14:00:08.179Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-telemetry-link-recovery` / `b6b1f9b` | ROS Git baseline |
+| typed execution-link tests | 6 new; 40 total F# tests pass | direct typed runner |
+| production recovery/guard tests | 4 new; focused work/telemetry gate has 60 passing tests | Node test runner |
+| successful builds before closeout | 2 | .NET builds, zero warnings/errors |
+| failed focused tests before closeout | 1 | no-write guard succeeded but test helper did not model an absent execution directory; helper repaired and unchanged guard reran successfully |
+| final complete suite | 157 passed, 0 failed | 100 Node + 7 Python + 40 F# + 10 Node-driven differential/smoke tests |
+| provider model/token/cache/cost | unavailable/not captured | no runtime observation; no values inferred |
+
+## MIG-07 work-orchestration continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T181145717Z-9fbd14f5.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T18:11:45.717Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-orchestration` / `0dd3198` | Git |
+| typed planner tests | 4 new; 44 total F# tests pass | direct typed runner |
+| production differential | all five legal item/event projections plus detailed rejection output pass | Node-driven F# differential |
+| failed builds | 3 | compiler found ambiguous record and overload inference; explicit type annotations repaired each |
+| complete suite | 169 passed, 0 failed: 104 Node, 7 Python, 44 F#, 14 differential/smoke | `npm run test:all` |
+| production mutations | none | shadow CLI only; Node remains state-changing authority |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 evidence-capability continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T182701803Z-a382e3c4.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T18:27:01.803Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-evidence` / `a37f2ff` | Git |
+| typed tests | 2 new; 46 total F# tests pass | direct typed runner; the filesystem case also proves malformed paths become `unavailable` |
+| evidence differential | file, directory, absolute existing path, and missing path match production | Node-driven F# differential |
+| failed builds | 2 | CLI composition first lacked repository root; after self-review extended the boundary test, one assertion-helper typo failed compilation; both were repaired and the unchanged complete gate reran |
+| repair loops | 2 | root composition remained at the infrastructure edge; malformed path normalization moved inside the typed exception boundary and its test now uses the established assertion API |
+| complete suite | 172 passed, 0 failed: 104 Node, 7 Python, 46 F#, 15 differential/smoke | `npm run test:all` |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 context-planning continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260908T233512457Z-e127ac8c.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-08T23:35:12.457Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-context-plan` / `d0a5902` | Git |
+| typed tests | 5 new; 51 total F# tests pass | direct typed runner |
+| work differential | 2 new; 8 work differentials pass | Node-driven F# comparison |
+| failed builds | 2 | compiler exposed regex and JSON overload ambiguity; explicit string/writer annotations repaired the boundaries |
+| complete suite | 179 passed, 0 failed: 104 Node, 7 Python, 51 F#, 17 differential/smoke | `npm run test:all` |
+| production mutations | none | context-plan is a shadow planning view; Node remains writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 backlog-planning continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260909T003403073Z-b80f117a.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-09T00:34:03.073Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-backlog-plan` / `f5d2b5e` | Git |
+| typed tests | 4 new; 55 total F# tests pass | direct typed runner |
+| work differential | 2 new; 10 work differentials pass | Node-driven F# comparison |
+| failed builds | 3 | nominal request/plan ambiguity plus CLI and JSON overload ambiguity; explicit boundary annotations repaired them |
+| failed differentials | 1 | first effect shape incorrectly cleared a preserved block reason; explicit keep/clear/set operations repaired the semantic model |
+| complete suite | 185 passed, 0 failed: 104 Node, 7 Python, 55 F#, 19 differential/smoke | `npm run test:all` |
+| production mutations | none | shadow decisions/plans only; Node remains queue and live-work writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |
+
+## MIG-07 verified-context continuation
+
+Canonical raw execution evidence is
+`.ros/telemetry/executions/EXE-20260909T005705798Z-55a690b1.json`.
+
+| Observation | Value/capability | Provenance |
+|---|---|---|
+| continuation start | 2026-09-09T00:57:05.798Z | ROS work/telemetry transition |
+| starting branch/SHA | `migration/ros-work-verified-context` / `ff47c69` | Git |
+| typed tests | 2 new; 57 total F# tests pass | direct typed runner |
+| work differential | 1 new; 11 work differentials pass | Node-driven F# comparison |
+| failed builds/tests | 0 | focused implementation gate passed on first run |
+| complete suite | 188 passed, 0 failed: 104 Node, 7 Python, 57 F#, 20 differential/smoke | `npm run test:all` |
+| production mutations | none | verified-context remains a shadow plan; Node remains writer |
+| provider model/token/cache/cost | unavailable/not captured | no provider usage snapshot was exposed; no values inferred |

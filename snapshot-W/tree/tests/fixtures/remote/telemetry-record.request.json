@@ -1,0 +1,21 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.0",
+  "requestId": "req-2026-09-28-telemetry-0001",
+  "operation": "telemetry.record",
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "59b4e032818a4c765886e48c117595dc58019d43"
+  },
+  "actor": { "kind": "agent", "id": "example/cloud-agent", "provider": "example", "runtime": "cloud-agent" },
+  "execution": { "id": "EXE-20260928T080000000Z-0a1b2c3d" },
+  "arguments": {
+    "workItemId": "WI-0100",
+    "metric": "tokens.input",
+    "value": 1532,
+    "unit": "tokens",
+    "quality": "observed",
+    "sourceType": "runtime-api",
+    "sourceName": "example-usage-api"
+  }
+}
