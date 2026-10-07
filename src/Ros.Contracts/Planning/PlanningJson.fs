@@ -1231,7 +1231,7 @@ module PlanningJson =
     let groupStoreSchemaVersion = "1.0.0"
 
     /// One declaration, with the keys `grouping.groups` reads, plus who
-    /// declared it and when, and who added each later member.
+    /// declared it and when, who added each later member, and who removed any.
     let storedGroup (value: StoredGroup) : JsonNode =
         let group = value.Group
 
@@ -1253,6 +1253,15 @@ module PlanningJson =
                       [ "workItem", text addition.WorkItem
                         "addedAt", text addition.AddedAt
                         "addedBy", text addition.AddedBy ])
+              |> array
+              "removals",
+              value.Removals
+              |> List.map (fun removal ->
+                  record
+                      [ "workItem", text removal.WorkItem
+                        "removedAt", text removal.RemovedAt
+                        "removedBy", text removal.RemovedBy
+                        "reason", optionalText removal.Reason ])
               |> array ]
 
     /// `work group show`: one declaration with its members' own states and
@@ -1325,7 +1334,18 @@ module PlanningJson =
                             |> List.map (fun addition ->
                                 { WorkItem = readText addition "workItem"
                                   AddedAt = readText addition "addedAt"
-                                  AddedBy = readText addition "addedBy" }) })
+                                  AddedBy = readText addition "addedBy" })
+                      // Absent in declarations written before `work group remove`.
+                      Removals =
+                        match field node "removals" with
+                        | null -> []
+                        | _ ->
+                            objects node "removals"
+                            |> List.map (fun removal ->
+                                { WorkItem = readText removal "workItem"
+                                  RemovedAt = readText removal "removedAt"
+                                  RemovedBy = readText removal "removedBy"
+                                  Reason = readOptionalText removal "reason" }) })
                 |> Ok
         with
         | Malformed message -> Error $"malformed group store: {message}"

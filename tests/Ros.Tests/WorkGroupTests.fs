@@ -10,7 +10,7 @@ open Ros.Domain.Work
 open PlanningFixtures
 
 /// `work group create` (PRAXIS-GROUP-01), `work group show`
-/// (PRAXIS-GROUP-02) and `work group add` (PRAXIS-GROUP-03; PRX-GRP-073 phase two): the pure declaration decision and
+/// (PRAXIS-GROUP-02), `work group add` (PRAXIS-GROUP-03) and `work group remove` (PRAXIS-GROUP-04; PRX-GRP-073 phase two): the pure declaration decision and
 /// view, the stored contract, the planner merge, and the commands through the
 /// real binary.
 module WorkGroupTests =
@@ -221,6 +221,68 @@ module WorkGroupTests =
               | Ok [ parsed ] -> Assert.empty parsed.Additions
               | other -> failwith $"unexpected parse: {other}") ]
 
+    // ---- remove: the pure decision ----------------------------------------------
+
+    let private removeRequest group item =
+        { GroupId = group
+          WorkItem = item
+          RemovedAt = "2026-10-09T00:00:00.000Z"
+          RemovedBy = "remover"
+          Reason = Some "split out" }
+
+    let private threeMembers =
+        GroupDeclaration.add [ baseGroup ] statuses here (addRequest "GROUP-A-1" "LIVE-1") |> created
+
+    let private removeTests =
+        [ t "remove: a member leaves, and who removed it is recorded" (fun () ->
+              let updated = GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-1" "A-2") |> created
+              Assert.equal [ "A-1"; "LIVE-1" ] updated.Group.Members
+              Assert.equal [ { WorkItem = "A-2"; RemovedAt = "2026-10-09T00:00:00.000Z"; RemovedBy = "remover"; Reason = Some "split out" } ] updated.Removals
+              Assert.equal threeMembers.Additions updated.Additions
+              Assert.equal "tester" updated.DeclaredBy
+              Assert.equal { threeMembers.Group with Members = updated.Group.Members } updated.Group)
+
+          t "remove: an added member's addition stays recorded after it leaves" (fun () ->
+              let updated = GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-1" "LIVE-1") |> created
+              Assert.equal [ "A-1"; "A-2" ] updated.Group.Members
+              Assert.equal [ "LIVE-1" ] (updated.Additions |> List.map (fun addition -> addition.WorkItem))
+              Assert.equal [ "LIVE-1" ] (updated.Removals |> List.map (fun removal -> removal.WorkItem)))
+
+          t "remove: non-members and undeclared groups are refused" (fun () ->
+              Assert.equal [ "not-member" ] (GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-1" "A-3") |> rejected)
+              Assert.equal [ "not-member" ] (GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-1" "NOPE-9") |> rejected)
+              Assert.equal [ "unknown-group" ] (GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-9" "A-1") |> rejected))
+
+          t "remove: the last members cannot be removed" (fun () ->
+              Assert.equal [ "last-members" ] (GroupDeclaration.remove [ baseGroup ] (removeRequest "GROUP-A-1" "A-1") |> rejected)
+              let message = GroupRejection.message (GroupRejection.LastMembers("A-1", "GROUP-A-1", 1))
+              Assert.isTrue (message.Contains "at least two" && message.Contains "GROUP-A-1") message)
+
+          t "remove: a terminal member may leave; its state is not consulted" (fun () ->
+              let partial = { threeMembers with Group = { threeMembers.Group with Members = [ "A-1"; "A-2"; "DONE-1" ] } }
+              Assert.equal [ "A-1"; "A-2" ] (GroupDeclaration.remove [ partial ] (removeRequest "GROUP-A-1" "DONE-1") |> created).Group.Members)
+
+          t "remove: the result passes the store's own validation" (fun () ->
+              let updated = GroupDeclaration.remove [ threeMembers ] (removeRequest "GROUP-A-1" "A-2") |> created
+              Assert.empty (GroupDeclaration.findings [ updated ] statuses))
+
+          t "remove: removals round-trip, a missing reason is null, and a store without them still parses" (fun () ->
+              let updated =
+                  GroupDeclaration.remove [ threeMembers ] { removeRequest "GROUP-A-1" "A-2" with Reason = None } |> created
+
+              match PlanningJson.parseGroupStore (PlanningJson.renderGroupStore [ updated ]) with
+              | Ok parsed -> Assert.equal [ updated ] parsed
+              | Error message -> failwith message
+
+              Assert.isTrue ((PlanningJson.renderGroupStore [ updated ]).Contains "\"reason\": null") "reason rendered as null"
+
+              let legacy =
+                  """{"schemaVersion":"1.0.0","groups":[{"id":"GROUP-A-1","members":["A-1","A-2"],"kind":null,"origin":"human-declared","sharedContext":[],"executionRepository":null,"crossRepository":false,"architectureNotes":[],"declaredAt":"2026-10-07T00:00:00.000Z","declaredBy":"tester","additions":[]}]}"""
+
+              match PlanningJson.parseGroupStore legacy with
+              | Ok [ parsed ] -> Assert.empty parsed.Removals
+              | other -> failwith $"unexpected parse: {other}") ]
+
     // ---- show: the pure view ---------------------------------------------------
 
     let private viewQueue =
@@ -245,7 +307,8 @@ module WorkGroupTests =
               ArchitectureNotes = [ "one renderer" ] }
           DeclaredAt = "2026-10-07T00:00:00.000Z"
           DeclaredBy = "tester"
-          Additions = [] }
+          Additions = []
+          Removals = [] }
 
     let private plannedView (stored: StoredGroup) =
         let configuration = GroupDeclaration.mergeInto [ stored ] PlannerConfiguration.defaults
@@ -579,4 +642,118 @@ module WorkGroupTests =
               Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--bogus" ]).ExitCode
               Assert.equal stored (File.ReadAllText(storePath root))) ]
 
-    let tests = domain @ addTests @ viewTests @ cli @ addCli
+    let private removeMember root extra =
+        PraxisCli.run root None ([ "work"; "group"; "remove"; "--occurred-at"; PraxisCli.now () ] @ extra)
+
+    /// Every file outside `.git` and the group store, with its content.
+    let private everythingButTheStore (root: string) =
+        Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+        |> Array.filter (fun path ->
+            not (path.Contains(Path.DirectorySeparatorChar.ToString() + ".git" + Path.DirectorySeparatorChar.ToString()))
+            && path <> storePath root)
+        |> Array.sort
+        |> Array.map (fun path -> path, File.ReadAllText path)
+        |> Array.toList
+
+    let private removeCli =
+        [ t "remove stores the removal with its remover and changes nothing else" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              write root ".ros/work/queue.json" (queueDocument.Replace("]}", ",\n  {\"id\":\"TASK-E\",\"title\":\"Task E\",\"tags\":[],\"priority\":\"low\",\"status\":\"ready\",\"createdAt\":\"2026-09-05T00:00:00.000Z\",\"updatedAt\":\"2026-09-05T00:00:00.000Z\",\"createdBy\":\"unknown\",\"source\":\"manual\",\"sourceReference\":null}\n]}"))
+              addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-E" ] |> PraxisCli.ok |> ignore
+              let before = everythingButTheStore root
+
+              let removed =
+                  removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-B"; "--reason"; "moved to its own group"; "--actor"; "group-remover"; "--json" ]
+                  |> PraxisCli.ok
+
+              Assert.equal "work-group-remove" (PraxisCli.text (removed.Json["kind"]))
+              Assert.isTrue (removed.Json["ok"].GetValue<bool>()) "ok"
+              Assert.equal before (everythingButTheStore root)
+
+              match PlanningJson.parseGroupStore (File.ReadAllText(storePath root)) with
+              | Ok [ stored ] ->
+                  Assert.equal [ "TASK-A"; "TASK-E" ] stored.Group.Members
+                  Assert.equal [ "TASK-E" ] (stored.Additions |> List.map (fun addition -> addition.WorkItem))
+
+                  match stored.Removals with
+                  | [ removal ] ->
+                      Assert.equal "TASK-B" removal.WorkItem
+                      Assert.isTrue (removal.RemovedBy.Contains "group-remover") removal.RemovedBy
+                      Assert.equal (Some "moved to its own group") removal.Reason
+                  | other -> failwith $"unexpected removals: {other}"
+              | other -> failwith $"unexpected store: {other}"
+
+              Assert.empty (validateFindings root)
+              let shown = PraxisCli.run root None [ "work"; "group"; "show"; "GROUP-FIXTURE-001" ]
+              Assert.isTrue (not (shown.Output.Contains "TASK-B")) shown.Output
+              let item = PraxisCli.run root None [ "work"; "show"; "TASK-B" ]
+              Assert.equal 0 item.ExitCode)
+
+          t "remove leaves a terminal member's state and evidence untouched" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+
+              // TASK-D completed after it joined (partial completion, PRX-GRP-042).
+              match PlanningJson.parseGroupStore (File.ReadAllText(storePath root)) with
+              | Ok [ stored ] ->
+                  let partial = { stored with Group = { stored.Group with Members = stored.Group.Members @ [ "TASK-D" ] } }
+                  File.WriteAllText(storePath root, PlanningJson.renderGroupStore [ partial ])
+              | other -> failwith $"unexpected store: {other}"
+
+              write root ".ros/context/current.json" (contextDocument.Replace("\"evidence\":[]", "\"evidence\":[{\"type\":\"test\",\"path\":\"evidence.txt\"}]"))
+              let before = everythingButTheStore root
+              removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-D" ] |> PraxisCli.ok |> ignore
+              Assert.equal before (everythingButTheStore root)
+              Assert.isTrue ((File.ReadAllText(Path.Combine(root, ".ros", "context", "current.json"))).Contains "evidence.txt") "evidence kept")
+
+          t "remove refuses non-members, undeclared groups and the last members with exit 1" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+
+              let codes extra =
+                  let result = removeMember root (extra @ [ "--json" ])
+                  Assert.equal 1 result.ExitCode
+                  Assert.isTrue (not (result.Json["ok"].GetValue<bool>())) "ok is false"
+                  result.Json["rejections"].AsArray() |> Seq.map (fun entry -> PraxisCli.text (entry["code"])) |> Seq.toList
+
+              Assert.equal [ "not-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-D" ])
+              Assert.equal [ "not-member" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-Z" ])
+              Assert.equal [ "unknown-group" ] (codes [ "--id"; "GROUP-FIXTURE-404"; "--member"; "TASK-A" ])
+              Assert.equal [ "last-members" ] (codes [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A" ])
+              let text = removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-B" ]
+              Assert.equal 1 text.ExitCode
+              Assert.isTrue (text.Error.Contains "at least two") text.Error
+              Assert.equal stored (File.ReadAllText(storePath root)))
+
+          t "remove --dry-run decides the same way and writes nothing" (fun () ->
+              let root = fixture ()
+              write root ".ros/work/queue.json" (queueDocument.Replace("\"status\":\"abandoned\"", "\"status\":\"ready\""))
+              declare root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-A"; "--member"; "TASK-B"; "--member"; "TASK-C" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+              let result = removeMember root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-C"; "--dry-run"; "--json" ] |> PraxisCli.ok
+              Assert.isTrue (result.Json["dryRun"].GetValue<bool>()) "dry run reported"
+              let group = result.Json["group"]
+              let members = group["members"].AsArray() |> Seq.map PraxisCli.text |> Seq.toList
+              Assert.equal [ "TASK-A"; "TASK-B" ] members
+              Assert.equal stored (File.ReadAllText(storePath root))
+              let text = removeMember root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-C"; "--dry-run" ] |> PraxisCli.ok
+              Assert.isTrue (text.Output.Contains "would remove TASK-C from GROUP-FIXTURE-002") text.Output
+              Assert.equal 1 (removeMember root [ "--id"; "GROUP-FIXTURE-002"; "--member"; "TASK-D"; "--dry-run" ]).ExitCode
+              Assert.equal stored (File.ReadAllText(storePath root)))
+
+          t "remove usage errors exit 2" (fun () ->
+              let root = fixture ()
+              declare root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ] |> PraxisCli.ok |> ignore
+              let stored = File.ReadAllText(storePath root)
+              Assert.equal 2 (removeMember root [ "--member"; "TASK-A" ]).ExitCode
+              Assert.equal 2 (removeMember root [ "--id"; "GROUP-FIXTURE-001" ]).ExitCode
+              Assert.equal 2 (removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--member"; "TASK-B" ]).ExitCode
+              Assert.equal 2 (PraxisCli.run root None [ "work"; "group"; "remove"; "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A" ]).ExitCode
+              Assert.equal 2 (removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--reason"; " " ]).ExitCode
+              Assert.equal 2 (removeMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--bogus" ]).ExitCode
+              Assert.equal 2 (addMember root [ "--id"; "GROUP-FIXTURE-001"; "--member"; "TASK-A"; "--reason"; "not an add flag" ]).ExitCode
+              Assert.equal stored (File.ReadAllText(storePath root))) ]
+
+    let tests = domain @ addTests @ removeTests @ viewTests @ cli @ addCli @ removeCli

@@ -45,7 +45,7 @@ balanced --json > plan.json` to keep a plan; later `praxis plan freshness
 | Merged PRs, tags, merged checkpoint commits | read-only Git on the integration branch (`origin/HEAD`, `origin/main`, `main`, ...) | `git` |
 | CI results, GitHub state | `--observations FILE`, supplied by a caller that can see them | `ci`, `github`, `external-observation` |
 | Weights, declared dependencies/areas/conflicts | `--config FILE` | `planner-configuration` |
-| Human-declared groups | `.ros/work/groups.json` (written by `work group create` and `work group add`), merged into `grouping.groups` | `planner-configuration` |
+| Human-declared groups | `.ros/work/groups.json` (written by `work group create`, `work group add` and `work group remove`), merged into `grouping.groups` | `planner-configuration` |
 
 The inventory is the union of queue and live context (PRX-PLAN-010); the
 effective lifecycle state uses the same authority as `work list`
@@ -302,8 +302,8 @@ ros work group create --id GROUP-AREA-001 --member ID --member ID [--member ID]*
 Records a human-declared execution group (PRX-GRP-073 phase two) in
 `.ros/work/groups.json`. Each entry has exactly the keys of a
 `grouping.groups` configuration entry (`origin` is always `human-declared`)
-plus `declaredAt`, `declaredBy` (the resolved actor) and `additions` (see
-"Adding a member"). The planner merges
+plus `declaredAt`, `declaredBy` (the resolved actor), `additions` (see
+"Adding a member") and `removals` (see "Removing a member"). The planner merges
 stored groups into `grouping.groups`; when an explicit `--config` file
 declares the same ID, the configuration's definition is used.
 
@@ -379,6 +379,34 @@ same decision and writes nothing. `--json` emits a `praxis.work-group/1.0.0`
 document of kind `work-group-add` with `dryRun`, `ok` and either the updated
 `group` or `rejections` (`code`, `message`).
 
+### Removing a member
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json]
+```
+
+Removes one member from a stored declaration (`PRAXIS-GROUP-04`). The store
+records who removed it: the declaration gains a `removals` entry
+`{workItem, removedAt, removedBy, reason}` (`removedBy` is the resolved
+actor; `reason` is `null` without `--reason`). The member's earlier
+`additions` entry, if any, stays: the declaration keeps its whole history.
+A store written before `removals` existed parses with none.
+
+The command refuses, reporting the reason and exiting `1`: an undeclared
+group; an item that is not a current member; and a removal that would leave
+the group with fewer than two members. A group needs at least two members
+(as `create` and `validate` require), so removing one of its last two is
+always refused rather than leaving a degenerate group; there is no flag to
+override it. Any member may otherwise leave whatever its lifecycle state:
+removal reads only the group store, never the item's state. Missing or
+malformed arguments (including more than one `--member` or an empty
+`--reason`) exit `2`. It writes only the group store, under the
+work-protocol lock; the item's lifecycle state, queue entry, context record,
+evidence and attribution are untouched. `--dry-run` takes the same decision
+and writes nothing. `--json` emits a `praxis.work-group/1.0.0` document of
+kind `work-group-remove` with `dryRun`, `ok` and either the updated `group`
+or `rejections` (`code`, `message`).
+
 ## JSON contract
 
 Every document has `"schema": "praxis.plan/1.0.0"` and a `kind`: `analysis`,
@@ -442,7 +470,7 @@ No external dependency was added (PRX-PLAN-004).
 | GRP-050..052 | Met for dependencies and cycles (dependency test) and repositories (tests 5, 5b); cross-repository orchestration is future work. |
 | GRP-060..063 | Met; context cost is counted, not priced (unmeasured). |
 | GRP-070..072 | Met. |
-| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"), and extended via `work group add` (`PRAXIS-GROUP-03`, experimental branch; see "Adding a member"). `remove`, `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-04..05`, deferred. |
+| GRP-073 | Declarations from configuration, and durably from `.ros/work/groups.json` via `work group create` (`PRAXIS-GROUP-01`, experimental branch; see "Declaring a group"), viewed read-only via `work group show` (`PRAXIS-GROUP-02`, experimental branch; see "Showing a group"), extended via `work group add` (`PRAXIS-GROUP-03`, experimental branch; see "Adding a member"), and reduced via `work group remove` (`PRAXIS-GROUP-04`, experimental branch; see "Removing a member"). `checkpoint` and `plan execute-group` remain captured as `PRAXIS-GROUP-05`, deferred. |
 | GRP-074 | Size and context-pressure splits and architecture merges met (tests 18, 19, merge test); splitting by independent chain or external blockage is not implemented. |
 | GRP-075 | Met (test 15). |
 | GRP-080..088 | Baseline, cohort, protocol and predictions frozen (`EV-ROS-2026-A059`, `EX-ROS-2026-A021`); the arms have not run. |

@@ -18,14 +18,23 @@ type MemberAddition =
       AddedAt: string
       AddedBy: string }
 
+/// Who removed one member from a declaration, when, and why
+/// (`work group remove`). The member's earlier addition stays recorded.
+type MemberRemoval =
+    { WorkItem: string
+      RemovedAt: string
+      RemovedBy: string
+      Reason: string option }
+
 /// A declaration as stored in `.ros/work/groups.json`: the same
 /// `DeclaredGroup` the planner reads from `grouping.groups`, plus who
-/// declared it and when, and who added each later member.
+/// declared it and when, who added each later member, and who removed any.
 type StoredGroup =
     { Group: DeclaredGroup
       DeclaredAt: string
       DeclaredBy: string
-      Additions: MemberAddition list }
+      Additions: MemberAddition list
+      Removals: MemberRemoval list }
 
 /// What a work item's recorded lifecycle says about group membership.
 [<RequireQualifiedAccess>]
@@ -50,6 +59,13 @@ type GroupAddRequest =
       AddedAt: string
       AddedBy: string }
 
+type GroupRemoveRequest =
+    { GroupId: string
+      WorkItem: string
+      RemovedAt: string
+      RemovedBy: string
+      Reason: string option }
+
 [<RequireQualifiedAccess>]
 type GroupRejection =
     | InvalidGroupId of id: string
@@ -63,6 +79,8 @@ type GroupRejection =
     | UnknownGroup of id: string
     | AlreadyMember of workItem: string * group: string
     | RepositoryMismatch of workItem: string * itemRepository: string * groupRepositories: string list
+    | NotMember of workItem: string * group: string
+    | LastMembers of workItem: string * group: string * remaining: int
 
 [<RequireQualifiedAccess>]
 module GroupRejection =
@@ -79,6 +97,8 @@ module GroupRejection =
         | GroupRejection.UnknownGroup _ -> "unknown-group"
         | GroupRejection.AlreadyMember _ -> "already-member"
         | GroupRejection.RepositoryMismatch _ -> "repository-mismatch"
+        | GroupRejection.NotMember _ -> "not-member"
+        | GroupRejection.LastMembers _ -> "last-members"
 
     let message rejection =
         match rejection with
@@ -94,6 +114,9 @@ module GroupRejection =
         | GroupRejection.AlreadyMember(id, group) -> $"{id} is already a member of {group}"
         | GroupRejection.RepositoryMismatch(id, repository, repositories) ->
             $"""{id} executes in {repository} but the group executes in {String.concat " + " repositories}; only a cross-repository group may span execution repositories (PRX-GRP-051)"""
+        | GroupRejection.NotMember(id, group) -> $"{id} is not a member of {group}"
+        | GroupRejection.LastMembers(id, group, remaining) ->
+            $"removing {id} would leave {group} with {remaining} member(s); a group needs at least two, so its last members cannot be removed"
 
 [<RequireQualifiedAccess>]
 module GroupDeclaration =
@@ -185,7 +208,8 @@ module GroupDeclaration =
                 { Group = group
                   DeclaredAt = request.DeclaredAt
                   DeclaredBy = request.DeclaredBy
-                  Additions = [] }
+                  Additions = []
+                  Removals = [] }
         else
             Error rejections
 
@@ -232,6 +256,39 @@ module GroupDeclaration =
                             @ [ { WorkItem = item
                                   AddedAt = request.AddedAt
                                   AddedBy = request.AddedBy } ] }
+            else
+                Error rejections
+
+    /// Decides a `work group remove`: one current member leaves a declared
+    /// group. A group keeps at least two members (as `create` and `validate`
+    /// require), so removing one of its last two is refused rather than
+    /// leaving a degenerate group. Only the declaration changes: the item's
+    /// lifecycle state, evidence and attribution are not read for writing
+    /// (PRX-GRP-002), and its earlier addition stays recorded.
+    let remove (existing: StoredGroup list) (request: GroupRemoveRequest) : Result<StoredGroup, GroupRejection list> =
+        match existing |> List.tryFind (fun stored -> stored.Group.Id = request.GroupId) with
+        | None -> Error [ GroupRejection.UnknownGroup request.GroupId ]
+        | Some stored ->
+            let group = stored.Group
+            let item = request.WorkItem
+            let remaining = group.Members |> List.filter ((<>) item)
+
+            let rejections =
+                [ if not (List.contains item group.Members) then
+                      yield GroupRejection.NotMember(item, group.Id)
+                  elif (List.distinct remaining).Length < 2 then
+                      yield GroupRejection.LastMembers(item, group.Id, (List.distinct remaining).Length) ]
+
+            if rejections.IsEmpty then
+                Ok
+                    { stored with
+                        Group = { group with Members = remaining }
+                        Removals =
+                            stored.Removals
+                            @ [ { WorkItem = item
+                                  RemovedAt = request.RemovedAt
+                                  RemovedBy = request.RemovedBy
+                                  Reason = request.Reason } ] }
             else
                 Error rejections
 

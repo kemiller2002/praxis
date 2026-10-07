@@ -90,7 +90,7 @@ module FileWorkGroupRepository =
             |> Result.mapError GroupCreateFailure.Rejected
             |> Result.map (fun updated -> existing, updated))
 
-    let private persistAdd (root: string) (existing: StoredGroup list, updated: StoredGroup) =
+    let private persistUpdate (root: string) (existing: StoredGroup list, updated: StoredGroup) =
         let replaced = existing |> List.map (fun stored -> if stored.Group.Id = updated.Group.Id then updated else stored)
 
         writeAtomic (FilePlanningRepository.groupStorePath root) (PlanningJson.renderGroupStore replaced)
@@ -100,7 +100,21 @@ module FileWorkGroupRepository =
     /// Decides and, unless `dryRun`, stores one added member. Only the group
     /// store is written.
     let add (root: string) (dryRun: bool) (request: GroupAddRequest) : Result<StoredGroup, GroupCreateFailure> =
-        apply root dryRun (fun () -> decideAdd root request) (persistAdd root)
+        apply root dryRun (fun () -> decideAdd root request) (persistUpdate root)
+
+    let private decideRemove (root: string) (request: GroupRemoveRequest) =
+        FilePlanningRepository.readStoredGroups root
+        |> Result.mapError GroupCreateFailure.Failed
+        |> Result.bind (fun existing ->
+            GroupDeclaration.remove existing request
+            |> Result.mapError GroupCreateFailure.Rejected
+            |> Result.map (fun updated -> existing, updated))
+
+    /// Decides and, unless `dryRun`, stores one removed member. Only the
+    /// group store is written: the item's queue entry, context record,
+    /// evidence and attribution are never read for writing.
+    let remove (root: string) (dryRun: bool) (request: GroupRemoveRequest) : Result<StoredGroup, GroupCreateFailure> =
+        apply root dryRun (fun () -> decideRemove root request) (persistUpdate root)
 
     /// `validate` findings for the store: (path, field, message).
     let findings (root: string) : (string * string * string) list =

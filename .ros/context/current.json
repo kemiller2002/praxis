@@ -4928,11 +4928,22 @@
       },
       "completedAt": "2026-10-07T21:01:06.000Z",
       "conclusion": "Verification: npm run build:fsharp (with the harness FSharpCore property, not committed) built with 0 warnings/0 errors; full F# suite dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 833 tests, 833 passed, 0 failed (14 new work-group add tests); ./ros validate: validation passed. Acceptance: refuses unknown and terminal items, items already present, undeclared groups, and an item whose execution repository differs from the group's unless the group is cross-repository (domain and CLI tests); records who added each member (additions {workItem, addedAt, addedBy}, tested through the binary); member lifecycle files byte-identical after add (tested). Item repository uses the planner's rule without --config, so grouping.executionRepositories from an explicit config file is not consulted. Not merged (experiment branch only)."
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-07T21:35:36.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T213536838Z-1c91d27a"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-07T21:01:06.000Z",
+  "updatedAt": "2026-10-07T21:35:36.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

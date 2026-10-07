@@ -15,6 +15,8 @@ open Ros.Infrastructure.Planning
 /// `praxis work group show`: a read-only view of one stored group.
 /// `praxis work group add`: one more member for a stored group, recording who
 /// added it; the member's own lifecycle is untouched.
+/// `praxis work group remove`: one member leaves a stored group, recording
+/// who removed it; the item's lifecycle, evidence and attribution are untouched.
 [<RequireQualifiedAccess>]
 module WorkGroupCommands =
     let showUsage = "work group show GROUP-ID [--json]"
@@ -25,21 +27,27 @@ module WorkGroupCommands =
     let addUsage =
         "work group add --id GROUP-ID --member ID --occurred-at TIMESTAMP [--dry-run] [--json]"
 
-    let usage = createUsage + " | " + showUsage + " | " + addUsage
+    let removeUsage =
+        "work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json]"
+
+    let usage = createUsage + " | " + showUsage + " | " + addUsage + " | " + removeUsage
 
     let private valued =
         [ "--id"; "--member"; "--occurred-at"; "--kind"; "--execution-repository"; "--shared-context"; "--architecture-note" ]
 
     let private switches = [ "--cross-repository"; "--dry-run"; "--json" ]
 
-    /// Tokens the command does not understand: identity flags (and their
-    /// values) are accepted because the actor is resolved from them.
-    let rec private unexpected (arguments: string list) =
+    /// Tokens the command does not understand, given the valued flags only it
+    /// takes: identity flags (and their values) are accepted because the
+    /// actor is resolved from them.
+    let rec private unexpectedWith (own: string list) (arguments: string list) =
         match arguments with
         | [] -> []
-        | flag :: _ :: rest when List.contains flag valued || List.contains flag ProvenanceCommands.identityFlags -> unexpected rest
-        | flag :: rest when List.contains flag switches -> unexpected rest
-        | token :: rest -> token :: unexpected rest
+        | flag :: _ :: rest when List.contains flag (own @ valued) || List.contains flag ProvenanceCommands.identityFlags -> unexpectedWith own rest
+        | flag :: rest when List.contains flag switches -> unexpectedWith own rest
+        | token :: rest -> token :: unexpectedWith own rest
+
+    let private unexpected = unexpectedWith []
 
     let private values (name: string) (arguments: string list) =
         arguments |> List.pairwise |> List.choose (fun (flag, value) -> if flag = name then Some value else None)
@@ -80,6 +88,22 @@ module WorkGroupCommands =
                   WorkItem = List.head members
                   AddedAt = timestamp
                   AddedBy = actor.Id }
+
+    let private removeRequest (actor: Actor) (arguments: string list) : Result<GroupRemoveRequest, string> =
+        match unexpectedWith [ "--reason" ] arguments, value "--id" arguments, values "--member" arguments, value "--occurred-at" arguments with
+        | (_ :: _) as stray, _, _, _ -> Error("unexpected argument(s): " + String.concat " " stray)
+        | _, None, _, _ -> Error "work group remove requires --id GROUP-ID"
+        | _, _, members, _ when members.Length <> 1 -> Error "work group remove requires exactly one --member ID"
+        | _, _, _, None -> Error "work group remove requires --occurred-at TIMESTAMP"
+        | _, _, _, Some timestamp when not (isTimestamp timestamp) -> Error $"--occurred-at '{timestamp}' is not a timestamp"
+        | _, _, _, _ when value "--reason" arguments |> Option.exists String.IsNullOrWhiteSpace -> Error "--reason cannot be empty"
+        | _, Some id, members, Some timestamp ->
+            Ok
+                { GroupId = id
+                  WorkItem = List.head members
+                  RemovedAt = timestamp
+                  RemovedBy = actor.Id
+                  Reason = value "--reason" arguments }
 
     let private envelope (kind: string) (fields: (string * JsonNode) list) : string =
         let root = JsonObject()
@@ -168,6 +192,29 @@ module WorkGroupCommands =
             eprintfn "Usage: %s" addUsage
             2
         | Ok parsed -> FileWorkGroupRepository.add root dryRun parsed |> emit "work-group-add" (describeAddition dryRun parsed) json dryRun
+
+    // ---- remove -------------------------------------------------------------------
+
+    let private describeRemoval (dryRun: bool) (request: GroupRemoveRequest) (stored: StoredGroup) =
+        let verb = if dryRun then "would remove" else "removed"
+
+        [ yield $"{verb} {request.WorkItem} from {stored.Group.Id} (by {request.RemovedBy} at {request.RemovedAt})"
+          yield! request.Reason |> Option.map (sprintf "  reason: %s") |> Option.toList
+          yield "  members: " + String.concat ", " stored.Group.Members
+          yield $"  {request.WorkItem} keeps its own lifecycle state, evidence and attribution" ]
+        |> String.concat "\n"
+
+    /// Exit 0 removed, 1 refused or unreadable, 2 usage.
+    let remove (root: string) (actor: Actor) (arguments: string list) : int =
+        let json = List.contains "--json" arguments
+        let dryRun = List.contains "--dry-run" arguments
+
+        match removeRequest actor arguments with
+        | Error message ->
+            eprintfn "ERROR %s" message
+            eprintfn "Usage: %s" removeUsage
+            2
+        | Ok parsed -> FileWorkGroupRepository.remove root dryRun parsed |> emit "work-group-remove" (describeRemoval dryRun parsed) json dryRun
 
     // ---- show ---------------------------------------------------------------------
 

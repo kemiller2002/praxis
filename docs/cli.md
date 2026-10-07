@@ -345,6 +345,18 @@ already present, and an item whose execution repository differs from the
 group's unless the group is cross-repository; never changes the member's
 lifecycle state. See [`planning.md`](planning.md#adding-a-member).
 
+### `work group remove`
+
+```
+ros work group remove --id GROUP-ID --member ID --occurred-at TIMESTAMP [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+```
+
+Removes one member from a stored group and records who removed it, when and
+why. Refuses (exit `1`) an undeclared group, an item that is not a member,
+and a removal that would leave fewer than two members; never changes the
+item's lifecycle state, evidence or attribution. See
+[`planning.md`](planning.md#removing-a-member).
+
 ### `work reconcile`
 
 ```
