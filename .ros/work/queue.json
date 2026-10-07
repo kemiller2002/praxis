@@ -4887,10 +4887,10 @@
         "release"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-06T23:55:41.005Z",
-      "updatedAt": "2026-10-06T23:55:55.789Z",
+      "updatedAt": "2026-10-07T05:34:49.943Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
