@@ -178,6 +178,14 @@ Acceptance:
 - scheduling decisions explain whether pacing affected ordering.
 - provider switching never occurs without capability/model compatibility.
 
+Status (2026-10-07, PRAXIS-QUAL-05): implemented. The planner reads
+provider-neutral `ProviderCapacity` (available, constrained, exhausted,
+unknown) through `PlanningReadPort.Capacity`: supplied in the observations
+file, or mapped from usage-pacing state by `FilePacingCapacity` when
+`PRAXIS_PACING_DIR` is set. Unknown is distinct from zero; limited capacity
+orders `provider-free` items first with explaining reasons and a finding;
+the planner never switches provider (PlanningCapacityTests, docs/planning.md).
+
 ### PRX-QUAL-010 — Replace release-version equality with compatibility authority
 Priority: high
 

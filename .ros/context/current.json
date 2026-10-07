@@ -7522,6 +7522,51 @@
         }
       },
       "completedAt": "2026-10-07T04:55:50.322Z"
+    },
+    {
+      "id": "PRAXIS-QUAL-05",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Planning/Capacity.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PlanningCapacityTests.fs"
+        },
+        {
+          "type": "verification",
+          "path": "research/verification/PRAXIS-QUAL-05-verification.json"
+        }
+      ],
+      "updatedAt": "2026-10-07T05:49:04.729Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T010638362Z-232c396f"
+      ],
+      "latestCheckpoint": {
+        "id": "ef9f65f1ee5056f7729b59a4",
+        "recordedAt": "2026-10-07T05:49:02.755Z",
+        "executionId": "EXE-20261007T010638362Z-232c396f",
+        "repository": "repository-operating-system",
+        "branch": "qual/planning-capacity",
+        "commit": "fbc3eb6c06c6858f065010b929b6b09277164f48",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "qual/planning-capacity",
+        "remoteCommit": "fbc3eb6c06c6858f065010b929b6b09277164f48",
+        "summary": "Implemented, verified per criterion, full suite green, pushed (PR #191)",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-07T05:49:04.729Z"
     }
   ],
   "protocolVersion": "1.0.0",

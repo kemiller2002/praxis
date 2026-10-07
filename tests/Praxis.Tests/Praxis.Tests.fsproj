@@ -113,6 +113,7 @@
     <Compile Include="CommitOwnershipTests.fs" />
     <Compile Include="WorkAbandonTests.fs" />
     <Compile Include="PlanningTests.fs" />
+    <Compile Include="PlanningCapacityTests.fs" />
     <Compile Include="PacingTests.fs" />
     <Compile Include="PacingSafetyTests.fs" />
     <Compile Include="PacingHardeningTests.fs" />

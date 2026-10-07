@@ -100,6 +100,7 @@ let main _ =
     @ CommitOwnershipTests.tests
     @ WorkAbandonTests.tests
     @ PlanningTests.tests
+    @ PlanningCapacityTests.tests
     @ PacingTests.tests
     @ PacingSafetyTests.tests
     @ PacingHardeningTests.tests
