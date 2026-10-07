@@ -47,6 +47,25 @@ Gemini or CI performs the same role with the same capabilities.
 - **Work identity** is repository-qualified (`owner/repo:WORK-ID`) from the
   Git remote, so it is globally unambiguous.
 
+### Governing contract
+
+The role, mutation boundary, evaluator closure and human-only transitions come
+from the governing Ordo execution contract (`ordo.execution-contract/1`,
+Ordo `schemas/ordo-execution-contract.v1.schema.json`), read and validated by
+Ordo.Core (PRX-BND-001, PRX-SEQ-003, PRX-VER-010):
+
+```
+praxis execution start --work-item WI-7 --contract contracts/WI-7.json --worktree
+```
+
+`--contract` cannot be combined with `--role`, `--scope`, `--allow`,
+`--evaluator` or `--human-only` (exit 2). Without `--contract` those flags are
+assembled into the same contract document and validated by Ordo identically.
+Either way the execution ledger records a `contract` entry with its `source`
+(`contract-file:PATH` or `operator-flags`) and `sha256` before the start
+transition, and the evaluator identity the contract requires is resolved and
+recorded in the envelope at start.
+
 ## Workspaces
 
 `--worktree` creates branch `praxis/<work-item>/<execution-id>` in a new
