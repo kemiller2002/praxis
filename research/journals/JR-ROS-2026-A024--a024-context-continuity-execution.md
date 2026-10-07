@@ -1,7 +1,7 @@
 ---
 id: JR-ROS-2026-A024
 title: EX-ROS-2026-A024 context-continuity experiment execution journal
-status: active
+status: completed
 version: 1.0.0
 research_area: repository-operating-system
 author_agent: anthropic/claude-code
@@ -11,6 +11,7 @@ related_mission: EX-ROS-2026-A024
 related_package: null
 evidence_ids:
   - EV-ROS-2026-A074
+  - EV-ROS-2026-A075
 hypothesis_ids:
   - HY-ROS-2026-A030
   - HY-ROS-2026-A028
@@ -19,8 +20,9 @@ tags: [claude, agents, context, handoff, experiment, execution-journal, orchestr
 provenance:
   contributions:
     EXE-20261007T162653169Z-f15a70b7:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-07T18:47:49.999Z
+      last: 2026-10-07T22:37:01.694Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -28,7 +30,7 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Execution journal for EX-ROS-2026-A024 up to the launcher blocker"
-      evidence: [EV-ROS-2026-A074]
+      evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 
 # Objective
@@ -66,6 +68,20 @@ execution's own `modified` contributions; the originator stays unknown.
    completed after a resync note; C's retry declined the note, which spent the
    arm-C item-02 retry. Execution stopped (`run/BLOCKER.txt`).
 
+6. **Resumption.** The owner replied "Try it now", which was recorded as
+   amendment A1. The probe-validated launcher (no `outcome_branch`) was used
+   from then on. B completed 02r-05 and C completed 02r2-05. The runtime
+   moved to 2.1.293 (D6). `arm-3-04` ran `git branch -a` (D7, a deviation).
+7. **Scoring.** Deterministic checks pass at all heads (819, 855 and 841
+   tests). The mapping commitment was committed first. Three fresh blinded
+   scorers each found 36/36, with defects K 1, P 2, W 1. The one-line harness
+   amendment 2 fixed a rename regression (D8).
+8. **Blind evaluation** (fresh session), committed before unblinding:
+   K 10, P 5, W 8.
+9. **Unblinding.** The mapping (A = P, B = K, C = W) was verified by the
+   commitment and by tree identity. Under the frozen analysis HY-A030 is not
+   supported, and the A021/R2 architecture direction reversed.
+
 # Decisions
 
 - Neutral branch names (`arm-1/2/3`) were used so the treatment is not
@@ -77,6 +93,5 @@ execution's own `modified` contributions; the originator stays unknown.
 
 # Next action
 
-Owner decision on BLOCKER.txt option 1, 2 or 3. If option 1 is chosen, resume
-with the probe-validated launcher (no `outcome_branch`) following the
-executable steps in BLOCKER.txt, then run phases 4-7.
+A024 is closed. The proposed follow-ons in `run/FOLLOW-ONS.txt` are not run.
+The guidance ablation has the highest information value.

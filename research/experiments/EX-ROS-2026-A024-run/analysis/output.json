@@ -1,0 +1,260 @@
+{
+  "schema": "ex-ros-2026-a024.analysis/1",
+  "thresholds": {
+    "recovery": "1/2",
+    "correctnessMargin": "1/20",
+    "arithmetic": "exact rationals (fractions.Fraction)"
+  },
+  "primary": {
+    "measures": {
+      "architecture": {
+        "higherIsBetter": true,
+        "A": 5,
+        "B": 10,
+        "C": 8,
+        "AbetterThanB": false,
+        "CbetterThanB": false,
+        "recovery": {
+          "status": "no recoverable calibration effect",
+          "ratio": null
+        }
+      },
+      "discovery": {
+        "higherIsBetter": false,
+        "A": 112,
+        "B": 263,
+        "C": 276,
+        "AbetterThanB": true,
+        "CbetterThanB": false,
+        "recovery": {
+          "status": "computed",
+          "ratio": -0.08609271523178808,
+          "exact": "-13/151",
+          "meetsThreshold": false
+        }
+      }
+    },
+    "applicablePrimaryMeasures": [
+      "discovery"
+    ],
+    "missingPrimaryData": [],
+    "acceptanceRate": {
+      "A": {
+        "value": 1.0,
+        "exact": "1"
+      },
+      "B": {
+        "value": 1.0,
+        "exact": "1"
+      },
+      "C": {
+        "value": 1.0,
+        "exact": "1"
+      }
+    },
+    "supportRule": {
+      "1_calibration_effect": true,
+      "2_C_better_than_B_on_applicable": false,
+      "3_recovery_at_least_0.50_on_applicable": false,
+      "4_C_correctness_within_0.05_of_B": true,
+      "5_no_arm_invalidated": true
+    },
+    "verdict": "not supported"
+  },
+  "sensitivity": {
+    "discoveryMainTranscriptOnly": {
+      "measures": {
+        "architecture": {
+          "higherIsBetter": true,
+          "A": 5,
+          "B": 10,
+          "C": 8,
+          "AbetterThanB": false,
+          "CbetterThanB": false,
+          "recovery": {
+            "status": "no recoverable calibration effect",
+            "ratio": null
+          }
+        },
+        "discovery": {
+          "higherIsBetter": false,
+          "A": 112,
+          "B": 263,
+          "C": 276,
+          "AbetterThanB": true,
+          "CbetterThanB": false,
+          "recovery": {
+            "status": "computed",
+            "ratio": -0.08609271523178808,
+            "exact": "-13/151",
+            "meetsThreshold": false
+          }
+        }
+      },
+      "applicablePrimaryMeasures": [
+        "discovery"
+      ],
+      "missingPrimaryData": [],
+      "acceptanceRate": {
+        "A": {
+          "value": 1.0,
+          "exact": "1"
+        },
+        "B": {
+          "value": 1.0,
+          "exact": "1"
+        },
+        "C": {
+          "value": 1.0,
+          "exact": "1"
+        }
+      },
+      "supportRule": {
+        "1_calibration_effect": true,
+        "2_C_better_than_B_on_applicable": false,
+        "3_recovery_at_least_0.50_on_applicable": false,
+        "4_C_correctness_within_0.05_of_B": true,
+        "5_no_arm_invalidated": true
+      },
+      "verdict": "not supported"
+    }
+  },
+  "secondary": {
+    "resourceRatios": {
+      "costUsd": {
+        "A/B": 0.5406660864324805,
+        "C/B": 1.1392203365424507,
+        "C/A": 2.1070682351457584
+      },
+      "elapsedMs": {
+        "A/B": 0.39778652846950024,
+        "C/B": 0.6054233341343963,
+        "C/A": 1.521980486528257
+      },
+      "outputTokens": {
+        "A/B": 0.6227586585834906,
+        "C/B": 1.2469886505857861,
+        "C/A": 2.0023626061212085
+      },
+      "inputTokens": {
+        "A/B": 0.12614980289093297,
+        "C/B": 0.33902759526938236,
+        "C/A": 2.6875
+      },
+      "cacheReadTokens": {
+        "A/B": 0.5982362078966397,
+        "C/B": 1.103811313185891,
+        "C/A": 1.845109504599899
+      },
+      "cacheWriteTokens": {
+        "A/B": 0.4198969466614857,
+        "C/B": 1.1182135833292393,
+        "C/A": 2.663066717250329
+      },
+      "modelRequests": {
+        "A/B": 0.4069264069264069,
+        "C/B": 1.0216450216450217,
+        "C/A": 2.5106382978723403
+      },
+      "toolCalls": {
+        "A/B": 0.4,
+        "C/B": 1.0333333333333334,
+        "C/A": 2.5833333333333335
+      }
+    },
+    "handoffOverhead": {
+      "arm-3-01": {
+        "firstAt": "2026-10-07T17:04:40.598000+00:00",
+        "lastAt": "2026-10-07T17:17:58.522000+00:00",
+        "paths": [],
+        "reads": 1,
+        "toolCalls": 2,
+        "writes": 1
+      },
+      "arm-3-02r2": {
+        "firstAt": "2026-10-07T20:49:29.878000+00:00",
+        "lastAt": "2026-10-07T21:01:42.692000+00:00",
+        "paths": [
+          "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-01.json"
+        ],
+        "reads": 1,
+        "toolCalls": 3,
+        "writes": 1
+      },
+      "arm-3-03": {
+        "firstAt": "2026-10-07T21:03:14.908000+00:00",
+        "lastAt": "2026-10-07T21:19:07.399000+00:00",
+        "paths": [
+          "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-02.json"
+        ],
+        "reads": 1,
+        "toolCalls": 3,
+        "writes": 1
+      },
+      "arm-3-04": {
+        "firstAt": "2026-10-07T21:20:34.915000+00:00",
+        "lastAt": "2026-10-07T21:32:03.129000+00:00",
+        "paths": [
+          "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json"
+        ],
+        "reads": 1,
+        "toolCalls": 4,
+        "writes": 1
+      },
+      "arm-3-05": {
+        "firstAt": "2026-10-07T21:33:54.429000+00:00",
+        "lastAt": "2026-10-07T21:54:43.906000+00:00",
+        "paths": [
+          "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-04.json"
+        ],
+        "reads": 2,
+        "toolCalls": 5,
+        "writes": 1
+      }
+    },
+    "acceptance": {
+      "A": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 2
+      },
+      "B": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 1
+      },
+      "C": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 1
+      }
+    },
+    "architectureDimensions": {
+      "A": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "B": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "C": [
+        2,
+        2,
+        2,
+        1,
+        1
+      ]
+    }
+  },
+  "note": "one cohort, one execution per arm: a mechanism demonstration, not a population estimate; no combined agent score is produced"
+}

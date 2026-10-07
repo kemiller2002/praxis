@@ -5,7 +5,7 @@ research_area: repository-operating-system
 status: supported
 confidence: low
 created: 2026-09-30
-supporting_evidence: [EV-ROS-2026-A063, EV-ROS-2026-A064, EV-ROS-2026-A070]
+supporting_evidence: [EV-ROS-2026-A063, EV-ROS-2026-A064, EV-ROS-2026-A070, EV-ROS-2026-A075]
 contradicting_evidence: []
 related_theories: []
 related_documents:
@@ -85,6 +85,17 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Linked EX-ROS-2026-A023 and EV-ROS-2026-A072; confidence unchanged"
+    EXE-20261007T162653169Z-f15a70b7:
+      operations: [modified]
+      at: 2026-10-07T22:37:01.067Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "A024 calibration: repeated-work advantage reproduced, architecture advantage not reproduced"
+      evidence: [EV-ROS-2026-A075]
 ---
 
 # Hypothesis
@@ -185,3 +196,18 @@ general claim about waterfall, iteration or batching.
 session setup-cost amortization. `EX-ROS-2026-A022` is the pre-registered
 2x2 falsification test: high- versus low-affinity cohorts crossed with grouped
 versus independent execution in a non-Praxis repository.
+
+EX-ROS-2026-A024 (EV-ROS-2026-A075, 2026-10-07) replayed the same cohort with
+calibration arms. Continuous execution again repeated less work. It made 112
+file reads and searches against 263 for serial fresh sessions, cost 0.54x as
+much and took 0.40x the elapsed time. That supports the repeated-work
+disjunct. The architectural-consistency advantage **did not reproduce**: the
+blinded rubric composite was 5 for continuous against 10 for code-only
+fresh sessions.
+
+A plausible, untested confound is guidance. A021's grouped arm had to write
+a group analysis covering architecture and reusable abstractions before
+coding; A024's continuous arm was only told to decide the architecture once.
+Confidence stays low. The consistency part of PGEI should now be treated as
+unestablished until a guidance ablation separates context from explicit
+analysis.

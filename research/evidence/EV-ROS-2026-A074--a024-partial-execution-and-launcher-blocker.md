@@ -25,8 +25,9 @@ derived_from: [EX-ROS-2026-A024]
 provenance:
   contributions:
     EXE-20261007T162653169Z-f15a70b7:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-07T18:47:24.444Z
+      last: 2026-10-07T22:37:02.532Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -129,3 +130,11 @@ withdrawn.
 High confidence that A024 is blocked and why: the probe evidence is direct
 and reproducible. No inference about HY-ROS-2026-A030 or HY-ROS-2026-A028 is
 drawn.
+
+## Resolution (2026-10-07)
+
+The owner accepted BLOCKER option 1 at 20:48Z (amendment A1, deviation D5).
+The remaining B and C sessions ran with the probe-validated launcher, with no
+`outcome_branch`, and every one passed its start check. A024 then completed.
+The results are in EV-ROS-2026-A075. This record still covers execution
+feasibility only.

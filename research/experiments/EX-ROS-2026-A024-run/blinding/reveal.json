@@ -1,0 +1,11 @@
+{
+  "commitment": "508a8f94332d9cf9f6c57508b7d88d79226c4661e385b0e439740c7187f18d0d",
+  "mapping": {
+    "continuous": "snapshot-P",
+    "code-only": "snapshot-K",
+    "handoff": "snapshot-W"
+  },
+  "nonce": "98c59b5d0537f5ee9ef972fbad99aed2",
+  "revealedAt": "2026-10-07T22:47:00Z",
+  "verifiedBy": "commitment recomputed and source tree identity (src tree hashes: P=arm-1 2c23fd2, K=arm-2 10c559b, W=arm-3 c4cdfe9)"
+}

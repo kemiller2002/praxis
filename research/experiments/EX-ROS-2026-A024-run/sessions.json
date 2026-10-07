@@ -552,7 +552,7 @@
       "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
     }
   ],
-  "status": "blind evaluation committed; unblinding next",
+  "status": "completed: all arms terminal, blinded scoring and evaluation committed, unblinded, frozen analysis applied",
   "scorers": [
     {
       "label": "scorer-K",

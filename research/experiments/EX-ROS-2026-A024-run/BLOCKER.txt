@@ -1,6 +1,8 @@
 # EX-ROS-2026-A024 blocker and resumption package
 
-Status: **blocked (owner decision required)**. Arm execution is stopped. No
+Status: **resolved 2026-10-07T20:48Z.** The owner accepted option 1 (amendment A1, deviation D5) and the experiment then completed (EV-ROS-2026-A075). The text below is kept as written at the time of the block.
+
+Original status: **blocked (owner decision required)**. Arm execution is stopped. No
 part of the frozen protocol (treatments, thresholds, recovery or correctness
 margins, blinding, stop conditions, retry rule) was changed.
 

@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A024
 title: "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
 research_area: repository-operating-system
-status: active
+status: completed
 created: 2026-10-07
 author_agent: openai/chatgpt
 tests_hypotheses:
@@ -11,7 +11,7 @@ tests_hypotheses:
 inputs:
   - EV-ROS-2026-A064
   - EV-ROS-2026-A070
-outputs: [EV-ROS-2026-A074]
+outputs: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 related_theories: []
 related_documents:
   - EX-ROS-2026-A021
@@ -27,6 +27,7 @@ provenance:
     EXE-20261007T162653169Z-f15a70b7:
       operations: [modified]
       at: 2026-10-07T18:47:25.856Z
+      last: 2026-10-07T22:36:59.831Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -34,7 +35,7 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Executed the frozen A024 protocol until the launcher blocker; recorded status, results and observed threats without editing the preregistered text"
-      evidence: [EV-ROS-2026-A074]
+      evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 
 # Experiment
@@ -401,28 +402,33 @@ These are limitations, not reasons to alter the frozen design after execution.
 
 ## Results
 
-Execution started on 2026-10-07 under the frozen manifest
+Executed on 2026-10-07 under the frozen manifest
 (`research/experiments/EX-ROS-2026-A024-harness/manifest.json`, commit
-`91745d9`) and is **blocked** (EV-ROS-2026-A074).
+`91745d9`) and owner amendment A1. All three arms reached a valid terminal
+state. Results are in EV-ROS-2026-A075; the partial-execution and blocker
+record is EV-ROS-2026-A074. The raw bundle is in
+`research/experiments/EX-ROS-2026-A024-run/`.
 
-- Sanitized start `ddda837` (parent `8b4ffa3`, reproducible), identical on all
-  three arm branches.
-- Arm A completed items 01-05 in one session. Arm B completed items 01-02.
-  Arm C completed item 01 with a schema-valid handoff.
-- A platform launcher defect (an `outcome_branch` is pinned to the first head
-  the platform saw) started every later serial session on the common start
-  commit. The frozen start check stopped those sessions before they changed
-  anything. The arm-C item-02 slot spent its single preregistered retry this
-  way, so A024 cannot reach a valid terminal state without an owner-approved
-  amendment (`research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt`).
-
-No blinded scoring, evaluation or comparison has been made. Raw per-session
-telemetry is preserved in `research/experiments/EX-ROS-2026-A024-run/`.
+| Measure | A continuous | B code-only | C handoff |
+| --- | --- | --- | --- |
+| Acceptance (blinded) | 36/36 | 36/36 | 36/36 |
+| Architecture composite (blinded) | 5 | 10 | 8 |
+| File reads + searches (primary discovery) | 112 | 263 | 276 |
+| Platform cost (USD) | 8.27 | 15.30 | 17.43 |
+| Output tokens | 102,006 | 163,797 | 204,253 |
 
 ## Analysis
 
-Not performed: arms B and C are not terminal. The frozen analysis
-(`analysis.py`) is unchanged.
+The frozen `analysis.py` (`run/analysis/output.json`) was applied unchanged:
+
+- architecture: A is not better than B, so there is no recoverable calibration effect;
+- discovery: A is better than B; recovery(C) = (263 - 276) / (263 - 112) = -13/151 (about -0.086), below 0.50;
+- support rule: calibration effect yes; C better than B no; recovery of at least 0.50 no; correctness within 0.05 yes; no arm invalidated yes.
+
+Verdict: **HY-ROS-2026-A030 is not supported.** As a secondary calibration,
+HY-ROS-2026-A028 reproduces on repeated work and resources (A/B cost 0.54,
+elapsed 0.40) but not on architecture, where the A021/R2 direction reversed.
+The comparison is a replay of the same cohort, not independent replication.
 
 ### Execution amendments (owner decision pending)
 
@@ -466,7 +472,12 @@ ineffective.
 
 ## Conclusion
 
-Pending.
+A structured durable handoff did not recover the continuous-context
+discovery advantage, and in this execution continuous context did not yield
+the more coherent architecture. HY-ROS-2026-A030 is not supported, at low
+confidence, on one replayed cohort with one execution per arm. The follow-on
+proposals are in `research/experiments/EX-ROS-2026-A024-run/FOLLOW-ONS.txt`.
+None of them was run automatically.
 
 ## Registry updates required
 
