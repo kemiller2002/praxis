@@ -349,8 +349,23 @@
         "START_SHA": "386297b7bc30253f01d88ae8a3dbc203793d62e0"
       },
       "attempt": 1,
-      "status": "running",
-      "launcher": "no outcome_branch (amendment A1, D5)"
+      "status": "completed",
+      "launcher": "no outcome_branch (amendment A1, D5)",
+      "headAfter": "5d33bb52a638a29244f697c985142cb2f1f06f50",
+      "terminalAt": "2026-10-07T21:01:26.384194Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.289647,
+        "input_tokens": 80,
+        "output_tokens": 25768,
+        "cache_read_tokens": 4503035,
+        "cache_write_tokens": 109170,
+        "context_used_tokens": 147680,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "corrected launcher; start check passed"
     }
   ],
   "status": "active: resumed under owner amendment A1"
