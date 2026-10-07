@@ -1,43 +1,38 @@
 namespace Praxis.Infrastructure.Pacing
 
 open System
-open System.Globalization
-open System.IO
 open System.Threading
 open Praxis.Application.Pacing
 open Praxis.Domain.Pacing
 
 [<RequireQualifiedAccess>]
 module PacingAdapters =
-    let private mergeMissingHard
+    /// Exhausted windows the previous reading saw that the current response
+    /// omitted. They are carried so the hard limit stays visible, and each is
+    /// reported `Stale` in coverage: carried evidence is never `Observed`.
+    let carryMissingHard
         (previous: QuotaWindow list)
-        (current: QuotaWindow list)
+        (current: QuotaReading)
         (now: DateTimeOffset)
-        : QuotaWindow list =
-        let currentKeys = current |> List.map _.Key |> Set.ofList
+        : QuotaReading =
+        let currentKeys = current.Windows |> List.map _.Key |> Set.ofList
 
-        let retained =
+        let carried =
             previous
             |> List.filter (fun window ->
                 window.UsedPercent > PacingPolicy.defaults.HardUsagePercent
                 && window.ResetsAt > now
                 && not (currentKeys.Contains window.Key))
 
-        current @ retained
+        let observedAt (window: QuotaWindow) = window.ObservedAt.ToString("O", Globalization.CultureInfo.InvariantCulture)
 
-    /// Human diagnostics only (`pace.log`), never safety evidence. An
-    /// unwritable log must not change a gate decision, so only filesystem
-    /// failures are tolerated here. Typed pacing telemetry replaces this
-    /// channel under PRX-QUAL-008 (kemiller2002/praxis#160).
-    let private writeLog (directory: string) (text: string) : unit =
-        try
-            Directory.CreateDirectory directory |> ignore
-            let timestamp = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)
-            let line = timestamp + " [" + string Environment.ProcessId + "] " + text + Environment.NewLine
-            File.AppendAllText(Path.Combine(directory, "pace.log"), line)
-        with
-        | :? IOException
-        | :? UnauthorizedAccessException -> ()
+        { Windows = current.Windows @ carried
+          Coverage =
+            current.Coverage
+            @ (carried
+               |> List.map (fun window ->
+                   { Key = window.Key
+                     Status = WindowStatus.Stale $"carried from the reading at {observedAt window}; absent from this response" })) }
 
     /// Scoped windows the previous reading saw whose window has not reset:
     /// their disappearance is missing evidence, not proof of capacity.
@@ -51,13 +46,29 @@ module PacingAdapters =
                | QuotaScope.Surface _ -> true)
         |> List.map _.Key
 
-    let private observe
+    /// Production provider queries: Codex app-server and the Claude usage API.
+    let queryProvider (provider: ProviderId) (adapter: PacingAdapterInfo) (expectedScoped: string list) (observedAt: DateTimeOffset) : Result<QuotaReading, string> =
+        match provider with
+        | ProviderId.Codex ->
+            let bucket = adapter.Bucket |> Option.defaultValue PacingAdapterRules.codexDefaultBucket
+
+            PacingProviders.queryCodex ()
+            |> Result.bind (PacingNormalization.normalizeCodexResult bucket observedAt)
+        | ProviderId.Claude ->
+            PacingProviders.queryClaude observedAt
+            |> Result.bind (PacingNormalization.normalizeClaudeUsage observedAt expectedScoped)
+
+    /// One observation: query the provider through `query`, judge per-window
+    /// completeness, and fall back to the cache only as stale evidence.
+    let observeWith
+        (query: ProviderId -> PacingAdapterInfo -> string list -> DateTimeOffset -> Result<QuotaReading, string>)
         (directory: string)
         (observedAt: DateTimeOffset)
-        (provider: string)
+        (provider: ProviderId)
         (model: string option)
         : ProviderSnapshot =
-        let cached = PacingPersistence.loadSnapshot directory provider
+        let adapter = PacingAdapterRules.info provider model
+        let cached = PacingPersistence.loadSnapshot directory provider adapter
 
         let previous =
             match cached with
@@ -70,27 +81,14 @@ module PacingAdapters =
             | Error message -> $"; {message}"
             | Ok _ -> ""
 
-        let result =
-            match provider with
-            | "codex" ->
-                let bucket =
-                    match model with
-                    | Some value when value.Contains("spark", StringComparison.OrdinalIgnoreCase) -> "codex_bengalfox"
-                    | _ -> "codex"
-
-                PacingProviders.queryCodex ()
-                |> Result.bind (PacingNormalization.normalizeCodexResult bucket observedAt)
-            | "claude" ->
-                PacingProviders.queryClaude observedAt
-                |> Result.bind (PacingNormalization.normalizeClaudeUsage observedAt (expectedScoped previous observedAt))
-            | other -> Error $"unknown pacing provider '{other}'"
+        let result = query provider adapter (expectedScoped previous observedAt) observedAt
 
         // The snapshot is a display/merge cache; hard holds live in hold state,
         // so a cache write failure does not change safety. It is still visible.
         let persist snapshot =
             match PacingPersistence.saveSnapshot directory snapshot with
             | Ok() -> ()
-            | Error message -> writeLog directory $"diagnostic: snapshot cache write failed: {message}"
+            | Error message -> PacingEventLog.diagnostic directory observedAt $"{ProviderId.code provider} snapshot cache write failed: {message}"
 
             snapshot
 
@@ -98,18 +96,20 @@ module PacingAdapters =
         | Ok reading when WindowObservation.isComplete reading.Coverage ->
             persist
                 { Provider = provider
+                  Adapter = adapter
                   ObservedAt = observedAt
                   Windows = reading.Windows
                   Coverage = reading.Coverage
                   Freshness = ObservationFreshness.Fresh }
         | Ok reading ->
-            let combined = mergeMissingHard previous reading.Windows observedAt
+            let combined = carryMissingHard previous reading observedAt
 
             persist
                 { Provider = provider
+                  Adapter = adapter
                   ObservedAt = observedAt
-                  Windows = combined
-                  Coverage = reading.Coverage
+                  Windows = combined.Windows
+                  Coverage = combined.Coverage
                   Freshness =
                     ObservationFreshness.Stale(
                         $"provider quota response was incomplete: {WindowObservation.incompleteness reading.Coverage}"
@@ -118,10 +118,16 @@ module PacingAdapters =
             match cached with
             | Ok(Some snapshot) ->
                 { snapshot with
+                    Coverage =
+                        snapshot.Windows
+                        |> List.map (fun window ->
+                            { Key = window.Key
+                              Status = WindowStatus.Stale "cached reading; the provider could not be queried" })
                     Freshness = ObservationFreshness.Stale message }
             | Ok None
             | Error _ ->
                 { Provider = provider
+                  Adapter = adapter
                   ObservedAt = observedAt
                   Windows = []
                   Coverage = []
@@ -131,18 +137,16 @@ module PacingAdapters =
         { Observer =
             { Observe =
                 fun observedAt provider model ->
-                    observe directory observedAt provider model }
+                    observeWith queryProvider directory observedAt provider model }
           State = PacingPersistence.stateStore directory
           Override = PacingPersistence.overrideStore directory
           Clock =
             { Now = fun () -> DateTimeOffset.UtcNow
               Sleep = fun delay -> Thread.Sleep delay }
-          Events =
-            { Write = writeLog directory }
+          Events = PacingEventLog.sink directory
           Context = PacingContext.resolver
           MaxGateWait =
             fun provider ->
-                if String.Equals(provider, "claude", StringComparison.OrdinalIgnoreCase) then
-                    TimeSpan.FromDays 6.0
-                else
-                    TimeSpan.FromDays 7.0 + TimeSpan.FromMinutes 1.0 }
+                match provider with
+                | ProviderId.Claude -> TimeSpan.FromDays 6.0
+                | ProviderId.Codex -> TimeSpan.FromDays 7.0 + TimeSpan.FromMinutes 1.0 }

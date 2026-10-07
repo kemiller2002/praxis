@@ -22,15 +22,19 @@ type EvidenceRequirement =
     | Optional
     | Off
 
-/// The four independent facets of "done". A work item can be implemented
+/// The independent facets of "done". A work item can be implemented
 /// without being behaviourally verified, verified without being
-/// architecturally sound, and all three without being releasable.
+/// architecturally sound, and all three without being releasable. Risk
+/// obligations add two more (PRX-QUAL-021, PRX-QUAL-022): its design debt is
+/// declared, and its verification matrix is satisfied.
 [<RequireQualifiedAccess>]
 type CompletionFacet =
     | ImplementationComplete
     | BehaviorVerified
     | ArchitectureVerified
     | ReleaseReady
+    | DesignDebtDeclared
+    | VerificationMatrixSatisfied
     /// A member of a grouped-mode group execution carries a committed group
     /// analysis and a per-criterion verification (PRX-GRP-133..135).
     | GroupVerified
@@ -104,6 +108,84 @@ type OrdoBoundaryEvidence =
       Unclassified: string list
       GeneratorVersion: string option }
 
+/// One tracked piece of design debt (PRX-QUAL-021): the captured work item
+/// that will pay it, why it was taken, its risk and the boundary compromised.
+type DesignDebtEntry =
+    { WorkItem: string
+      Rationale: string
+      Risk: string
+      CompromisedBoundary: string }
+
+/// A `praxis.design-debt/1` declaration. No entries means "no known design
+/// debt". A prototype must name the debt that makes it canonical-in-waiting.
+type DesignDebtDeclaration =
+    { WorkItem: string
+      Prototype: bool
+      Entries: DesignDebtEntry list }
+
+[<RequireQualifiedAccess>]
+type VerificationEvidenceKind =
+    | Build
+    | UnitTest
+    | IntegrationTest
+    | Command
+    | Location
+    | Live
+
+type VerificationEvidenceItem =
+    { Kind: VerificationEvidenceKind
+      Reference: string
+      Result: string }
+
+[<RequireQualifiedAccess>]
+type MatrixRowStatus =
+    | Met
+    | NotMet
+    | NotApplicable of reason: string
+
+type VerificationRow =
+    { Dimension: VerificationDimension
+      Status: MatrixRowStatus
+      Evidence: VerificationEvidenceItem list }
+
+/// A `praxis.verification-matrix/1` document (PRX-QUAL-022).
+type VerificationMatrix =
+    { WorkItem: string
+      Rows: VerificationRow list }
+
+[<RequireQualifiedAccess>]
+type ReleaseCheckStatus =
+    | Passed
+    | Failed
+    | Skipped
+
+type ReleaseCheck =
+    { Name: string
+      Status: ReleaseCheckStatus
+      Evidence: string }
+
+[<RequireQualifiedAccess>]
+type ReleaseVerdict =
+    | Ready
+    | NotReady
+
+/// A `praxis.release-readiness/1` document (PRX-QUAL-023): which release, the
+/// checks run against it and the producer's verdict.
+type ReleaseReadinessEvidence =
+    { ReleaseName: string
+      Version: string
+      Commit: string
+      CheckedAt: string
+      Verdict: ReleaseVerdict
+      Checks: ReleaseCheck list }
+
+/// One evidence file the gate consumed, with the SHA-256 digest of the exact
+/// bytes it decoded (`None` when the file could not be read).
+type ConsumedEvidence =
+    { Type: string
+      Path: string
+      Sha256: string option }
+
 /// What decoding one supplied evidence document produced.
 [<RequireQualifiedAccess>]
 type EvidenceReading<'T> =
@@ -145,6 +227,12 @@ type FacetAssessment =
       Status: FacetStatus
       Blocking: bool }
 
+/// The obligation evidence a completion request supplied.
+type ObligationObservations =
+    { DesignDebt: SourceObservation<DesignDebtDeclaration>
+      VerificationMatrix: SourceObservation<VerificationMatrix>
+      ReleaseReadiness: SourceObservation<ReleaseReadinessEvidence> }
+
 /// The machine-readable readiness of one work item at completion.
 type ItemReadiness =
     { WorkItemId: string
@@ -154,6 +242,15 @@ type ItemReadiness =
       DokimosJudgement: SourceJudgement
       Ordo: SourceObservation<OrdoBoundaryEvidence>
       OrdoJudgement: SourceJudgement
+      /// The item's declared risk metadata and the obligations derived from it.
+      Risk: WorkRisk option
+      Obligations: CompletionObligations
+      Observations: ObligationObservations
+      DesignDebtJudgement: SourceJudgement
+      VerificationMatrixJudgement: SourceJudgement
+      ReleaseJudgement: SourceJudgement
+      /// Every evidence file read for this decision, with its digest.
+      ConsumedEvidence: ConsumedEvidence list
       Facets: FacetAssessment list }
 
 [<RequireQualifiedAccess>]
@@ -168,6 +265,12 @@ module QualityEvidenceTypes =
     let groupVerification = "group-verification"
     let implementation = "implementation"
     let tests = "tests"
+    /// `--evidence design-debt=PATH`: a `praxis.design-debt/1` declaration.
+    let designDebt = "design-debt"
+    /// `--evidence verification-matrix=PATH`: a `praxis.verification-matrix/1` matrix.
+    let verificationMatrix = "verification-matrix"
+    /// `--evidence release-readiness=PATH`: a `praxis.release-readiness/1` document.
+    let releaseReadiness = "release-readiness"
 
 [<RequireQualifiedAccess>]
 module CompletionReadiness =
@@ -177,6 +280,8 @@ module CompletionReadiness =
         | CompletionFacet.BehaviorVerified -> "behavior-verified"
         | CompletionFacet.ArchitectureVerified -> "architecture-verified"
         | CompletionFacet.ReleaseReady -> "release-ready"
+        | CompletionFacet.DesignDebtDeclared -> "design-debt-declared"
+        | CompletionFacet.VerificationMatrixSatisfied -> "verification-matrix-satisfied"
         | CompletionFacet.GroupVerified -> "group-verified"
 
     let parseFacet =
@@ -185,6 +290,8 @@ module CompletionReadiness =
         | "behavior-verified" -> Some CompletionFacet.BehaviorVerified
         | "architecture-verified" -> Some CompletionFacet.ArchitectureVerified
         | "release-ready" -> Some CompletionFacet.ReleaseReady
+        | "design-debt-declared" -> Some CompletionFacet.DesignDebtDeclared
+        | "verification-matrix-satisfied" -> Some CompletionFacet.VerificationMatrixSatisfied
         | _ -> None
 
     let allFacets =
@@ -192,6 +299,8 @@ module CompletionReadiness =
           CompletionFacet.BehaviorVerified
           CompletionFacet.ArchitectureVerified
           CompletionFacet.ReleaseReady
+          CompletionFacet.DesignDebtDeclared
+          CompletionFacet.VerificationMatrixSatisfied
           CompletionFacet.GroupVerified ]
 
     let requirementCode =
@@ -357,13 +466,139 @@ module CompletionReadiness =
         | [] -> FacetStatus.NotRequired
         | entries -> FacetStatus.Satisfied(entries |> List.map (fun evidence -> $"{evidence.Type}={evidence.Path}"))
 
-    /// No release-readiness evidence contract is consumed yet, so a required
-    /// release-ready facet is unavailable -- never assumed.
-    let releaseFacet (required: bool) : FacetStatus =
-        if required then
-            FacetStatus.Unavailable [ "no release-readiness evidence contract is consumed yet; release-ready cannot be established" ]
-        else
-            FacetStatus.NotRequired
+    /// A facet established by one judged evidence document: a pass
+    /// satisfies it, a failure never does (whatever the requirement), and
+    /// unavailable evidence is never a pass (it blocks only a required facet).
+    /// An unjudged source is not required.
+    let judgedFacet (required: bool) (facetName: string) (judgement: SourceJudgement) : FacetStatus =
+        match judgement with
+        | SourceJudgement.Passed evidence -> FacetStatus.Satisfied [ evidence ]
+        | SourceJudgement.Failed reasons -> FacetStatus.NotSatisfied reasons
+        | SourceJudgement.Unavailable reasons -> FacetStatus.Unavailable reasons
+        | SourceJudgement.Ignored when required -> FacetStatus.Unavailable [ $"{facetName} is required but was not judged" ]
+        | SourceJudgement.Ignored -> FacetStatus.NotRequired
+
+    /// Judges a `praxis.release-readiness/1` document (PRX-QUAL-023). Only a
+    /// consistent document whose verdict is `ready` and whose every check
+    /// passed establishes release readiness; a `ready` verdict over a failed
+    /// or skipped check is inconsistent, hence unavailable.
+    let judgeRelease (observation: SourceObservation<ReleaseReadinessEvidence>) =
+        observationGap QualityEvidenceTypes.releaseReadiness observation (fun release ->
+            let notPassed = release.Checks |> List.filter (fun check -> check.Status <> ReleaseCheckStatus.Passed)
+
+            let describe (check: ReleaseCheck) =
+                let status =
+                    match check.Status with
+                    | ReleaseCheckStatus.Passed -> "passed"
+                    | ReleaseCheckStatus.Failed -> "failed"
+                    | ReleaseCheckStatus.Skipped -> "skipped"
+
+                $"{check.Name} {status}"
+
+            match release.Verdict with
+            | _ when release.Checks.IsEmpty ->
+                SourceJudgement.Unavailable [ "release-readiness evidence lists no checks; readiness cannot be established" ]
+            | ReleaseVerdict.Ready when not notPassed.IsEmpty ->
+                let joined = notPassed |> List.map describe |> String.concat ", "
+                SourceJudgement.Unavailable [ $"inconsistent release-readiness evidence: verdict 'ready' with {joined}" ]
+            | ReleaseVerdict.Ready ->
+                SourceJudgement.Passed $"release {release.ReleaseName} {release.Version} at {release.Commit} ready: {release.Checks.Length} check(s) passed ({release.CheckedAt})"
+            | ReleaseVerdict.NotReady ->
+                SourceJudgement.Failed(
+                    $"release {release.ReleaseName} {release.Version} is not ready"
+                    :: (notPassed |> List.map describe)
+                ))
+
+    /// Judges a `praxis.design-debt/1` declaration (PRX-QUAL-021). Debt is
+    /// tracked only by recorded, open work items other than this one; a
+    /// prototype cannot complete as canonical without a debt entry.
+    let judgeDesignDebt (workItemId: string) (openItems: Set<string>) (observation: SourceObservation<DesignDebtDeclaration>) =
+        observationGap QualityEvidenceTypes.designDebt observation (fun declaration ->
+            let untracked =
+                declaration.Entries
+                |> List.filter (fun entry -> entry.WorkItem = workItemId || not (openItems.Contains entry.WorkItem))
+                |> List.map (fun entry ->
+                    if entry.WorkItem = workItemId then
+                        $"debt entry names '{entry.WorkItem}', the item being completed; debt must be tracked by a separate work item"
+                    else
+                        $"debt entry names '{entry.WorkItem}', which is not a recorded open work item; capture the debt first")
+
+            if declaration.WorkItem <> workItemId then
+                SourceJudgement.Unavailable [ $"design-debt declaration is for work item '{declaration.WorkItem}', not '{workItemId}'" ]
+            elif declaration.Prototype && declaration.Entries.IsEmpty then
+                SourceJudgement.Failed [ "a prototype cannot complete as canonical without a debt entry naming the work that makes it canonical" ]
+            elif not untracked.IsEmpty then
+                SourceJudgement.Failed untracked
+            elif declaration.Entries.IsEmpty then
+                SourceJudgement.Passed "no known design debt declared"
+            else
+                let tracked = declaration.Entries |> List.map (fun entry -> $"{entry.WorkItem} ({entry.CompromisedBoundary})") |> String.concat ", "
+                SourceJudgement.Passed $"design debt tracked by {tracked}")
+
+    let private dimensionLabel = WorkRisk.dimensionCode
+
+    /// Judges a `praxis.verification-matrix/1` document (PRX-QUAL-022)
+    /// against the required dimensions. Every required dimension must be
+    /// met; no row may be not-met; a met row needs evidence, compilation
+    /// alone never meets a row, a live-effect row needs live evidence, and a
+    /// matrix resting only on unit tests and compilation is not satisfied.
+    /// `locationExists` checks `location` evidence references.
+    let judgeVerificationMatrix
+        (workItemId: string)
+        (required: Set<VerificationDimension>)
+        (locationExists: string -> bool)
+        (observation: SourceObservation<VerificationMatrix>)
+        =
+        observationGap QualityEvidenceTypes.verificationMatrix observation (fun matrix ->
+            let rowFor dimension = matrix.Rows |> List.tryFind (fun row -> row.Dimension = dimension)
+
+            let kinds (row: VerificationRow) = row.Evidence |> List.map _.Kind |> Set.ofList
+            let weak = set [ VerificationEvidenceKind.Build; VerificationEvidenceKind.UnitTest ]
+
+            let rowProblems (row: VerificationRow) =
+                let label = dimensionLabel row.Dimension
+
+                [ match row.Status with
+                  | MatrixRowStatus.NotMet -> yield $"{label} is not met"
+                  | MatrixRowStatus.NotApplicable _ when required.Contains row.Dimension ->
+                      yield $"{label} is required for this change and cannot be not-applicable"
+                  | MatrixRowStatus.NotApplicable _ -> ()
+                  | MatrixRowStatus.Met ->
+                      if row.Evidence.IsEmpty then
+                          yield $"{label} is marked met without evidence"
+                      elif kinds row = set [ VerificationEvidenceKind.Build ] then
+                          yield $"{label} rests on compilation alone"
+                      elif row.Dimension = VerificationDimension.LiveEffect && not ((kinds row).Contains VerificationEvidenceKind.Live) then
+                          yield "live-effect needs live evidence (kind 'live')"
+
+                      for item in row.Evidence do
+                          if item.Kind = VerificationEvidenceKind.Location && not (locationExists item.Reference) then
+                              yield $"{label} cites location '{item.Reference}', which does not exist" ]
+
+            let missing =
+                required
+                |> Set.toList
+                |> List.filter (fun dimension -> (rowFor dimension).IsNone)
+                |> List.map (fun dimension -> $"{dimensionLabel dimension} has no row")
+
+            let metRows = matrix.Rows |> List.filter (fun row -> row.Status = MatrixRowStatus.Met)
+
+            let onlyWeak =
+                not metRows.IsEmpty
+                && metRows |> List.forall (fun row -> Set.isSubset (kinds row) weak)
+
+            let problems =
+                missing
+                @ (matrix.Rows |> List.collect rowProblems)
+                @ (if onlyWeak then [ "unit tests and compilation alone do not satisfy a verification matrix" ] else [])
+
+            if matrix.WorkItem <> workItemId then
+                SourceJudgement.Unavailable [ $"verification matrix is for work item '{matrix.WorkItem}', not '{workItemId}'" ]
+            elif not problems.IsEmpty then
+                SourceJudgement.Failed problems
+            else
+                let met = metRows |> List.map (fun row -> dimensionLabel row.Dimension) |> String.concat ", "
+                SourceJudgement.Passed $"verification matrix met: {met}")
 
     /// Not-satisfied evidence always blocks; unavailable evidence blocks a
     /// required facet. Satisfied and not-required never block.

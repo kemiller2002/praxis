@@ -1,12 +1,12 @@
 ---
 id: RQ-ROS-2026-A024
 title: Repository-owned implementation and automation are F#/.NET only
-status: implemented
-version: 1.0.1
+status: accepted
+version: 1.0.2
 owners:
   - repository-governance
 created: 2026-09-28
-updated: 2026-09-30
+updated: 2026-10-06
 research_area: repository-operating-system
 priority: high
 related_documents:
@@ -55,6 +55,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:45.363Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: fix the tests/Praxis.Tests path and correct the status to accepted while Python automation remains (PRAXIS-MISC-08)"
 ---
 
 > **Renumbered 2026-09-30** (`PRAXIS-PR92-ID-RENUMBER`, owner-approved): this record was numbered A022 on PR #92's branch. Main had already given A022 to a different record, so this one took the next free number before the branches were reconciled. Its content is unchanged.
@@ -84,5 +94,17 @@ An approved exception MUST name one exact path, or one directory, and cite the a
 
 ## Verification
 
-- `tests/Ros.Tests/ImplementationLanguagePolicyTests.fs` (policy classification, exceptions, CLI exit codes and paths, unified `validate`, scaffolded profiles, and this repository's own tree)
+- `tests/Praxis.Tests/ImplementationLanguagePolicyTests.fs` (policy classification, exceptions, CLI exit codes and paths, unified `validate`, scaffolded profiles, and this repository's own tree)
 - `.github/workflows/praxis-validation.yml` step "F#/.NET-only repository invariant"
+
+## Status (2026-10-06)
+
+Status corrected from `implemented` to `accepted` (`PRAXIS-MISC-09`). The
+Node/JavaScript/TypeScript part is met: no such artifact is
+repository-owned, and the F# check above enforces it. The wider rule,
+that build tooling and executable automation are F#/.NET, is not yet met:
+tracked Python remains under `research/experiments/`, and several scripts,
+workflows and the remote action still run inline `python3`. The acceptance
+criteria above check only Node artifacts, so they pass anyway. Porting the
+Python, or recording an approved exception for each remaining use, plus an
+automated check for it, is `PRAXIS-MISC-08`.

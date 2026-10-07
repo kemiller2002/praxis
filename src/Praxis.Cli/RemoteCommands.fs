@@ -82,6 +82,9 @@ type private Context =
       Grants: Set<Capability>
       Timeout: TimeSpan }
 
+let private governedRepository (context: Context) =
+    Praxis.Infrastructure.Identity.FileRepositoryIdentityRepository.current Praxis.Infrastructure.Identity.RepositoryObserver.environmentVariable context.Root
+
 let private runAs (context: Context) (actor: RequestActor option) (arguments: string list) =
     let program, prefix = self ()
     let environment = RemoteIdentity.childEnvironment (parentEnvironment ()) actor context.Executor
@@ -97,7 +100,7 @@ let private validationFindings (context: Context) (request: Request) =
 let private failure code message problems = RemoteFailure.create code message problems
 
 let private withExecutor (context: Context) (response: Response) =
-    { response with Executor = Some context.Executor }
+    { response with Executor = Some context.Executor; RepositoryIdentity = governedRepository context }
 
 let private rejectedFor (context: Context) (request: Request) (value: RemoteFailure) =
     Response.rejected
@@ -125,45 +128,8 @@ let private AgentContract = "docs/remote-agent-contract.md"
 let private describe (context: Context) =
     let status = runAs context None [ "status"; "--json" ]
 
-    let openWork =
-        try
-            use document = System.Text.Json.JsonDocument.Parse status.Stdout
-
-            match document.RootElement.TryGetProperty "workItems" with
-            | true, items when items.ValueKind = System.Text.Json.JsonValueKind.Array ->
-                items.EnumerateArray()
-                |> Seq.filter (fun item ->
-                    match item.TryGetProperty "semanticState" with
-                    | true, state -> state.GetString() <> "complete"
-                    | _ -> true)
-                |> Seq.map (fun item -> item.GetRawText())
-                |> Seq.toList
-                |> Some
-            | _ -> None
-        with _ ->
-            None
-
-    let readyWork =
-        let ready = runAs context None [ "work"; "ready" ]
-
-        try
-            use document = System.Text.Json.JsonDocument.Parse ready.Stdout
-
-            if document.RootElement.ValueKind = System.Text.Json.JsonValueKind.Array then
-                document.RootElement.EnumerateArray()
-                |> Seq.map (fun item ->
-                    let text (name: string) =
-                        match item.TryGetProperty name with
-                        | true, value when value.ValueKind = System.Text.Json.JsonValueKind.String -> Some(value.GetString())
-                        | _ -> None
-
-                    text "id", text "title", text "priority")
-                |> Seq.toList
-                |> Some
-            else
-                None
-        with _ ->
-            None
+    let openWork = RemoteJson.openWorkOf status.Stdout
+    let readyWork = RemoteJson.readyWorkOf (runAs context None [ "work"; "ready" ]).Stdout
 
     Praxis.Contracts.JsonRendering.renderIndented (fun writer ->
         writer.WriteStartObject()
@@ -177,6 +143,7 @@ let private describe (context: Context) =
         writer.WriteEndArray()
         writer.WriteString("praxisVersion", context.Version)
         writer.WriteString("contract", AgentContract)
+        RemoteJson.writeIdentityDiscovery writer (governedRepository context)
         writer.WriteStartObject("repository")
 
         match context.ObservedRef with
@@ -650,7 +617,8 @@ let private handle (context: Context) (request: Request) : Response * string opt
             { Principal = context.Executor.Principal |> Option.defaultValue "unknown"
               Grants = context.Grants
               ObservedRef = context.ObservedRef
-              ObservedSha = context.ObservedSha }
+              ObservedSha = context.ObservedSha
+              Repository = governedRepository context }
 
         match RequestDecision.decide trusted lookup request with
         | Decision.Reject value -> rejectedFor context request value, None
@@ -672,8 +640,8 @@ let private handle (context: Context) (request: Request) : Response * string opt
         | Error lockFailure -> rejectedFor context request (failure FailureCode.ConcurrencyConflict lockFailure.Message []), None
         | Ok lease ->
             try
-                match FileRemoteRepository.lookup context.Root request.RequestId with
-                | Error message -> rejectedFor context request (failure FailureCode.Internal (diagnostic message) []), None
+                match FileRemoteRepository.preflight context.Root request.RequestId with
+                | Error value -> rejectedFor context request { value with Message = diagnostic value.Message }, None
                 | Ok(lookup, recorded) -> decideAndRun lookup recorded
             finally
                 lease.Release() |> ignore

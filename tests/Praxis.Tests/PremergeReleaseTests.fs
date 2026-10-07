@@ -86,24 +86,85 @@ module PremergeReleaseTests =
           { Name = "fence release: the native release publishes an attested echelon-release.json manifest"
             Run = fun () -> contains "echelon-release.json" (workflow "native-release.yml") "release manifest" }
 
-          { Name = "fence release: the self-hosting remote executor pins the repository release version"
+          { Name = "fence release: release.json declares the state compatibility this build reads and writes"
             Run =
               fun () ->
-                  let release = JsonNode.Parse(readRepositoryFile "release.json")
-                  let toolchain = JsonNode.Parse(readRepositoryFile ".echelon/toolchain.json")
-                  let released = release["version"].GetValue<string>()
-                  let pinned = toolchain["praxis"].GetValue<string>()
+                  let declared = (JsonNode.Parse(readRepositoryFile "release.json")).["compatibility"]
+                  let compiled = Praxis.Domain.Remote.StateCompatibility.current
+                  Assert.equal compiled.RemoteProtocol (declared["remoteProtocol"].GetValue<string>())
 
-                  Assert.equal released pinned }
+                  let schemas = declared["stateSchemas"].AsObject()
+                  Assert.equal (compiled.Reads |> Map.keys |> Set.ofSeq) (schemas |> Seq.map (fun entry -> entry.Key) |> Set.ofSeq)
 
-          { Name = "fence release: the one-click version bump moves the self-hosting toolchain pin with release.json"
+                  for entry in schemas do
+                      let reads = entry.Value["reads"].AsArray() |> Seq.map (fun value -> value.GetValue<string>()) |> Seq.toList
+                      let compiledReads = compiled.Reads[entry.Key]
+                      let compiledWrites = compiled.Writes[entry.Key]
+                      Assert.equal compiledReads reads
+                      Assert.equal compiledWrites (entry.Value["writes"].GetValue<string>())
+                      Assert.isTrue (List.contains compiledWrites reads) $"{entry.Key}: a release reads what it writes" }
+
+          { Name = "fence release: the self-hosting pin names a published release compatible with the repository state"
             Run =
               fun () ->
-                  // Otherwise the bump commits a release.json the pin no longer
-                  // matches and the dispatched native release fails the check above.
+                  // PRX-QUAL-010: compatibility, not version equality, is the
+                  // authority. Source may advance release.json past the pin;
+                  // the pin must be a recorded (published, verified) release
+                  // whose reads cover the committed state, or the gap must be
+                  // an owned, unexpired exception.
+                  let semver (value: string) =
+                      let parts = value.Split '.'
+                      Assert.equal 3 parts.Length
+                      parts |> Array.map int |> fun numbers -> numbers[0], numbers[1], numbers[2]
+
+                  let pinned = (JsonNode.Parse(readRepositoryFile ".echelon/toolchain.json")).["praxis"].GetValue<string>()
+                  let released = (JsonNode.Parse(readRepositoryFile "release.json")).["version"].GetValue<string>()
+                  Assert.isTrue (semver pinned <= semver released) $"the pin {pinned} must not be ahead of the source version {released}"
+
+                  let record = JsonNode.Parse(readRepositoryFile "quality/release-compatibility.json")
+                  let release = record["releases"][pinned]
+                  Assert.isTrue (not (isNull release)) $"the pinned release {pinned} has no recorded compatibility in quality/release-compatibility.json"
+
+                  let reads =
+                      release["reads"].AsObject()
+                      |> Seq.map (fun entry -> entry.Key, entry.Value.AsArray() |> Seq.map (fun value -> value.GetValue<string>()) |> Seq.toList)
+                      |> Map.ofSeq
+
+                  let compatibility = { Praxis.Domain.Remote.StateCompatibility.current with Reads = reads }
+
+                  let observed =
+                      match Praxis.Infrastructure.Remote.FileStateCompatibility.observe (repositoryFile ".") with
+                      | Ok observed -> observed
+                      | Error message -> failwith message
+
+                  let today = System.DateOnly.FromDateTime System.DateTime.UtcNow
+
+                  let excepted (gap: Praxis.Domain.Remote.StateIncompatibility) =
+                      record["exceptions"].AsArray()
+                      |> Seq.exists (fun entry ->
+                          entry["release"].GetValue<string>() = pinned
+                          && entry["document"].GetValue<string>() = gap.Document
+                          && entry["version"].GetValue<string>() = gap.Version
+                          && entry["owner"].GetValue<string>() <> ""
+                          && entry["rationale"].GetValue<string>() <> ""
+                          && System.DateOnly.Parse(entry["expires"].GetValue<string>()) >= today)
+
+                  Praxis.Domain.Remote.StateCompatibility.check compatibility observed
+                  |> List.filter (excepted >> not)
+                  |> List.map Praxis.Domain.Remote.StateCompatibility.describe
+                  |> Assert.empty }
+
+          { Name = "fence release: the version bump never moves the pin; the pin advances only after assets and attestations verify"
+            Run =
+              fun () ->
                   let bump = readRepositoryFile "scripts/praxis-release-bump.sh"
-                  contains "\".echelon/toolchain.json\"" bump "version bump rewrites the pin"
-                  contains "git add release.json .echelon/toolchain.json .ros" bump "version bump commits the pin" }
+                  Assert.isTrue (not (bump.Contains "git add release.json .echelon/toolchain.json")) "the bump must not commit the pin"
+                  contains "git add release.json .ros" bump "the bump commits release.json and the Praxis state"
+                  let enable = readRepositoryFile "scripts/praxis-remote-enable.sh"
+                  let verify = enable.IndexOf("gh attestation verify")
+                  let pin = enable.IndexOf("toolchain[\"praxis\"] = version")
+                  Assert.isTrue (verify > 0 && pin > verify) "the pin is written only after the attestation verifies"
+                  contains "quality/release-compatibility.json" enable "the pinned release's compatibility is recorded" }
 
           { Name = "fence release: the version bump and remote enablement stamp work transitions with real millisecond timestamps"
             Run =

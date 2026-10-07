@@ -51,7 +51,7 @@ module InstallationCommands =
         code
 
     /// Build and send one request. `actor` is the resolved Praxis identity.
-    let private mutate (root: string) (capability: string) (actor: Actor) (arguments: string list) =
+    let mutate (root: string) (capability: string) (actor: Actor) (arguments: string list) =
         let json = hasFlag "--json" arguments
         let explicitRequire = hasFlag "--require" arguments
 

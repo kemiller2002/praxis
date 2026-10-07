@@ -1,0 +1,32 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-FND-ORDO",
+  "rows": [
+    { "member": "PRAXIS-FND-01", "criterion": "Ordo release carries the Ordo.Core package with a published sha256", "status": "met",
+      "evidence": { "kind": "command", "reference": "gh api repos/kemiller2002/ordo/releases/tags/v1.5.0 (assets include ordo-core.nupkg); native-checksums.txt line 091d8472...d3e ordo-core.nupkg", "result": "present (kemiller2002/ordo#57, release v1.5.0)" } },
+    { "member": "PRAXIS-FND-01", "criterion": "Praxis references that exact version from an immutable checksum-verified artifact", "status": "met",
+      "evidence": { "kind": "test", "reference": "ordo core: the package is the pinned, checksum-verified Ordo release artifact", "result": "passed" } },
+    { "member": "PRAXIS-FND-01", "criterion": "Role capability sets come from Ordo.Core; no role-to-capability table remains in Praxis", "status": "met",
+      "evidence": { "kind": "test", "reference": "ordo core: every role's capability set is Ordo.Core's role authority; ordo core: Praxis keeps no copy of Ordo's role matrix, fingerprint or glob rules", "result": "passed" } },
+    { "member": "PRAXIS-FND-01", "criterion": "Mutation-boundary classification and evaluator fingerprinting delegate to Ordo.Core", "status": "met",
+      "evidence": { "kind": "test", "reference": "ordo core: boundary classification and expansion are Ordo.Core's; evaluator fingerprint matches Ordo.Core byte for byte (conformance vector)", "result": "passed" } },
+    { "member": "PRAXIS-FND-01", "criterion": "Vocabulary-divergence test and vendored-package digest test", "status": "met",
+      "evidence": { "kind": "test", "reference": "ordo core: the Praxis and Ordo capability and role vocabularies are one-to-one; ordo core: the package is the pinned, checksum-verified Ordo release artifact", "result": "passed" } },
+    { "member": "PRAXIS-FND-01", "criterion": "foundations.json and foundations verify evidence the Ordo.Core pin", "status": "met",
+      "evidence": { "kind": "test", "reference": "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use", "result": "passed; Praxis's own declaration is PRAXIS-FND-03" } },
+    { "member": "PRAXIS-FND-01", "criterion": "Governance header, docs/execution-runtime.md and requirement status updated", "status": "met",
+      "evidence": { "kind": "location", "reference": "docs/execution-runtime.md", "result": "section 'Ordo.Core'; Governance.fs header names the consumed package" } },
+    { "member": "PRAXIS-FND-02", "criterion": "execution start --contract FILE (ordo.execution-contract/1 parsed by Ordo.Core) supplies role, boundary and evaluator closure", "status": "met",
+      "evidence": { "kind": "test", "reference": "execution contract: a contract file supplies role, boundary, evaluator and human-only transitions", "result": "passed" } },
+    { "member": "PRAXIS-FND-02", "criterion": "Envelope records the contract source path and sha256", "status": "met",
+      "evidence": { "kind": "test", "reference": "execution contract: a contract file supplies role, boundary, evaluator and human-only transitions (execution ledger 'contract' entry: source and sha256)", "result": "passed" } },
+    { "member": "PRAXIS-FND-02", "criterion": "Flags contradicting a supplied contract are refused with exit 2", "status": "met",
+      "evidence": { "kind": "test", "reference": "execution contract: flags that contradict a contract are refused, and invalid contracts are Ordo's refusals", "result": "passed" } },
+    { "member": "PRAXIS-FND-02", "criterion": "Without --contract the flags are assembled into the Ordo contract shape, validated by Ordo, and recorded as operator-supplied", "status": "met",
+      "evidence": { "kind": "test", "reference": "execution contract: operator flags are assembled into the Ordo contract and recorded as such", "result": "passed" } },
+    { "member": "PRAXIS-FND-02", "criterion": "Tests cover acceptance, digest, invalid contract and flag conflict", "status": "met",
+      "evidence": { "kind": "location", "reference": "tests/Praxis.Tests/ExecutionGovernanceTests.fs", "result": "three 'execution contract:' tests" } },
+    { "member": "PRAXIS-FND-02", "criterion": "docs/execution-runtime.md and requirement status updated", "status": "met",
+      "evidence": { "kind": "location", "reference": "docs/execution-runtime.md", "result": "section 'Governing contract'" } }
+  ]
+}

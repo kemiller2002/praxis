@@ -36,7 +36,13 @@ type LifecycleEnvironment<'payload> =
       /// Persist the installation manifest.
       RecordManifest: InstallationManifest -> unit
       /// Lay down the legacy `ros-bootstrap` snapshot on a fresh install.
-      RecordLegacyInstallation: 'payload -> ObservedRepository -> unit }
+      RecordLegacyInstallation: 'payload -> ObservedRepository -> unit
+      /// Create the Praxis instance identity when it is missing, never
+      /// replacing one (DER-16, 17, 24). It runs after every non-dry-run
+      /// `init`/`upgrade`, including a no-op one, so an installation that
+      /// predates instance identity gets one on its next upgrade; it runs
+      /// before any registration is attempted. Returns what it did.
+      EnsureInstanceIdentity: unit -> Result<string, string> }
 
 /// Outcome of a command that can change the repository.
 type ExecutionOutcome =
@@ -44,7 +50,9 @@ type ExecutionOutcome =
       /// True when the plan was actually executed (false for a dry run, for a
       /// no-op, and for a plan blocked by a conflict).
       Applied: bool
-      AppliedPaths: string list }
+      AppliedPaths: string list
+      /// What happened to the instance identity, when it was ensured.
+      InstanceIdentity: string option }
 
 [<RequireQualifiedAccess>]
 type LifecycleFailure =
@@ -152,14 +160,18 @@ module Lifecycle =
                 Ok
                     { Installation = installation
                       Applied = false
-                      AppliedPaths = [] }
+                      AppliedPaths = []
+                      InstanceIdentity = None }
             | Ok _ when Plan.isNoOp installation.Plan ->
                 // Nothing to do. Idempotency is a property of the plan being
                 // empty, not of re-writing identical bytes.
-                Ok
+                environment.EnsureInstanceIdentity()
+                |> Result.mapError LifecycleFailure.ExecutionFailed
+                |> Result.map (fun instance ->
                     { Installation = installation
                       Applied = false
-                      AppliedPaths = [] }
+                      AppliedPaths = []
+                      InstanceIdentity = Some instance })
             | Ok _ ->
                 match payloadOf environment request with
                 | Error failure -> Error failure
@@ -173,10 +185,13 @@ module Lifecycle =
                         environment.RecordLegacyInstallation payload observedBefore
                         environment.RecordManifest installation.Manifest
 
-                        Ok
+                        environment.EnsureInstanceIdentity()
+                        |> Result.mapError LifecycleFailure.ExecutionFailed
+                        |> Result.map (fun instance ->
                             { Installation = installation
                               Applied = true
-                              AppliedPaths = appliedPaths })
+                              AppliedPaths = appliedPaths
+                              InstanceIdentity = Some instance }))
 
     /// `init`: inspect, plan, validate, execute, and leave the repository in a
     /// state `verify` accepts. Safe to run repeatedly; a second run plans no

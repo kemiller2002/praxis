@@ -139,7 +139,7 @@ module GroupEvidenceJson =
                       NewAbstractions = value abstractions }
             | errors -> Error errors)
 
-    let private row (node: JsonObject) : Result<VerificationRow, string list> =
+    let private row (node: JsonObject) : Result<CriterionVerificationRow, string list> =
         let memberId = text node "member"
         let criterion = text node "criterion"
 
@@ -157,7 +157,7 @@ module GroupEvidenceJson =
                         else Error $"evidence kind '{raw}' is not test, command or location")
 
                 match kind, text evidence "reference", optionalText evidence "result" with
-                | Ok kind, Ok reference, Ok result -> Ok { Kind = kind; Reference = reference; Result = result |> Option.defaultValue "" }
+                | Ok kind, Ok reference, Ok result -> Ok({ Kind = kind; Reference = reference; Result = result |> Option.defaultValue "" }: CriterionEvidence)
                 | kind, reference, result -> Error(String.concat "; " (errorsOf [ boxed kind; boxed reference; boxed result ]))
             | _ -> Error "evidence must be an object {kind, reference, result}"
 

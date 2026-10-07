@@ -171,7 +171,15 @@ module Snapshot =
             |> String.concat ","
 
         let observations = input.Observations |> List.map observationCanonical |> Text.sortOrdinal |> String.concat ","
-        String.concat "\n" [ executions; costs; observations ]
+
+        // Capacity is evidence too; it is appended only when observed, so
+        // snapshots of plans without capacity keep their recorded hashes.
+        let capacity =
+            input.Capacity
+            |> List.map (fun provider -> $"{provider.Provider}:{CapacityState.describe provider.State}@{provider.Provenance.Reference}")
+            |> Text.sortOrdinal
+
+        String.concat "\n" ([ executions; costs; observations ] @ (if capacity.IsEmpty then [] else [ String.concat "," capacity ]))
 
     let create (input: PlanningInput) (items: ItemAnalysis list) (collisions: Collision list) : PlanSnapshot =
         let digests = items |> List.map digest

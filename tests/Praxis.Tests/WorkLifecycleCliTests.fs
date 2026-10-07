@@ -18,7 +18,7 @@ module WorkLifecycleCliTests =
         CliGolden.withRepository prefix project CliGolden.noPreparation true test
 
     let private baseVolatile =
-        [ "executionId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
+        [ "executionId"; "instanceId"; "startedAt"; "discoveredAt"; "lastAssessedAt"; "recordedAt"; "collectedAt"; "measurementId"
           "commit"; "branch"; "dirtyPaths"; "dirty"; "commits"; "occurredAt"; "eventId"; "updatedAt"
           "telemetryExecutionIds"; "telemetryExecutions"
           // The installation work item's own completedAt is set by `praxis init`.

@@ -311,6 +311,17 @@ module FilePlanningRepository =
                         { configuration.Grouping with
                             Groups = WorkGroups.declarations configuration.Grouping.Groups stored } }))
 
+    /// Provider capacity (PRX-QUAL-009): entries supplied in the observations
+    /// file's `capacity` array, plus usage-pacing state when the operator has
+    /// opted in by naming its directory in `PRAXIS_PACING_DIR`. Nothing
+    /// observed is unknown capacity, never zero.
+    let readCapacity (observationsFile: string option) (pacingDirectory: string option) (now: DateTimeOffset) : Result<ProviderCapacity list, string> =
+        readOptionalFile observationsFile PlanningJson.parseCapacity []
+        |> Result.map (fun supplied ->
+            let pacing = pacingDirectory |> Option.map (fun directory -> FilePacingCapacity.read directory now) |> Option.defaultValue []
+            let suppliedProviders = supplied |> List.map _.Provider |> Set.ofList
+            supplied @ (pacing |> List.filter (fun provider -> not (suppliedProviders.Contains provider.Provider))))
+
     let create (root: string) (observationsFile: string option) (configurationFile: string option) : PlanningReadPort =
         { Repository = fun () -> readRepository root
           Queue = fun () -> readQueue root
@@ -318,4 +329,13 @@ module FilePlanningRepository =
           Executions = fun () -> readExecutions root
           RepositoryObservations = readRepositoryObservations root
           SuppliedObservations = fun () -> readOptionalFile observationsFile PlanningJson.parseObservations []
+          Capacity =
+            fun () ->
+                let pacing =
+                    match Environment.GetEnvironmentVariable "PRAXIS_PACING_DIR" with
+                    | null
+                    | "" -> None
+                    | value -> Some(Path.GetFullPath value)
+
+                readCapacity observationsFile pacing DateTimeOffset.UtcNow
           Configuration = fun () -> readConfiguration root configurationFile }

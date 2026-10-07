@@ -1,0 +1,100 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-PRAXIS-PLANNING-002",
+  "groupExecutionId": null,
+  "repository": "kemiller2002/praxis",
+  "baseCommit": "f242aae664b4601e106b6e33ebce2b95bedfae35",
+  "members": [
+    {
+      "workItemId": "PRAXIS-MISC-02",
+      "repository": null,
+      "obligation": "Observe CI status for checkpoints that wait on CI (PRX-PLAN-020)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "an opt-in planner flag (--observe-ci) queries a CI observation port for the checkpoint commits of items with a ContinuousIntegration dependency and adds ContinuousIntegrationPassed/Failed observations labelled with their source",
+        "the default stays offline and deterministic, and an unavailable CI source is reported as unavailable, never as failure or success",
+        "observations stay separate from recorded state (PLAN-021) and never rewrite it",
+        "the observation inputs are included in the plan's input fingerprint",
+        "tests cover passed, failed, pending and unavailable CI through a fake port, and a CLI test proves the default issues no CI query",
+        "docs/planning.md status for 020 is updated"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-MISC-03",
+      "repository": null,
+      "obligation": "Historical merge-conflict evidence in the collision graph (PRX-PLAN-081)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "a read-only Git query finds merge commits on the integration branch whose parents both changed the same path, and records the conflict-prone paths as historical evidence with provenance",
+        "a pair of items whose declared areas or checkpoint-changed paths touch a historically conflicting path gets an 'elevated' collision reason naming the evidence, never 'safe'",
+        "the evidence is part of the collision-graph fingerprint",
+        "a domain test and a Git-fixture test cover it",
+        "docs/planning.md 'Collisions' and status for 080-084 are updated"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-MISC-04",
+      "repository": null,
+      "obligation": "Replay compares predicted and observed cost (PRX-PLAN-152)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "replay predicts each finalized execution's cost from executions finalized strictly before it started, only when enough earlier cost samples in one currency exist",
+        "it reports observed cost, predicted range, within-range and absolute error per execution and a summary, and 'unavailable' with the reason otherwise",
+        "no later outcome is used (PLAN-151)",
+        "tests with and without cost evidence",
+        "docs/planning.md status for 150-152 updated"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-MISC-05",
+      "repository": null,
+      "obligation": "Compare a saved plan's recommendations with what happened (PRX-PLAN-162)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "plan freshness --plan FILE adds a recommendation-outcome summary: per recommended item whether it was started, completed, blocked or untouched since the plan, whether the start order followed the recommended wave order, and the observed versus predicted duration for completed items",
+        "the output states that it is an observation and not the planner's effect",
+        "tests cover followed and not-followed orders",
+        "docs/planning.md status for 162 updated"
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-MISC-06",
+      "repository": null,
+      "obligation": "Persist estimate-error history over time (PRX-PLAN-170)",
+      "dependsOn": [ "PRAXIS-MISC-04" ],
+      "acceptanceCriteria": [
+        "plan replay --record appends one praxis.plan-calibration/1 entry per run (planner version, as-of, work-state fingerprint, sample count, within-range rate, median absolute and relative error, per class) to a committed history file under .ros/planning/; plain replay stays read-only (PLAN-001, PLAN-161)",
+        "a repeated record for the same fingerprint and planner version is idempotent",
+        "plan replay reports the trend from the recorded history",
+        "tests cover append, idempotency, read-only default and trend",
+        "docs/planning.md status for 170-173 updated"
+      ]
+    }
+  ],
+  "reuseInventory": [
+    { "element": "ObservationKind / Observation (ContinuousIntegrationPassed, ContinuousIntegrationFailed)", "location": "src/Praxis.Domain/Planning/Model.fs:411", "disposition": "reused", "reason": "CI evidence already has a typed observation; the new port only produces values of it." },
+    { "element": "Inventory dependency resolution for DependencyTarget.ContinuousIntegration", "location": "src/Praxis.Domain/Planning/Inventory.fs:155", "disposition": "reused", "reason": "Resolves CI dependencies from observations; unchanged, so observed and supplied CI behave identically." },
+    { "element": "PlanningReadPort.RepositoryObservations / SuppliedObservations", "location": "src/Praxis.Application/Planning/Operations.fs:13", "disposition": "extended", "reason": "The CI port is added as one more observation source on the same read port; it must stay opt-in, so it is a separate field rather than folded into the Git source." },
+    { "element": "FilePlanningRepository.readRepositoryObservations (PR merged, release tags, checkpoint merged)", "location": "src/Praxis.Infrastructure/Planning/FilePlanningRepository.fs:208", "disposition": "extended", "reason": "Historical merge-conflict paths are read with the same read-only Git helper next to the existing Git observations." },
+    { "element": "ProcessGitRepository.readLines", "location": "src/Praxis.Infrastructure/Git/GitRepository.fs:336", "disposition": "reused", "reason": "Read-only Git query helper with typed failures." },
+    { "element": "PlanningJson.parseObservations", "location": "src/Praxis.Contracts/Planning/PlanningJson.fs:827", "disposition": "reused", "reason": "Supplied observations keep their contract; observed CI is rendered with the same observation fields." },
+    { "element": "Snapshot.evidenceCanonical (observations fingerprint)", "location": "src/Praxis.Domain/Planning/Snapshot.fs:160", "disposition": "reused", "reason": "Every observation is already part of the input fingerprint, so observed CI is fingerprinted with no new code." },
+    { "element": "Graph.collision and CollisionSignal", "location": "src/Praxis.Domain/Planning/Graph.fs:208", "disposition": "extended", "reason": "A historical-conflict signal is one more CollisionSignal case raising the pair to elevated; the risk ordering and scheduling policies stay unchanged." },
+    { "element": "Snapshot.collisionCanonical", "location": "src/Praxis.Domain/Planning/Snapshot.fs:88", "disposition": "reused", "reason": "Signals are fingerprinted by code and detail, so the new signal enters the collision fingerprint automatically." },
+    { "element": "Replay.predict / Replay.replay", "location": "src/Praxis.Domain/Planning/Replay.fs:57", "disposition": "extended", "reason": "Cost prediction follows the same no-hindsight training filter as duration prediction." },
+    { "element": "History.executionCostKind / History.costSummary", "location": "src/Praxis.Domain/Planning/History.fs:227", "disposition": "reused", "reason": "Per-execution monetary totals and the minimum-sample rule are taken from the existing cost evidence rules, not re-derived." },
+    { "element": "Snapshot.compare / PlanFreshness", "location": "src/Praxis.Domain/Planning/Snapshot.fs:203", "disposition": "extended", "reason": "The recommendation-outcome comparison is computed from the same previous/current snapshots freshness already diffs." },
+    { "element": "PlanCommands option parsing and replay/freshness verbs", "location": "src/Praxis.Cli/PlanCommands.fs:558", "disposition": "extended", "reason": "New flags (--observe-ci, --record) are added to the existing verbs; no new verb." }
+  ],
+  "searches": [
+    "grep -n ObservationKind src/Praxis.Domain/Planning/*.fs",
+    "grep -n -E 'let (costSummary|executionCostKind)' src/Praxis.Domain/Planning/History.fs",
+    "grep -rn 'let collision' src/Praxis.Domain/Planning/",
+    "grep -rn 'readRepositoryObservations\\|SuppliedObservations' src",
+    "grep -rn 'calibration' src (no existing calibration store)"
+  ],
+  "newAbstractions": [
+    { "name": "CI observation port (opt-in) producing ContinuousIntegrationPassed/Failed", "consideredExisting": "FilePlanningRepository.readRepositoryObservations", "whyNotReused": "That source is offline Git and always on; CI needs a network query that must stay opt-in so the default plan remains deterministic and offline." },
+    { "name": "praxis.plan-calibration/1 history file", "consideredExisting": "telemetry execution records and .ros/work/groups.json", "whyNotReused": "Telemetry records are per execution and the group store is owned by the group commands (PRAXIS-GROUP-08 is changing it); calibration is per planner run, so it gets its own append-only file read by one parser." }
+  ]
+}

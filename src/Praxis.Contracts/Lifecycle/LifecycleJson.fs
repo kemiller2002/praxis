@@ -199,6 +199,7 @@ module LifecycleContract =
         (cliVersion: string)
         (dryRun: bool)
         (applied: bool)
+        (instanceIdentity: string option)
         (installation: InstallationPlan)
         =
         JsonRendering.renderIndented (fun writer ->
@@ -210,6 +211,11 @@ module LifecycleContract =
             writer.WriteBoolean("dryRun", dryRun)
             writer.WriteBoolean("applied", applied)
             writer.WriteBoolean("changesRequired", not (Plan.isNoOp installation.Plan))
+
+            match instanceIdentity with
+            | Some note -> writer.WriteString("instanceIdentity", note)
+            | None -> ()
+
             writer.WriteStartArray("migrations")
 
             for step in installation.Steps do
