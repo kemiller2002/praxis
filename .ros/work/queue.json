@@ -5448,8 +5448,8 @@
     },
     {
       "id": "WI-0078",
-      "title": "EXP-A024: three-arm execution-granularity experiment separating retained context from mandated cross-item analysis",
-      "description": "A021/R2 bundle two treatment components (one retained-context session; mandated up-front cross-item analysis) and cannot attribute effects to either. Preregister and run: (a) cohort session with analysis, (b) cohort session without analysis, (c) per-item sessions with a shared, pre-written cross-item analysis, (d) per-item uninstructed, with >=3 independent executions per arm to bound run-to-run variance, in a repository without the hypothesis/protocol/cohort labels visible to implementers, blind evaluation with pre-frozen rubric and human coders. Needs owner authorization for cost.",
+      "title": "EXP-GRANULARITY-ARMS: multi-arm execution-granularity experiment separating retained context from mandated cross-item analysis (complements preregistered EX-ROS-2026-A024 handoff study)",
+      "description": "A021/R2 bundle two treatment components (one retained-context session; mandated up-front cross-item analysis) and cannot attribute effects to either. EX-ROS-2026-A024 (preregistered on main 2026-10-07, status proposed) tests structured handoffs between fresh sessions; this item covers the remaining arms: cohort session without the analysis step, and per-item sessions given a shared pre-written analysis, with >=3 executions per arm to bound run-to-run variance, implementers unable to see hypothesis/protocol/cohort labels, blind evaluation with a pre-frozen rubric and human coders. Coordinate with EX-ROS-2026-A024 rather than duplicating it. Needs owner authorization for cost.",
       "tags": [
         "research",
         "a021-publication"
@@ -5458,7 +5458,7 @@
       "status": "captured",
       "attachments": [],
       "createdAt": "2026-10-07T15:03:55.000Z",
-      "updatedAt": "2026-10-07T15:03:55.000Z",
+      "updatedAt": "2026-10-07T17:32:27.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

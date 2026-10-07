@@ -289,7 +289,7 @@
 | WI-0075 | A021-PUB-IRR: independent human second coding of the 8-dimension architecture rubric with agreement statistics | captured | research, a021-publication | high |
 | WI-0076 | A021-PUB-REFS: verify all 57 references against authoritative records | captured | research, a021-publication | high |
 | WI-0077 | A021-PUB-VENUE: confirm SANER 2027 / MSR 2027 submission facts on official pages | captured | research, a021-publication | high |
-| WI-0078 | EXP-A024: three-arm execution-granularity experiment separating retained context from mandated cross-item analysis | captured | research, a021-publication | medium |
+| WI-0078 | EXP-GRANULARITY-ARMS: multi-arm execution-granularity experiment separating retained context from mandated cross-item analysis (complements preregistered EX-ROS-2026-A024 handoff study) | captured | research, a021-publication | medium |
 | WI-0079 | EXP-A022-UNBLOCK: find or create a gate-satisfying target for the A022 affinity falsification | captured | research, a021-publication | medium |
 | WI-ACTIVE | Active item | blocked |  | medium |
 | WI-READY | Ready item | active |  | medium |
