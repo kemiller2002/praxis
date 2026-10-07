@@ -115,6 +115,7 @@ let main _ =
     @ InternalNamingTests.tests
     @ TelemetryCostUnitTests.tests
     @ QualityEvidenceTests.tests
+    @ FormaPresentationTests.tests
     @ AegisBoundaryTests.tests
     @ IdentityTests.tests
     |> TestRunner.run
