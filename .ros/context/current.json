@@ -9112,11 +9112,22 @@
       "blockReason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt",
       "completedAt": "2026-10-07T23:02:53.000Z",
       "conclusion": "EX-ROS-2026-A024 executed to valid terminal results; blinded scoring and evaluation; frozen analysis: HY-ROS-2026-A030 not supported (discovery recovery -13/151; no architecture calibration effect: A 5, B 10, C 8; acceptance 36/36 in all arms). Follow-ons proposed, not run."
+    },
+    {
+      "id": "WI-0078",
+      "type": "feature",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-08T23:13:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T231313875Z-08e02d5e"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T22:27:52.000Z",
+  "updatedAt": "2026-10-08T23:13:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
