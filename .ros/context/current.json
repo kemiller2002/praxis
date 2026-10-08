@@ -8811,6 +8811,250 @@
       "conclusion": "Ordo pin and .sde at 1.5.0 via ordo upgrade; 1739/1739 tests, architecture/registry/validate, foundations verify pass"
     },
     {
+      "id": "WI-0077",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Foundations/RoutingFoundation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RoutingFoundationsTests.fs"
+        },
+        {
+          "type": "requirement",
+          "path": "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+        }
+      ],
+      "updatedAt": "2026-10-08T20:31:05.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T190013901Z-42197b39"
+      ],
+      "latestCheckpoint": {
+        "id": "806298c8c0918a3e793cade5",
+        "recordedAt": "2026-10-08T20:31:01.000Z",
+        "executionId": "EXE-20261008T190013901Z-42197b39",
+        "repository": "repository-operating-system",
+        "branch": "feature/deep-linking-foundations",
+        "commit": "9b3fe887b371e937c2d9af89d19df1283cba7d6f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feature/deep-linking-foundations",
+        "remoteCommit": "9b3fe887b371e937c2d9af89d19df1283cba7d6f",
+        "summary": "SAF-URL-1..10 deep-linking standard aligned to Limen 0.9.0 (DF-LIMEN-2026-0006; a drafted DF-ROS-2026-A056 was withdrawn before commit in its favour), echelon.routes/v1 schema mirror and template, routing foundation (ECHELON-FND-ROUTING-001..005, pending until Limen 0.9.0) in Infrastructure with the CLI held to its ratchet, Praxis's own web/hub inventories; PR #209 CI green on 9b3fe887",
+        "nextAction": "Complete WI-0077, merge PR #209 on green, release Praxis (minor), pin it, record it in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T20:31:05.000Z"
+    },
+    {
+      "id": "RELEASE-3-9-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-10-08T20:50:43.869Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T205039845Z-73887b1b"
+      ],
+      "latestCheckpoint": {
+        "id": "a3d3a82a36727aa706a59cca",
+        "recordedAt": "2026-10-08T20:50:42.655Z",
+        "executionId": "EXE-20261008T205039845Z-73887b1b",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "0cc784a3f75bd1e7a3aa59f03d015f893e5820a0",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "0cc784a3f75bd1e7a3aa59f03d015f893e5820a0",
+        "summary": "Bumped the package version from 3.8.0 to 3.9.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T20:50:43.869Z"
+    },
+    {
+      "id": "WI-0080",
+      "type": "release",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/toolchain.json"
+        },
+        {
+          "type": "implementation",
+          "path": "quality/release-compatibility.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T21:18:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T211755135Z-8e681103"
+      ],
+      "latestCheckpoint": {
+        "id": "f99d3a5f066fae66675f84c9",
+        "recordedAt": "2026-10-08T21:18:47.000Z",
+        "executionId": "EXE-20261008T211755135Z-8e681103",
+        "repository": "repository-operating-system",
+        "branch": "chore/pin-praxis-3.9.0",
+        "commit": "d55570db47b1d12cf0e80de0ebd99fdb4e2c9fc4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "chore/pin-praxis-3.9.0",
+        "remoteCommit": "d55570db47b1d12cf0e80de0ebd99fdb4e2c9fc4",
+        "summary": "toolchain pinned to verified 3.9.0; compatibility recorded",
+        "nextAction": "Merge on green; record 3.9.0 in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T21:18:51.000Z"
+    },
+    {
+      "id": "WI-0079",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "schemas/echelon-routes-v1.schema.json"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Foundations/RouteInventory.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RoutingFoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T21:40:48.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T213537458Z-4d816bba"
+      ],
+      "latestCheckpoint": {
+        "id": "868a09fd1a64d69c63d8c422",
+        "recordedAt": "2026-10-08T21:40:45.000Z",
+        "executionId": "EXE-20261008T213537458Z-4d816bba",
+        "repository": "repository-operating-system",
+        "branch": "feature/vendor-limen-routes-schema",
+        "commit": "efb5e6ae09e4b09439b24c2d8730d971d7d40d81",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feature/vendor-limen-routes-schema",
+        "remoteCommit": "efb5e6ae09e4b09439b24c2d8730d971d7d40d81",
+        "summary": "schemas/echelon-routes-v1.schema.json vendored byte for byte from Limen 0.9.0; legacy {name,pattern,to,params-object} and optional wildcard accepted; Limen's rendered inventory vector is a passing fixture; template and Praxis inventories in Limen's exact shape",
+        "nextAction": "Merge on green; release Praxis 3.9.1; pin it; record it in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T21:40:48.000Z"
+    },
+    {
+      "id": "RELEASE-3-9-1",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-10-08T22:03:47.549Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T220341606Z-b4b89ebc"
+      ],
+      "latestCheckpoint": {
+        "id": "96e5b5ce6f27809108b866fb",
+        "recordedAt": "2026-10-08T22:03:45.662Z",
+        "executionId": "EXE-20261008T220341606Z-b4b89ebc",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "e21444fb08cc5bc7b3ffc4f43a3317d8ff4b2a00",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "e21444fb08cc5bc7b3ffc4f43a3317d8ff4b2a00",
+        "summary": "Bumped the package version from 3.9.0 to 3.9.1",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T22:03:47.549Z"
+    },
+    {
+      "id": "WI-0081",
+      "type": "release",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/toolchain.json"
+        },
+        {
+          "type": "implementation",
+          "path": "quality/release-compatibility.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T22:27:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T222723726Z-1fc40c36"
+      ],
+      "latestCheckpoint": {
+        "id": "eb0c405739435dbd64b3a1a6",
+        "recordedAt": "2026-10-08T22:27:49.000Z",
+        "executionId": "EXE-20261008T222723726Z-1fc40c36",
+        "repository": "repository-operating-system",
+        "branch": "chore/pin-praxis-3.9.1",
+        "commit": "1c6b58cec23f409843e0aa9496c135bfbf9cfb41",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "chore/pin-praxis-3.9.1",
+        "remoteCommit": "1c6b58cec23f409843e0aa9496c135bfbf9cfb41",
+        "summary": "toolchain pinned to verified 3.9.1; compatibility recorded",
+        "nextAction": "Merge on green; record 3.9.1 in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T22:27:52.000Z"
+    },
+    {
       "id": "EX-ROS-2026-A024",
       "type": "task",
       "state": "complete",
@@ -8872,7 +9116,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T07:30:28.224Z",
+  "updatedAt": "2026-10-08T22:27:52.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -18,7 +18,8 @@
         "folio": { "$ref": "#/$defs/capability" },
         "limen": { "$ref": "#/$defs/capability" },
         "ordo": { "$ref": "#/$defs/capability" },
-        "praxis": { "$ref": "#/$defs/capability" }
+        "praxis": { "$ref": "#/$defs/capability" },
+        "routing": { "$ref": "#/$defs/routingCapability" }
       }
     }
   },
@@ -32,6 +33,25 @@
         "version": { "type": "string", "minLength": 1 },
         "sourceCommit": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
         "boundaryManifest": { "type": "string", "minLength": 1 }
+      }
+    },
+    "routingCapability": {
+      "description": "URL-addressable state (deep linking, SAF-URL-1..10): the route inventory, and Limen routing use once Limen ships it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "hosting": { "enum": ["static", "server"], "description": "static (default): served as files, e.g. GitHub Pages, so the inventory must use hash mode (SAF-URL-6, DF-LIMEN-2026-0006); server: every path is answered by the application." },
+        "inventory": {
+          "description": "Route inventory path, or one path per served surface; default .echelon/routes.json.",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "limenRoutingVersion": { "type": "string", "minLength": 1, "description": "First Limen release that ships the routing / URL-state module, when it is not 0.9.0. An application on an older Limen is pending, not failed." },
+        "limenRoutingModule": { "type": "string", "minLength": 1, "description": "The Limen routing module source must reference, when it differs from @echelon-foundry/limen/routing, EchelonFoundry.Limen.Routing and Limen.Routing." }
       }
     }
   }

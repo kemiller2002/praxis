@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 76,
+  "nextSeq": 82,
   "items": [
     {
       "id": "WI-0001",
@@ -5580,6 +5580,193 @@
         "id": "anthropic/claude-code",
         "provider": "anthropic",
         "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0076",
+      "title": "Reconcile a completed work item's stale backlog row: queue.json status stays 'ready' when the item completed before markComplete existed, and no CLI transition can correct it",
+      "description": "Observed in kemiller2002/summa: WI-0001, WI-0002 and WI-0003 are complete in .ros/context/current.json and queue.md renders them complete, but their raw queue.json rows still say status 'ready'. They were promoted with 'work start' and completed before FileBacklogQueueRepository.markComplete existed, so their rows were never marked. No transition can now fix them: 'work complete' refuses ('cannot complete WI-0001 from complete'), and 'work backlog-transition --action abandon' is accepted on a live-complete item and would record them as abandoned, which is false. Consumers that read queue.json directly (Summa's GapAnalysisTests treat ready/captured/active/blocked rows as open) see completed work as open. Proposed: an idempotent 'work reconcile-backlog' (or 'praxis upgrade' migration) that sets a row's status to 'complete' when the live record is complete, recording an event; and refuse backlog-transition abandon/ready/block on an id whose live state is complete. Hand-editing .ros is not an option.",
+      "tags": [
+        "work",
+        "backlog",
+        "queue"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T15:33:59.000Z",
+      "updatedAt": "2026-10-08T15:33:59.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/summa/blob/main/docs/requirements/backlog-plan.md"
+    },
+    {
+      "id": "WI-0077",
+      "title": "URL-addressable state (deep linking): shared requirement SAF-URL-1..10, static-hosting decision, and a foundations verify routing capability",
+      "description": "Portfolio standard: every web application keeps navigable state in the URL. Add the requirement section to requirements/SHARED-APPLICATION-FOUNDATIONS.md, record the static-hosting decision, add schemas/echelon-routes-v1 and a routing capability (ECHELON-FND-ROUTING-NNN) to praxis foundations verify that checks the route inventory and, once Limen's routing release exists, its usage (pending until then).",
+      "tags": [
+        "foundations",
+        "deep-linking"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:00:02.612Z",
+      "updatedAt": "2026-10-08T20:31:05.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0078",
+      "title": "Bring praxis web and hub to SAF-URL-2/3/4/9/10: canonical filter URLs, replace on refinement, not-found page for unknown paths, route formatter with round-trip property tests, Copy link",
+      "description": "Found while adding the SAF-URL requirements (WI-0077); docs/application-foundations.md lists each gap as Partial or Not met. The script-free UI may need a minimal progressive enhancement for replace-on-refine and Copy link, which needs a decision against PRX-UI-031.",
+      "tags": [
+        "foundations",
+        "deep-linking",
+        "web"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:13:36.384Z",
+      "updatedAt": "2026-10-08T19:13:36.384Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0079",
+      "title": "Replace schemas/echelon-routes-v1.schema.json with a copy of Limen 0.9.0's contract/routes.schema.json once published, and add its inventory vectors to the routing tests",
+      "description": "WI-0077 mirrors the echelon.routes/v1 shape fixed in Limen DF-LIMEN-2026-0006 (limen#100) because Limen has not published contract/routes.schema.json yet (LCP-108). When Limen 0.9.0 ships, vendor the schema byte for byte, run Limen's inventory vectors through RouteInventory.problems, and reconcile any difference.",
+      "tags": [
+        "foundations",
+        "deep-linking",
+        "limen"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:22:42.455Z",
+      "updatedAt": "2026-10-08T21:40:48.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-9-0",
+      "title": "Release Praxis 3.9.0",
+      "description": "Bump release.json from 3.8.0 to 3.9.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T20:50:39.170Z",
+      "updatedAt": "2026-10-08T20:50:43.869Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0080",
+      "title": "Pin Praxis 3.9.0 (URL-addressable state foundations) in the self-hosting toolchain",
+      "description": "Pin .echelon/toolchain.json to 3.9.0 (tag v3.9.0 at e7727b04; native-release.yml run 37842486119; linux-x64 bundle checksum and build-provenance attestation verified) and record its declared state compatibility in quality/release-compatibility.json.",
+      "tags": [
+        "release"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T21:17:48.113Z",
+      "updatedAt": "2026-10-08T21:18:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-9-1",
+      "title": "Release Praxis 3.9.1",
+      "description": "Bump release.json from 3.9.0 to 3.9.1 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T22:03:40.308Z",
+      "updatedAt": "2026-10-08T22:03:47.549Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0081",
+      "title": "Pin Praxis 3.9.1 (Limen routes schema vendored) in the self-hosting toolchain",
+      "description": "Pin .echelon/toolchain.json to 3.9.1 (tag v3.9.1 at 607d058a; native-release.yml run 37851051894; every bundle's checksum and build-provenance attestation verified) and record its declared compatibility.",
+      "tags": [
+        "release"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-08T22:27:07.852Z",
+      "updatedAt": "2026-10-08T22:27:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
         "runtime": "claude-code"
       },
       "source": "manual",

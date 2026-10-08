@@ -54,6 +54,8 @@ let main _ =
     @ AdapterPublishEffectTests.tests
     @ LifecycleTests.tests
     @ FoundationsTests.tests
+    @ RoutingFoundationsTests.tests
+    @ RoutingFoundationsTests.limenTests
     @ OrdoObservationTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests

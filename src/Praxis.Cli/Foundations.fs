@@ -4,7 +4,6 @@ open System
 open System.IO
 open System.Text.Json
 open System.Text.Json.Nodes
-open System.Text.RegularExpressions
 open Praxis.Domain.Foundations
 open Praxis.Infrastructure.Foundations
 
@@ -18,7 +17,8 @@ module Foundations =
           Required: bool
           Version: string option
           SourceCommit: string option
-          BoundaryManifest: string option }
+          BoundaryManifest: string option
+          Routing: RoutingDeclaration }
 
     type CapabilityResult =
         { Name: string
@@ -104,7 +104,8 @@ module Foundations =
           Required = boolProperty false "required" element
           Version = stringProperty "version" element
           SourceCommit = stringProperty "sourceCommit" element
-          BoundaryManifest = stringProperty "boundaryManifest" element }
+          BoundaryManifest = stringProperty "boundaryManifest" element
+          Routing = RoutingFoundation.declaration element }
 
     let private readConfig root =
         let path = Path.Combine(root, ConfigRelativePath.Replace('/', Path.DirectorySeparatorChar))
@@ -141,7 +142,8 @@ module Foundations =
                                   Required = false
                                   Version = None
                                   SourceCommit = None
-                                  BoundaryManifest = None }
+                                  BoundaryManifest = None
+                                  Routing = RoutingFoundation.none }
 
                         Ok(
                             application,
@@ -150,7 +152,8 @@ module Foundations =
                               rule "folio"
                               rule "limen"
                               rule "ordo"
-                              rule "praxis" ]
+                              rule "praxis"
+                              rule "routing" ]
                         )
             with error ->
                 Error $"{ConfigRelativePath} could not be parsed: {error.Message}"
@@ -217,28 +220,6 @@ module Foundations =
             with _ ->
                 None
 
-    let private isFloatingSpec (spec: string) =
-        let value = spec.Trim()
-        value.StartsWith("^", StringComparison.Ordinal)
-        || value.StartsWith("~", StringComparison.Ordinal)
-        || value = "*"
-        || value.Equals("latest", StringComparison.OrdinalIgnoreCase)
-        || Regex.IsMatch(value, "(^|[#/@])main($|[/?#])", RegexOptions.IgnoreCase)
-
-    let private npmPinned (expectedVersion: string option) (sourceCommit: string option) (spec: string option) =
-        match spec with
-        | None -> false
-        | Some value when isFloatingSpec value -> false
-        | Some value ->
-            match sourceCommit, expectedVersion with
-            | Some commit, _ -> value.Contains(commit, StringComparison.OrdinalIgnoreCase)
-            | None, Some version ->
-                value.Equals(version, StringComparison.OrdinalIgnoreCase)
-                || value.Contains($"/v{version}/", StringComparison.OrdinalIgnoreCase)
-                || value.EndsWith($"#v{version}", StringComparison.OrdinalIgnoreCase)
-                || value.EndsWith($"@{version}", StringComparison.OrdinalIgnoreCase)
-            | None, None -> true
-
     let private projectDependencyStatus (root: string) (packageName: string) (expectedVersion: string option) =
         let projectTexts =
             projectFiles root
@@ -278,6 +259,9 @@ module Foundations =
 
             true, pinned
 
+    /// Only an error fails verification; an info finding (a pending check) is reported, never PASS or FAIL.
+    let isError (finding: Finding) = finding.Severity = "error"
+
     let private findingCode (capability: string) (suffix: string) =
         $"ECHELON-FND-{capability.ToUpperInvariant()}-{suffix}"
 
@@ -307,7 +291,7 @@ module Foundations =
         let lock = FormaRelease.repositoryLock root
         let lockPinned = lock |> Option.exists (Result.exists (fun l -> rule.Version |> Option.forall ((=) l.Version)))
         let installed = spec.IsSome || lock.IsSome
-        let pinned = (spec.IsSome && npmPinned rule.Version rule.SourceCommit spec) || lockPinned
+        let pinned = (spec.IsSome && NpmPin.isPinned rule.Version rule.SourceCommit spec) || lockPinned
         let used =
             anySourceContains
                 root
@@ -330,7 +314,7 @@ module Foundations =
     let private verifyFolio (root: string) (rule: CapabilityRule) =
         let spec = tryPackageSpec root "@echelon-foundry/print-components"
         let installed = spec.IsSome
-        let pinned = npmPinned rule.Version rule.SourceCommit spec
+        let pinned = NpmPin.isPinned rule.Version rule.SourceCommit spec
 
         let used =
             anySourceContains
@@ -351,7 +335,7 @@ module Foundations =
                 File.Exists(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))))
 
         let installed = spec.IsSome || manifest.IsSome
-        let npmEvidence = spec |> Option.map (Some >> npmPinned rule.Version rule.SourceCommit)
+        let npmEvidence = spec |> Option.map (Some >> NpmPin.isPinned rule.Version rule.SourceCommit)
         let manifestEvidence = LimenPin.manifestEvidence rule.Version manifest.IsSome (LimenManifestReader.tryRead root)
         let pinned = LimenPin.isPinned npmEvidence manifestEvidence
         let used = manifest.IsSome || anySourceContains root (LimenPin.packageNames @ [ "Limen"; "limen"; "WebAssembly" ])
@@ -373,7 +357,14 @@ module Foundations =
         let pinned = if rule.Version.IsSome then manifestPinned else installed
         installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/ros.json"; "state: .ros/" ]
 
-    let private evaluate (root: string) (rule: CapabilityRule) =
+    /// SAF-URL-8/9: the route inventories, and Limen routing once the installed Limen ships it.
+    let private verifyRouting (root: string) (rules: CapabilityRule list) (rule: CapabilityRule) =
+        let limen = rules |> List.tryFind (fun item -> item.Name = "limen")
+        let limenVersion = LimenManifestReader.tryRead root |> Option.bind _.InstalledVersion |> Option.orElse (limen |> Option.bind _.Version)
+        let uses names = anySourceContains root names || names |> List.exists (fun name -> (allProjectText root).Contains(name, StringComparison.OrdinalIgnoreCase))
+        RoutingFoundation.verify root uses (limen |> Option.exists _.Required) limenVersion rule.Routing
+
+    let private evaluate (root: string) (rules: CapabilityRule list) (rule: CapabilityRule) =
         if not rule.Required then
             { Name = rule.Name
               Required = false
@@ -386,8 +377,11 @@ module Foundations =
               Details = [ "not applicable by repository declaration" ] },
             []
         else
+            let routing = if rule.Name = "routing" then Some(verifyRouting root rules rule) else None
+
             let installed, pinned, used, evidencePresent, details =
                 match rule.Name with
+                | "routing" -> routing |> Option.map (fun o -> o.Installed, o.Pinned, o.Used, o.EvidencePresent, o.Details) |> Option.defaultValue (false, false, false, false, [])
                 | "aegis" -> verifyAegis root rule
                 | "forma" -> verifyForma root rule
                 | "folio" -> verifyFolio root rule
@@ -407,7 +401,7 @@ module Foundations =
                   Passed = installed && pinned && used && evidencePresent
                   Details = details }
 
-            let findings =
+            let standard =
                 [ if not installed then
                       yield
                           { Code = findingCode rule.Name "001"
@@ -446,6 +440,9 @@ module Foundations =
                                 else
                                     $"Add repository evidence proving canonical {rule.Name} use." } ]
 
+            let asFinding (item: RoutingFinding) = { Code = findingCode "routing" item.Suffix; Capability = "routing"; Severity = item.Severity; Message = item.Message; Remediation = item.Remediation }
+            let findings = routing |> Option.map (_.Findings >> List.map asFinding) |> Option.defaultValue standard
+
             result, findings
 
     let verify (root: string) : Result<Report, string> =
@@ -454,7 +451,7 @@ module Foundations =
         match readConfig absoluteRoot with
         | Error message -> Error message
         | Ok(application, rules) ->
-            let evaluated = rules |> List.map (evaluate absoluteRoot)
+            let evaluated = rules |> List.map (evaluate absoluteRoot rules)
             let capabilities = evaluated |> List.map fst
             let findings = evaluated |> List.collect snd
 
@@ -462,7 +459,7 @@ module Foundations =
                 { SchemaVersion = 1
                   Application = application
                   Configuration = ConfigRelativePath
-                  Passed = findings.IsEmpty
+                  Passed = findings |> List.forall (isError >> not)
                   Capabilities = capabilities
                   Findings = findings }
 
@@ -505,6 +502,7 @@ module Foundations =
         summary["required"] <- JsonValue.Create(report.Capabilities |> List.filter _.Required |> List.length)
         summary["passed"] <- JsonValue.Create(report.Capabilities |> List.filter (fun item -> item.Required && item.Passed) |> List.length)
         summary["failed"] <- JsonValue.Create(report.Capabilities |> List.filter (fun item -> item.Required && not item.Passed) |> List.length)
+        summary["notes"] <- JsonValue.Create(report.Findings |> List.filter (isError >> not) |> List.length)
 
         let root = JsonObject()
         root["schemaVersion"] <- JsonValue.Create report.SchemaVersion
@@ -539,11 +537,13 @@ module Foundations =
             lines.Add("Findings:")
 
             for finding in report.Findings do
-                lines.Add($"  {finding.Code} {finding.Message}")
+                lines.Add((if isError finding then "  " else "  NOTE ") + $"{finding.Code} {finding.Message}")
                 lines.Add($"    REPAIR {finding.Remediation}")
 
         lines.Add("")
-        lines.Add(if report.Passed then "application foundations passed" else $"application foundations failed with {report.Findings.Length} finding(s)")
+        let errors, notes = report.Findings |> List.partition isError
+        let noted = if notes.IsEmpty then "" else $" ({notes.Length} note(s))"
+        lines.Add(if report.Passed then $"application foundations passed{noted}" else $"application foundations failed with {errors.Length} finding(s){noted}")
         String.concat Environment.NewLine lines
 
     let run root asJson =
