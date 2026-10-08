@@ -68,7 +68,7 @@ module FoundationsTests =
                   Assert.empty result.Findings
 
                   let required = result.Capabilities |> List.filter _.Required |> List.map _.Name
-                  Assert.equal [ "aegis"; "forma"; "ordo" ] required
+                  Assert.equal [ "aegis"; "forma"; "ordo"; "routing" ] required
                   Assert.isTrue (result.Capabilities |> List.forall (fun c -> not c.Required || (c.Installed && c.Pinned && c.Used && c.EvidencePresent))) "every required foundation is installed, pinned, used and evidenced" }
           { Name = "foundation verifier pins Ordo through the EchelonFoundry.Ordo.Core package and its use"
             Run =

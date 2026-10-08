@@ -35,10 +35,91 @@ Stable finding codes use `ECHELON-FND-<CAPABILITY>-NNN`:
 - `001`: required capability is absent;
 - `002`: present but not pinned to the declared immutable baseline;
 - `003`: installed/pinned but canonical usage is not present;
-- `004`: implementation exists but required evidence/configuration is absent.
+- `004`: implementation exists but required evidence/configuration is absent;
+- `005` (routing only, severity `info`): a check that cannot run yet is
+  pending. It is reported but never passes or fails anything.
+
+Only `error` findings fail verification (exit code `3`).
 
 A capability marked `required: false` is reported as `N/A`, not PASS. That
 preserves the difference between "not applicable" and "implemented correctly."
+
+## Routing: URL-addressable state (deep linking)
+
+The `routing` capability verifies the parts of `SAF-URL-1..10` that a
+repository can show. Those requirements are the portfolio-wide deep-linking
+standard in
+[`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](../requirements/SHARED-APPLICATION-FOUNDATIONS.md).
+Limen 0.9.0 implements them (`DF-LIMEN-2026-0006`, LCP-088..112), and
+Praxis checks the inventory and its use without depending on Limen:
+
+```json
+"routing": {
+  "required": true,
+  "hosting": "static",
+  "inventory": ".echelon/routes.json"
+}
+```
+
+`hosting` is `static` (the default: files on GitHub Pages or similar) or
+`server` (the application answers every path). `inventory` is one path, or
+a list with one inventory per served surface.
+
+- **installed/declared**: each declared inventory exists. Limen's
+  `Inventory.render` (F#) or `renderRouteInventory` (TypeScript) writes it.
+  Without Limen, start from
+  [`templates/application-routes.json`](../templates/application-routes.json).
+- **pinned**: the inventory declares `"schema": "echelon.routes/v1"`.
+  [`schemas/echelon-routes-v1.schema.json`](../schemas/echelon-routes-v1.schema.json)
+  mirrors Limen's `contract/routes.schema.json` (LCP-108) and is replaced by a
+  copy of it once Limen 0.9.0 publishes it.
+- **evidence/configuration**: the inventory satisfies the contract, which
+  mirrors Limen's route-table refusals:
+  - `mode` is `hash` or `path`, and a `static` application uses `hash`
+    (SAF-URL-6, `DF-LIMEN-2026-0006`);
+  - `home`, `signIn` and `notFound` name declared routes;
+  - route names are unique;
+  - patterns are paths whose `{name}`, `{name:type}` or `{*name}`
+    placeholders match the declared path parameters;
+  - parameter locations and types are legal; path parameters are required,
+    have no default and use a path type; an enum lists values, values are
+    unique, and an enum default is one of them;
+  - no parameter uses a name Limen reserves for credentials (SAF-URL-5);
+  - every legacy entry names a declared route (SAF-URL-7).
+- **used**: on Limen 0.9.0 or later, the application references
+  `@echelon-foundry/limen/routing`, `EchelonFoundry.Limen.Routing` or
+  `Limen.Routing` in source or in a project file (SAF-URL-9).
+
+Finding codes:
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `ECHELON-FND-ROUTING-001` | error | routing is required but a declared route inventory is missing |
+| `ECHELON-FND-ROUTING-002` | error | the inventory is not `echelon.routes/v1` |
+| `ECHELON-FND-ROUTING-003` | error | the installed Limen ships routing but the application does not use it |
+| `ECHELON-FND-ROUTING-004` | error | the inventory breaks the contract; the message lists every problem with its SAF-URL id |
+| `ECHELON-FND-ROUTING-005` | info | Limen routing usage is **pending**; reported, never passed or failed |
+
+Unlike the other capabilities, routing reports inventory problems (004) and
+missing Limen usage (003) independently, because one does not imply the
+other.
+
+### Limen routing: pending until the application can have it
+
+Limen routing applies only to an application that requires Limen. For any
+other application the usage check is N/A. For an application that requires
+Limen, the installed version is read from `.echelon/limen.json`
+`installedVersion`, or from the declared `limen.version` when the manifest
+does not record one. Below 0.9.0, including every application while 0.9.0 is
+unpublished, the usage check is `ECHELON-FND-ROUTING-005`. It is also 005 when
+the version is unknown. An info finding never fails verification: the
+summary reads `passed (1 note(s))` and the exit code stays `0`. Once the
+application moves to Limen 0.9.0, the check is enforced.
+
+If Limen ships the module in another release or under another name, the
+declaration can say so: `"limenRoutingVersion": "X.Y.Z"` names the first
+release, and `"limenRoutingModule": "<name>"` names the module source must
+reference. Neither needs a new Praxis release.
 
 ## Ownership
 
@@ -106,6 +187,16 @@ Praxis is itself an Echelon application and is bound by
 | PRX-UI-030 | Met | As SAF-FORMA-1..6 |
 | PRX-UI-031 | Not applicable (decision) | Script-free, server-rendered UI has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
 | SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
+| SAF-URL-1 | Met | Server-rendered pages derive the view from path and query only; no authentication, so a cold load needs no sign-in round trip |
+| SAF-URL-2 | Partial | Work item and execution ids are path segments, filters are query parameters (`.echelon/routes.json`, `.echelon/routes.hub.json`). Open: the GET filter forms submit empty parameters (`?tag=&status=`) instead of omitting them, and `tag` is repeatable rather than one sorted set (WI-0078) |
+| SAF-URL-3 | Partial | Links and post/redirect/get push history; Back/Forward/refresh show the URL's view. Open: a script-free filter submit pushes rather than replaces (WI-0078) |
+| SAF-URL-4 | Partial | An unknown work item renders "Not found" with a link back to the queue (HTTP 404). Open: an unknown page path answers plain-text `not found` with no way back (WI-0078) |
+| SAF-URL-5 | Met | URLs carry opaque work item, execution and repository ids and filter values; no token or credential is ever a parameter (the verifier checks the inventory) |
+| SAF-URL-6 | Not applicable | Server-rendered on localhost, not statically hosted (`"hosting": "server"`, inventories in `path` mode) |
+| SAF-URL-7 | Met | `/index.html` is served as `/` on both surfaces and recorded as a legacy entry; no route has been renamed |
+| SAF-URL-8 | Met | `.echelon/routes.json` (`praxis web serve`) and `.echelon/routes.hub.json` (`praxis hub serve`) list every page; `foundations verify` checks both in the suite |
+| SAF-URL-9 | Partial | `WebInterface.route` and the hub router are pure parsers of method, path and query. Open: no paired formatter or round-trip property test (WI-0078) |
+| SAF-URL-10 | Not met | No Copy link action; the script-free UI relies on the address bar (WI-0078) |
 | SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
 | SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
@@ -118,10 +209,12 @@ sha256 matches it.
 
 ### Declaration
 
-`.echelon/foundations.json` requires Aegis, Forma and Ordo. Folio is not
+`.echelon/foundations.json` requires Aegis, Forma, Ordo and routing. Folio is not
 applicable: Praxis has no printable or PDF surface (SAF-FOLIO-1 is
 conditional). Limen is not applicable: the web and hub UIs are script-free
-and server-rendered (PRX-UI-031, see `web-interface.md`). Praxis is not
+and server-rendered (PRX-UI-031, see `web-interface.md`). Routing is required:
+`.echelon/routes.json` and `.echelon/routes.hub.json` are the inventories of the web and hub UIs, and
+Limen routing is N/A because Limen is not applicable. Praxis is not
 required of itself: this repository is Praxis's source and runs its own
 build. The suite runs `foundations verify` against this repository, so a
 missing pin, unused dependency or absent boundary manifest fails CI.

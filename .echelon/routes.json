@@ -1,0 +1,51 @@
+{
+  "home": "queue",
+  "legacy": [
+    { "params": [], "pattern": "/index.html", "to": "queue" }
+  ],
+  "mode": "path",
+  "notFound": null,
+  "routes": [
+    {
+      "guard": null,
+      "name": "queue",
+      "params": [
+        { "default": null, "in": "query", "name": "tag", "required": false, "type": "set" },
+        { "default": null, "in": "query", "name": "status", "required": false, "type": "enum", "values": ["abandoned", "active", "blocked", "captured", "complete", "ready"] }
+      ],
+      "pattern": "/",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guard": null,
+      "name": "work.item",
+      "params": [
+        { "default": null, "in": "path", "name": "id", "required": true, "type": "string" }
+      ],
+      "pattern": "/work/{id}",
+      "requires": ["work-item"],
+      "returnTarget": true
+    },
+    {
+      "guard": null,
+      "name": "validate",
+      "params": [],
+      "pattern": "/validate",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guard": null,
+      "name": "execution",
+      "params": [
+        { "default": null, "in": "path", "name": "id", "required": true, "type": "string" }
+      ],
+      "pattern": "/executions/{id}",
+      "requires": ["execution"],
+      "returnTarget": true
+    }
+  ],
+  "schema": "echelon.routes/v1",
+  "signIn": null
+}

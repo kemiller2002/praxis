@@ -8809,11 +8809,56 @@
       },
       "completedAt": "2026-10-08T07:30:28.224Z",
       "conclusion": "Ordo pin and .sde at 1.5.0 via ordo upgrade; 1739/1739 tests, architecture/registry/validate, foundations verify pass"
+    },
+    {
+      "id": "WI-0077",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Foundations/RoutingFoundation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RoutingFoundationsTests.fs"
+        },
+        {
+          "type": "requirement",
+          "path": "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+        }
+      ],
+      "updatedAt": "2026-10-08T20:31:05.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T190013901Z-42197b39"
+      ],
+      "latestCheckpoint": {
+        "id": "806298c8c0918a3e793cade5",
+        "recordedAt": "2026-10-08T20:31:01.000Z",
+        "executionId": "EXE-20261008T190013901Z-42197b39",
+        "repository": "repository-operating-system",
+        "branch": "feature/deep-linking-foundations",
+        "commit": "9b3fe887b371e937c2d9af89d19df1283cba7d6f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feature/deep-linking-foundations",
+        "remoteCommit": "9b3fe887b371e937c2d9af89d19df1283cba7d6f",
+        "summary": "SAF-URL-1..10 deep-linking standard aligned to Limen 0.9.0 (DF-LIMEN-2026-0006; a drafted DF-ROS-2026-A056 was withdrawn before commit in its favour), echelon.routes/v1 schema mirror and template, routing foundation (ECHELON-FND-ROUTING-001..005, pending until Limen 0.9.0) in Infrastructure with the CLI held to its ratchet, Praxis's own web/hub inventories; PR #209 CI green on 9b3fe887",
+        "nextAction": "Complete WI-0077, merge PR #209 on green, release Praxis (minor), pin it, record it in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T20:31:05.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T07:30:28.224Z",
+  "updatedAt": "2026-10-08T20:31:05.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

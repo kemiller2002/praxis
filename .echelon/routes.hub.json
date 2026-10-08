@@ -1,0 +1,24 @@
+{
+  "home": "work",
+  "legacy": [
+    { "params": [], "pattern": "/index.html", "to": "work" }
+  ],
+  "mode": "path",
+  "notFound": null,
+  "routes": [
+    {
+      "guard": null,
+      "name": "work",
+      "params": [
+        { "default": null, "in": "query", "name": "repo", "required": false, "type": "string" },
+        { "default": null, "in": "query", "name": "tag", "required": false, "type": "set" },
+        { "default": null, "in": "query", "name": "status", "required": false, "type": "enum", "values": ["abandoned", "active", "blocked", "captured", "complete", "ready"] }
+      ],
+      "pattern": "/",
+      "requires": [],
+      "returnTarget": true
+    }
+  ],
+  "schema": "echelon.routes/v1",
+  "signIn": null
+}
