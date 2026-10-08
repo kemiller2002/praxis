@@ -172,7 +172,8 @@ module AegisBoundaryTests =
                         Segments = [ "work"; "X" ]
                         Query = []
                         ContentType = None
-                        Body = [||] }
+                        Body = [||]
+                        Headers = [] }
 
                   let response = HttpHost.respond aegis (fun _ -> raise (Exception "internal: /home/ops/.ros token=abc")) request
                   let body = Encoding.UTF8.GetString response.Body

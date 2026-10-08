@@ -111,7 +111,7 @@ module WebExecutionTests =
                       Assert.equal "active" (Http.text (Http.json (server.Get $"/api/executions/{id}")) "state")
                       let posted = server.PostForm($"/executions/{id}/transitions", [ "action", "complete"; "reason", "reviewed"; "human", "yes"; "operator", "casey" ])
                       Assert.equal 303 (Http.status posted)
-                      Http.contains "notice=" (Http.location posted)
+                      Http.contains "notice:" (Http.flash posted)
                       let after = Http.json (server.Get $"/api/executions/{id}")
                       Assert.equal "completed" (Http.text after "state")
                       let ledger = CliHarness.read root $".ros/executions/{id}/events.jsonl"

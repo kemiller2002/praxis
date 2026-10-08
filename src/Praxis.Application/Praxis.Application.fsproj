@@ -7,6 +7,10 @@
     <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- vendor/nuget/limen-routing.lock; restored only from vendor/nuget (DF-ROS-2026-A057). -->
+    <PackageReference Include="EchelonFoundry.Limen.Routing" Version="0.9.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Git/Operations.fs" />
     <Compile Include="Work/Operations.fs" />
@@ -26,5 +30,7 @@
     <Compile Include="Lifecycle/Operations.fs" />
     <Compile Include="Planning/Operations.fs" />
     <Compile Include="Execution/Operations.fs" />
+    <Compile Include="Web/HttpHeaders.fs" />
+    <Compile Include="Web/UrlState.fs" />
   </ItemGroup>
 </Project>

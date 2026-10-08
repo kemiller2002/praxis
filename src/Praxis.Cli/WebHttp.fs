@@ -9,6 +9,7 @@ open System.Text.Json
 open System.Text.Json.Nodes
 open System.Threading
 open System.Threading.Tasks
+open Praxis.Application.Web
 open Praxis.Infrastructure.Boundary
 open Praxis.Infrastructure.Foundations
 
@@ -20,7 +21,9 @@ type HttpRequestData =
       Segments: string list
       Query: (string * string) list
       ContentType: string option
-      Body: byte array }
+      Body: byte array
+      /// Request headers, names lower-cased (the Cookie and Host the URL gate reads).
+      Headers: (string * string) list }
 
 type HttpResponseData =
     { Status: int
@@ -150,11 +153,15 @@ module HttpMessages =
     let css (text: string) =
         response 200 "text/css; charset=utf-8" (utf8.GetBytes text)
 
-    /// 303 See Other: the post/redirect/get step after every form post.
-    let redirect (location: string) =
+    /// 303 See Other: the post/redirect/get step after every form post. A
+    /// `notice` or `error` in the target moves to the flash cookie, so the
+    /// address bar never carries transient feedback (SAF-URL-5).
+    let redirect (target: string) =
+        let location, feedback = UrlState.splitFlash target
+
         { Status = 303
           ContentType = "text/plain; charset=utf-8"
-          Headers = [ "Location", location ]
+          Headers = ("Location", location) :: (feedback |> Option.map (fun (kind, message) -> "Set-Cookie", UrlState.flash kind message) |> Option.toList)
           Body = utf8.GetBytes $"See {location}" }
 
     /// Splits `a=1&b=two+words` into ordered, decoded pairs.
@@ -173,74 +180,8 @@ module HttpMessages =
         |> Array.map Uri.UnescapeDataString
         |> Array.toList
 
-    /// Reads one `; key=value` parameter from a header value, honouring
-    /// quoted values and RFC 5987 `key*=utf-8''...` extended values.
-    let headerParameter (name: string) (headerValue: string) : string option =
-        let parameters =
-            let result = ResizeArray<string * string>()
-            let mutable index = 0
-            let length = headerValue.Length
-
-            while index < length do
-                // skip to after the next ';'
-                let separator = headerValue.IndexOf(';', index)
-
-                if separator < 0 then
-                    index <- length
-                else
-                    index <- separator + 1
-
-                    while index < length && Char.IsWhiteSpace headerValue[index] do
-                        index <- index + 1
-
-                    let equals = headerValue.IndexOf('=', index)
-
-                    if equals > index then
-                        let key = headerValue.Substring(index, equals - index).Trim().ToLowerInvariant()
-                        let valueStart = equals + 1
-
-                        if valueStart < length && headerValue[valueStart] = '"' then
-                            let builder = StringBuilder()
-                            let mutable cursor = valueStart + 1
-                            let mutable closed = false
-
-                            while cursor < length && not closed do
-                                match headerValue[cursor] with
-                                | '\\' when cursor + 1 < length ->
-                                    builder.Append headerValue[cursor + 1] |> ignore
-                                    cursor <- cursor + 2
-                                | '"' ->
-                                    closed <- true
-                                    cursor <- cursor + 1
-                                | other ->
-                                    builder.Append other |> ignore
-                                    cursor <- cursor + 1
-
-                            result.Add(key, builder.ToString())
-                            index <- cursor
-                        else
-                            let next = headerValue.IndexOf(';', valueStart)
-                            let valueEnd = if next < 0 then length else next
-                            result.Add(key, headerValue.Substring(valueStart, valueEnd - valueStart).Trim())
-                            index <- valueEnd
-
-            result |> Seq.toList
-
-        let lowered = name.ToLowerInvariant()
-
-        let extended =
-            parameters
-            |> List.tryFind (fst >> (=) (lowered + "*"))
-            |> Option.bind (fun (_, value) ->
-                match value.IndexOf("''", StringComparison.Ordinal) with
-                | -1 -> None
-                | index ->
-                    try
-                        Some(Uri.UnescapeDataString(value.Substring(index + 2)))
-                    with _ ->
-                        None)
-
-        extended |> Option.orElse (parameters |> List.tryFind (fst >> (=) lowered) |> Option.map snd)
+    /// Reads one `; key=value` parameter from a header value (Praxis.Application.Web.HttpHeaders).
+    let headerParameter = HttpHeaders.parameter
 
     let private indexOf (haystack: byte array) (needle: byte array) (start: int) =
         if start >= haystack.Length then
@@ -459,7 +400,8 @@ module HttpHost =
             | Error(status, message) -> HttpMessages.text status message
             | Ok body ->
                 { Method = request.HttpMethod.ToUpperInvariant(); Segments = HttpMessages.pathSegments request.Url.AbsolutePath
-                  Query = HttpMessages.parseUrlEncoded request.Url.Query; ContentType = request.ContentType |> Option.ofObj; Body = body }
+                  Query = HttpMessages.parseUrlEncoded request.Url.Query; ContentType = request.ContentType |> Option.ofObj; Body = body
+                  Headers = [ for name in request.Headers.AllKeys do if not (isNull name) then yield name.ToLowerInvariant(), request.Headers[name] ] }
                 |> respond aegis handler
 
         // A disconnecting client is a recorded web fault; the connection is aborted.
@@ -533,3 +475,42 @@ module HttpHost =
                         ()
 
                 0
+
+/// Every GET page of `web serve` and `hub serve` passes here first
+/// (SAF-URL-1..10, DF-ROS-2026-A057): a canonical location renders, any other
+/// spelling of a view redirects to its canonical URL, and a location that is no
+/// view renders its typed refusal with a way back. A shown flash is cleared,
+/// and the page offers its canonical URL as "Link to this view".
+[<RequireQualifiedAccess>]
+module UrlGate =
+    let private header name (request: HttpRequestData) =
+        request.Headers |> List.tryPick (fun (key, value) -> if key = name then Some value else None)
+
+    let refused (problem: Limen.Routing.RouteError) =
+        let status, title, message = UrlState.refusal problem
+        let back = "<p><a class=\"ef-button\" href=\"/\">&larr; Back to the start</a></p>"
+        HttpMessages.html status (Html.page $"{title} · Praxis" $"<main id=\"main\" tabindex=\"-1\"><h1>{Html.escape title}</h1>{FormaMarkup.alert message}{back}</main>")
+
+    let private linkSection (share: string) (location: string) =
+        $"<section class=\"ef-section\" aria-label=\"Link to this view\"><h2>Link to this view</h2><p><a href=\"{Html.escape location}\" rel=\"bookmark\">{Html.escape share}</a></p><p>Copy it with your browser's Copy Link, or select it here:</p><input type=\"text\" readonly value=\"{Html.escape share}\" aria-label=\"Address of this view\" /></section>\n</main>"
+
+    let private decorate (share: string) (location: string) (shown: bool) (response: HttpResponseData) =
+        let page = response.Status = 200 && response.ContentType.StartsWith("text/html", StringComparison.Ordinal)
+        let body = if page then Encoding.UTF8.GetBytes((Encoding.UTF8.GetString response.Body).Replace("</main>", linkSection share location)) else response.Body
+        { response with Body = body; Headers = response.Headers @ (if shown then [ "Set-Cookie", UrlState.clearFlash ] else []) }
+
+    let serve (routing: Result<Routing<'View>, Limen.Routing.DefinitionError list>) (handler: HttpRequestData -> HttpResponseData) (request: HttpRequestData) =
+        match request.Method, request.Segments with
+        | "GET", ("api" :: _ | [ "styles.css" ]) -> handler request
+        | "GET", segments ->
+            let path = "/" + String.Join("/", segments |> List.map Html.segment)
+
+            match UrlState.resolve routing path request.Query with
+            | Canonical location -> HttpMessages.redirect location
+            | Refused problem -> refused problem
+            | Show _ ->
+                let flash = UrlState.readFlash (header "cookie" request) |> Option.toList
+                let location = UrlState.locationOf path request.Query
+                let share = UrlState.share (header "host" request |> Option.defaultValue "localhost") location
+                decorate share location (not flash.IsEmpty) (handler { request with Query = request.Query @ flash })
+        | _ -> handler request

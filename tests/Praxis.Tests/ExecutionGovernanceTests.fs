@@ -406,7 +406,21 @@ module ExecutionGovernanceTests =
                   Assert.isTrue (domain.Contains $"<PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"{version}\" />") "Praxis.Domain pins the locked version"
                   let config = File.ReadAllText(Path.Combine(root, "NuGet.config"))
                   Assert.isTrue (config.Contains "<package pattern=\"EchelonFoundry.Ordo.Core\" />") "the package restores only from the vendored source"
-                  Assert.equal [ $"echelonfoundry.ordo.core.{version}.nupkg"; "ordo-core.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.sort |> List.ofArray) }
+                  Assert.equal [ $"echelonfoundry.ordo.core.{version}.nupkg"; "ordo-core.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.filter (fun name -> name.Contains "ordo") |> Array.sort |> List.ofArray) }
+          { Name = "limen routing: the package is the pinned, checksum-verified Limen release asset, restored only from vendor/nuget (DF-ROS-2026-A057)"
+            Run =
+              fun () ->
+                  let root = repositoryRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let lock = File.ReadAllText(Path.Combine(root, "vendor", "nuget", "limen-routing.lock"))
+                  let version = lockValue lock "limen"
+                  let package = Path.Combine(root, "vendor", "nuget", $"echelonfoundry.limen.routing.{version}.nupkg")
+                  let digest = Convert.ToHexString(Security.Cryptography.SHA256.HashData(File.ReadAllBytes package)).ToLowerInvariant()
+                  Assert.equal (lockValue lock "sha256") digest
+                  Assert.equal $"https://github.com/kemiller2002/limen/releases/download/v{version}/EchelonFoundry.Limen.Routing.{version}.nupkg" (lockValue lock "url")
+                  let application = File.ReadAllText(Path.Combine(root, "src", "Praxis.Application", "Praxis.Application.fsproj"))
+                  Assert.isTrue (application.Contains $"<PackageReference Include=\"EchelonFoundry.Limen.Routing\" Version=\"{version}\" />") "Praxis.Application pins the locked version"
+                  let config = File.ReadAllText(Path.Combine(root, "NuGet.config"))
+                  Assert.isTrue (config.Contains "<package pattern=\"EchelonFoundry.Limen.Routing\" />") "the package restores only from the vendored source" }
           { Name = "ordo core: Praxis keeps no copy of Ordo's role matrix, fingerprint or glob rules"
             Run =
               fun () ->

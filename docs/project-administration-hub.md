@@ -96,7 +96,11 @@ and no browser JavaScript: a register form, a repo list (with unregister), a
 create-work-item form (repository, title, tags, priority, description, and
 up to three files with optional display names), a filter bar (repo, tag,
 status), and the aggregated table. Every form post redirects back with a
-notice or the exact error. **No authentication, localhost by default** --
+notice or the exact error, carried in a short-lived flash cookie rather than
+the URL. Filters have one canonical URL (`/?repo=ID&tag=a,b&status=ready`;
+empty fields omitted, other spellings redirected), unknown pages are a typed
+404 with a way back, and each page offers "Link to this view" (inventory
+`.echelon/routes.hub.json`; see the URLs section of `web-interface.md`). **No authentication, localhost by default** --
 this server can create work items and run commands in every registered
 repository, which is a larger blast radius than the single-repo web
 interface. Do not bind it to a non-loopback host without your own

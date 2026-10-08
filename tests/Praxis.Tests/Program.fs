@@ -56,6 +56,7 @@ let main _ =
     @ FoundationsTests.tests
     @ RoutingFoundationsTests.tests
     @ RoutingFoundationsTests.limenTests
+    @ UrlStateTests.tests
     @ OrdoObservationTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests

@@ -1885,5 +1885,56 @@
     "title": "The EX-ROS-2026-A024 frozen research instruments are approved Python exceptions under DF-ROS-2026-A054's frozen-instrument class",
     "updated": "2026-10-08",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-08",
+    "decision_type": "architecture",
+    "derived_from": [],
+    "id": "DF-ROS-2026-A057",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A057--praxis-ui-url-state-through-limen-routing.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261008T231313875Z-08e02d5e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "claude-opus-5-5",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-08T23:33:41.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0078: Praxis UI URL state through Limen.Routing; script-dependent SAF-URL behaviours escalated"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md",
+      "docs/application-foundations.md",
+      "docs/web-interface.md",
+      "docs/project-administration-hub.md",
+      "RQ-ROS-2026-A024"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "foundations",
+      "deep-linking",
+      "routing",
+      "web",
+      "decision"
+    ],
+    "title": "Praxis's web and hub UIs keep their URL state through the pinned Limen.Routing engine library, stay script-free, and escalate the two SAF-URL behaviours that need browser script",
+    "updated": "2026-10-08",
+    "version": "1.0.0"
   }
 ]

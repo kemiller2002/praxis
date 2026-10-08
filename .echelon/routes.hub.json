@@ -9,7 +9,7 @@
     }
   ],
   "mode": "path",
-  "notFound": null,
+  "notFound": "notFound",
   "routes": [
     {
       "guards": [],
@@ -50,6 +50,23 @@
       "pattern": "/",
       "requires": [],
       "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "notFound",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "rest",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/{*rest}",
+      "requires": [],
+      "returnTarget": false
     }
   ],
   "schema": "echelon.routes/v1",

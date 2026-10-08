@@ -189,16 +189,16 @@ Praxis is itself an Echelon application and is bound by
 | PRX-UI-030 | Met | As SAF-FORMA-1..6 |
 | PRX-UI-031 | Not applicable (decision) | Script-free, server-rendered UI has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
 | SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
-| SAF-URL-1 | Met | Server-rendered pages derive the view from path and query only; no authentication, so a cold load needs no sign-in round trip |
-| SAF-URL-2 | Partial | Work item and execution ids are path segments, filters are query parameters (`.echelon/routes.json`, `.echelon/routes.hub.json`). Open: the GET filter forms submit empty parameters (`?tag=&status=`) instead of omitting them, and `tag` is repeatable rather than one sorted set (WI-0078) |
-| SAF-URL-3 | Partial | Links and post/redirect/get push history; Back/Forward/refresh show the URL's view. Open: a script-free filter submit pushes rather than replaces (WI-0078) |
-| SAF-URL-4 | Partial | An unknown work item renders "Not found" with a link back to the queue (HTTP 404). Open: an unknown page path answers plain-text `not found` with no way back (WI-0078) |
-| SAF-URL-5 | Met | URLs carry opaque work item, execution and repository ids and filter values; no token or credential is ever a parameter (the verifier checks the inventory) |
+| SAF-URL-1 | Met | Every GET page is resolved from its path and query alone by `Praxis.Application.Web.UrlState` (Limen.Routing) before rendering; no authentication, so a cold load needs no sign-in round trip |
+| SAF-URL-2 | Met | Limen.Routing's canonical form: empty GET-form fields are dropped, free-text or repeated `tag` values become one sorted set, and any non-canonical location (including `/index.html` and undeclared parameters) answers 303 to the canonical URL; "url state: canonical locations ..." and "web serve: a non-canonical page URL redirects ..." |
+| SAF-URL-3 | Partial | Links and post/redirect/get push; Back, Forward and reload show the URL's view, and canonicalization replaces via redirect. A script-free filter submit still pushes rather than replaces; replacing needs browser script, escalated to the owner (`DF-ROS-2026-A057` item 6, WI-0082) |
+| SAF-URL-4 | Met | Typed refusals with a way back: unknown page 404 "Not found", invalid parameter 400 "Invalid link", denied view 403 "Not permitted"; an unknown work item keeps its 404 page linking to the queue |
+| SAF-URL-5 | Met | URLs carry only ids and filters; post/redirect/get feedback moved from `?notice=`/`?error=` to a 60-second HttpOnly, SameSite=Strict flash cookie cleared once shown |
 | SAF-URL-6 | Not applicable | Server-rendered on localhost, not statically hosted (`"hosting": "server"`, inventories in `path` mode) |
-| SAF-URL-7 | Met | `/index.html` is served as `/` on both surfaces and recorded as a legacy entry; no route has been renamed |
-| SAF-URL-8 | Met | `.echelon/routes.json` (`praxis web serve`) and `.echelon/routes.hub.json` (`praxis hub serve`) list every page; `foundations verify` checks both in the suite |
-| SAF-URL-9 | Partial | `WebInterface.route` and the hub router are pure parsers of method, path and query. Open: no paired formatter or round-trip property test (WI-0078) |
-| SAF-URL-10 | Not met | No Copy link action; the script-free UI relies on the address bar (WI-0078) |
+| SAF-URL-7 | Met | `/index.html` is a legacy route of both tables and redirects to `/`; no route has been renamed |
+| SAF-URL-8 | Met | `.echelon/routes.json` and `.echelon/routes.hub.json` are `Inventory.render` of the two tables, held byte-equal by "url state: .echelon/routes.json and routes.hub.json are Inventory.render ..."; `foundations verify` checks both |
+| SAF-URL-9 | Met | `RouteTable.define` tables and typed `RouteCodec`s; `UrlState.format` is the route formatter; "url state: format then resolve is the view, for generated views" is the round-trip property test |
+| SAF-URL-10 | Partial | Every page ends with "Link to this view": its canonical URL as a link and a selectable absolute address, copied with the browser's Copy Link. One-action clipboard copy needs browser script, escalated with SAF-URL-3 (`DF-ROS-2026-A057`, WI-0082) |
 | SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
 | SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
@@ -215,8 +215,11 @@ sha256 matches it.
 applicable: Praxis has no printable or PDF surface (SAF-FOLIO-1 is
 conditional). Limen is not applicable: the web and hub UIs are script-free
 and server-rendered (PRX-UI-031, see `web-interface.md`). Routing is required:
-`.echelon/routes.json` and `.echelon/routes.hub.json` are the inventories of the web and hub UIs, and
-Limen routing is N/A because Limen is not applicable. Praxis is not
+`.echelon/routes.json` and `.echelon/routes.hub.json` are the inventories of the web and hub UIs,
+rendered by Limen.Routing. The UIs consume `EchelonFoundry.Limen.Routing`
+0.9.0 as a pinned engine library (`vendor/nuget/limen-routing.lock`,
+`DF-ROS-2026-A057`); the `limen` capability, which is the browser runtime,
+stays N/A, so the verifier reports Limen routing usage as N/A. Praxis is not
 required of itself: this repository is Praxis's source and runs its own
 build. The suite runs `foundations verify` against this repository, so a
 missing pin, unused dependency or absent boundary manifest fails CI.
