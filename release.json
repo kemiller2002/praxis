@@ -1,6 +1,6 @@
 {
   "name": "@echelon-foundry/repository-operating-system",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "compatibility": {
     "remoteProtocol": "1.4",
     "stateSchemas": {
