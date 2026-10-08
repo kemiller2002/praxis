@@ -9116,18 +9116,56 @@
     {
       "id": "WI-0078",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-08T23:13:12.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Web/UrlState.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/WebHttp.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/UrlStateTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WebInterfaceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T23:59:21.000Z",
       "telemetryExecutionIds": [
         "EXE-20261008T231313875Z-08e02d5e"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "cdfcbac1ae73d23d89407d1b",
+        "recordedAt": "2026-10-08T23:59:17.000Z",
+        "executionId": "EXE-20261008T231313875Z-08e02d5e",
+        "repository": "repository-operating-system",
+        "branch": "feature/web-url-state",
+        "commit": "0529c3c2a9be4d5fef723f5b0aa4d0853510c975",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feature/web-url-state",
+        "remoteCommit": "0529c3c2a9be4d5fef723f5b0aa4d0853510c975",
+        "summary": "praxis web and hub URL state through vendored Limen.Routing: canonical 303s, typed refusals, flash cookie, Link to this view, rendered inventories, round-trip tests; replace-on-refine and one-action copy escalated (DF-ROS-2026-A057, WI-0082); full suite 1769/1769",
+        "nextAction": "Merge on green; release Praxis; pin it; record it in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T23:59:21.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T23:13:12.000Z",
+  "updatedAt": "2026-10-08T23:59:21.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
