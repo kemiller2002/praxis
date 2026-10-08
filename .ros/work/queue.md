@@ -300,7 +300,7 @@
 | WI-0076 | Reconcile a completed work item's stale backlog row: queue.json status stays 'ready' when the item completed before markComplete existed, and no CLI transition can correct it | captured | work, backlog, queue | medium |
 | WI-0077 | URL-addressable state (deep linking): shared requirement SAF-URL-1..10, static-hosting decision, and a foundations verify routing capability | complete | foundations, deep-linking | high |
 | WI-0078 | Bring praxis web and hub to SAF-URL-2/3/4/9/10: canonical filter URLs, replace on refinement, not-found page for unknown paths, route formatter with round-trip property tests, Copy link | captured | foundations, deep-linking, web | medium |
-| WI-0079 | Replace schemas/echelon-routes-v1.schema.json with a copy of Limen 0.9.0's contract/routes.schema.json once published, and add its inventory vectors to the routing tests | ready | foundations, deep-linking, limen | medium |
+| WI-0079 | Replace schemas/echelon-routes-v1.schema.json with a copy of Limen 0.9.0's contract/routes.schema.json once published, and add its inventory vectors to the routing tests | complete | foundations, deep-linking, limen | medium |
 | WI-0080 | Pin Praxis 3.9.0 (URL-addressable state foundations) in the self-hosting toolchain | complete | release | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
