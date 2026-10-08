@@ -1,0 +1,14 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.4",
+  "requestId": "req-openai-20261008-a021-pub-describe-01",
+  "operation": "praxis.describe",
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {}
+}
