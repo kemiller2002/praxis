@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 78,
+  "nextSeq": 80,
   "items": [
     {
       "id": "WI-0001",
@@ -5623,6 +5623,56 @@
       "attachments": [],
       "createdAt": "2026-10-08T19:00:02.612Z",
       "updatedAt": "2026-10-08T19:00:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0078",
+      "title": "Bring praxis web and hub to SAF-URL-2/3/4/9/10: canonical filter URLs, replace on refinement, not-found page for unknown paths, route formatter with round-trip property tests, Copy link",
+      "description": "Found while adding the SAF-URL requirements (WI-0077); docs/application-foundations.md lists each gap as Partial or Not met. The script-free UI may need a minimal progressive enhancement for replace-on-refine and Copy link, which needs a decision against PRX-UI-031.",
+      "tags": [
+        "foundations",
+        "deep-linking",
+        "web"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:13:36.384Z",
+      "updatedAt": "2026-10-08T19:13:36.384Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0079",
+      "title": "Replace schemas/echelon-routes-v1.schema.json with a copy of Limen 0.9.0's contract/routes.schema.json once published, and add its inventory vectors to the routing tests",
+      "description": "WI-0077 mirrors the echelon.routes/v1 shape fixed in Limen DF-LIMEN-2026-0006 (limen#100) because Limen has not published contract/routes.schema.json yet (LCP-108). When Limen 0.9.0 ships, vendor the schema byte for byte, run Limen's inventory vectors through RouteInventory.problems, and reconcile any difference.",
+      "tags": [
+        "foundations",
+        "deep-linking",
+        "limen"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:22:42.455Z",
+      "updatedAt": "2026-10-08T19:22:42.455Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

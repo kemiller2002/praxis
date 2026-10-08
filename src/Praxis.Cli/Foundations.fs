@@ -18,7 +18,11 @@ module Foundations =
           Required: bool
           Version: string option
           SourceCommit: string option
-          BoundaryManifest: string option }
+          BoundaryManifest: string option
+          Inventories: string list
+          Hosting: string option
+          LimenRoutingVersion: string option
+          LimenRoutingModule: string option }
 
     type CapabilityResult =
         { Name: string
@@ -99,12 +103,26 @@ module Foundations =
         | Some value when value.ValueKind = JsonValueKind.False -> false
         | _ -> defaultValue
 
+    /// A string, or an array of strings, as a list.
+    let private stringOrStrings name element =
+        match tryProperty name element with
+        | Some value when value.ValueKind = JsonValueKind.String -> value.GetString() |> Option.ofObj |> Option.toList
+        | Some value when value.ValueKind = JsonValueKind.Array ->
+            value.EnumerateArray()
+            |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String then item.GetString() |> Option.ofObj else None)
+            |> List.ofSeq
+        | _ -> []
+
     let private parseRule name (element: JsonElement) =
         { Name = name
           Required = boolProperty false "required" element
           Version = stringProperty "version" element
           SourceCommit = stringProperty "sourceCommit" element
-          BoundaryManifest = stringProperty "boundaryManifest" element }
+          BoundaryManifest = stringProperty "boundaryManifest" element
+          Inventories = stringOrStrings "inventory" element
+          Hosting = stringProperty "hosting" element
+          LimenRoutingVersion = stringProperty "limenRoutingVersion" element
+          LimenRoutingModule = stringProperty "limenRoutingModule" element }
 
     let private readConfig root =
         let path = Path.Combine(root, ConfigRelativePath.Replace('/', Path.DirectorySeparatorChar))
@@ -141,7 +159,11 @@ module Foundations =
                                   Required = false
                                   Version = None
                                   SourceCommit = None
-                                  BoundaryManifest = None }
+                                  BoundaryManifest = None
+                                  Inventories = []
+                                  Hosting = None
+                                  LimenRoutingVersion = None
+                                  LimenRoutingModule = None }
 
                         Ok(
                             application,
@@ -150,7 +172,8 @@ module Foundations =
                               rule "folio"
                               rule "limen"
                               rule "ordo"
-                              rule "praxis" ]
+                              rule "praxis"
+                              rule "routing" ]
                         )
             with error ->
                 Error $"{ConfigRelativePath} could not be parsed: {error.Message}"
@@ -278,6 +301,10 @@ module Foundations =
 
             true, pinned
 
+    /// Only an error fails verification; an info finding (a pending check)
+    /// is reported but never fails or passes anything.
+    let isError (finding: Finding) = finding.Severity = "error"
+
     let private findingCode (capability: string) (suffix: string) =
         $"ECHELON-FND-{capability.ToUpperInvariant()}-{suffix}"
 
@@ -373,80 +400,212 @@ module Foundations =
         let pinned = if rule.Version.IsSome then manifestPinned else installed
         installed, pinned, installed, manifestInstalled, [ "manifest: .echelon/ros.json"; "state: .ros/" ]
 
-    let private evaluate (root: string) (rule: CapabilityRule) =
+    let private routingFinding suffix severity message remediation =
+        { Code = findingCode "routing" suffix
+          Capability = "routing"
+          Severity = severity
+          Message = message
+          Remediation = remediation }
+
+    /// What one declared inventory file shows.
+    type private InventoryCheck =
+        { Path: string
+          Exists: bool
+          Supported: bool
+          Routes: int
+          Problems: string list }
+
+    let private checkInventory (root: string) (staticHosting: bool) (path: string) =
+        let exists, inventory = RouteInventoryReader.tryRead root path
+
+        { Path = path
+          Exists = exists
+          Supported = inventory |> Option.exists RouteInventory.isSupportedVersion
+          Routes = inventory |> Option.map (_.Routes >> List.length) |> Option.defaultValue 0
+          Problems =
+            match exists, inventory with
+            | true, None -> [ $"{path} is not a JSON object" ]
+            | _, Some parsed -> RouteInventory.problems staticHosting parsed
+            | false, None -> [] }
+
+    let private inventoryFindings (check: InventoryCheck) =
+        [ if not check.Exists then
+              yield
+                  routingFinding
+                      "001"
+                      "error"
+                      $"routing is required but the route inventory {check.Path} is missing (SAF-URL-8)."
+                      "Publish the route inventory: Limen's Inventory.render / renderRouteInventory writes it; without Limen, start from templates/application-routes.json (schema schemas/echelon-routes-v1.schema.json)."
+          if check.Exists && not check.Supported then
+              yield
+                  routingFinding
+                      "002"
+                      "error"
+                      $"the route inventory {check.Path} does not declare \"schema\": \"{RouteInventory.SchemaId}\"."
+                      $"Declare \"schema\": \"{RouteInventory.SchemaId}\" and validate against schemas/echelon-routes-v1.schema.json."
+          if check.Exists && not check.Problems.IsEmpty then
+              yield
+                  routingFinding
+                      "004"
+                      "error"
+                      ("the route inventory " + check.Path + " breaks the deep-linking contract: " + String.Join("; ", check.Problems) + ".")
+                      "Fix each listed problem; requirements/SHARED-APPLICATION-FOUNDATIONS.md (SAF-URL-1..10) states the rules." ]
+
+    /// The installed Limen version: the manifest's `installedVersion`, else
+    /// the version the foundations declaration pins.
+    let private installedLimenVersion (root: string) (limen: CapabilityRule) =
+        LimenManifestReader.tryRead root
+        |> Option.bind _.InstalledVersion
+        |> Option.orElse limen.Version
+
+    /// SAF-URL-8 (inventory declared and valid) and SAF-URL-9 (Limen routing
+    /// used once the installed Limen ships it). A pending Limen routing check
+    /// is an info finding (005), never PASS and never FAIL.
+    let private verifyRouting (root: string) (limen: CapabilityRule) (rule: CapabilityRule) =
+        let paths =
+            if rule.Inventories.IsEmpty then [ RouteInventoryReader.DefaultRelativePath ] else rule.Inventories
+
+        // Static hosting is the default: most Echelon applications are GitHub Pages sites.
+        let staticHosting = rule.Hosting |> Option.forall ((<>) "server")
+        let checks = paths |> List.map (checkInventory root staticHosting)
+
+        let availability =
+            LimenRouting.availability limen.Required (installedLimenVersion root limen) rule.LimenRoutingVersion
+
+        let modules =
+            rule.LimenRoutingModule |> Option.map List.singleton |> Option.defaultValue LimenRouting.defaultModules
+
+        let names = String.Join(" or ", modules)
+
+        let used, usageDetail, usageFindings =
+            match availability with
+            | LimenRouting.NotApplicable reason -> true, $"limen routing: N/A ({reason})", []
+            | LimenRouting.Pending reason ->
+                true,
+                $"limen routing: pending ({reason})",
+                [ routingFinding
+                      "005"
+                      "info"
+                      $"Limen routing usage is pending: {reason}. The usage check (SAF-URL-9) is neither passed nor failed."
+                      $"No action until the application can install Limen {LimenRouting.firstRelease} or later; then parse and format routes with {names}." ]
+            | LimenRouting.Available release ->
+                // Source references, or the F# package reference in a project file.
+                let found = anySourceContains root modules || modules |> List.exists (fun name -> (allProjectText root).Contains(name, StringComparison.OrdinalIgnoreCase))
+                let state = if found then "used" else "not used"
+
+                found,
+                $"limen routing: required since Limen {release}; {names} {state}",
+                [ if not found then
+                      yield
+                          routingFinding
+                              "003"
+                              "error"
+                              $"Limen {release} ships routing, but this application does not use it (SAF-URL-9)."
+                              $"Parse and format routes with Limen's routing module ({names}) instead of a local router." ]
+
+        let installed = checks |> List.forall _.Exists
+        let pinned = checks |> List.forall (fun check -> check.Exists && check.Supported)
+        let evidence = checks |> List.forall (fun check -> check.Exists && check.Supported && check.Problems.IsEmpty)
+
+        let details =
+            [ for check in checks do
+                  let missing = if check.Exists then String.Empty else " (missing)"
+                  yield $"inventory: {check.Path}{missing}, routes: {check.Routes}"
+                  yield! check.Problems |> List.map (sprintf "problem: %s")
+              let hostingName = if staticHosting then "static" else "server"
+              yield $"hosting: {hostingName}"
+              yield usageDetail ]
+
+        (installed, pinned, used, evidence, details), (checks |> List.collect inventoryFindings) @ usageFindings
+
+    let private standardFindings (rule: CapabilityRule) (installed: bool, pinned: bool, used: bool, evidencePresent: bool) =
+        [ if not installed then
+              yield
+                  { Code = findingCode rule.Name "001"
+                    Capability = rule.Name
+                    Severity = "error"
+                    Message = $"{rule.Name} is required but is not installed/declared."
+                    Remediation = $"Install the canonical {rule.Name} dependency or lifecycle component." }
+
+          if installed && not pinned then
+              yield
+                  { Code = findingCode rule.Name "002"
+                    Capability = rule.Name
+                    Severity = "error"
+                    Message = $"{rule.Name} is present but is not pinned to the declared immutable baseline."
+                    Remediation = $"Pin {rule.Name} to the version/commit declared in {ConfigRelativePath}." }
+
+          if installed && pinned && not used then
+              yield
+                  { Code = findingCode rule.Name "003"
+                    Capability = rule.Name
+                    Severity = "error"
+                    Message = $"{rule.Name} is declared but no canonical application usage was found."
+                    Remediation = $"Use the shared {rule.Name} capability in the applicable implementation boundary instead of merely listing it." }
+
+          if installed && pinned && used && not evidencePresent then
+              yield
+                  { Code = findingCode rule.Name "004"
+                    Capability = rule.Name
+                    Severity = "error"
+                    Message = $"{rule.Name} usage exists but required repository evidence/configuration is missing."
+                    Remediation =
+                      if rule.Name = "aegis" then
+                          "Add the declared Aegis machine-readable boundary manifest."
+                      elif rule.Name = "limen" then
+                          "Add the Limen repository/application configuration manifest."
+                      else
+                          $"Add repository evidence proving canonical {rule.Name} use." } ]
+
+    let private notApplicable (rule: CapabilityRule) =
+        { Name = rule.Name
+          Required = false
+          ExpectedVersion = rule.Version
+          Installed = false
+          Pinned = false
+          Used = false
+          EvidencePresent = false
+          Passed = true
+          Details = [ "not applicable by repository declaration" ] }
+
+    let private evaluate (root: string) (rules: CapabilityRule list) (rule: CapabilityRule) =
         if not rule.Required then
-            { Name = rule.Name
-              Required = false
-              ExpectedVersion = rule.Version
-              Installed = false
-              Pinned = false
-              Used = false
-              EvidencePresent = false
-              Passed = true
-              Details = [ "not applicable by repository declaration" ] },
-            []
+            notApplicable rule, []
         else
-            let installed, pinned, used, evidencePresent, details =
+            let observation, findings =
                 match rule.Name with
-                | "aegis" -> verifyAegis root rule
-                | "forma" -> verifyForma root rule
-                | "folio" -> verifyFolio root rule
-                | "limen" -> verifyLimen root rule
-                | "ordo" -> verifyOrdo root rule
-                | "praxis" -> verifyPraxis root rule
-                | _ -> false, false, false, false, []
+                | "routing" ->
+                    let limen =
+                        rules
+                        |> List.tryFind (fun item -> item.Name = "limen")
+                        |> Option.defaultValue { rule with Name = "limen"; Required = false; Version = None }
 
-            let result =
-                { Name = rule.Name
-                  Required = true
-                  ExpectedVersion = rule.Version
-                  Installed = installed
-                  Pinned = pinned
-                  Used = used
-                  EvidencePresent = evidencePresent
-                  Passed = installed && pinned && used && evidencePresent
-                  Details = details }
+                    verifyRouting root limen rule
+                | name ->
+                    let installed, pinned, used, evidencePresent, details =
+                        match name with
+                        | "aegis" -> verifyAegis root rule
+                        | "forma" -> verifyForma root rule
+                        | "folio" -> verifyFolio root rule
+                        | "limen" -> verifyLimen root rule
+                        | "ordo" -> verifyOrdo root rule
+                        | "praxis" -> verifyPraxis root rule
+                        | _ -> false, false, false, false, []
 
-            let findings =
-                [ if not installed then
-                      yield
-                          { Code = findingCode rule.Name "001"
-                            Capability = rule.Name
-                            Severity = "error"
-                            Message = $"{rule.Name} is required but is not installed/declared."
-                            Remediation = $"Install the canonical {rule.Name} dependency or lifecycle component." }
+                    (installed, pinned, used, evidencePresent, details), standardFindings rule (installed, pinned, used, evidencePresent)
 
-                  if installed && not pinned then
-                      yield
-                          { Code = findingCode rule.Name "002"
-                            Capability = rule.Name
-                            Severity = "error"
-                            Message = $"{rule.Name} is present but is not pinned to the declared immutable baseline."
-                            Remediation = $"Pin {rule.Name} to the version/commit declared in {ConfigRelativePath}." }
+            let installed, pinned, used, evidencePresent, details = observation
 
-                  if installed && pinned && not used then
-                      yield
-                          { Code = findingCode rule.Name "003"
-                            Capability = rule.Name
-                            Severity = "error"
-                            Message = $"{rule.Name} is declared but no canonical application usage was found."
-                            Remediation = $"Use the shared {rule.Name} capability in the applicable implementation boundary instead of merely listing it." }
-
-                  if installed && pinned && used && not evidencePresent then
-                      yield
-                          { Code = findingCode rule.Name "004"
-                            Capability = rule.Name
-                            Severity = "error"
-                            Message = $"{rule.Name} usage exists but required repository evidence/configuration is missing."
-                            Remediation =
-                                if rule.Name = "aegis" then
-                                    "Add the declared Aegis machine-readable boundary manifest."
-                                elif rule.Name = "limen" then
-                                    "Add the Limen repository/application configuration manifest."
-                                else
-                                    $"Add repository evidence proving canonical {rule.Name} use." } ]
-
-            result, findings
+            { Name = rule.Name
+              Required = true
+              ExpectedVersion = rule.Version
+              Installed = installed
+              Pinned = pinned
+              Used = used
+              EvidencePresent = evidencePresent
+              Passed = installed && pinned && used && evidencePresent
+              Details = details },
+            findings
 
     let verify (root: string) : Result<Report, string> =
         let absoluteRoot = Path.GetFullPath root
@@ -454,7 +613,7 @@ module Foundations =
         match readConfig absoluteRoot with
         | Error message -> Error message
         | Ok(application, rules) ->
-            let evaluated = rules |> List.map (evaluate absoluteRoot)
+            let evaluated = rules |> List.map (evaluate absoluteRoot rules)
             let capabilities = evaluated |> List.map fst
             let findings = evaluated |> List.collect snd
 
@@ -462,7 +621,7 @@ module Foundations =
                 { SchemaVersion = 1
                   Application = application
                   Configuration = ConfigRelativePath
-                  Passed = findings.IsEmpty
+                  Passed = findings |> List.forall (isError >> not)
                   Capabilities = capabilities
                   Findings = findings }
 
@@ -505,6 +664,7 @@ module Foundations =
         summary["required"] <- JsonValue.Create(report.Capabilities |> List.filter _.Required |> List.length)
         summary["passed"] <- JsonValue.Create(report.Capabilities |> List.filter (fun item -> item.Required && item.Passed) |> List.length)
         summary["failed"] <- JsonValue.Create(report.Capabilities |> List.filter (fun item -> item.Required && not item.Passed) |> List.length)
+        summary["notes"] <- JsonValue.Create(report.Findings |> List.filter (isError >> not) |> List.length)
 
         let root = JsonObject()
         root["schemaVersion"] <- JsonValue.Create report.SchemaVersion
@@ -539,11 +699,16 @@ module Foundations =
             lines.Add("Findings:")
 
             for finding in report.Findings do
-                lines.Add($"  {finding.Code} {finding.Message}")
+                let marker = if isError finding then String.Empty else "NOTE "
+                lines.Add($"  {marker}{finding.Code} {finding.Message}")
                 lines.Add($"    REPAIR {finding.Remediation}")
 
+        let errors = report.Findings |> List.filter isError |> List.length
+        let notes = report.Findings.Length - errors
+        let noteSuffix = if notes = 0 then String.Empty else $" ({notes} note(s))"
+
         lines.Add("")
-        lines.Add(if report.Passed then "application foundations passed" else $"application foundations failed with {report.Findings.Length} finding(s)")
+        lines.Add(if report.Passed then $"application foundations passed{noteSuffix}" else $"application foundations failed with {errors} finding(s){noteSuffix}")
         String.concat Environment.NewLine lines
 
     let run root asJson =

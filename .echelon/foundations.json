@@ -24,6 +24,11 @@
     },
     "praxis": {
       "required": false
+    },
+    "routing": {
+      "required": true,
+      "hosting": "server",
+      "inventory": [".echelon/routes.json", ".echelon/routes.hub.json"]
     }
   }
 }

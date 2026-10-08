@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelonfoundry.com/schemas/echelon-routes-v1.schema.json",
+  "title": "echelon.routes/v1 route inventory",
+  "description": "Every addressable view of a web application, its parameters and their encoding (SAF-URL-8). Limen owns this document: Inventory.render (F#) and renderRouteInventory (TypeScript) write it (Limen LCP-107), and Limen publishes the canonical schema as contract/routes.schema.json in @echelon-foundry/limen (LCP-108). This file mirrors that contract as fixed in Limen DF-LIMEN-2026-0006, so a repository can be checked without Limen installed; once Limen 0.9.0 publishes its schema, this file is replaced by a byte-for-byte copy of it. Changes within v1 are additive, so unknown properties are allowed.",
+  "type": "object",
+  "required": ["schema", "mode", "home", "routes"],
+  "properties": {
+    "schema": { "const": "echelon.routes/v1" },
+    "mode": {
+      "description": "hash: the route follows #/ (index.html#/invoices/42?tab=history), for static hosts such as GitHub Pages; path: for hosts that answer every path with the application (SAF-URL-6, DF-LIMEN-2026-0006).",
+      "enum": ["hash", "path"]
+    },
+    "home": { "type": "string", "minLength": 1, "description": "Full name of the home route." },
+    "signIn": { "type": ["string", "null"], "description": "Full name of the sign-in route, or null." },
+    "notFound": { "type": ["string", "null"], "description": "Full name of the not-found route, or null." },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/route" }
+    },
+    "legacy": {
+      "description": "Old URLs that redirect to a current route (SAF-URL-7, Limen LCP-105).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/legacy" }
+    }
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "required": ["name", "pattern", "params"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "Full, dotted route name, e.g. invoices.invoice.history." },
+        "pattern": {
+          "type": "string",
+          "pattern": "^/[^?#]*$",
+          "description": "Path pattern with {name} or {name:type} placeholders, e.g. /invoices/{id:int}/history. Query parameters are declared in params, not written into the pattern."
+        },
+        "params": {
+          "description": "Parent first, in declaration order: the canonical URL writes query parameters in this order and omits any equal to its default (SAF-URL-2).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" }
+        },
+        "guard": { "type": ["string", "null"], "description": "Name of the engine guard, an interface decision, not authorization." },
+        "requires": { "type": "array", "items": { "type": "string" }, "description": "Resources the view needs before it can resolve." },
+        "returnTarget": { "type": "boolean", "description": "Whether sign-in may return to this route (SAF-URL-1)." }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": ["name", "in", "type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "Never a name reserved for credentials (SAF-URL-5, Limen LCP-109)." },
+        "in": { "enum": ["path", "query"] },
+        "type": {
+          "enum": ["string", "int", "bool", "date", "month", "enum", "set"],
+          "description": "int: decimal within ±(2^53-1); date: YYYY-MM-DD; month: YYYY-MM; set: sorted, de-duplicated, comma-joined. Path parameters use string, int, date, month or enum."
+        },
+        "required": { "type": "boolean" },
+        "default": { "description": "Query parameters only; omitted from the canonical URL when equal." },
+        "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "The values of an enum or set." }
+      }
+    },
+    "legacy": {
+      "type": "object",
+      "required": ["pattern", "to"],
+      "properties": {
+        "pattern": { "type": "string", "pattern": "^/[^?#]*$" },
+        "to": { "type": "string", "minLength": 1, "description": "Full name of the current route." },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/param" } }
+      }
+    }
+  }
+}
