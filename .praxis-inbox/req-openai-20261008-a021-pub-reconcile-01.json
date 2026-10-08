@@ -1,0 +1,54 @@
+{
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.4",
+  "requestId": "req-openai-20261008-a021-pub-reconcile-01",
+  "operation": "batch",
+  "repository": {
+    "ref": "refs/heads/research/a021-publication-package",
+    "expectedSha": "89252730c5a9090d14b2f581fd1b2c60575bcd2d"
+  },
+  "actor": {
+    "kind": "agent",
+    "id": "openai/chatgpt",
+    "provider": "openai",
+    "model": "gpt-5.6-sol",
+    "runtime": "chatgpt"
+  },
+  "arguments": {
+    "requests": [
+      {
+        "requestId": "req-openai-20261008-wi0075-reconcile-01",
+        "operation": "work.reconcile",
+        "arguments": {
+          "workItemId": "WI-0075",
+          "reason": "Prepared and froze the treatment-blind independent human architecture-coding packet, coding sheet, agreement analysis, and packet-isolation fix. No human coding result was fabricated or claimed.",
+          "commits": [
+            "b909b4ff8d0b0153e9e7be6a13deba2512ad5137",
+            "75aabc3c68cc4c41f51fe7c52b32d4b0861f8233",
+            "04495c9f6a539b9dc27d69d3730e1a70ba9c73cc",
+            "5cb295f3b90532d1d92ab1da358563886599bf47",
+            "db3d4468f8794c62b061d2b2c2ee64648e088130",
+            "ce5c405f14ea363575fcbe91ab624cb178d0f1cb",
+            "a3176ad84373abc1830cce7b56c8b36acb60aced",
+            "cee8c5594aaa1462fcd5fe88b7544ada67b375a1",
+            "89252730c5a9090d14b2f581fd1b2c60575bcd2d"
+          ]
+        }
+      },
+      {
+        "requestId": "req-openai-20261008-wi0078-reconcile-01",
+        "operation": "work.reconcile",
+        "arguments": {
+          "workItemId": "WI-0078",
+          "reason": "Designed and froze the 2x2 context-continuity by shared-analysis experiment, three blocked replicates per cell, randomized run order, owner authorization, cost/retry boundaries, and pre-run freeze manifest. No implementation arm was run.",
+          "commits": [
+            "c180e31eda0600db2e7b4d381857a88c705eb5cc",
+            "d13a764d749f4dbf12497291b8c78196d00d2b53",
+            "27d97033f552ecb4a891cee6a46ded33f41e6b1c",
+            "476c02796666c3e4fdb2807b9278ded5984986be"
+          ]
+        }
+      }
+    ]
+  }
+}
