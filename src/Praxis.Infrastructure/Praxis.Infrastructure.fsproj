@@ -83,6 +83,7 @@
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />
     <Compile Include="Foundations/RouteInventoryReader.fs" />
+    <Compile Include="Foundations/RoutingFoundation.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released
@@ -119,8 +120,8 @@
 
     <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/00-governance/**/*.*" LogicalName="praxis.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(PraxisRepositoryRoot)framework/**/*.*" LogicalName="praxis.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(PraxisRepositoryRoot)schemas/**/*.*" Exclude="$(PraxisRepositoryRoot)schemas/provenance-actor.schema.json;$(PraxisRepositoryRoot)schemas/artifact-provenance.schema.json;$(PraxisRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-foundations-v1.schema.json" LogicalName="praxis.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(PraxisRepositoryRoot)templates/**/*.*" Exclude="$(PraxisRepositoryRoot)templates/application-foundations.json" LogicalName="praxis.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)schemas/**/*.*" Exclude="$(PraxisRepositoryRoot)schemas/provenance-actor.schema.json;$(PraxisRepositoryRoot)schemas/artifact-provenance.schema.json;$(PraxisRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-foundations-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-routes-v1.schema.json" LogicalName="praxis.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)templates/**/*.*" Exclude="$(PraxisRepositoryRoot)templates/application-foundations.json;$(PraxisRepositoryRoot)templates/application-routes.json" LogicalName="praxis.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- The web interface and hub pages are rendered by the CLI itself; only
          their stylesheets ship, and `praxis web serve`/`praxis hub serve` fall back
          to these embedded copies when a repository has none on disk. -->
