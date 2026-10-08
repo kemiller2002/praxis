@@ -18,7 +18,7 @@
     },
     {
       "path": "scripts/build_human_coding_packet.py",
-      "blob_sha": "b1c72540f6d19893a6eebb9aa0bad9a92253153f"
+      "blob_sha": "4f0ec64325975168308f066e9490eb2c05cd260d"
     },
     {
       "path": "scripts/compute_human_agreement.py",
@@ -33,5 +33,12 @@
     "not-assessable"
   ],
   "adjudication": "Existing AI coding is never edited to match the human. Unresolved AI-human disagreements are not independently corroborated; only a second treatment-blind human may adjudicate them.",
-  "treatment_mapping_withheld": true
+  "treatment_mapping_withheld": true,
+  "revision": 2,
+  "amendments": [
+    {
+      "revision": 2,
+      "reason": "Packet builder narrowed the baseline to production source/tests and the relevant requirements, and corrected baseline metadata paths, so study work-item snapshots cannot reveal cohort/treatment context. No human coding had started."
+    }
+  ]
 }
