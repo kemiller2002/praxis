@@ -295,6 +295,7 @@
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
 | WI-0073 | Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL | complete |  | high |
 | WI-0074 | praxis-remote-enable.sh: land before completing, and retire the previous pin's exceptions | captured |  | medium |
+| WI-0075 | Move the Praxis source repository's Ordo pin and .sde installation to Ordo 1.5.0 (echelon-current 1.2.0) | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
