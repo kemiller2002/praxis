@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 76,
+  "nextSeq": 77,
   "items": [
     {
       "id": "WI-0001",
@@ -5584,6 +5584,31 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0076",
+      "title": "Reconcile a completed work item's stale backlog row: queue.json status stays 'ready' when the item completed before markComplete existed, and no CLI transition can correct it",
+      "description": "Observed in kemiller2002/summa: WI-0001, WI-0002 and WI-0003 are complete in .ros/context/current.json and queue.md renders them complete, but their raw queue.json rows still say status 'ready'. They were promoted with 'work start' and completed before FileBacklogQueueRepository.markComplete existed, so their rows were never marked. No transition can now fix them: 'work complete' refuses ('cannot complete WI-0001 from complete'), and 'work backlog-transition --action abandon' is accepted on a live-complete item and would record them as abandoned, which is false. Consumers that read queue.json directly (Summa's GapAnalysisTests treat ready/captured/active/blocked rows as open) see completed work as open. Proposed: an idempotent 'work reconcile-backlog' (or 'praxis upgrade' migration) that sets a row's status to 'complete' when the live record is complete, recording an event; and refuse backlog-transition abandon/ready/block on an id whose live state is complete. Hand-editing .ros is not an option.",
+      "tags": [
+        "work",
+        "backlog",
+        "queue"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T15:33:59.000Z",
+      "updatedAt": "2026-10-08T15:33:59.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": "https://github.com/kemiller2002/summa/blob/main/docs/requirements/backlog-plan.md"
     }
   ]
 }
