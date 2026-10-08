@@ -5757,10 +5757,10 @@
         "release"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T22:27:07.852Z",
-      "updatedAt": "2026-10-08T22:27:22.000Z",
+      "updatedAt": "2026-10-08T22:27:52.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

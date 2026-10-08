@@ -9012,18 +9012,52 @@
     {
       "id": "WI-0081",
       "type": "release",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-08T22:27:22.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/toolchain.json"
+        },
+        {
+          "type": "implementation",
+          "path": "quality/release-compatibility.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PremergeReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T22:27:52.000Z",
       "telemetryExecutionIds": [
         "EXE-20261008T222723726Z-1fc40c36"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "eb0c405739435dbd64b3a1a6",
+        "recordedAt": "2026-10-08T22:27:49.000Z",
+        "executionId": "EXE-20261008T222723726Z-1fc40c36",
+        "repository": "repository-operating-system",
+        "branch": "chore/pin-praxis-3.9.1",
+        "commit": "1c6b58cec23f409843e0aa9496c135bfbf9cfb41",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "chore/pin-praxis-3.9.1",
+        "remoteCommit": "1c6b58cec23f409843e0aa9496c135bfbf9cfb41",
+        "summary": "toolchain pinned to verified 3.9.1; compatibility recorded",
+        "nextAction": "Merge on green; record 3.9.1 in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T22:27:52.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T22:27:22.000Z",
+  "updatedAt": "2026-10-08T22:27:52.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
