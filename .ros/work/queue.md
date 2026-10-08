@@ -297,6 +297,7 @@
 | WI-0074 | praxis-remote-enable.sh: land before completing, and retire the previous pin's exceptions | captured |  | medium |
 | WI-0075 | Move the Praxis source repository's Ordo pin and .sde installation to Ordo 1.5.0 (echelon-current 1.2.0) | complete |  | medium |
 | WI-0076 | Reconcile a completed work item's stale backlog row: queue.json status stays 'ready' when the item completed before markComplete existed, and no CLI transition can correct it | captured | work, backlog, queue | medium |
+| WI-0077 | URL-addressable state (deep linking): shared requirement SAF-URL-1..10, static-hosting decision, and a foundations verify routing capability | ready | foundations, deep-linking | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 77,
+  "nextSeq": 78,
   "items": [
     {
       "id": "WI-0001",
@@ -5609,6 +5609,30 @@
       },
       "source": "manual",
       "sourceReference": "https://github.com/kemiller2002/summa/blob/main/docs/requirements/backlog-plan.md"
+    },
+    {
+      "id": "WI-0077",
+      "title": "URL-addressable state (deep linking): shared requirement SAF-URL-1..10, static-hosting decision, and a foundations verify routing capability",
+      "description": "Portfolio standard: every web application keeps navigable state in the URL. Add the requirement section to requirements/SHARED-APPLICATION-FOUNDATIONS.md, record the static-hosting decision, add schemas/echelon-routes-v1 and a routing capability (ECHELON-FND-ROUTING-NNN) to praxis foundations verify that checks the route inventory and, once Limen's routing release exists, its usage (pending until then).",
+      "tags": [
+        "foundations",
+        "deep-linking"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-08T19:00:02.612Z",
+      "updatedAt": "2026-10-08T19:00:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
