@@ -1,0 +1,56 @@
+{
+  "schema": "a021.wi0078-freeze/1",
+  "frozen_at_utc": "2026-10-08",
+  "status": "pre-run",
+  "first_implementation_started": false,
+  "protocol_revision": 1,
+  "design": {
+    "factors": [
+      "context-continuity",
+      "shared-architecture-briefing"
+    ],
+    "cells": [
+      "CA",
+      "CN",
+      "FA",
+      "FN"
+    ],
+    "scheduled_replicates_per_cell": 3,
+    "scheduled_primary_replicates": 12,
+    "scheduled_implementation_sessions": 36,
+    "blocks": 3,
+    "randomization_seed": "20261008"
+  },
+  "files": [
+    {
+      "path": "experiments/WI-0078-PROTOCOL.md",
+      "blob_sha": "b76d536aaa97afd712ef8b6d7bc5d1fd70854ca8"
+    },
+    {
+      "path": "experiments/WI-0078-run-matrix.csv",
+      "blob_sha": "c3754b7956d1e64d848456c6bec5827551225108"
+    },
+    {
+      "path": "experiments/WI-0078-AUTHORIZATION.md",
+      "blob_sha": "8a39bdaf75088cfffbca2295ebf8ec984b1ce511"
+    },
+    {
+      "path": "human-coding/CODEBOOK.md",
+      "blob_sha": "227eff270da8469698fe46a56ecffc81997735fb"
+    }
+  ],
+  "before_run_must_freeze": [
+    "sanitized subject hash",
+    "neutral T01..T05 task text hashes",
+    "shared briefing hash",
+    "briefing-author prompt hash",
+    "common and treatment prompt hashes",
+    "provider/model/runtime/settings",
+    "environment/toolchain identity",
+    "telemetry extractor version/hash",
+    "blinding alias procedure"
+  ],
+  "amendment_rule": "Before first implementation run, amendments increment protocol revision and regenerate this freeze. After first implementation run, treatment/outcome/analysis rules are immutable; deviations are appended.",
+  "owner_authorized": true,
+  "results_seen": false
+}
