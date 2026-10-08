@@ -5619,10 +5619,10 @@
         "deep-linking"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T19:00:02.612Z",
-      "updatedAt": "2026-10-08T19:00:12.000Z",
+      "updatedAt": "2026-10-08T20:31:05.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
