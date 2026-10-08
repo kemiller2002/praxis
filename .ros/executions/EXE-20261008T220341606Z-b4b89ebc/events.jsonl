@@ -1,1 +1,2 @@
 {"entry":"transition","transition":"execution.start","state":"active","origin":"work-transition","originReference":"work.begin","actor":"github/github-actions","actorKind":"automation","at":"2026-10-08T22:03:42.400Z"}
+{"entry":"transition","transition":"work.complete","state":"completed","reason":null,"actor":"github/github-actions","actorKind":"automation","candidate":"e21444fb08cc5bc7b3ffc4f43a3317d8ff4b2a00","commits":"e21444fb08cc5bc7b3ffc4f43a3317d8ff4b2a00","at":"2026-10-08T22:03:50.114Z"}
