@@ -71,8 +71,10 @@ a list with one inventory per served surface.
   [`templates/application-routes.json`](../templates/application-routes.json).
 - **pinned**: the inventory declares `"schema": "echelon.routes/v1"`.
   [`schemas/echelon-routes-v1.schema.json`](../schemas/echelon-routes-v1.schema.json)
-  mirrors Limen's `contract/routes.schema.json` (LCP-108) and is replaced by a
-  copy of it once Limen 0.9.0 publishes it.
+  is a byte-for-byte copy of Limen 0.9.0's published `contract/routes.schema.json`
+  (LCP-108, `$id` kept). Validate a document's structure against it; the rules
+  below are the meaning the verifier adds. A test checks that Limen 0.9.0's
+  own rendered inventory (its url-state conformance vector) passes every rule.
 - **evidence/configuration**: the inventory satisfies the contract, which
   mirrors Limen's route-table refusals:
   - `mode` is `hash` or `path`, and a `static` application uses `hash`
@@ -81,11 +83,12 @@ a list with one inventory per served surface.
   - route names are unique;
   - patterns are paths whose `{name}`, `{name:type}` or `{*name}`
     placeholders match the declared path parameters;
-  - parameter locations and types are legal; path parameters are required,
-    have no default and use a path type; an enum lists values, values are
+  - parameter locations and types are legal; path parameters have no
+    default and use a path type (a `{*name}` wildcard may be optional); an enum lists values, values are
     unique, and an enum default is one of them;
   - no parameter uses a name Limen reserves for credentials (SAF-URL-5);
-  - every legacy entry names a declared route (SAF-URL-7).
+  - every legacy entry names a declared route in `to`, and each `{source}`
+    in its `params` is a placeholder its `pattern` captures (SAF-URL-7).
 - **used**: on Limen 0.9.0 or later, the application references
   `@echelon-foundry/limen/routing`, `EchelonFoundry.Limen.Routing` or
   `Limen.Routing` in source or in a project file (SAF-URL-9).
@@ -110,8 +113,7 @@ Limen routing applies only to an application that requires Limen. For any
 other application the usage check is N/A. For an application that requires
 Limen, the installed version is read from `.echelon/limen.json`
 `installedVersion`, or from the declared `limen.version` when the manifest
-does not record one. Below 0.9.0, including every application while 0.9.0 is
-unpublished, the usage check is `ECHELON-FND-ROUTING-005`. It is also 005 when
+does not record one. Below 0.9.0 (published 2026-10-08), the usage check is `ECHELON-FND-ROUTING-005`. It is also 005 when
 the version is unknown. An info finding never fails verification: the
 summary reads `passed (1 note(s))` and the exit code stays `0`. Once the
 application moves to Limen 0.9.0, the check is enforced.

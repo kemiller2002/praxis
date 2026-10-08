@@ -153,5 +153,6 @@
   <ItemGroup>
     <None Include="Golden/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Fixtures/claude-session-transcript.jsonl" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures/limen-0.9.0-views.routes.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
