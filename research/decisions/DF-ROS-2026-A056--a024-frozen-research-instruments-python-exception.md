@@ -6,7 +6,7 @@ version: 1.0.0
 owners:
   - repository-governance
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-10-08
 research_area: repository-operating-system
 decision_type: architecture
 supports: [RQ-ROS-2026-A024]
@@ -22,8 +22,9 @@ derived_from: [DF-ROS-2026-A054]
 provenance:
   contributions:
     EXE-20261007T162653169Z-f15a70b7:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-07T22:41:56.936Z
+      last: 2026-10-08T11:21:40.328Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -74,9 +75,10 @@ Any follow-on experiment uses an F# instrument, as DF-ROS-2026-A054 requires
 The executing agent recorded this decision as accepted under the owner's A024
 brief, which requires the complete harness and evidence to be committed and
 the repository to validate, applying the class the owner accepted in
-DF-ROS-2026-A054. The owner may revoke it. Revoking it requires porting or
-removing these instruments and marking the A024 evidence as no longer
-reproducible from the repository.
+DF-ROS-2026-A054. The owner confirmed the decision on 2026-10-08 in reply to
+the executing agent's request to confirm or revoke it. Revoking it later
+requires porting or removing these instruments and marking the A024 evidence
+as no longer reproducible from the repository.
 
 # Consequences
 

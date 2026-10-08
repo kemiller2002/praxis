@@ -1853,8 +1853,10 @@
             "runtime": "claude-code"
           },
           "at": "2026-10-07T22:41:56.936Z",
+          "last": "2026-10-08T11:21:40.328Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "Approved Python exceptions for the EX-ROS-2026-A024 frozen research instruments under DF-ROS-2026-A054's class"
         }
@@ -1881,7 +1883,7 @@
       "experiment"
     ],
     "title": "The EX-ROS-2026-A024 frozen research instruments are approved Python exceptions under DF-ROS-2026-A054's frozen-instrument class",
-    "updated": "2026-10-07",
+    "updated": "2026-10-08",
     "version": "1.0.0"
   }
 ]
