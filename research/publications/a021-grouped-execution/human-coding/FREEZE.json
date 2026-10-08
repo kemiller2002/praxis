@@ -1,0 +1,37 @@
+{
+  "schema": "a021.human-coding-freeze/1",
+  "frozen_at_utc": "2026-10-08",
+  "purpose": "WI-0075 independent blind human second coding. These materials were frozen before human coding and must not be changed without invalidating the coding round.",
+  "codebook_commit": "b909b4ff8d0b0153e9e7be6a13deba2512ad5137",
+  "files": [
+    {
+      "path": "human-coding/CODEBOOK.md",
+      "blob_sha": "227eff270da8469698fe46a56ecffc81997735fb"
+    },
+    {
+      "path": "human-coding/INSTRUCTIONS.md",
+      "blob_sha": "06809da23669d98009ccae34b667e4f03448fe83"
+    },
+    {
+      "path": "human-coding/coding-sheet.csv",
+      "blob_sha": "b4be9c50127f8753541c7000997c29a41f9c7e93"
+    },
+    {
+      "path": "scripts/build_human_coding_packet.py",
+      "blob_sha": "b1c72540f6d19893a6eebb9aa0bad9a92253153f"
+    },
+    {
+      "path": "scripts/compute_human_agreement.py",
+      "blob_sha": "3d3763a680a6ff1755c6b9615afaaf2371e46e9d"
+    }
+  ],
+  "allowed_categories": [
+    "unified",
+    "duplicated-compatible",
+    "divergent",
+    "missing",
+    "not-assessable"
+  ],
+  "adjudication": "Existing AI coding is never edited to match the human. Unresolved AI-human disagreements are not independently corroborated; only a second treatment-blind human may adjudicate them.",
+  "treatment_mapping_withheld": true
+}
