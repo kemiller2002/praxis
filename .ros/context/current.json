@@ -8767,10 +8767,23 @@
     {
       "id": "WI-0075",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-08T07:07:59.126Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/toolchain.json"
+        },
+        {
+          "type": "implementation",
+          "path": ".echelon/sde.json"
+        },
+        {
+          "type": "tests",
+          "path": ".github/workflows/praxis-validation.yml"
+        }
+      ],
+      "updatedAt": "2026-10-08T07:30:28.224Z",
       "telemetryExecutionIds": [
         "EXE-20261008T070800132Z-adf6d47d"
       ],
@@ -8793,12 +8806,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-08T07:30:28.224Z",
+      "conclusion": "Ordo pin and .sde at 1.5.0 via ordo upgrade; 1739/1739 tests, architecture/registry/validate, foundations verify pass"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T07:07:59.126Z",
+  "updatedAt": "2026-10-08T07:30:28.224Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -5570,10 +5570,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T07:07:57.972Z",
-      "updatedAt": "2026-10-08T07:07:58.732Z",
+      "updatedAt": "2026-10-08T07:30:28.224Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
