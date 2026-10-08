@@ -1,0 +1,102 @@
+{
+  "branch": "experiment/a024-arm-3",
+  "capturedAt": "2026-10-07T21:19:12.350758+00:00",
+  "headAtCapture": "c30ef6a86c7da77efe28a27dd507de408b39883c",
+  "label": "arm-3-03",
+  "main": {
+    "builds": 6,
+    "compactions": 0,
+    "distinctFilesEdited": 0,
+    "distinctFilesRead": 16,
+    "endedAt": "2026-10-07T21:19:11.906000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 45
+      },
+      "entrypoint": {
+        "remote": 45
+      },
+      "models": {
+        "claude-opus-5-5": 45
+      },
+      "runtimeVersion": {
+        "2.1.293": 45
+      }
+    },
+    "fileReads": 26,
+    "fileWrites": 13,
+    "governanceReads": {
+      "AGENTS.md": 1,
+      "docs/cli.md": 1,
+      "docs/planning.md": 1,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": "2026-10-07T21:03:14.908000+00:00",
+      "lastAt": "2026-10-07T21:19:07.399000+00:00",
+      "paths": [
+        "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-02.json"
+      ],
+      "reads": 1,
+      "toolCalls": 3,
+      "writes": 1
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 45,
+    "msToFirstCodeMutation": 469588,
+    "peakContextTokens": 173155,
+    "readPaths": [
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/planning.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-02.json",
+      "research/experiments/EX-ROS-2026-A024-harness/handoff.schema.json",
+      "research/experiments/EX-ROS-2026-A024-harness/validate_handoff.py",
+      "src/Ros.Application/Planning/WorkGroups.fs",
+      "src/Ros.Cli/WorkGroupCommands.fs",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "src/Ros.Domain/Planning/Grouping.fs",
+      "src/Ros.Domain/Planning/Model.fs",
+      "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+      "src/Ros.Infrastructure/Planning/FileWorkGroupStore.fs",
+      "tests/Ros.Tests/WorkGroupTests.fs"
+    ],
+    "repeatedReadExcess": 10,
+    "repeatedReadPaths": 4,
+    "repeatedReadsTop": {
+      "src/Ros.Cli/WorkGroupCommands.fs": 2,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 5,
+      "src/Ros.Domain/Planning/Grouping.fs": 5,
+      "tests/Ros.Tests/WorkGroupTests.fs": 2
+    },
+    "searches": 23,
+    "startedAt": "2026-10-07T21:03:12.102000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 3,
+    "tokens": {
+      "cacheCreation": 134645,
+      "cacheRead": 5690991,
+      "input": 90,
+      "output": 41781
+    },
+    "toolCalls": {
+      "Bash": 46
+    },
+    "toolErrors": 0,
+    "wallMs": 959804
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "8c52c62d-fb2c-5593-93d2-2660cdde18a0",
+  "subagents": [],
+  "transcript": "8c52c62d-fb2c-5593-93d2-2660cdde18a0.jsonl",
+  "transcriptSha256": {
+    "8c52c62d-fb2c-5593-93d2-2660cdde18a0.jsonl": "f784d74e9e44ca08fb6487dc193c065ee53ff44bbb6d1816349f64834fb62e96"
+  }
+}

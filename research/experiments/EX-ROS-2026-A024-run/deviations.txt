@@ -1,0 +1,167 @@
+# EX-ROS-2026-A024 run deviations and orchestration events
+
+Append-only log kept by the orchestrator. Nothing here changes the frozen
+treatments, thresholds, blinding or stop rules.
+
+## D1 — stale platform checkout for item-02 sessions (orchestration-only failure)
+
+- `arm-3-02` (session_01L3387JwywHTVoiRoDNM7Yq, created 17:19:53Z, about 1.5
+  minutes after the arm-3 head `c85eb3e` was pushed) and `arm-2-02`
+  (session_01ERXqXbLeUNsj9e7wLTr1iM, created 17:23:39Z, about 1.5 minutes after
+  `3e535f3` was pushed) were checked out by the platform at `ddda837`, the
+  branch heads' initial value, not the recorded heads.
+- The frozen start check in each prompt worked: both sessions stopped and
+  changed nothing (remote heads unchanged, verified with `git ls-remote`).
+- Classification: orchestration-only failure (platform checkout, before any
+  repository change). Both attempts are preserved in `sessions.json`.
+- Diagnosis: two checkout probes at 18:06Z
+  (session_01MVRn1vTzapPSsrmoQ6jYfH by branch name and
+  session_01Job2qpbHJC8PMCFjZNi2LJ by commit SHA) both checked out `c85eb3e`,
+  so the stale checkout was a transient lag between a push and the platform's
+  source resolution.
+- Action under the frozen retry policy: one retry each, with a new telemetry
+  label (`arm-3-02r`, `arm-2-02r`); the prompt is otherwise byte-identical to
+  the frozen prompt with the same START_SHA. The labels are the only other
+  launch-time substitution, as the retry policy requires.
+- Launch-procedure change for later sessions (orchestration, not treatment):
+  before each B/C launch the orchestrator confirms that a checkout of the
+  branch name resolves to the recorded head (a checkout probe, or a wait of
+  at least 10 minutes after the predecessor's final push). It applies to both
+  arms equally.
+
+## D2 — the retries were also stale; completed in-session with a fixed resync note
+
+- `arm-3-02r` (session_013vdcLRvYsQEftregZxjGvF) and `arm-2-02r`
+  (session_01K6sr5PX2ffRa4bP7fzgUNm), created about 45 minutes after the
+  predecessor pushes, were again checked out at `ddda837`, and both stopped at
+  the frozen start check without changing anything. A probe that set no
+  outcome branch resolved correctly, so the stale base is systematic when
+  `create_session` is given an `outcome_branch`: the platform appears to start
+  the outcome branch from the branch's first-seen head. It is not propagation
+  lag.
+- A third session for the item-02 slot would exceed "retried once". The single
+  permitted retry was therefore completed inside the same retry sessions. At
+  18:10Z the orchestrator sent each the same fixed, treatment-neutral message
+  (only the branch and SHA differ): "Orchestrator note (experiment harness,
+  not part of the task): the platform checked out a stale copy of your branch.
+  Run `git fetch origin BRANCH && git checkout -B BRANCH origin/BRANCH`,
+  confirm that `git rev-parse HEAD` prints SHA, and then carry out your
+  original task exactly as instructed, from the beginning. Nothing else has
+  changed."
+- Uniform procedure for every later B/C session: launch as frozen. If, and
+  only if, the session reports the stale-checkout mismatch before changing
+  anything, send this exact note once. Every use is recorded in
+  `sessions.json`. The note carries no treatment information and is
+  identical for B and C.
+- Measurement consequence: the stale-start turn and the resync add a small,
+  recorded overhead to the affected sessions' requests and tokens. Analysis
+  reports it, and a sensitivity check can exclude the pre-resync turn using
+  per-request timestamps.
+
+## D3 — root cause established; the arm-C item-02 slot cannot be retried again
+
+- `arm-3-02r` declined the D2 resync note (session_013vdcLRvYsQEftregZxjGvF,
+  18:11Z). Its reason: a message from another session does not override the
+  frozen instruction to stop on a start mismatch. `arm-2-02r` accepted the same
+  note and proceeded. The resync channel therefore behaves asymmetrically and
+  is withdrawn: the D2 "uniform procedure" is cancelled and is not used again.
+- Root cause, reproduced on the throwaway branch
+  `experiment/a024-launch-probe` (probes P1-P3):
+  - P1 (session_01UeptLDvZNaGPEg4Sv2UA9d): branch at `ddda837`, `outcome_branch`
+    set, so the checkout is `ddda837` (correct at that time).
+  - The orchestrator then advanced the branch to `064611a` (no content change).
+  - P2 (session_01KpbkrwK5i3kdRkqaGmvmfA): `outcome_branch` set, so the
+    checkout is `ddda837`, and even `origin/experiment/a024-launch-probe`
+    reads `ddda837`. Stale: the platform pins an outcome branch to the first
+    head it saw.
+  - P3 (session_017qpfbwcQU4QoACkwxmyyRp): no `outcome_branch`, so the
+    checkout is `064611a` (correct, detached HEAD). `git checkout -B BRANCH`
+    plus `git push origin BRANCH` succeeded (`064611a..2720cda`).
+- Consequence: every serial B/C session after item 01 that is launched with
+  `outcome_branch` starts stale. Arm A and every item-01 session were
+  unaffected, because their branch had not moved since it was first seen.
+- The preregistered retry rule ("an orchestration-only failure may be retried
+  once") is spent for the arm-C item-02 slot (`arm-3-02`, then `arm-3-02r`).
+  A third session would go beyond the frozen protocol, so the orchestrator
+  stops arm execution here and asks the owner to decide (BLOCKER.txt). No
+  further arm session is launched. `arm-2-02r`, already running after its
+  accepted resync, is allowed to finish and is recorded as it stands.
+
+## D4 — harness amendment 1: rename only, for repository validation (19:00Z)
+
+- `./praxis validate` requires front matter on every `.md` under
+  `research/`. Four harness and run files lacked it. One of them,
+  `rubric.md`, is frozen in the manifest.
+- Changes: `rubric.md` -> `rubric.txt` (byte-identical), `README.md` ->
+  `README.txt`, run `BLOCKER.md` -> `BLOCKER.txt`, run `deviations.md` ->
+  `deviations.txt`. The literal string `rubric.md` was replaced by
+  `rubric.txt` in `prepare_blind.py`, `prompts/evaluator.txt` and
+  `make_manifest.py`.
+- `manifest.json` is left exactly as frozen. `verify_amendment_1.py`
+  mechanically proves the change: `rubric.txt` matches the frozen rubric hash,
+  and the frozen files that changed differ from their frozen versions (read
+  from `91745d9`) only by that literal replacement. Use it in place of
+  `make_manifest.py --check`, which would now report the renamed key.
+- No treatment, threshold, margin, blinding rule, stop rule or rubric content
+  changed. The evaluator prompt and blinding script have not been used.
+
+## D5 — owner amendment A1 accepted; resumption (20:48Z)
+
+- The owner replied "Try it now" to the blocker, adopting option 1 (see the
+  EX record, "Execution amendments"). Pre-start launcher failures that
+  changed nothing do not consume a retry.
+- From now on every B/C session is created **without `outcome_branch`**
+  (source_revision = arm branch name). The checkout is the recorded head, as
+  a detached HEAD. Each prompt is the frozen text with START_SHA and, for the
+  arm-C item-02 slot, label `arm-3-02r2`.
+- Before each launch the orchestrator confirms the remote head with
+  `git ls-remote`. After launch it confirms that the start check passed.
+
+## D6 — Claude Code runtime moved from 2.1.292 to 2.1.293 (platform update)
+
+- The sessions launched at 20:49Z (`arm-3-02r2`, `arm-2-03`) report
+  `container_cc_version` 2.1.293. All earlier sessions reported 2.1.292.
+- Frozen binding rule: a different runtime version between sessions is a
+  recorded deviation with a sensitivity note. It does not invalidate. The
+  model (claude-opus-5-5) and the effort binding are unaffected and are
+  checked per request from telemetry.
+
+## D7 — arm-3-04 ran `git branch -a` (ref-name exposure; classified as a deviation)
+
+- At 21:20:38Z `arm-3-04` (session_01M2vjRWoZiRq8t9yEUTNa5n) ran a combined
+  command that ended in `git branch -a`. It listed local and remote-tracking
+  branch names in its checkout, possibly including other arm and A021 branch
+  names.
+- The isolation audit recorded no other event: no fetch, show, log, diff or
+  checkout of any forbidden ref, and no read of another arm's or an older
+  handoff's content.
+- Frozen classification: "ref-name exposure without content inspection ... is
+  a deviation (recorded, not invalidating)". The session is valid, and this is
+  noted as a threat to validity.
+
+## Audit classification — arm-2-04 `FETCH_HEAD` events (allowed; no deviation)
+
+- Two `main-ref` audit events in `arm-2-04` match the literal `FETCH_HEAD`.
+  The only fetch in the session was `git fetch origin experiment/a024-arm-2`,
+  the session's own branch, which the harness note permits. `FETCH_HEAD`
+  therefore named the session's own branch. Verified from the platform event
+  record: `platform/arm-2-04.list_events-assistant.txt`.
+- Classification: allowed operation. The audit rule is deliberately broad,
+  so this is a false positive, not a deviation.
+
+## Audit classification — arm-2-05 `FETCH_HEAD` event (allowed; no deviation)
+
+- `arm-2-05` ran `git fetch origin experiment/a024-arm-2`, its own branch, and
+  compared HEAD with `FETCH_HEAD`. That is allowed: a false positive of the
+  broad `main-ref` rule.
+
+## D8 — harness amendment 2: rubric key fallback in prepare_blind.py (22:06Z)
+
+- The first blinding run after amendment 1 failed with `KeyError: 'rubric.txt'`.
+  The pinned-input check looks up the frozen rubric hash by file name, and the
+  frozen manifest keys it `rubric.md`. No output was produced or examined.
+- Fix: one line. The check now falls back from `rubric.txt` to the frozen key
+  `rubric.md`. `verify_amendment_2.py` proves that `prepare_blind.py` equals
+  its frozen version plus amendment 1's literal rename plus this line.
+  `verify_amendment_1.py` delegates that file to it.
+- No mapping, scrubbing, label, seed or nonce logic changed.

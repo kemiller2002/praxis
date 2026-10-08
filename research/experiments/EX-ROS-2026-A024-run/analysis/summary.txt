@@ -1,0 +1,68 @@
+EX-ROS-2026-A024 frozen analysis: summary (after unblinding)
+
+Inputs: analysis/input.json (assemble_analysis.py over the run bundle).
+Output: analysis/output.json (harness analysis.py, unchanged except the
+amendment-free frozen file). Mapping revealed in blinding/reveal.json:
+continuous = snapshot-P, code-only = snapshot-K, handoff = snapshot-W. It is
+verified by the commitment 508a8f94... and by exact src tree identity.
+
+PRIMARY (frozen formulas, thresholds 1/2 and 1/20, exact rationals)
+
+  measure       A (continuous)  B (code-only)  C (handoff)  A better than B?  C better than B?  recovery(C)
+  architecture  5               10             8            no                no                no recoverable calibration effect
+  discovery     112             263            276          yes               no                -13/151 = -0.086 (< 0.50)
+
+  acceptance rate  A 36/36, B 36/36, C 36/36 (rule 4 holds: C is not >0.05 below B)
+  support rule     1 calibration effect: yes (discovery only)
+                   2 C better than B on the applicable measure: NO
+                   3 recovery >= 0.50 on the applicable measure: NO
+                   4 correctness within 0.05: yes
+                   5 no arm invalidated: yes
+  VERDICT: HY-ROS-2026-A030 NOT SUPPORTED.
+
+  Sensitivity (discovery from the main transcript only): identical, because no
+  session used subagents.
+
+RAW MEASURES (reported separately; no combined score)
+
+  Acceptance: every arm passes all 36 frozen criteria (blinded scorers).
+  Confirmed defects: A 2, B 1, C 1.
+  Architecture dimensions (D1..D5): A 1,1,1,1,1  B 2,2,2,2,2  C 2,2,2,1,1.
+  Divergence points recorded by the evaluator: A 8, B 5, C 6.
+  Deterministic checks at each head: all build, all tests pass
+    (A 819/819, B 855/855, C 841/841), ./ros validate passes.
+
+  Resources (completed sessions; platform usage)
+                    A          B           C
+    sessions        1          5           5
+    cost USD        8.27       15.30       17.43
+    output tokens   102,006    163,797     204,253
+    cache-read      19.9M      33.2M       36.7M
+    model requests  94         231         236
+    tool calls      (ratios A/B 0.40, C/B 1.03)
+    elapsed (created->terminal, summed)  51.2 min  128.7 min  77.9 min
+    telemetry wall (summed)               50.5 min  125.2 min  74.4 min
+    builds / test runs   20/10    26/12     26/18
+    repeated-read excess within sessions  15  55  60
+    paths re-read across sessions         0   18  20
+    governance reads                      6   16  21
+
+  Ratios: cost A/B 0.54, C/B 1.14, C/A 2.11; output tokens A/B 0.62, C/B 1.25;
+  elapsed A/B 0.40, C/B 0.61.
+
+  Including the pre-start orchestration failures (stale launcher sessions):
+  B $15.69, C $18.24, with A unchanged. No conclusion changes.
+
+  Handoff overhead (arm C): 2 to 5 tool calls per session touching the handoff
+  directory, i.e. one read of the predecessor handoff and one write; finer
+  token or time attribution is not available from the transcript.
+
+  B elapsed caveat: arm-2-02r includes a stale-start turn and the resync
+  (D2), and arm-2-04 waited on a slow SDK install. Elapsed time is a weak
+  measure here.
+
+INTERPRETATION LIMITS
+  One cohort, one execution per arm, one same-family blinded evaluator.
+  Acceptance is at ceiling, so correctness does not discriminate. Runtime
+  2.1.292 ran A, B01-02 and C01; 2.1.293 ran the rest (D6). arm-3-04 saw branch
+  names (D7, a deviation).

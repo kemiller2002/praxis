@@ -9053,6 +9053,65 @@
         }
       },
       "completedAt": "2026-10-08T22:27:52.000Z"
+    },
+    {
+      "id": "EX-ROS-2026-A024",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/experiments/EX-ROS-2026-A024-harness/manifest.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-1/checks.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-2/checks.json"
+        },
+        {
+          "type": "tests",
+          "path": "research/experiments/EX-ROS-2026-A024-run/checks/arm-3/checks.json"
+        },
+        {
+          "type": "results",
+          "path": "research/evidence/EV-ROS-2026-A075--a024-context-continuity-results.md"
+        },
+        {
+          "type": "analysis",
+          "path": "research/experiments/EX-ROS-2026-A024-run/analysis/summary.txt"
+        }
+      ],
+      "updatedAt": "2026-10-07T23:02:53.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261007T162653169Z-f15a70b7"
+      ],
+      "latestCheckpoint": {
+        "id": "1f2045e0e444c5ee7ffe43c4",
+        "recordedAt": "2026-10-07T23:02:27.000Z",
+        "executionId": "EXE-20261007T162653169Z-f15a70b7",
+        "repository": "repository-operating-system",
+        "branch": "claude/ex-ros-2026-a024-f5elvt",
+        "commit": "12528cd4d178fe6d6b1ec20a701225f9c921584c",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/ex-ros-2026-a024-f5elvt",
+        "remoteCommit": "12528cd4d178fe6d6b1ec20a701225f9c921584c",
+        "summary": "A024 complete: all arms terminal, blinded scoring and evaluation committed, unblinded, frozen analysis applied (HY-A030 not supported); EV-A075, DF-A056; main merged; validate passes; 1739/1739 tests",
+        "nextAction": "Owner review of PR #205 (DF-ROS-2026-A056 acceptance basis, follow-on proposals)",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "blockReason": "Owner decision required: the arm-C item-02 slot spent its single preregistered retry on a platform launcher defect (outcome_branch pinning); see research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt",
+      "completedAt": "2026-10-07T23:02:53.000Z",
+      "conclusion": "EX-ROS-2026-A024 executed to valid terminal results; blinded scoring and evaluation; frozen analysis: HY-ROS-2026-A030 not supported (discovery recovery -13/151; no architecture calibration effect: A 5, B 10, C 8; acceptance 36/36 in all arms). Follow-ons proposed, not run."
     }
   ],
   "protocolVersion": "1.0.0",

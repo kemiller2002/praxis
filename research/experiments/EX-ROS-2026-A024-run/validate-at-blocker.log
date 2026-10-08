@@ -1,0 +1,9 @@
+WARN research/evidence/EV-ROS-2026-A063--a021-preliminary-plan-globally-execute-incrementally.md:provenance.contributions: no contribution records the artifact's creation ('created'); its originator is unknown
+  REPAIR Correct the provenance block (or re-record it with './praxis provenance record'); never rewrite another contributor's entry.
+WARN research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md:provenance.contributions: no contribution records the artifact's creation ('created'); its originator is unknown
+  REPAIR Correct the provenance block (or re-record it with './praxis provenance record'); never rewrite another contributor's entry.
+WARN research/experiments/EX-ROS-2026-A024--context-continuity-and-externalized-handoff.md:provenance.contributions: no contribution records the artifact's creation ('created'); its originator is unknown
+  REPAIR Correct the provenance block (or re-record it with './praxis provenance record'); never rewrite another contributor's entry.
+WARN research/hypotheses/HY-ROS-2026-A030--structured-handoffs-recover-shared-context-benefit.md:provenance.contributions: no contribution records the artifact's creation ('created'); its originator is unknown
+  REPAIR Correct the provenance block (or re-record it with './praxis provenance record'); never rewrite another contributor's entry.
+validation passed with 4 warning(s)

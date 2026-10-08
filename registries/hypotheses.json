@@ -330,6 +330,23 @@
             "modified"
           ],
           "reason": "Linked EX-ROS-2026-A023 and EV-ROS-2026-A072; confidence unchanged"
+        },
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:37:01.067Z",
+          "evidence": [
+            "EV-ROS-2026-A075"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "A024 calibration: repeated-work advantage reproduced, architecture advantage not reproduced"
         }
       }
     },
@@ -353,7 +370,8 @@
     "supporting_evidence": [
       "EV-ROS-2026-A063",
       "EV-ROS-2026-A064",
-      "EV-ROS-2026-A070"
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A075"
     ],
     "tags": [
       "planning",
@@ -434,12 +452,33 @@
   {
     "author_agent": "openai/chatgpt",
     "confidence": "very-low",
-    "contradicting_evidence": [],
+    "contradicting_evidence": [
+      "EV-ROS-2026-A075"
+    ],
     "created": "2026-10-07",
     "id": "HY-ROS-2026-A030",
     "path": "research/hypotheses/HY-ROS-2026-A030--structured-handoffs-recover-shared-context-benefit.md",
     "provenance": {
       "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T18:47:26.586Z",
+          "evidence": [
+            "EV-ROS-2026-A074",
+            "EV-ROS-2026-A075"
+          ],
+          "last": "2026-10-07T22:37:00.463Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Recorded the first test, EX-ROS-2026-A024: blocked, then completed; not supported (EV-ROS-2026-A075)"
+        },
         "EXE-20261007T185521101Z-d60238bc": {
           "actor": {
             "id": "anthropic/claude-code",

@@ -1,0 +1,18 @@
+{
+  "schema": "ex-ros-2026-a024.checks/1",
+  "commit": "de9f39e81b26aae03da84e90d726df04367e61b5",
+  "buildExit": 0,
+  "testsExit": 0,
+  "validateExit": 0,
+  "tests": {
+    "total": 841,
+    "passed": 841,
+    "failed": 0
+  },
+  "failedTests": [],
+  "command": {
+    "build": "npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400",
+    "tests": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll",
+    "validate": "./ros validate"
+  }
+}

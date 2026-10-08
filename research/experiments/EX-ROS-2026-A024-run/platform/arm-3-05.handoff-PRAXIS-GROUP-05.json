@@ -1,0 +1,577 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EX-ROS-2026-A024",
+  "arm": "structured-handoff",
+  "completedItem": "PRAXIS-GROUP-05",
+  "baselineCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "headCommit": "8b02e42aec464b3847c48b384da4f6049486a3de",
+  "decisions": [
+    {
+      "topic": "Storage location and format of declared groups",
+      "decision": "Declared groups live in .ros/work/groups.json as {\"schema\":\"praxis.work-groups/1.0.0\",\"groups\":[...]}. Each entry is exactly a planner grouping.groups entry (id, members, kind, origin, sharedContext, executionRepository, crossRepository, architectureNotes; fixed field order from PlanningJson.declaredGroupFields) plus store metadata declaredAt (the --occurred-at), declaredBy (ActorJson actor or null) and membership (array of {member, operation, occurredAt, actor}; optional when parsed, missing = []; always rendered, [] after create) and checkpoints (array of group checkpoints, see the work group checkpoint decisions; optional when parsed, missing = []; always rendered, [] after create). Store schema stays praxis.work-groups/1.0.0. Groups are kept sorted by ordinal ID. A missing file is an empty store. Writes are temp-file-then-rename and touch nothing else.",
+      "evidencePaths": [
+        "src/Ros.Infrastructure/Planning/FileWorkGroupStore.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "src/Ros.Domain/Planning/GroupDeclaration.fs"
+      ]
+    },
+    {
+      "topic": "How the planner reads stored groups",
+      "decision": "PlanningReadPort gained DeclaredGroups: unit -> Result<DeclaredGroup list,string>; PlanningOperations.gather merges them via GroupDeclaration.mergeInto: configured grouping.groups first, then stored groups in ID order, skipping a stored ID that the --config file also declares (configuration wins). Stored entries are parsed by the same private readDeclaredGroup that parseConfiguration uses for grouping.groups.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/Operations.fs",
+        "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "Member state resolution and refusal rules",
+      "decision": "GroupDeclaration.memberStates builds Map<id, MemberState> from the backlog queue then overrides with live context (live outranks backlog because a started item keeps its queue entry). Terminal = queue status 'abandoned' or live Complete/Abandoned. Unknown = in neither. create refuses (all reasons reported, fixed order): invalid ID (regex ^GROUP-[A-Z0-9]+(-[A-Z0-9]+)+$), duplicate group ID, no members, repeated member, unknown member, terminal member, crossRepository without executionRepository.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs"
+      ]
+    },
+    {
+      "topic": "validate semantics for stored groups",
+      "decision": "Unified ./ros validate adds WorkGroupCommands.findings (path .ros/work/groups.json): unreadable/malformed store, wrong or missing schema, duplicate IDs, invalid ID, empty members, repeated member, unknown member, cross-repository without repository, empty declaredAt. A member that became terminal after declaration is NOT a finding (PRX-GRP-042 partial completion).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs"
+      ]
+    },
+    {
+      "topic": "CLI shape and exit codes",
+      "decision": "ros work group create --id GROUP-ID --member ITEM [--member ITEM]* --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]* [--execution-repository NAME] [--cross-repository] [--architecture-note TEXT]* [--dry-run] [--json] [IDENTITY]. Dispatched in Program.fs through ProvenanceCommands.withResolvedActor. Exit 2 for argument errors, 1 for domain refusal or IO error (nothing written), 0 for recorded or dry-run. --json kinds: group-created (dryRun, recorded, group, members[{id,state}]) and group-rejected (id, recorded:false, errors[]), both with schema praxis.work-groups/1.0.0. Origin defaults to human-declared.",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "work group show: what it reads and how it joins state",
+      "decision": "WorkGroupOperations.show (port: WorkGroupPort) (planning: PlanningReadPort) plannedAt plannerVersion id reads the store via WorkGroupPort.ReadStore; unknown ID returns GroupShowOutcome.NotFound before any planning. Otherwise it runs PlanningOperations.analyze, derives member states with GroupDeclaration.memberStates input.Queue input.Live (the same queue/live the planner saw), runs Grouping.recommend and builds GroupView.tryShow store states report id, matching the planner WorkGroup by WorkGroupId.value = id. The CLI uses FilePlanningRepository.create root None None (default configuration, no --config/--observations), so the planner group with the stored ID is the stored declaration.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "src/Ros.Domain/Planning/GroupView.fs",
+        "src/Ros.Cli/WorkGroupCommands.fs"
+      ]
+    },
+    {
+      "topic": "Member view and progress semantics",
+      "decision": "GroupMemberView = {WorkItemId; Recorded: MemberState option (None = unknown to backlog and context); Planning: GroupMember option (None = not in planning inventory); Gates: members whose planner GatedBy contains this ID}. GroupView.statusCode: 'unknown' when Planning is None, 'abandoned' when PlanningState is Abandoned, else MemberStatus.code. GroupViewProgress counts every declared member (not just the planner's filtered members) by statusCode: Total, Complete, Abandoned, InProgress, Runnable, Blocked, NotRunnable, Unknown, plus a Statement naming blocked/abandoned/unknown IDs. Blocked = members with statusCode 'blocked' and their Gates. Abandoned is kept apart from complete (the planner's own GroupProgress counts abandoned as complete).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupView.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "work group show CLI shape and exit codes",
+      "decision": "ros work group show GROUP-ID [--json]; read-only so it is dispatched in Program.fs without ProvenanceCommands.withResolvedActor (next to 'work group create'). Exit 0 shown, 1 unknown group or read error (--json kind group-not-found with errors[]), 2 missing/extra positional argument. --json kind group-shown (schema praxis.work-groups/1.0.0): group (storedGroupNode), plannerExecutionRepository, members[{id, recordedState, recordedTerminal, planningState, status, gatedBy, gates}] (null recordedState/recordedTerminal/planningState when unknown), progress{...}, blocked[{id,gates}], notes (planner GroupNote), plannedAt, commit, branch, statement. WorkGroupCommands.usage is now createUsage + ' | ' + showUsage.",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "Where per-member add/remove provenance lives",
+      "decision": "In the stored group entry, not in .ros/events/events.jsonl: StoredGroup.Membership is a MembershipChange list {Member; Operation: MembershipOperation; OccurredAt; Actor} appended oldest-first and never rewritten. MembershipOperation is Added ('added') | Removed ('removed'), parsed by MembershipOperation.tryParse over MembershipOperation.all. The planner ignores membership (GroupStore.declarations returns only Declaration).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs"
+      ]
+    },
+    {
+      "topic": "work group add semantics and refusal order",
+      "decision": "GroupDeclaration.addMember store states locate addedAt addedBy groupId memberId appends the member to the END of Declaration.Members (no other declaration field changes, DeclaredAt/DeclaredBy unchanged), appends a MembershipChange Added, and replaces the group in place via GroupStore.replace. addRejections: unknown group -> only [UnknownGroup]; otherwise in order AlreadyMember, then UnknownMember/TerminalMember (shared memberRejections), then RepositoryMismatch (only checked when the item is known).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "Execution-repository check for add (PRX-GRP-051)",
+      "decision": "Item repository = Grouping.executionLocation input id (made public; the planner's evidenceFor now calls it): grouping.executionRepositories entry (explicit) > description matching 'external repository' (UnknownExternal) > input.Repository (repository name from queue/context 'repository' field, else directory name). Group repository = declared ExecutionRepository, else the distinct locations of its current members. Cross-repository groups skip the check. An UnknownExternal item is refused by a non-cross-repository group. Mismatch message names both repositories.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/Grouping.fs",
+        "src/Ros.Domain/Planning/GroupDeclaration.fs"
+      ]
+    },
+    {
+      "topic": "work group add application operation",
+      "decision": "WorkGroupOperations.add (port: WorkGroupPort) (planning: PlanningReadPort) plannedAt plannerVersion (request: GroupAddRequest) reads the store via port.ReadStore, runs PlanningOperations.gather (not analyze) for queue, live, repository and configuration, derives states with GroupDeclaration.memberStates input.Queue input.Live, and writes only via port.WriteStore unless DryRun. Outcomes: GroupAddOutcome.Rejected | Planned(StoredGroup, AddedMember) | Recorded(StoredGroup, AddedMember); AddedMember = {Change; State; ExecutionRepository}.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs"
+      ]
+    },
+    {
+      "topic": "work group add CLI shape and exit codes",
+      "decision": "ros work group add --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--config FILE] [--dry-run] [--json] [IDENTITY]; exactly one --id and one --member (add members one at a time); --cross-repository is an argument error (it belongs to the declaration). Dispatched through ProvenanceCommands.withResolvedActor. --config feeds FilePlanningRepository.create root None configuration so executionRepositories can be supplied. Exit 0 added/dry-run, 1 refusal (incl. unknown group) or IO error, 2 argument error. --json kinds member-added {dryRun, recorded, group (storedGroupNode of the updated group), member{id,state,executionRepository}, change} and member-rejected {id, member, recorded:false, errors}. WorkGroupCommands.usage = createUsage | addUsage | showUsage. Flag sets are per subcommand (createFlags, addFlags via parseWith).",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "validate findings for membership history",
+      "decision": "GroupDeclaration.findings additionally reports (field groups[ID].membership) a change with empty occurredAt, a member whose LATEST change is Added but who is not in members, and a member whose LATEST change is Removed but who is still in members. Only each member's latest change counts, so remove-then-add (or add-then-remove) histories are valid.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "Removing the last member",
+      "decision": "Refused, with no override flag: GroupRejection.LastMember(id, group). A stored group with no members is already a validate finding ('a stored group has no members') and create refuses NoMembers, so a group always keeps at least one member. To retire a group entirely there is no command yet.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "work group remove semantics and refusal order",
+      "decision": "GroupDeclaration.removeRejections store groupId memberId returns exactly one reason: UnknownGroup (group absent), else NotMember(member, group), else LastMember(member, group), else []. The member's own state is NOT an input: open, terminal and unknown members may all be removed. GroupDeclaration.removeMember store removedAt removedBy groupId memberId filters the member out of Declaration.Members (others keep order; no other declaration field, DeclaredAt or DeclaredBy changes), appends a MembershipChange Removed, and replaces the group via GroupStore.replace. A removed item can be re-added with work group add (subject to add's checks).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "work group remove application operation",
+      "decision": "WorkGroupOperations.remove (port: WorkGroupPort) (request: GroupRemoveRequest) reads the store and member states via port.Queue/port.Live only (no PlanningReadPort, no --config, since removal needs no repository check), and writes only via port.WriteStore unless DryRun. Outcomes: GroupRemoveOutcome.Rejected | Planned(StoredGroup, RemovedMember) | Recorded(StoredGroup, RemovedMember); RemovedMember = {Change; State} where State is the item's own recorded state code or 'unknown'. GroupRemoveRequest has the same field names as GroupAddRequest (and RemovedMember shares Change/State with AddedMember), so record constructions are type-annotated (': GroupAddRequest', ': GroupRemoveRequest', ': AddedMember') to keep F# inference unambiguous.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs"
+      ]
+    },
+    {
+      "topic": "work group remove CLI shape and exit codes",
+      "decision": "ros work group remove --id GROUP-ID --member ITEM --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]; exactly one --id and one --member; --cross-repository and --config are argument errors. Dispatched in Program.fs through ProvenanceCommands.withResolvedActor (before 'work group show'). Exit 0 removed/dry-run, 1 refusal (unknown group, non-member, last member) or IO error, 2 argument error. --json kinds member-removed {dryRun, recorded, group (storedGroupNode of the updated group), member{id,state}, change} and member-removal-rejected {id, member, recorded:false, errors}. add and remove share the private WorkGroupCommands.memberChange parser for --id/--member/--occurred-at/--cross-repository/stray tokens; add layers --config on top. WorkGroupCommands.usage = createUsage | addUsage | removeUsage | showUsage.",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "Shared durability verification for checkpoints that belong to no single work item",
+      "decision": "CheckpointVerification.durableLocation candidate observations : Result<GitDurableLocation, CheckpointRejection list> applies exactly verify's text rules (BlankSummary, BlankNextAction), Git location rules (named branch, upstream, remote configured/reachable, local HEAD == remote branch head read from the remote) and working-tree rule (UncommittedChanges after the path filter and baseline), skipping only the work-item and execution checks. verify and durableLocation share the private durability helper, so the Git rules cannot drift. Application wrapper: CheckpointOperations.verifyDurableLocation git policy candidate (observes with itemState None and ExecutionObservation.NoneActive).",
+      "evidencePaths": [
+        "src/Ros.Domain/Work/Checkpoint.fs",
+        "src/Ros.Application/Work/Checkpoint.fs"
+      ]
+    },
+    {
+      "topic": "Where group checkpoints live and what they record",
+      "decision": "StoredGroup gained Checkpoints: GroupCheckpoint list (append-only, oldest first, never rewritten; store metadata the planner ignores; store schema unchanged praxis.work-groups/1.0.0). GroupCheckpoint = {RecordedAt (--occurred-at); Actor; Summary; NextAction (both trimmed); Decisions (--decision, trimmed); Location: GitDurableLocation (verified); Members: GroupCheckpointMember list}. GroupCheckpointMember = {WorkItemId; State (own recorded state code or 'unknown'); Partition; Checkpoint: MemberCheckpointReference option}. MemberCheckpointReference = {CheckpointId; ExecutionId; Commit; RecordedAt} of the member's latest VERIFIED checkpoint from PlanningLiveItem.Checkpoint (live context latestCheckpoint). No group-checkpoint event is written to .ros/events/events.jsonl, so CheckpointOwnership claims and member continuity are unaffected.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "src/Ros.Application/Planning/WorkGroups.fs"
+      ]
+    },
+    {
+      "topic": "Member partition semantics for group checkpoints",
+      "decision": "GroupMemberPartition.ofState (MemberState option): Open 'active' -> Active; Terminal 'complete' -> Completed; Terminal 'abandoned' -> Abandoned (kept apart from completed, PRX-GRP-042); everything else (ready, captured, blocked, unknown) -> Remaining. Codes active|completed|abandoned|remaining (GroupMemberPartition.code/all/tryParse). GroupDeclaration.partitionOf partition checkpoint lists members of one partition in declaration order. Partitions cover the current declaration members at record time; later membership changes do not alter recorded checkpoints.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "topic": "work group checkpoint application operation and order of checks",
+      "decision": "WorkGroupOperations.checkpoint (port: WorkGroupPort) (verify: CheckpointCandidate -> Result<GitDurableLocation, CheckpointRejection list>) (request: GroupCheckpointRequest). Order: read store; unknown group -> GroupCheckpointOutcome.Rejected [UnknownGroup] without calling verify; verify candidate {WorkItemId = group ID; Repository = request.Repository; StepId = None} -> NotDurable rejections; then Queue/Live -> GroupDeclaration.recordCheckpoint; write via port.WriteStore unless DryRun. Outcomes Rejected | NotDurable | Planned(StoredGroup, GroupCheckpoint) | Recorded(StoredGroup, GroupCheckpoint). The verifier is injected as a function so the operation stays pure and testable without Git.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs"
+      ]
+    },
+    {
+      "topic": "work group checkpoint CLI shape, exit codes and JSON",
+      "decision": "ros work group checkpoint --id GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]; dispatched in Program.fs through ProvenanceCommands.withResolvedActor (after 'work group remove'); runs under RegistryLock 'work-protocol' like work checkpoint; repository from FileWorkConfigRepository.readRepositoryId; git = ProcessGitDurability.create root; policy = FileCheckpointRepository.readPolicy root. Exit 0 recorded/dry-run; 1 unknown group, not durable, IO/lock error; 2 argument errors (missing/repeated --id/--summary/--next-action/--occurred-at, bad timestamp, blank --decision, --cross-repository, stray tokens) and blank --summary/--next-action (CheckpointRejection.isArgumentError, same as work checkpoint). --json kinds group-checkpointed {schema, kind, dryRun, recorded, group (storedGroupNode), checkpoint} and group-checkpoint-rejected {id, recorded:false, errors[], rejections[{code,message,remedy}]} (unknown group uses code 'group-rejected'; durability uses work checkpoint's codes, e.g. local-ahead, uncommitted-changes, blank-summary). Checkpoint JSON: recordedAt, actor, summary, nextAction, decisions, repository, branch, commit, remote{name,url}, remoteBranch, remoteCommit, verification{status:verified, mechanism:git-remote-observation}, members[{id,state,partition,checkpoint|null}], then derived active/completed/abandoned/remaining arrays (rendered only; parse reads members). WorkGroupCommands.usage = create | add | remove | checkpoint | show.",
+      "evidencePaths": [
+        "src/Ros.Cli/WorkGroupCommands.fs",
+        "src/Ros.Cli/Program.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "docs/cli.md"
+      ]
+    },
+    {
+      "topic": "validate findings and show for group checkpoints",
+      "decision": "GroupDeclaration.findings additionally reports (field groups[ID].checkpoints) a group checkpoint with empty recordedAt, blank summary, blank nextAction, LocalCommit <> RemoteCommit, no members, or a member listed twice. Parsing fails the store (malformed) on a non-40/64-hex commit, a verification status other than 'verified' or a mechanism other than 'git-remote-observation'. work group show text prints the number of group checkpoints and the latest one (time, short commit, branch, summary, next action, decisions); show --json carries them inside group.checkpoints via storedGroupNode.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs",
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "src/Ros.Cli/WorkGroupCommands.fs"
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "statement": "No work group operation reads or writes a member's lifecycle state: WorkGroupPort's only write is WriteStore (the group store); queue.json and context/current.json are byte-identical before and after create (CLI test).",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "A stored group entry round-trips through renderGroupStore/parseGroupStore and its declaration fields parse through parseConfiguration's grouping.groups reader to the identical DeclaredGroup; any new declaration field must be added to both readDeclaredGroup and declaredGroupFields.",
+      "evidencePaths": [
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "Planner output for a group stored in the store equals the output for the same group supplied in grouping.groups configuration (equivalence test over PlanningOperations.analyze and Grouping.recommend).",
+      "evidencePaths": [
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "Refusals and --dry-run write nothing (whole-fixture file hash unchanged).",
+      "evidencePaths": [
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "Group IDs are stable and never reused: a duplicate ID is refused rather than overwritten.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupDeclaration.fs"
+      ]
+    },
+    {
+      "statement": "work group show never writes: WorkGroupOperations.show never calls WriteStore (domain test port counts writes and fails on write) and the CLI tests assert the whole-fixture fingerprint is unchanged for shown, unknown-group and argument-error runs.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "Every declared member appears in the show view in declaration order, including unknown members (status 'unknown') and members that became terminal after declaration (partial completion, still not a validate finding).",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/GroupView.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "work group add writes only the group store: queue.json and context/current.json are byte-identical after an add (CLI test); refusals, unknown groups, --dry-run and argument errors leave the whole-fixture fingerprint unchanged; the domain operation test counts zero writes for refusal and dry-run.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "After add, GroupStore.declarations equals the plain declaration with the member appended, so the planner sees an added member exactly as if it had been declared; the store with membership history round-trips through renderGroupStore/parseGroupStore, and a store without a membership field still parses.",
+      "evidencePaths": [
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "The planner and work group add resolve an item's execution repository with the same function (Grouping.executionLocation); do not duplicate that rule.",
+      "evidencePaths": [
+        "src/Ros.Domain/Planning/Grouping.fs"
+      ]
+    },
+    {
+      "statement": "work group remove writes only the group store: queue.json and context/current.json are byte-identical after a CLI remove; refusals (non-member, unknown group, last member), --dry-run and argument errors leave the whole-fixture fingerprint unchanged; the operation test counts zero writes for refusal and dry run.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "After remove, GroupStore.declarations equals the plain declaration without the member, the store with a Removed change round-trips through renderGroupStore/parseGroupStore, and the result has no validate findings; re-adding the member also has none.",
+      "evidencePaths": [
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "work group checkpoint requires the same durable-checkpoint verification as work checkpoint: both call the shared private CheckpointVerification.durability (Git location + working tree) and textRejections; a domain test asserts the same local-ahead refusal from both, and CLI tests show local-ahead, uncommitted-changes and blank-summary refusals with work checkpoint's codes.",
+      "evidencePaths": [
+        "src/Ros.Domain/Work/Checkpoint.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "A group checkpoint never replaces or writes a member checkpoint and claims no paths: the CLI test shows queue.json, context/current.json and events.jsonl byte-identical after a group checkpoint, the member's work context still reports its own checkpoint ID, and the group checkpoint JSON has no paths field.",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "Recording a group checkpoint leaves GroupStore.declarations unchanged (the planner sees nothing new); a store with checkpoints round-trips through renderGroupStore/parseGroupStore and a store without the checkpoints field still parses.",
+      "evidencePaths": [
+        "src/Ros.Contracts/Planning/PlanningJson.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    },
+    {
+      "statement": "work group checkpoint refusals (unknown group, not durable), argument errors and --dry-run write nothing (operation test counts zero writes; CLI test compares the store file); an unknown group is refused before Git is consulted (verify call count 0).",
+      "evidencePaths": [
+        "src/Ros.Application/Planning/WorkGroups.fs",
+        "tests/Ros.Tests/WorkGroupTests.fs"
+      ]
+    }
+  ],
+  "reusableAbstractions": [
+    {
+      "name": "StoredGroup / GroupStore (GroupStore.empty, add, tryFind, declarations, Schema)",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Typed store model; add keeps ordinal ID order; tryFind is the lookup show/add/remove/checkpoint need."
+    },
+    {
+      "name": "GroupDeclaration.memberStates / MemberState",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Each item's own recorded state (live over backlog, Open/Terminal with state code); reuse for show (member states), add (unknown/terminal refusal) and checkpoint (active/completed/remaining)."
+    },
+    {
+      "name": "GroupDeclaration.rejections / create / findings / mergeInto, GroupRejection.message",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Pure validation and creation; GroupRejection is the place to add new refusal cases (e.g. AlreadyMember, NotMember, LastMember, RepositoryMismatch)."
+    },
+    {
+      "name": "WorkGroupPort, GroupCreateRequest, GroupCreateOutcome, WorkGroupOperations.create/findings",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Application port (ReadStore, Queue, Live, WriteStore) and the read-validate-write pattern with dry-run; extend with add/remove/show operations on the same port."
+    },
+    {
+      "name": "FileWorkGroupStore.read/write/path/declarations",
+      "path": "src/Ros.Infrastructure/Planning/FileWorkGroupStore.fs",
+      "purpose": "File IO for .ros/work/groups.json; compiled before FilePlanningRepository so the planner port can read it."
+    },
+    {
+      "name": "FileWorkGroupRepository.create",
+      "path": "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+      "purpose": "File-backed WorkGroupPort composed from FileWorkGroupStore and FilePlanningRepository.readQueue/readLive."
+    },
+    {
+      "name": "PlanningJson.declaredGroupFields, renderGroupStore, parseGroupStore, renderGroupCreated, renderGroupRejected",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for stored groups and command results; storedGroupNode (private) renders one stored group and can back a show document."
+    },
+    {
+      "name": "WorkGroupCommands (argument parser, render, findings)",
+      "path": "src/Ros.Cli/WorkGroupCommands.fs",
+      "purpose": "CLI module for the work group family; flag parsing collects (flag, value) pairs in order. New subcommands go here and are dispatched in Program.fs next to the 'work group create' case (before 'work checkpoint')."
+    },
+    {
+      "name": "WorkGroupTests fixture helpers (fixture, fingerprint, memberFiles, createArguments)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "Git fixture with queue (TASK-A, TASK-B ready; TASK-X abandoned) and live context (TASK-DONE complete) plus hash helpers for no-mutation assertions."
+    },
+    {
+      "name": "GroupView (build, tryShow, statusCode, statement), GroupMemberView, GroupViewProgress, BlockedMember",
+      "path": "src/Ros.Domain/Planning/GroupView.fs",
+      "purpose": "Pure per-group view joining recorded member states with the planner's WorkGroup; statusCode-based partitions (group checkpoint uses its own GroupMemberPartition over MemberState instead, without the planner)."
+    },
+    {
+      "name": "GroupShowOutcome, WorkGroupOperations.show",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Application operation composing WorkGroupPort and PlanningReadPort read-only; template for any operation needing the planner's view of a stored group."
+    },
+    {
+      "name": "PlanningJson.renderGroupShown, renderGroupNotFound (private memberStateFields)",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for show; defined after the private groupNote helper (renderers needing groupNote/workGroup must be placed after them in the file)."
+    },
+    {
+      "name": "WorkGroupTests show fixtures (showQueue, showLive, showStore, showPorts, shown)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "In-memory WorkGroupPort/PlanningReadPort pair with a blocked prerequisite chain (S-1 gates S-2, S-3), complete, abandoned and unknown members; showPorts counts writes."
+    },
+    {
+      "name": "MembershipOperation / MembershipChange, StoredGroup.Membership",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Per-member provenance history on a stored group: Added and Removed. Add new operations here (code + all) if a later command changes membership."
+    },
+    {
+      "name": "GroupStore.replace",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Replace a stored group by ID in place (order preserved); use for remove/checkpoint updates."
+    },
+    {
+      "name": "GroupDeclaration.addRejections / addMember (private groupLocations, repositoryRejection, memberRejections)",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Pure add validation and update (repository check via locate)."
+    },
+    {
+      "name": "Grouping.executionLocation",
+      "path": "src/Ros.Domain/Planning/Grouping.fs",
+      "purpose": "Planner's per-item execution repository (ExecutionLocation * SignalBasis) from a PlanningInput."
+    },
+    {
+      "name": "GroupAddRequest, AddedMember, GroupAddOutcome, WorkGroupOperations.add",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Read-validate-write with dry-run over WorkGroupPort + PlanningReadPort (gather); template for remove."
+    },
+    {
+      "name": "PlanningJson.renderMemberAdded, renderMemberRejected (private actorNode, readActor, membershipChangeNode, readMembershipChange)",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for add results and membership history; a remove renderer can reuse membershipChangeNode."
+    },
+    {
+      "name": "WorkGroupCommands.parseWith, addFlags, addRequest, renderAdd",
+      "path": "src/Ros.Cli/WorkGroupCommands.fs",
+      "purpose": "Per-subcommand flag parsing and add CLI; remove can mirror addRequest/renderAdd."
+    },
+    {
+      "name": "WorkGroupTests add fixtures (locate, addStates, addTo, baseStore, addRejected)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "Domain fixtures with E-1 (echelon) and X-1 (unknown external) items for repository checks; CLI tests write a --config file outside the fixture root so the fingerprint is unaffected."
+    },
+    {
+      "name": "GroupDeclaration.removeRejections / removeMember",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Pure remove validation (UnknownGroup, NotMember, LastMember) and update appending a Removed change."
+    },
+    {
+      "name": "GroupRemoveRequest, RemovedMember, GroupRemoveOutcome, WorkGroupOperations.remove",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Read-validate-write with dry-run over WorkGroupPort alone (no planner); template for a store-only group mutation."
+    },
+    {
+      "name": "PlanningJson.renderMemberRemoved, renderMemberRemovalRejected",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for remove results (member-removed / member-removal-rejected)."
+    },
+    {
+      "name": "WorkGroupCommands.memberChange, removeFlags, renderRemove, remove",
+      "path": "src/Ros.Cli/WorkGroupCommands.fs",
+      "purpose": "Shared one-member argument parsing for add/remove and the remove CLI."
+    },
+    {
+      "name": "WorkGroupTests remove fixtures (removeFrom, twoMemberStore, removeRejected, removeTests)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "Domain fixtures for remove; CLI tests use fixture/fingerprint/memberFiles with a second single-member group GROUP-FIXTURE-SOLO-001 for the last-member refusal."
+    },
+    {
+      "name": "CheckpointVerification.durableLocation / CheckpointOperations.verifyDurableLocation",
+      "path": "src/Ros.Domain/Work/Checkpoint.fs",
+      "purpose": "work checkpoint's durability rules (text, Git location, working tree) for a checkpoint owned by no single work item or execution; Application wrapper in src/Ros.Application/Work/Checkpoint.fs."
+    },
+    {
+      "name": "GroupCheckpoint, GroupCheckpointMember, MemberCheckpointReference, GroupMemberPartition (code, all, tryParse, ofState)",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Typed group checkpoint model stored on StoredGroup.Checkpoints."
+    },
+    {
+      "name": "GroupDeclaration.checkpointMembers / partitionOf / recordCheckpoint",
+      "path": "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "purpose": "Pure construction of a group checkpoint from member states and member checkpoint references; append to a stored group."
+    },
+    {
+      "name": "GroupCheckpointRequest, GroupCheckpointOutcome, WorkGroupOperations.checkpoint (private reference, memberCheckpoints)",
+      "path": "src/Ros.Application/Planning/WorkGroups.fs",
+      "purpose": "Read-verify-write with dry run over WorkGroupPort and an injected durability verifier; template for any group operation that needs Git durability."
+    },
+    {
+      "name": "PlanningJson.renderGroupCheckpointed, renderGroupCheckpointRejected (private groupCheckpointNode, readGroupCheckpoint, memberCheckpointNode, readCommit)",
+      "path": "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "purpose": "JSON contract for group checkpoints in the store and in command results."
+    },
+    {
+      "name": "WorkGroupCommands.checkpoint, checkpointRequest, checkpointFlags, renderCheckpoint, checkpointText",
+      "path": "src/Ros.Cli/WorkGroupCommands.fs",
+      "purpose": "CLI for work group checkpoint, including the work-protocol lock composition."
+    },
+    {
+      "name": "WorkGroupTests checkpoint fixtures (sha, verifiedAt, checkpointStore, checkpointLive, ownCheckpoint, recordGroupCheckpoint, checkpointPorts, checkpointRequest, start, groupCheckpoint, withPushedRepository, rejectionCodes)",
+      "path": "tests/Ros.Tests/WorkGroupTests.fs",
+      "purpose": "Domain/operation fixtures and CLI tests over PraxisCli.installedRepository (bare remote, branch feature/x pushed with upstream)."
+    }
+  ],
+  "changedPaths": [
+    "src/Ros.Domain/Work/Checkpoint.fs",
+    "src/Ros.Application/Work/Checkpoint.fs",
+    "src/Ros.Domain/Planning/GroupDeclaration.fs",
+    "src/Ros.Application/Planning/WorkGroups.fs",
+    "src/Ros.Contracts/Planning/PlanningJson.fs",
+    "src/Ros.Cli/WorkGroupCommands.fs",
+    "src/Ros.Cli/Program.fs",
+    "tests/Ros.Tests/WorkGroupTests.fs",
+    "docs/cli.md",
+    "docs/planning.md"
+  ],
+  "verification": {
+    "acceptanceStatus": [
+      {
+        "criterion": "Records a group checkpoint: group ID, active/completed/remaining members, shared architectural decisions, branch and commit, next action (PRX-GRP-044)",
+        "status": "pass",
+        "evidence": "WorkGroupTests 'checkpoint: partitions members, references their own checkpoints and appends to the group' and 'cli: checkpoint records a verified group checkpoint that references members' own checkpoints' (commit/remoteCommit == pushed HEAD, branch feature/x, decisions, active [FEAT-1, FEAT-2], nextAction)"
+      },
+      {
+        "criterion": "Requires the same durable-checkpoint verification as work checkpoint",
+        "status": "pass",
+        "evidence": "Shared CheckpointVerification.durability helper; 'checkpoint: durability uses work checkpoint's own Git rules without a work item or execution' (local-ahead from both durableLocation and verify; blank-summary/blank-next-action); CLI test refusals local-ahead, uncommitted-changes (exit 1) and blank-summary (exit 2) with work checkpoint's codes"
+      },
+      {
+        "criterion": "References members' own checkpoints and never replaces them",
+        "status": "pass",
+        "evidence": "CLI test: members[0].checkpoint.checkpointId equals FEAT-1's work checkpoint id, FEAT-2 null; context/current.json, queue.json and events.jsonl byte-identical; work context FEAT-1 still reports its own checkpoint id"
+      },
+      {
+        "criterion": "No member claims another's changes (PRX-GRP-043)",
+        "status": "pass",
+        "evidence": "The group checkpoint records no paths (CLI asserts no paths field) and writes no work.checkpointed event, so CheckpointOwnership claims and per-member attribution are unchanged; WorkGroupPort's only write is the group store"
+      }
+    ],
+    "testsRun": [
+      {
+        "command": "npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400",
+        "result": "succeeded, 0 warnings, 0 errors"
+      },
+      {
+        "command": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll",
+        "result": "841 tests; 841 passed; 0 failed (8 new work group checkpoint tests)"
+      },
+      {
+        "command": "./ros validate",
+        "result": "validation passed"
+      },
+      {
+        "command": "node --test tests/validate-unified-fsharp-differential.test.mjs tests/status-fsharp-differential.test.mjs",
+        "result": "7 passed, 0 failed"
+      }
+    ]
+  },
+  "unresolvedRisks": [
+    "The group store write has no journal; create/add/remove do not take a lock (only work group checkpoint takes the work-protocol lock), so concurrent group commands could lose an update.",
+    "Without --config, add only knows this repository and 'external repository' descriptions; an item executing elsewhere but undeclared is treated as local. show, remove and checkpoint ignore --config/--observations.",
+    "create still does not run the repository check that add runs, so a group can be created with mixed repositories that add would refuse.",
+    "There is no command to retire or delete a whole group; remove refuses the last member.",
+    "Node's validate (tools/ros_cli.mjs) does not know groups.json; differential tests stay equal only while fixtures lack groups.json.",
+    "A group checkpoint verifies only the current checkout's branch; for a cross-repository group it does not verify other repositories' durability, and member checkpoint references may point at commits on other branches.",
+    "A group checkpoint does not require any member to be active or the executor to own an execution; it is attributed only through its actor field and is not part of execution telemetry.",
+    "Group checkpoints are not surfaced in work context/status continuity; only work group show reports the latest one.",
+    "The local branch ref in a fresh checkout may be stale relative to origin and HEAD may be detached; this session reset experiment/a024-arm-3 to HEAD (a fast-forward) and set its upstream before pushing. Checkpoints require a named branch.",
+    "The work item descriptions say this must not be merged before EX-ROS-2026-A021 is evaluated and the owner accepts phase two."
+  ],
+  "nextItemContext": {
+    "constraints": [
+      "PRAXIS-GROUP-01..05 (create, show, add, remove, checkpoint) are all implemented on this branch; PRX-GRP-073's remaining command, plan execute-group, has no work item here.",
+      "Membership and group checkpoints never change a member's lifecycle state, evidence, checkpoints or attribution (PRX-GRP-002, PRX-GRP-043); WorkGroupPort's only write is the group store.",
+      "Keep stored entries in grouping.groups shape; store-only metadata (declaredAt, declaredBy, membership, checkpoints) must be ignored by the planner. Update both readDeclaredGroup and declaredGroupFields together for declaration fields.",
+      "Any new checkpoint-like command must reuse CheckpointVerification.durableLocation / CheckpointOperations.verifyDurableLocation rather than re-implementing Git durability rules.",
+      "Mutating commands need --occurred-at (real current time) and go through ProvenanceCommands.withResolvedActor; read-only commands do not. --dry-run writes nothing; refusals exit 1 and write nothing; argument errors exit 2.",
+      "Record membership changes and group checkpoints append-only on the stored group; never rewrite earlier entries.",
+      "A member becoming terminal after declaration is partial completion, not a validate finding (PRX-GRP-042); abandoned is never counted as completed.",
+      "Record-type field names overlap across request/result records and with Ros.Domain.Work types (WorkGroups.fs now opens Ros.Domain.Work); annotate record constructions with their type."
+    ],
+    "likelyReuse": [
+      "Test helpers in tests/Ros.Tests/WorkGroupTests.fs: fixture, fingerprint, memberFiles, createArguments, executor, add/remove fixtures, and the checkpoint fixtures (withPushedRepository over PraxisCli.installedRepository, start, groupCheckpoint, rejectionCodes, checkpointPorts).",
+      "WorkGroupOperations.checkpoint's injected verify function pattern for any group operation needing Git durability; GroupMemberPartition.ofState for summarising member progress without the planner.",
+      "For a plan execute-group or a continuity view of groups: StoredGroup.Checkpoints (latest via List.tryLast), GroupView.build for the planner's view, PlanningLiveItem.Checkpoint for members' own checkpoints."
+    ],
+    "openQuestions": [
+      "Should create run the same repository check as add (Grouping.executionLocation) for consistency with PRX-GRP-051?",
+      "Should show accept --config/--observations to mirror plan groups and add?",
+      "Should group checkpoints appear in work context/status continuity, or require an active member execution?",
+      "Should create/add/remove also take the work-protocol lock that checkpoint takes?"
+    ]
+  }
+}

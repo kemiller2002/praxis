@@ -1829,5 +1829,61 @@
     "title": "An \"origin unrecorded\" provenance acknowledgement satisfies the creation rule for records whose creating process left no Praxis execution, without naming or inferring a creator",
     "updated": "2026-10-07",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-07",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A054"
+    ],
+    "id": "DF-ROS-2026-A056",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A056--a024-frozen-research-instruments-python-exception.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:41:56.936Z",
+          "last": "2026-10-08T11:21:40.328Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Approved Python exceptions for the EX-ROS-2026-A024 frozen research instruments under DF-ROS-2026-A054's class"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A054",
+      "RQ-ROS-2026-A024",
+      "EX-ROS-2026-A024",
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A075"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "python",
+      "invariant",
+      "exception",
+      "decision",
+      "experiment"
+    ],
+    "title": "The EX-ROS-2026-A024 frozen research instruments are approved Python exceptions under DF-ROS-2026-A054's frozen-instrument class",
+    "updated": "2026-10-08",
+    "version": "1.0.0"
   }
 ]

@@ -107,6 +107,62 @@
       {
         "path": ".github/workflows/praxis-remote.yml",
         "decision": "DF-ROS-2026-A054"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/analysis.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/decode_telemetry.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/make_manifest.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/make_prompts.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/prepare_blind.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/session_telemetry.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/validate_handoff.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/verify_amendment_1.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/verify_amendment_2.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-harness/run_checks.sh",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/assemble_analysis.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/ledger.py",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/collect.sh",
+        "decision": "DF-ROS-2026-A056"
+      },
+      {
+        "path": "research/experiments/EX-ROS-2026-A024-run/check_handoff.sh",
+        "decision": "DF-ROS-2026-A056"
       }
     ]
   },

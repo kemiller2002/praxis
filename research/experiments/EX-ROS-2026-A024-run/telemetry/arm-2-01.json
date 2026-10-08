@@ -1,0 +1,107 @@
+{
+  "branch": "experiment/a024-arm-2",
+  "capturedAt": "2026-10-07T17:21:37.096310+00:00",
+  "headAtCapture": "bd8acd38f490cc29d7b6bca6d17204e1594d6a2d",
+  "label": "arm-2-01",
+  "main": {
+    "builds": 6,
+    "compactions": 0,
+    "distinctFilesEdited": 1,
+    "distinctFilesRead": 19,
+    "endedAt": "2026-10-07T17:21:36.475000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 51
+      },
+      "entrypoint": {
+        "remote": 51
+      },
+      "models": {
+        "claude-opus-5-5": 51
+      },
+      "runtimeVersion": {
+        "2.1.292": 51
+      }
+    },
+    "fileReads": 29,
+    "fileWrites": 12,
+    "governanceReads": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 2,
+      "docs/planning.md": 2,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": null,
+      "lastAt": null,
+      "paths": [],
+      "reads": 0,
+      "toolCalls": 0,
+      "writes": 0
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 51,
+    "msToFirstCodeMutation": 278663,
+    "peakContextTokens": 187393,
+    "readPaths": [
+      ".ros/work/queue.json",
+      "/tmp/claude-0/apt.log",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/planning.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "src/Ros.Application/Planning/Operations.fs",
+      "src/Ros.Cli/PlanCommands.fs",
+      "src/Ros.Cli/Program.fs",
+      "src/Ros.Cli/Ros.Cli.fsproj",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Domain/Planning/Model.fs",
+      "src/Ros.Domain/Work/Backlog.fs",
+      "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs",
+      "src/Ros.Infrastructure/Work/FileEventLogRepository.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/GroupingTests.fs",
+      "tests/Ros.Tests/PlanningCliTests.fs",
+      "tests/Ros.Tests/TestFramework.fs"
+    ],
+    "repeatedReadExcess": 10,
+    "repeatedReadPaths": 7,
+    "repeatedReadsTop": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 2,
+      "docs/planning.md": 2,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 4,
+      "src/Ros.Domain/Planning/Model.fs": 2,
+      "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs": 3,
+      "tests/Ros.Tests/PlanningCliTests.fs": 2
+    },
+    "searches": 44,
+    "startedAt": "2026-10-07T17:04:16.308000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 2,
+    "tokens": {
+      "cacheCreation": 143690,
+      "cacheRead": 6656083,
+      "input": 102,
+      "output": 35272
+    },
+    "toolCalls": {
+      "Bash": 51,
+      "Write": 1
+    },
+    "toolErrors": 1,
+    "wallMs": 1040166
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "fb05db3f-9ff5-5a49-9396-db01addb42ed",
+  "subagents": [],
+  "transcript": "fb05db3f-9ff5-5a49-9396-db01addb42ed.jsonl",
+  "transcriptSha256": {
+    "fb05db3f-9ff5-5a49-9396-db01addb42ed.jsonl": "603f817696ebba6ecfb3fce0a8c25dbca9173370698ee87a27c50ef3dcbd2ec7"
+  }
+}

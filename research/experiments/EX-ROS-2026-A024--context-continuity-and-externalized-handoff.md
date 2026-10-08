@@ -2,7 +2,7 @@
 id: EX-ROS-2026-A024
 title: "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
 research_area: repository-operating-system
-status: proposed
+status: completed
 created: 2026-10-07
 author_agent: openai/chatgpt
 tests_hypotheses:
@@ -11,7 +11,7 @@ tests_hypotheses:
 inputs:
   - EV-ROS-2026-A064
   - EV-ROS-2026-A070
-outputs: []
+outputs: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 related_theories: []
 related_documents:
   - EX-ROS-2026-A021
@@ -34,6 +34,18 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
+    EXE-20261007T162653169Z-f15a70b7:
+      operations: [modified]
+      at: 2026-10-07T18:47:25.856Z
+      last: 2026-10-07T22:36:59.831Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Executed the frozen A024 protocol; recorded the blocker, amendment A1, results, analysis and observed threats without editing the preregistered text"
+      evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 
 # Experiment
@@ -400,16 +412,66 @@ These are limitations, not reasons to alter the frozen design after execution.
 
 ## Results
 
-No arm has run under this protocol.
+Executed on 2026-10-07 under the frozen manifest
+(`research/experiments/EX-ROS-2026-A024-harness/manifest.json`, commit
+`91745d9`) and owner amendment A1. All three arms reached a valid terminal
+state. Results are in EV-ROS-2026-A075; the partial-execution and blocker
+record is EV-ROS-2026-A074. The raw bundle is in
+`research/experiments/EX-ROS-2026-A024-run/`.
+
+| Measure | A continuous | B code-only | C handoff |
+| --- | --- | --- | --- |
+| Acceptance (blinded) | 36/36 | 36/36 | 36/36 |
+| Architecture composite (blinded) | 5 | 10 | 8 |
+| File reads + searches (primary discovery) | 112 | 263 | 276 |
+| Platform cost (USD) | 8.27 | 15.30 | 17.43 |
+| Output tokens | 102,006 | 163,797 | 204,253 |
 
 ## Analysis
 
-Pending.
+The frozen `analysis.py` (`run/analysis/output.json`) was applied unchanged:
+
+- architecture: A is not better than B, so there is no recoverable calibration effect;
+- discovery: A is better than B; recovery(C) = (263 - 276) / (263 - 112) = -13/151 (about -0.086), below 0.50;
+- support rule: calibration effect yes; C better than B no; recovery of at least 0.50 no; correctness within 0.05 yes; no arm invalidated yes.
+
+Verdict: **HY-ROS-2026-A030 is not supported.** As a secondary calibration,
+HY-ROS-2026-A028 reproduces on repeated work and resources (A/B cost 0.54,
+elapsed 0.40) but not on architecture, where the A021/R2 direction reversed.
+The comparison is a replay of the same cohort, not independent replication.
+
+### Execution amendments (owner decision pending)
+
+**Amendment A1 (accepted by the owner, 2026-10-07T20:48Z, "Try it now" in
+response to BLOCKER.txt, adopting the recommended option 1):** a session the
+platform starts on a commit other than the recorded head, which the frozen
+start check stops before any repository change, is a launcher defect and not
+an attempt; it does not consume the slot's single retry. Every later B/C
+session is launched without `outcome_branch`, using the probe-validated
+launcher. No treatment, threshold, margin, blinding rule or stop condition
+changes. BLOCKER.txt lists the options that were offered. Any amendment is recorded here
+with its date and author, below the preregistered text, and never edits it.
 
 ## Threats to validity
 
 See the preregistered threats above. Add observed threats after execution
 without deleting or rewriting the preregistered section.
+
+Observed during execution (2026-10-07):
+
+- Platform launcher pinning of `outcome_branch` (deviations D1-D3). It is
+  harmless to validity so far: the start check stopped every affected session
+  before any change. It does block the serial arms.
+- `arm-2-02r` (B, item 02) received a fixed orchestrator resync note; C's
+  retry declined the same note. B item 02 therefore carries a small extra
+  stale-start turn in its usage that no other session has.
+- Arm B receives each prior session's Praxis checkpoint summary and next
+  action through committed `.ros/` state. That is normal repository state, but
+  it is an informal handoff, so B is not handoff-free in the strict sense.
+- Arm C's prompt alone mentions "remaining members of this work group",
+  which the handoff schema's `nextItemContext` requires.
+- The frozen arm-A prompt asked for cross-item architecture to be decided
+  once, as the orchestration script required.
 
 ## Replication notes
 
@@ -420,7 +482,12 @@ ineffective.
 
 ## Conclusion
 
-Pending.
+A structured durable handoff did not recover the continuous-context
+discovery advantage, and in this execution continuous context did not yield
+the more coherent architecture. HY-ROS-2026-A030 is not supported, at low
+confidence, on one replayed cohort with one execution per arm. The follow-on
+proposals are in `research/experiments/EX-ROS-2026-A024-run/FOLLOW-ONS.txt`.
+None of them was run automatically.
 
 ## Registry updates required
 

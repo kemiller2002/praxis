@@ -1,0 +1,613 @@
+{
+  "schema": "ex-ros-2026-a024.sessions/1",
+  "experimentId": "EX-ROS-2026-A024",
+  "orchestrator": "session_017jqvmNzwivr7inMUUL6ku4",
+  "frozenManifestCommit": "91745d917e8d6722c027d7033a436271d1746504",
+  "sanitizedStartCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+  "launchOrder": [
+    "B",
+    "C",
+    "A"
+  ],
+  "preflight": [
+    {
+      "id": "session_01LF9wTRatrsvBPSCz5tLK7G",
+      "purpose": "executor configuration"
+    },
+    {
+      "id": "session_01K2uq5tGob5heiRq38Eti7j",
+      "purpose": "telemetry push (denied by auto-mode classifier)"
+    },
+    {
+      "id": "session_01Y6TTvXHcEs8e7eWAR88TsL",
+      "purpose": "telemetry print/decode"
+    },
+    {
+      "id": "session_01MVRn1vTzapPSsrmoQ6jYfH",
+      "purpose": "checkout probe, branch name, no outcome branch: c85eb3e (correct)"
+    },
+    {
+      "id": "session_01Job2qpbHJC8PMCFjZNi2LJ",
+      "purpose": "checkout probe, commit SHA"
+    },
+    {
+      "id": "session_01UeptLDvZNaGPEg4Sv2UA9d",
+      "purpose": "launch probe P1"
+    },
+    {
+      "id": "session_01KpbkrwK5i3kdRkqaGmvmfA",
+      "purpose": "launch probe P2: outcome branch pinned to first-seen head (stale)"
+    },
+    {
+      "id": "session_017qpfbwcQU4QoACkwxmyyRp",
+      "purpose": "launch probe P3: no outcome branch -> correct head; push works"
+    }
+  ],
+  "sessions": [
+    {
+      "label": "arm-2-01",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01GcAFbQum7GhurR6v9EtK2H",
+      "createdAt": "2026-10-07T17:04:10.283938Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-2-01.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a",
+      "terminalAt": "2026-10-07T17:22:20.563543Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.466602,
+        "input_tokens": 112,
+        "output_tokens": 38010,
+        "cache_read_tokens": 7604690,
+        "cache_write_tokens": 148127,
+        "context_used_tokens": 191830,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "telemetry verified (sha256 9b1ee5fd...); headAtCapture bd8acd3; isolation audit 0 events"
+    },
+    {
+      "label": "arm-3-01",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-01"
+      ],
+      "session": "session_01MSYbrVDPUQtWNoua5dxT2S",
+      "createdAt": "2026-10-07T17:04:29.381472Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-3-01.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870",
+      "terminalAt": "2026-10-07T17:18:36.985104Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.7075558,
+        "input_tokens": 110,
+        "output_tokens": 46391,
+        "cache_read_tokens": 7754679,
+        "cache_write_tokens": 153545,
+        "context_used_tokens": 197248,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "telemetry verified (sha256 6143e578...); headAtCapture 331c876; handoff PRAXIS-GROUP-01.json schema-valid (sha256 26fb9368...); isolation audit 0 events"
+    },
+    {
+      "label": "arm-1",
+      "arm": "A",
+      "condition": "continuous",
+      "items": [
+        "PRAXIS-GROUP-01",
+        "PRAXIS-GROUP-02",
+        "PRAXIS-GROUP-03",
+        "PRAXIS-GROUP-04",
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_012GwtUuexDiqGUuwVsGa4CF",
+      "createdAt": "2026-10-07T17:04:41.923598Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-1",
+      "startCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+      "prompt": "prompts/arm-1.txt",
+      "promptSubstitution": {
+        "START_SHA": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "9a6c64fc0bcb19c9fcd7004b743f45391343a1e4",
+      "terminalAt": "2026-10-07T17:55:54.057717Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 8.2724554,
+        "input_tokens": 192,
+        "output_tokens": 102006,
+        "cache_read_tokens": 19876197,
+        "cache_write_tokens": 282041,
+        "context_used_tokens": 310164,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "telemetry verified (sha256 5b706d07...); headAtCapture 28d70c4; isolation audit 0 events; arm A terminal"
+    },
+    {
+      "label": "arm-3-02",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01L3387JwywHTVoiRoDNM7Yq",
+      "createdAt": "2026-10-07T17:19:53.167252Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870",
+      "prompt": "prompts/arm-3-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
+      },
+      "attempt": 1,
+      "status": "failed-orchestration",
+      "headAfter": "null",
+      "terminalAt": "2026-10-07T17:20:11.202147Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.3921458,
+        "input_tokens": 6,
+        "output_tokens": 861,
+        "cache_read_tokens": 147149,
+        "cache_write_tokens": 43184,
+        "context_used_tokens": 71307,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292"
+      },
+      "note": "stale checkout: the platform checked out ddda837 (the branch's initial head) instead of the recorded head c85eb3e; the frozen start check stopped the session before any repository change (post_turn_summary: HEAD is ddda8379, not c85eb3e). Orchestration-only failure; eligible for one retry under a new label."
+    },
+    {
+      "label": "arm-2-02",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01ERXqXbLeUNsj9e7wLTr1iM",
+      "createdAt": "2026-10-07T17:23:39.331557Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a",
+      "prompt": "prompts/arm-2-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a"
+      },
+      "attempt": 1,
+      "status": "failed-orchestration",
+      "headAfter": "null",
+      "terminalAt": "2026-10-07T17:23:56.747647Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.3880676,
+        "input_tokens": 6,
+        "output_tokens": 842,
+        "cache_read_tokens": 147058,
+        "cache_write_tokens": 42724,
+        "context_used_tokens": 70847,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292"
+      },
+      "note": "stale checkout: the platform checked out ddda837 instead of the recorded head 3e535f3; the frozen start check stopped the session before any repository change. Orchestration-only failure; eligible for one retry under a new label."
+    },
+    {
+      "label": "arm-3-02r",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_013vdcLRvYsQEftregZxjGvF",
+      "createdAt": "2026-10-07T18:07:30.099838Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870",
+      "prompt": "prompts/arm-3-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
+      },
+      "attempt": 2,
+      "status": "failed-orchestration",
+      "events": [
+        {
+          "at": "2026-10-07T18:07:48Z",
+          "event": "stale checkout at ddda837; frozen start check stopped the session before any change"
+        },
+        {
+          "at": "2026-10-07T18:10:30Z",
+          "event": "orchestrator resync note sent (deviations.txt D2)"
+        },
+        {
+          "at": "2026-10-07T18:11:12Z",
+          "event": "declined resync note (cross-session message does not override the frozen stop instruction)"
+        }
+      ],
+      "headAfter": "null",
+      "terminalAt": "2026-10-07T18:11:12.138471Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 0.42041,
+        "input_tokens": 520,
+        "output_tokens": 2256,
+        "cache_read_tokens": 446050,
+        "cache_write_tokens": 35500,
+        "context_used_tokens": 74291,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292"
+      },
+      "note": "stale checkout at ddda837 again (outcome_branch pinning, D3); stopped at the frozen start check; declined the D2 resync note as a cross-session message; changed nothing. Retry for the arm-C item-02 slot is exhausted."
+    },
+    {
+      "label": "arm-2-02r",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01K6sr5PX2ffRa4bP7fzgUNm",
+      "createdAt": "2026-10-07T18:07:31.818613Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a",
+      "prompt": "prompts/arm-2-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "3e535f3a16e0b538806e1c63cbdb9122bd5b1a6a"
+      },
+      "attempt": 2,
+      "status": "completed",
+      "events": [
+        {
+          "at": "2026-10-07T18:07:48Z",
+          "event": "stale checkout at ddda837; frozen start check stopped the session before any change"
+        },
+        {
+          "at": "2026-10-07T18:10:30Z",
+          "event": "orchestrator resync note sent (deviations.txt D2)"
+        },
+        {
+          "at": "2026-10-07T18:11:00Z",
+          "event": "accepted resync note; fetched own branch, reset to 3e535f3, started the task"
+        }
+      ],
+      "headAfter": "386297b7bc30253f01d88ae8a3dbc203793d62e0",
+      "terminalAt": "2026-10-07T18:45:49.130373Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.9616556,
+        "input_tokens": 614,
+        "output_tokens": 29080,
+        "cache_read_tokens": 6628598,
+        "cache_write_tokens": 131485,
+        "context_used_tokens": 170276,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.292",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "completed after the D2 resync note; telemetry verified (sha256 abd08b3f...); headAtCapture 659b433; isolation audit 0 events. Usage includes the pre-resync stale-start turn."
+    },
+    {
+      "label": "arm-3-02r2",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-02"
+      ],
+      "session": "session_01Aw2fUVg9dnqrQLciSmUaD8",
+      "createdAt": "2026-10-07T20:49:21.857973Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870",
+      "prompt": "prompts/arm-3-02.txt",
+      "promptSubstitution": {
+        "START_SHA": "c85eb3e6e7f96d376613a18e9bdf8256bd92b870"
+      },
+      "attempt": 3,
+      "status": "completed",
+      "launcher": "no outcome_branch (amendment A1, D5)",
+      "note": "corrected launcher; handoff PRAXIS-GROUP-02 valid (sha256 c53190f9...), only latest handoff present; read PRAXIS-GROUP-01 handoff only",
+      "headAfter": "58a4b1d1d13b24d4875df6611b6d7d2bc7c84b2b",
+      "terminalAt": "2026-10-07T21:02:19.107241Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.9141808,
+        "input_tokens": 90,
+        "output_tokens": 31676,
+        "cache_read_tokens": 5683504,
+        "cache_write_tokens": 142950,
+        "context_used_tokens": 171135,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      }
+    },
+    {
+      "label": "arm-2-03",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-03"
+      ],
+      "session": "session_01DHSD58W29upiQhuywL6QVT",
+      "createdAt": "2026-10-07T20:49:22.988558Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "386297b7bc30253f01d88ae8a3dbc203793d62e0",
+      "prompt": "prompts/arm-2-03.txt",
+      "promptSubstitution": {
+        "START_SHA": "386297b7bc30253f01d88ae8a3dbc203793d62e0"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "launcher": "no outcome_branch (amendment A1, D5)",
+      "headAfter": "5d33bb52a638a29244f697c985142cb2f1f06f50",
+      "terminalAt": "2026-10-07T21:01:26.384194Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.289647,
+        "input_tokens": 80,
+        "output_tokens": 25768,
+        "cache_read_tokens": 4503035,
+        "cache_write_tokens": 109170,
+        "context_used_tokens": 147680,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "corrected launcher; start check passed"
+    },
+    {
+      "label": "arm-2-04",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_0185s7SMdqWBCXszWPsiaieV",
+      "createdAt": "2026-10-07T21:02:02.393457Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "5d33bb52a638a29244f697c985142cb2f1f06f50",
+      "prompt": "prompts/arm-2-04.txt",
+      "promptSubstitution": {
+        "START_SHA": "5d33bb52a638a29244f697c985142cb2f1f06f50"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "52340e40fc5f6f42bc43fe47207bc1077648eafe",
+      "terminalAt": "2026-10-07T21:39:26.707351Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.652276,
+        "input_tokens": 608,
+        "output_tokens": 24879,
+        "cache_read_tokens": 6268600,
+        "cache_write_tokens": 112318,
+        "context_used_tokens": 149971,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "audit 2 events: FETCH_HEAD of own-branch fetch (allowed; false positive)"
+    },
+    {
+      "label": "arm-3-03",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-03"
+      ],
+      "session": "session_014Lnr4h6bWJwYPKWkdSa2yT",
+      "createdAt": "2026-10-07T21:03:06.638619Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "58a4b1d1d13b24d4875df6611b6d7d2bc7c84b2b",
+      "prompt": "prompts/arm-3-03.txt",
+      "promptSubstitution": {
+        "START_SHA": "58a4b1d1d13b24d4875df6611b6d7d2bc7c84b2b"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "0d00a8614b90046af2f8412cc440bc872e3ec7fa",
+      "terminalAt": "2026-10-07T21:19:50.358243Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.346616,
+        "input_tokens": 102,
+        "output_tokens": 44332,
+        "cache_read_tokens": 6744120,
+        "cache_write_tokens": 138843,
+        "context_used_tokens": 177353,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "handoff PRAXIS-GROUP-03 valid (sha256 37d149c1...); read PRAXIS-GROUP-02 handoff only; audit 0"
+    },
+    {
+      "label": "arm-3-04",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-04"
+      ],
+      "session": "session_01M2vjRWoZiRq8t9yEUTNa5n",
+      "createdAt": "2026-10-07T21:20:25.425709Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "0d00a8614b90046af2f8412cc440bc872e3ec7fa",
+      "prompt": "prompts/arm-3-04.txt",
+      "promptSubstitution": {
+        "START_SHA": "0d00a8614b90046af2f8412cc440bc872e3ec7fa"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071",
+      "terminalAt": "2026-10-07T21:32:42.774098Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 2.2679928,
+        "input_tokens": 72,
+        "output_tokens": 26611,
+        "cache_read_tokens": 4112024,
+        "cache_write_tokens": 114135,
+        "context_used_tokens": 152645,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "handoff PRAXIS-GROUP-04 valid (sha256 9c36cef0...); audit 1 event: git branch -a (ref-name exposure, deviation D7, not invalidating)"
+    },
+    {
+      "label": "arm-3-05",
+      "arm": "C",
+      "condition": "handoff",
+      "items": [
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01XCigN8PQHsBEB3TfC2Ycaa",
+      "createdAt": "2026-10-07T21:33:42.305294Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-3",
+      "startCommit": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071",
+      "prompt": "prompts/arm-3-05.txt",
+      "promptSubstitution": {
+        "START_SHA": "53bb1d19f721b14b70f6fdc3084ab8b3220a5071"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "de9f39e81b26aae03da84e90d726df04367e61b5",
+      "terminalAt": "2026-10-07T21:55:32.114999Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 5.1942826,
+        "input_tokens": 142,
+        "output_tokens": 55243,
+        "cache_read_tokens": 12379433,
+        "cache_write_tokens": 201621,
+        "context_used_tokens": 245386,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "handoff PRAXIS-GROUP-05 valid (sha256 95296a9f...); audit 0; arm C terminal"
+    },
+    {
+      "label": "arm-2-05",
+      "arm": "B",
+      "condition": "code-only",
+      "items": [
+        "PRAXIS-GROUP-05"
+      ],
+      "session": "session_01Nm8DFRodU9NmSGzudo9Byo",
+      "createdAt": "2026-10-07T21:40:25.744713Z",
+      "configuredModel": "claude-opus-5-5",
+      "branch": "experiment/a024-arm-2",
+      "startCommit": "52340e40fc5f6f42bc43fe47207bc1077648eafe",
+      "prompt": "prompts/arm-2-05.txt",
+      "promptSubstitution": {
+        "START_SHA": "52340e40fc5f6f42bc43fe47207bc1077648eafe"
+      },
+      "attempt": 1,
+      "status": "completed",
+      "headAfter": "680500702291af09ae99ec689494117fd8a5b7ba",
+      "terminalAt": "2026-10-07T22:03:13.518833Z",
+      "platformUsage": {
+        "source": "get_session external_metadata.usage",
+        "cost_usd": 3.9303082,
+        "input_tokens": 108,
+        "output_tokens": 46060,
+        "cache_read_tokens": 8219741,
+        "cache_write_tokens": 170591,
+        "context_used_tokens": 209101,
+        "last_served_model": "claude-opus-5-5",
+        "container_cc_version": "2.1.293",
+        "session_context_model": "claude-opus-5-5"
+      },
+      "note": "audit 1 event: FETCH_HEAD of own-branch fetch (allowed; false positive); arm B terminal"
+    }
+  ],
+  "status": "completed: all arms terminal, blinded scoring and evaluation committed, unblinded, frozen analysis applied",
+  "scorers": [
+    {
+      "label": "scorer-K",
+      "snapshot": "snapshot-K",
+      "session": "session_01DPVmNPxNv9Mm4Yv5SZ8P7f",
+      "branch": "experiment/a024-blind-score-snapshot-K",
+      "packageCommit": "533e6f0b7f0fb3b6d2a1450b1e23a53e9af8ca1f",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-K",
+        "LABEL": "snapshot-K"
+      },
+      "status": "completed",
+      "resultCommit": "e7d9036f22367f3760615e8627c4282002942038"
+    },
+    {
+      "label": "scorer-P",
+      "snapshot": "snapshot-P",
+      "session": "session_01Vc7aHUqzVTRCrpVvKxdVr9",
+      "branch": "experiment/a024-blind-score-snapshot-P",
+      "packageCommit": "68dc99b670c28fff2778eabe5b231498b6c1892a",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-P",
+        "LABEL": "snapshot-P"
+      },
+      "status": "completed",
+      "resultCommit": "4255fe279d96ed274647d2f3e2fac8099320ca9d"
+    },
+    {
+      "label": "scorer-W",
+      "snapshot": "snapshot-W",
+      "session": "session_01EYACPKcUBqDFcPt4F7swHM",
+      "branch": "experiment/a024-blind-score-snapshot-W",
+      "packageCommit": "f894ece655d18f772c9cb8435e3b9bbe8e539763",
+      "prompt": "prompts/acceptance-scorer.txt",
+      "substitutions": {
+        "SCORE_BRANCH": "experiment/a024-blind-score-snapshot-W",
+        "LABEL": "snapshot-W"
+      },
+      "status": "completed",
+      "resultCommit": "e16fc1be5e31d6aa67ca7b8554959273c4d2cabc"
+    }
+  ],
+  "evaluator": {
+    "session": "session_011eiwEeybGsSrBnpQGEKaKM",
+    "branch": "experiment/a024-blind-eval",
+    "packageCommit": "8936074aced7c8718e2b2d867972050cd4600f12",
+    "prompt": "prompts/evaluator.txt",
+    "substitutions": {
+      "EVAL_BRANCH": "experiment/a024-blind-eval",
+      "LABELS": "snapshot-K/, snapshot-P/, snapshot-W/"
+    },
+    "createdAt": "2026-10-07T22:25:43.601108Z",
+    "status": "completed",
+    "resultCommit": "1414a8845b4a933820b14ee303b68e7fecf45daf"
+  }
+}

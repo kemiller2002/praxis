@@ -1,0 +1,53 @@
+# EX-ROS-2026-A024 acceptance: snapshot-W
+
+Built: `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400` (0 warnings, 0 errors). Driven via `./ros` in a scratch git repo copy of `snapshot-W/tree` with a local bare `origin`.
+
+**Result: 36 pass / 0 fail / 0 indeterminate of 36 criteria.**
+
+| ID | Status | Evidence (abridged; full in snapshot-W.json) |
+|---|---|---|
+| 01.1 | pass | Fixture: scratch git repo (copy of snapshot-W/tree, built with npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400, 0 warnings/0 errors) with a local bare 'origin'. T=2026-10-07T00:00:00Z. `./ros work group create --id GROUP-PRX-TEST-001 --mem… |
+| 01.2 | pass | `./ros work group create --id GROUP-PRX-TEST-002 --member NOPE-999 --occurred-at $T` -> 'ERROR NOPE-999 is not a work item in this repository's backlog or live context / group GROUP-PRX-TEST-002 was not recorded' [exit 1]; state hash of queue/context/groups/ev… |
+| 01.3 | pass | `work group create --id GROUP-PRX-TEST-003 --member GH-90 --json` -> kind group-rejected, 'GH-90 is abandoned; a terminal item cannot join a new group' [exit 1]; `--member TASK-20260816-PROMPTS` -> 'TASK-20260816-PROMPTS is complete; a terminal item cannot joi… |
+| 01.4 | pass | `work group create --id GROUP-PRX-TEST-001 --member PRAXIS-GROUP-03` (ID already stored) -> 'ERROR group GROUP-PRX-TEST-001 is already declared; group IDs are stable and never reused' [exit 1]; state hash unchanged. |
+| 01.5 | pass | After successful create, `git status --short` shows only '?? .ros/work/groups.json' (queue.json, context/current.json, events unchanged); members still reported 'ready'. Domain create only returns a new GroupStore (snapshot-W/tree/src/Ros.Domain/Planning/Group… |
+| 01.6 | pass | With GROUP-PRX-TEST-001 stored: `./ros plan groups --plan /dev/null --as-of $T --json` saved; then groups.json moved away and the identical entry supplied as grouping.groups via `--config cfg.json`: the two JSON outputs are equal in every top-level key (python… |
+| 01.7 | pass | `work group create ... --dry-run --json` -> exit 0, kind group-created, dryRun:true, recorded:false; afterwards .ros/work/groups.json does not exist (STATE hash 51a9fe7cb7550c76 unchanged). |
+| 01.8 | pass | `--json` emits machine-readable objects: success {schema praxis.work-groups/1.0.0, kind group-created, dryRun, recorded, group{...}, members[{id,state}]}; refusal {kind group-rejected, recorded:false, errors[...]} with exit 1. |
+| 01.9 | pass | Edited stored group to add member GHOST-1 and crossRepository:true without executionRepository; `./ros validate` -> 'ERROR .ros/work/groups.json:groups[GROUP-PRX-TEST-001].members: GHOST-1 is not a work item...' and '...executionRepository: a cross-repository … |
+| 02.1 | pass | `./ros work group show GROUP-PRX-TEST-001` -> 'Members (recorded state / planning state / status):' then '  PRAXIS-GROUP-01  blocked / blocked / blocked; gates PRAXIS-GROUP-02' / '  PRAXIS-GROUP-02  ready / ready / runnable; gated by PRAXIS-GROUP-01'; JSON mem… |
+| 02.2 | pass | Text: 'Progress: 0 of 2 complete; blocked: PRAXIS-GROUP-01; each member completes on its own evidence (PRX-GRP-042)'; JSON progress{total,complete,abandoned,inProgress,runnable,blocked,notRunnable,unknown,statement}. |
+| 02.3 | pass | After `work start` + `work block --id PRAXIS-GROUP-01`, show prints 'Blocked members:\n  PRAXIS-GROUP-01 gates PRAXIS-GROUP-02'; JSON blocked: [{"id":"PRAXIS-GROUP-01","gates":["PRAXIS-GROUP-02"]}]. |
+| 02.4 | pass | Text: 'Execution repository: repository-operating-system (declared); cross-repository: no'; JSON group.executionRepository and plannerExecutionRepository = repository-operating-system. |
+| 02.5 | pass | Text: 'Architecture note: note one' (and 'Shared context: shared ctx A'); JSON group.architectureNotes ['note one']. |
+| 02.6 | pass | `./ros work group show GROUP-PRX-TEST-001` -> human-readable view, exit 0 (output quoted in 02.1-02.5). |
+| 02.7 | pass | `./ros work group show GROUP-PRX-TEST-001 --json` -> exit 0, valid JSON, keys schema, kind 'group-shown', group, plannerExecutionRepository, members, progress, blocked, notes, plannedAt, commit, branch, statement. |
+| 02.8 | pass | `./ros work group show GROUP-PRX-NOPE-001` -> 'ERROR no declared group GROUP-PRX-NOPE-001; see 'plan groups' or .ros/work/groups.json' [exit 1]; with --json -> {kind group-not-found, errors[...]} [exit 1]. |
+| 02.9 | pass | sha256 of every file under .ros taken before and after `work group show GROUP-PRX-NOPE-001`, `... --json`, and `work group show GROUP-PRX-TEST-001 --json`: `diff` -> '.ros byte-identical'; `git status --porcelain` unchanged ('?? .ros/work/groups.json' only, pr… |
+| 03.1 | pass | `work group add --id GROUP-PRX-TEST-001 --member PRAXIS-GROUP-03 --occurred-at 2026-10-07T01:00:00Z --actor-kind human --actor bob` -> 'added PRAXIS-GROUP-03 to group GROUP-PRX-TEST-001 (ready; executes in repository-operating-system)' 'members (3): PRAXIS-GRO… |
+| 03.2 | pass | `work group add --id GROUP-PRX-TEST-001 --member NOPE-999` -> 'ERROR NOPE-999 is not a work item in this repository's backlog or live context' [exit 1]; state hash unchanged (a9800d0e9e680f44). |
+| 03.3 | pass | `work group add --id GROUP-PRX-TEST-001 --member GH-90` -> 'ERROR GH-90 is abandoned; a terminal item cannot join a new group' [exit 1]; state hash unchanged. |
+| 03.4 | pass | `work group add --id GROUP-PRX-TEST-001 --member PRAXIS-GROUP-02` -> 'ERROR PRAXIS-GROUP-02 is already a member of GROUP-PRX-TEST-001' [exit 1]; state hash unchanged. |
+| 03.5 | pass | With cfg2.json {grouping.executionRepositories: {PRAXIS-REMOTE-12: conditor}}: `work group add --id GROUP-PRX-TEST-001 --member PRAXIS-REMOTE-12 --config cfg2.json` -> 'ERROR PRAXIS-REMOTE-12 executes in conditor but the group executes in repository-operating-… |
+| 03.6 | pass | Cross-repository group GROUP-PRX-XREPO-001 (execution repo conditor, member PRAXIS-GROUP-04 in repository-operating-system): `work group add --id GROUP-PRX-XREPO-001 --member PRAXIS-REMOTE-12 --config cfg2.json` -> 'added PRAXIS-REMOTE-12 ... (ready; executes … |
+| 03.7 | pass | Stored membership after add: [{member: PRAXIS-GROUP-03, operation: added, occurredAt: 2026-10-07T01:00:00Z, actor: {kind: human, id: bob}}]; text 'added at 2026-10-07T01:00:00Z by bob'. |
+| 03.8 | pass | After add, `git status --short` shows only '?? .ros/work/groups.json'; queue.json/context/events unchanged; member reported still 'ready'. |
+| 04.1 | pass | `work group remove --id GROUP-PRX-TEST-001 --member PRAXIS-GROUP-03 --occurred-at 2026-10-07T02:00:00Z --actor-kind human --actor dave` -> 'removed PRAXIS-GROUP-03 from group GROUP-PRX-TEST-001 (the item stays ready)' 'members (2): PRAXIS-GROUP-01, PRAXIS-GROU… |
+| 04.2 | pass | `work group remove --id GROUP-PRX-TEST-001 --member PRAXIS-GROUP-05` -> 'ERROR PRAXIS-GROUP-05 is not a member of GROUP-PRX-TEST-001' [exit 1]; state hash unchanged (31ba47fd30eb3e90). |
+| 04.3 | pass | PRAXIS-GROUP-01 was started, blocked, resumed and given its own durable `work checkpoint` (execution EXE-20261007T221019332Z-eaf3ab19). sha256 of .ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl taken; `work group remove --id GROUP-PRX… |
+| 04.4 | pass | Single-member group GROUP-PRX-SOLO-001: `work group remove --id GROUP-PRX-SOLO-001 --member PRAXIS-GROUP-05` -> 'ERROR PRAXIS-GROUP-05 is the last member of GROUP-PRX-SOLO-001; a declared group keeps at least one member, so the last member cannot be removed' [… |
+| 04.5 | pass | Stored membership after removal appends {member: PRAXIS-GROUP-03, operation: removed, occurredAt: 2026-10-07T02:00:00Z, actor: {kind: human, id: dave}} after the 'added' entry; text 'removed at 2026-10-07T02:00:00Z by dave'. |
+| 05.1 | pass | `work group checkpoint --id GROUP-PRX-TEST-001 --occurred-at 2026-10-07T04:00:00Z --summary 'grp cp' --next-action 'finish 02' --decision 'one store model' --actor-kind human --actor frank --json` -> kind group-checkpointed, recorded:true, checkpoint{summary, … |
+| 05.2 | pass | Uncommitted src/dirty.txt -> 'ERROR [uncommitted-changes] meaningful uncommitted changes exist and would be hidden by the checkpoint: src/dirty.txt ... group checkpoint rejected; nothing was recorded' [exit 1]; local unpushed commit -> JSON group-checkpoint-re… |
+| 05.3 | pass | Recorded group checkpoint member entry PRAXIS-GROUP-01 carries checkpoint {checkpointId c664cd0d18d05ee8a64be1a9, executionId EXE-20261007T221019332Z-eaf3ab19, commit d448579a..., recordedAt 2026-10-07T03:30:00Z} - the member's own checkpoint as shown by `work… |
+| 05.4 | pass | After the group checkpoint, `cmp .ros/events/events.jsonl <copy taken before>` -> 'events.jsonl unchanged'; `git diff --stat` -> only .ros/work/groups.json changed; `work checkpoint show PRAXIS-GROUP-01 --offline` still shows checkpoint c664cd0d18d05ee8a64be1a… |
+| 05.5 | pass | Group checkpoint record has no paths/attribution fields: GroupCheckpoint type (snapshot-W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:99-106) holds RecordedAt, Actor, Summary, NextAction, Decisions, Location, Members (each only id/state/partition/checkpoi… |
+
+## Confirmed defects
+
+- A work item whose backlog (queue.json) status is 'complete' but which has no live-context entry is treated as an open member: work group create (and add) accept it although it is terminal, and the output even labels it 'complete'. GroupDeclaration.memberStates maps only queue status 'abandoned' to Terminal (snapshot-W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:196). Not reachable with the shipped state (every backlog-complete item also has a live entry), so criterion 01.3 is still scored pass on the observed paths.
+  - Reproduction: In the fixture set PRAXIS-GROUP-05 status to 'complete' in .ros/work/queue.json (it has no .ros/context entry); `./ros work validate` -> valid:true; `./ros work group create --id GROUP-PRX-DEF-001 --member PRAXIS-GROUP-05 --occurred-at 2026-10-07T07:00:00Z --dry-run` -> 'dry run: would record group GROUP-PRX-DEF-001 ... PRAXIS-GROUP-05  complete' [exit 0] instead of a terminal-member refusal.
+
+## Blinding
+
+Scored using only this checkout (inputs/ and snapshot-W/) plus a scratch copy of snapshot-W/tree built and exercised in the session scratchpad. No other branch, tag or ref was fetched, listed, read or diffed, and no GitHub search/API or web page was used. Nothing observed (commits.txt, diff.patch, tree) indicated which experimental condition produced this snapshot; I have not inferred it. The 'agent anthropic/claude-code' actor seen in one JSON output is the scorer's own runtime identity recorded during testing, not snapshot provenance.

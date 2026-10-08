@@ -1,0 +1,9 @@
+{
+  "schema": "ex-ros-2026-a024.blinding-commitment/1",
+  "committedAt": "2026-10-07T22:02:00Z",
+  "seed": 2026100724,
+  "procedure": "research/experiments/EX-ROS-2026-A024-harness/prepare_blind.py (permutation seeded with \"SEED:NONCE\"; commitment = sha256 of canonical JSON {experiment, mapping, nonce})",
+  "commitment": "508a8f94332d9cf9f6c57508b7d88d79226c4661e385b0e439740c7187f18d0d",
+  "nonce": "withheld until the blind evaluation commit is durable",
+  "labels": ["snapshot-K", "snapshot-P", "snapshot-W"]
+}

@@ -7,7 +7,7 @@ confidence: very-low
 created: 2026-10-07
 author_agent: openai/chatgpt
 supporting_evidence: []
-contradicting_evidence: []
+contradicting_evidence: [EV-ROS-2026-A075]
 related_theories: []
 related_documents:
   - HY-ROS-2026-A028
@@ -31,6 +31,18 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Added by a direct push to main (cd97bdde..94258e4f, 2026-10-07) with no Praxis execution; its creation was never recorded (DF-ROS-2026-A055)"
+    EXE-20261007T162653169Z-f15a70b7:
+      operations: [modified]
+      at: 2026-10-07T18:47:26.586Z
+      last: 2026-10-07T22:37:00.463Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Recorded the first test, EX-ROS-2026-A024: blocked, then completed; not supported (EV-ROS-2026-A075)"
+      evidence: [EV-ROS-2026-A074, EV-ROS-2026-A075]
 ---
 
 # Hypothesis
@@ -113,11 +125,18 @@ hypothesis rather than supportive.
 
 ## Tests performed
 
-None yet. EX-ROS-2026-A024 is preregistered as the first test.
+EX-ROS-2026-A024 (2026-10-07), executed to valid terminal results after
+owner amendment A1 (EV-ROS-2026-A074 records the launcher blocker).
 
 ## Results
 
-No result yet.
+Not supported (EV-ROS-2026-A075).
+
+- Discovery, the only applicable mechanism measure: A 112, B 263, C 276.
+  Recovery is -13/151.
+- Architecture: A 5, B 10, C 8. There is no continuous-context advantage to
+  recover.
+- Acceptance is 36/36 in every arm.
 
 ## Falsification attempts
 
@@ -127,8 +146,14 @@ state.
 
 ## Current assessment
 
-Active, very low confidence. A021 and its R2 replication motivate the mechanism
-question but did not test structured handoff.
+Active, very low confidence. The first test, EX-ROS-2026-A024, contradicts
+the hypothesis on its applicable measure: the structured handoff did not
+reduce discovery relative to code-only resets. The architectural part could
+not be tested, because continuous context showed no advantage to recover.
+
+One replayed cohort with one execution per arm is weak evidence. A negative
+result should prompt a check of whether the handoff schema omitted durable
+context (preregistered replication note) before the idea is abandoned.
 
 ## Next experiment
 

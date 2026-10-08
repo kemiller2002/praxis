@@ -1,0 +1,196 @@
+{
+  "schema": "ex-ros-2026-a024.manifest/1",
+  "experimentId": "EX-ROS-2026-A024",
+  "protocol": "research/experiments/EX-ROS-2026-A024--context-continuity-and-externalized-handoff.md",
+  "baselineCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+  "sanitizedStartCommit": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+  "sanitizedStartTree": "f080df49f4106916c4135a6dcb4cdc39c3d484f8",
+  "startProcedure": "research/experiments/EX-ROS-2026-A024-harness/build_start.sh (fixed identity and dates; reproducible) verified by research/experiments/EX-ROS-2026-A024-harness/verify_start.sh",
+  "cohort": [
+    "PRAXIS-GROUP-01",
+    "PRAXIS-GROUP-02",
+    "PRAXIS-GROUP-03",
+    "PRAXIS-GROUP-04",
+    "PRAXIS-GROUP-05"
+  ],
+  "order": "fixed 01..05 within every arm",
+  "workItems": [
+    {
+      "id": "PRAXIS-GROUP-01",
+      "sha256": "86989aa707c4d4a2810a6c2b76152032e0a52ef1924cc5a641072349f4b7bb3b"
+    },
+    {
+      "id": "PRAXIS-GROUP-02",
+      "sha256": "612a66d59c0528b4d3e00a7de41d744645a5cf3fd5bd57468c3b36184e7f00ac"
+    },
+    {
+      "id": "PRAXIS-GROUP-03",
+      "sha256": "ba6bd1ed8ee50a65efd07d286edef55098b1d746e85502ee8b83a13f370c842f"
+    },
+    {
+      "id": "PRAXIS-GROUP-04",
+      "sha256": "7498a42bc7b41cb487f303a6fd7f16742435a519a881f9e2209a08274702d53a"
+    },
+    {
+      "id": "PRAXIS-GROUP-05",
+      "sha256": "5c64dd88ec197440da60269e99f2fb26b497bd1c440092cb7a7c45e4ff6365c8"
+    }
+  ],
+  "workItemHashAlgorithm": "sha256 of canonical JSON {id,title,description} (sorted keys, no whitespace, UTF-8)",
+  "arms": {
+    "A": {
+      "condition": "continuous",
+      "branch": "experiment/a024-arm-1",
+      "sessions": [
+        "arm-1"
+      ],
+      "prompt": "prompts/arm-1.txt"
+    },
+    "B": {
+      "condition": "code-only",
+      "branch": "experiment/a024-arm-2",
+      "sessions": [
+        "arm-2-01",
+        "arm-2-02",
+        "arm-2-03",
+        "arm-2-04",
+        "arm-2-05"
+      ],
+      "prompts": [
+        "prompts/arm-2-01.txt",
+        "prompts/arm-2-02.txt",
+        "prompts/arm-2-03.txt",
+        "prompts/arm-2-04.txt",
+        "prompts/arm-2-05.txt"
+      ]
+    },
+    "C": {
+      "condition": "handoff",
+      "branch": "experiment/a024-arm-3",
+      "sessions": [
+        "arm-3-01",
+        "arm-3-02",
+        "arm-3-03",
+        "arm-3-04",
+        "arm-3-05"
+      ],
+      "prompts": [
+        "prompts/arm-3-01.txt",
+        "prompts/arm-3-02.txt",
+        "prompts/arm-3-03.txt",
+        "prompts/arm-3-04.txt",
+        "prompts/arm-3-05.txt"
+      ]
+    }
+  },
+  "branchNaming": "neutral arm-1/2/3 names instead of the orchestration prompt's suggested condition names, so branch names do not announce the treatment to arm agents",
+  "executor": {
+    "provider": "anthropic",
+    "runtime": "Claude Code on the web (claude-code-remote sessions)",
+    "runtimeVersion": "2.1.292 (container_cc_version and transcript 'version'; observed in orchestrator and preflight probe session_01LF9wTRatrsvBPSCz5tLK7G)",
+    "model": "claude-opus-5-5",
+    "modelSelection": "create_session model=claude-opus-5-5 for every session",
+    "environmentId": "env_016QeyeEJj49imTiwTeC9Tgd",
+    "environmentKind": "anthropic_cloud",
+    "permissionMode": "auto (inherited from the orchestrator; create_session permission_mode omitted)",
+    "reasoningEffort": "medium: the platform default for create_session children (not settable through create_session, not reported by get_session for children), observed as transcript 'effort' = medium on every request of preflight session_01Y6TTvXHcEs8e7eWAR88TsL and bound per request through the telemetry 'effort' field",
+    "appendSystemPrompt": null,
+    "extraAllowedTools": null,
+    "subagents": "available to every session identically (Agent tool); subagent transcripts are included in telemetry",
+    "bindingRules": [
+      "every main-transcript model request of every implementation session reports model claude-opus-5-5; any other model on a main-transcript request invalidates that session",
+      "the transcript 'effort' value is medium on every main-transcript request of every implementation session; a different value invalidates the affected session's arm unless it is corrected before any implementation begins",
+      "get_session configured_model, session_context.model and external_metadata.last_served_model equal claude-opus-5-5 at session end",
+      "a different Claude Code runtime version between sessions is recorded as a deviation and reported in a sensitivity note; it does not invalidate by itself"
+    ]
+  },
+  "toolchain": {
+    "dotnet": "dotnet-sdk-10.0 from Ubuntu apt (10.0.112 observed when frozen); build property -p:FSharpCoreImplicitPackageVersion=10.1.400",
+    "node": "v22.22.0",
+    "python": "3.13.16",
+    "git": "2.43.0",
+    "kernel": "6.18.44-fc-v77",
+    "baselineBuild": "npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400 (passed at baseline)",
+    "baselineTests": "dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll: 792 passed, 0 failed at baseline"
+  },
+  "hashes": {
+    "handoff.schema.json": "292626cc595242ba2d670bb4da4d6408f9256c5de69fa5f5a16f66a6fb6b5483",
+    "harness-note.txt": "91366bc904167fb089a8a41e95738d912d6ecca0c6e37d57204cf38b49507812",
+    "session_telemetry.py": "8f01b7a5164ccc3b9d5d19d3c9f353c0c048ebfaaf20f819c66ac43a93603542",
+    "validate_handoff.py": "79377ccc8a5a358601229948e04961ba61248e8fcedd82783262295e1f8dac39",
+    "decode_telemetry.py": "0c2c1d916964b2513c0c6c91cbc0dd606611ba312278a261af3dff98ee908032",
+    "acceptance-criteria.json": "dc0bde4941fb040935c462568fdaff096366ca886554edf501f6cf61d63fc6c9",
+    "rubric.md": "38f9a1d717b6dda9d10d8346b87838da8d66ff8a08454aa0a62a320e51362bf9",
+    "analysis.py": "f314a613fd5691f83d1ad1cedc15a086054b64adb34ea095e1942d03d0d1b7f1",
+    "prepare_blind.py": "7de6a14650e2ac5e182372d4edae0067b0dd3ddea256d9685131be662de1a36a",
+    "run_checks.sh": "42d8d8753c8e6dae0d90ef01e2efc320fc82b510dff2cc49521e792c44a114d9",
+    "build_start.sh": "6e639f808bfbe84f6f89290778a968cf014c198b80c1d48e7a0ba7b7dffc27f8",
+    "verify_start.sh": "df015f8949f30f3c1bcdc50f9b119157ab9f681befeee8bdda36fe0141a357f1",
+    "make_prompts.py": "b11d3b8c7d0777d2b0d17ec86bff9cf5203e9649903d8f803d6c4171b90a90e8",
+    "prompts/acceptance-scorer.txt": "32e49edc9b81259041a6cf6bb793ee1b8b0a25be9c8b77f3287b792a356b18d2",
+    "prompts/arm-1.txt": "74ab1092d8d0a6cd809a74e6984e9f4b59de0184a59298be041fe4c966faebb7",
+    "prompts/arm-2-01.txt": "64328b82824523de5ac266f832957c39cf54104ded7d586d0e44cc181da34b59",
+    "prompts/arm-2-02.txt": "559913f97b14da819613f01b20330668fac9a47756c23cf9eac8761f4b95ece4",
+    "prompts/arm-2-03.txt": "3be185273655b0403be244780bd07c23a70dc0fe2ed6048a2a5f4ba8abd1ca17",
+    "prompts/arm-2-04.txt": "14397ed24cd019928d534beeb8c794a7e876878aae75ee0c7d2e6fd962a879d9",
+    "prompts/arm-2-05.txt": "25259f0a7c6a774b7e98e1151a9fe3234a17be08a91d0bfff7a80e2f6c9b9bf2",
+    "prompts/arm-3-01.txt": "ea11f9de1e8bf1f9a62e2df424b22a827b110c8f550fafd01ae535805ac797b1",
+    "prompts/arm-3-02.txt": "2d5ecfa6eccc7b83f1d33d9f2812fa52d2a7a37e48ce0a8d884e0d50f8dae262",
+    "prompts/arm-3-03.txt": "3adfa43abebce3c3490378bbdd6e4a48650ee55c91aa2b008a6ecf74ff37b641",
+    "prompts/arm-3-04.txt": "dd46903877f632007708a216b8039dbb104ab9dc89849480217e66a5aeb134da",
+    "prompts/arm-3-05.txt": "8928d6bee94d076cc7f1a3c968032ac0d826f133a74d4df912cbc54f4a0c2331",
+    "prompts/evaluator.txt": "8f8f3469fb6a5a38cfafef9974de902d91e393ec5b22cf9a4bb4eac166e26731"
+  },
+  "handoffSchemaSha256": "292626cc595242ba2d670bb4da4d6408f9256c5de69fa5f5a16f66a6fb6b5483",
+  "telemetryExtractorSha256": "8f01b7a5164ccc3b9d5d19d3c9f353c0c048ebfaaf20f819c66ac43a93603542",
+  "rubricSha256": "38f9a1d717b6dda9d10d8346b87838da8d66ff8a08454aa0a62a320e51362bf9",
+  "evaluatorPromptSha256": "8f8f3469fb6a5a38cfafef9974de902d91e393ec5b22cf9a4bb4eac166e26731",
+  "acceptanceScorerPromptSha256": "32e49edc9b81259041a6cf6bb793ee1b8b0a25be9c8b77f3287b792a356b18d2",
+  "promptLaunchSubstitution": "{START_SHA} is the only launch-time substitution in an implementation prompt: the recorded branch head the session must start from",
+  "randomizationSeed": 2026100724,
+  "launchOrder": [
+    "B",
+    "C",
+    "A"
+  ],
+  "launchPolicy": "the three arms run concurrently, launched in launchOrder; within an arm items run serially 01..05; a B or C session starts only after the preceding session is terminal and its pushed head is recorded",
+  "blinding": {
+    "labels": [
+      "snapshot-K",
+      "snapshot-P",
+      "snapshot-W"
+    ],
+    "procedure": "research/experiments/EX-ROS-2026-A024-harness/prepare_blind.py (seeded permutation; commitment = sha256 of canonical mapping JSON)"
+  },
+  "measures": {
+    "acceptance": "passed / scorable over the 36 frozen criteria in acceptance-criteria.json, scored by one blinded fresh scorer session per snapshot; indeterminate reported separately",
+    "architecture": "blinded rubric composite 0-10 (rubric.md) from one fresh evaluator session that sees only the three anonymized snapshots",
+    "discoveryPrimary": "file reads + searches summed over all sessions of the arm, main and subagent transcripts (A021 extractor definitions); the protocol's named fallback proxy, chosen because the bash read/search detection is pattern-based and a repeated-operation aggregate built on it would not be reliable enough to be primary",
+    "discoverySecondary": "cross-session repeated reads (paths read in more than one session of an arm, plus within-session repeats) reported descriptively",
+    "resources": "platform cost and tokens from get_session external_metadata.usage read after the session is terminal (whole session, including the tail after telemetry capture), plus telemetry tokens and wall time; arm elapsed time = sum of session wall times (created_at to terminal updated_at); missing is null, never zero",
+    "telemetryTransport": "session_telemetry.py prints gzip+base64 metrics with a SHA-256 just before the session's final checkpoint; the orchestrator copies that tool output from the platform event record (list_events) and verifies it with decode_telemetry.py. Full raw transcripts are not exported from arm sessions: a preflight (session_01K2uq5tGob5heiRq38Eti7j) showed the platform's auto-mode classifier blocks pushing a session transcript as data exfiltration, and committing it to an arm branch would pass context forward. Raw platform records kept per session: get_session record and the terminal result events (cost, modelUsage, permission denials, turns); the full event stream stays in the platform under the recorded session IDs.",
+    "handoffOverhead": "arm C telemetry handoff counters (tool calls touching the handoff directory, first/last timestamps) per session"
+  },
+  "deterministicChecks": "research/experiments/EX-ROS-2026-A024-harness/run_checks.sh at every arm head (build, full F# suite, ./ros validate)",
+  "analysis": "research/experiments/EX-ROS-2026-A024-harness/analysis.py (recovery >= 0.50, correctness margin 0.05, unclipped ratios)",
+  "isolationClassification": [
+    "contamination (invalidates the session's arm): reading content, logs or diffs of main, another arm, an A021/R2 branch or evaluation, another session's telemetry, or a non-immediately-preceding handoff (arm C)",
+    "deviation (recorded, not invalidating): ref-name exposure without content inspection, such as an unscoped fetch, a ref listing, or a pull-request listing, with no subsequent content read of a forbidden ref",
+    "the session_telemetry.py isolationAudit lists candidate events; the orchestrator classifies each against these rules and records the classification"
+  ],
+  "retryPolicy": [
+    "every attempted session gets a unique label and run ID and stays in sessions.json",
+    "no silent retry; an orchestration-only failure (session failed to start, platform error before any repository change, harness defect) may be retried once under a new label with the original preserved",
+    "a model-generated implementation failure is outcome data and is never rerun",
+    "permission prompts, stale checkouts, missing pushes, merge conflicts, tool failures and context exhaustion are measured events"
+  ],
+  "stopConditions": [
+    "the sanitized start cannot be reproduced",
+    "arms do not share an identical start tree",
+    "model/configuration differs across arms and cannot be corrected before any implementation begins",
+    "fresh-session isolation cannot be established",
+    "an arm sees another arm or a post-baseline implementation (classified contamination)",
+    "the handoff schema is changed after arm C starts",
+    "scoring or blinding cannot be frozen before outputs are examined"
+  ]
+}

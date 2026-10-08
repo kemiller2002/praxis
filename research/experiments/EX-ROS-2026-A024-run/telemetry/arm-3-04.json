@@ -1,0 +1,103 @@
+{
+  "branch": "experiment/a024-arm-3",
+  "capturedAt": "2026-10-07T21:32:08.552192+00:00",
+  "headAtCapture": "e29d5b94e64cfc5e58ae0376dbb696708918b274",
+  "label": "arm-3-04",
+  "main": {
+    "builds": 3,
+    "compactions": 0,
+    "distinctFilesEdited": 0,
+    "distinctFilesRead": 11,
+    "endedAt": "2026-10-07T21:32:07.996000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 32
+      },
+      "entrypoint": {
+        "remote": 32
+      },
+      "models": {
+        "claude-opus-5-5": 32
+      },
+      "runtimeVersion": {
+        "2.1.293": 32
+      }
+    },
+    "fileReads": 16,
+    "fileWrites": 8,
+    "governanceReads": {
+      "docs/cli.md": 1,
+      "docs/planning.md": 1
+    },
+    "handoff": {
+      "firstAt": "2026-10-07T21:20:34.915000+00:00",
+      "lastAt": "2026-10-07T21:32:03.129000+00:00",
+      "paths": [
+        "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json"
+      ],
+      "reads": 1,
+      "toolCalls": 4,
+      "writes": 1
+    },
+    "isolationAudit": {
+      "count": 1,
+      "events": [
+        {
+          "at": "2026-10-07T21:20:38.660000+00:00",
+          "rules": [
+            "ref-listing"
+          ],
+          "text": "python3 -c \"\nimport json;d=json.load(open('research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json'))\nfor k in d:\n  if k not in ('decisions','nextItemContext'): print(k, json.dumps(d[k],indent=1)[:6000])\nfor x in d['decisions'][",
+          "tool": "Bash"
+        }
+      ]
+    },
+    "modelRequests": 32,
+    "msToFirstCodeMutation": 381338,
+    "peakContextTokens": 148995,
+    "readPaths": [
+      "/tmp/claude-0/-home-user-praxis/c1fec827-d3e2-5a8e-8552-d8c1e4b7e9c4/tasks/bhh1eckjz.output",
+      "docs/cli.md",
+      "docs/planning.md",
+      "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json",
+      "research/experiments/EX-ROS-2026-A024-harness/handoff.schema.json",
+      "src/Ros.Application/Planning/WorkGroups.fs",
+      "src/Ros.Cli/WorkGroupCommands.fs",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/WorkGroupTests.fs"
+    ],
+    "repeatedReadExcess": 5,
+    "repeatedReadPaths": 3,
+    "repeatedReadsTop": {
+      "/tmp/claude-0/-home-user-praxis/c1fec827-d3e2-5a8e-8552-d8c1e4b7e9c4/tasks/bhh1eckjz.output": 4,
+      "src/Ros.Cli/WorkGroupCommands.fs": 2,
+      "tests/Ros.Tests/WorkGroupTests.fs": 2
+    },
+    "searches": 10,
+    "startedAt": "2026-10-07T21:20:31.881000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 3,
+    "tokens": {
+      "cacheCreation": 110485,
+      "cacheRead": 3508177,
+      "input": 64,
+      "output": 24503
+    },
+    "toolCalls": {
+      "Bash": 33
+    },
+    "toolErrors": 4,
+    "wallMs": 696115
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "c1fec827-d3e2-5a8e-8552-d8c1e4b7e9c4",
+  "subagents": [],
+  "transcript": "c1fec827-d3e2-5a8e-8552-d8c1e4b7e9c4.jsonl",
+  "transcriptSha256": {
+    "c1fec827-d3e2-5a8e-8552-d8c1e4b7e9c4.jsonl": "e5047324ca7ed6fa91f44bec9ebc2a331eddfa1e4f26b74b965085c263c7f546"
+  }
+}

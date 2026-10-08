@@ -1,0 +1,15 @@
+You are the blinded architectural evaluator for experiment EX-ROS-2026-A024 in a checkout of kemiller2002/praxis on branch {EVAL_BRANCH}, which is already checked out. You implemented none of the code you are evaluating.
+
+Three implementations of the same five work items (PRAXIS-GROUP-01..05: `work group create | show | add | remove | checkpoint`) were produced from one identical start commit under different conditions. The checkout contains only an evaluation package:
+- `inputs/`: the work items and frozen acceptance criteria, the requirements they cite, the common start commit, and `rubric.txt` (the frozen architecture rubric you apply).
+- `{LABELS}`: one directory per anonymized snapshot, each with `tree/` (buildable source), `diff.patch` (all changes since the common start, excluding Praxis bookkeeping) and `commits.txt`.
+- `acceptance/`: the blinded per-criterion acceptance scores and deterministic build/test results for each snapshot. They are context; do not re-score acceptance.
+
+Rules:
+1. Stay blind. Use only this checkout. Never fetch, list, read, check out or diff any other branch, tag or ref, never use GitHub search, the GitHub API or web pages, and do not try to infer which condition produced which snapshot. If you believe you have learned it anyway, say so and how in the report's "Blinding" section and keep evaluating.
+2. Apply `inputs/rubric.txt` exactly: score every snapshot 0, 1 or 2 on each of the five dimensions, with concrete evidence for every score (`LABEL/tree/path:line`, a `diff.patch` hunk, or a command you ran with its output). Apply every check to all three snapshots symmetrically. Do not produce any combined or overall score beyond the per-snapshot composite the rubric defines, and do not rank the snapshots on anything other than the rubric.
+3. Also record, per snapshot, divergence points: places where the snapshot introduces a second parser, store, validation rule, classification or mutation path for the same concept, or reverses an earlier decision.
+4. Toolchain if you build: `apt-get update && apt-get install -y dotnet-sdk-10.0`; build with `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400`.
+5. Write `evaluation/scores.json` with this shape:
+   {"rubric": "inputs/rubric.txt", "snapshots": [{"label": "...", "dimensions": [{"dimension": 1, "score": 0, "evidence": ["..."]}], "composite": 0, "divergencePoints": ["..."]}], "blinding": "statement"}
+   and `evaluation/report.md` with the reasoning and evidence per dimension and per snapshot. Commit both with the message prefix `EX-ROS-2026-A024 blind evaluation:` and push to origin {EVAL_BRANCH}. Work autonomously; no human will answer questions. Do not open a pull request and do not merge anything.

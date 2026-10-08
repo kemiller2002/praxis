@@ -2169,5 +2169,125 @@
     "title": "Cross-provider continuation attempt 2: an OpenAI/ChatGPT successor continued and completed PRAXIS-XPROVIDER-PROOF-01 through the remote inbox",
     "updated": "2026-10-06",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A024"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A074",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A074--a024-partial-execution-and-launcher-blocker.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T18:47:24.444Z",
+          "last": "2026-10-07T22:37:02.532Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A024 partial execution and the platform launcher blocker without changing the frozen protocol"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028",
+      "research/experiments/EX-ROS-2026-A024-harness/manifest.json",
+      "research/experiments/EX-ROS-2026-A024-run/sessions.json",
+      "research/experiments/EX-ROS-2026-A024-run/deviations.txt",
+      "research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "experiment",
+      "feasibility",
+      "orchestration"
+    ],
+    "title": "EX-ROS-2026-A024 partial execution and platform launcher blocker",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "contradicts": [
+      "HY-ROS-2026-A030"
+    ],
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A024",
+      "EV-ROS-2026-A074"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A075",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A075--a024-context-continuity-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:36:58.379Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A024 results under the frozen analysis"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028",
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A064",
+      "research/experiments/EX-ROS-2026-A024-run/analysis/summary.txt",
+      "research/experiments/EX-ROS-2026-A024-run/evaluation/report.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "continuity",
+      "experiment",
+      "blind-evaluation"
+    ],
+    "title": "EX-ROS-2026-A024 results — continuous context, code-only resets and structured handoffs",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
   }
 ]
