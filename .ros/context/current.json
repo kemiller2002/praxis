@@ -8931,11 +8931,56 @@
         }
       },
       "completedAt": "2026-10-08T21:18:51.000Z"
+    },
+    {
+      "id": "WI-0079",
+      "type": "feature",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "schemas/echelon-routes-v1.schema.json"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Foundations/RouteInventory.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RoutingFoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-08T21:40:48.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261008T213537458Z-4d816bba"
+      ],
+      "latestCheckpoint": {
+        "id": "868a09fd1a64d69c63d8c422",
+        "recordedAt": "2026-10-08T21:40:45.000Z",
+        "executionId": "EXE-20261008T213537458Z-4d816bba",
+        "repository": "repository-operating-system",
+        "branch": "feature/vendor-limen-routes-schema",
+        "commit": "efb5e6ae09e4b09439b24c2d8730d971d7d40d81",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feature/vendor-limen-routes-schema",
+        "remoteCommit": "efb5e6ae09e4b09439b24c2d8730d971d7d40d81",
+        "summary": "schemas/echelon-routes-v1.schema.json vendored byte for byte from Limen 0.9.0; legacy {name,pattern,to,params-object} and optional wildcard accepted; Limen's rendered inventory vector is a passing fixture; template and Praxis inventories in Limen's exact shape",
+        "nextAction": "Merge on green; release Praxis 3.9.1; pin it; record it in echelon-registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-08T21:40:48.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-08T21:18:51.000Z",
+  "updatedAt": "2026-10-08T21:40:48.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

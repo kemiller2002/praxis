@@ -5669,10 +5669,10 @@
         "limen"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T19:22:42.455Z",
-      "updatedAt": "2026-10-08T19:22:42.455Z",
+      "updatedAt": "2026-10-08T21:40:48.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

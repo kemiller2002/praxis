@@ -36,14 +36,14 @@ module RoutingFoundationsTests =
         """{
   "home": "home",
   "legacy": [
-    { "params": [ { "in": "path", "name": "id", "required": true, "type": "int" } ], "pattern": "/cases/{id:int}", "to": "investigations.investigation" }
+    { "name": "legacy-1", "params": { "id": "{id}", "tab": "evidence" }, "pattern": "/cases/{id:int}", "to": "investigations.investigation" }
   ],
   "mode": "hash",
   "notFound": "notFound",
   "routes": [
-    { "guard": null, "name": "home", "params": [], "pattern": "/", "requires": [], "returnTarget": true },
+    { "guards": [], "name": "home", "params": [], "pattern": "/", "requires": [], "returnTarget": true },
     {
-      "guard": null,
+      "guards": [],
       "name": "investigations.investigation",
       "params": [
         { "default": null, "in": "path", "name": "id", "required": true, "type": "int" },
@@ -55,7 +55,7 @@ module RoutingFoundationsTests =
       "requires": ["investigation"],
       "returnTarget": true
     },
-    { "guard": null, "name": "notFound", "params": [ { "in": "path", "name": "rest", "required": true, "type": "string" } ], "pattern": "/{*rest}", "requires": [], "returnTarget": false }
+    { "guards": [], "name": "notFound", "params": [ { "default": null, "in": "path", "name": "rest", "required": false, "type": "string", "values": null } ], "pattern": "/{*rest}", "requires": [], "returnTarget": false }
   ],
   "schema": "echelon.routes/v1",
   "signIn": null
@@ -233,11 +233,11 @@ module RoutingFoundationsTests =
                   single (withParameter 1 { route.Parameters[1] with Location = "fragment" }) |> contains "'in' must be"
                   single (withParameter 1 { route.Parameters[1] with Type = "period" }) |> contains "type must be one of"
                   single (withParameter 0 { route.Parameters[0] with Type = "set" }) |> contains "path parameter's type"
-                  single (withParameter 0 { route.Parameters[0] with Required = false }) |> contains "always required"
                   single (withParameter 0 { route.Parameters[0] with Default = Some "1" }) |> contains "path parameter has no default"
                   single (withParameter 2 { route.Parameters[2] with Name = "Client-Secret" }) |> contains "SAF-URL-5"
                   single (fun i -> { i with Legacy = [ { i.Legacy[0] with To = "gone" } ] }) |> contains "'to' must name a declared route"
-                  single (fun i -> { i with Legacy = [ { i.Legacy[0] with Parameters = [] } ] }) |> contains "placeholder 'id'"
+                  single (fun i -> { i with Legacy = [ { i.Legacy[0] with Pattern = "/cases/{caseId}" } ] }) |> contains "which the pattern does not capture"
+                  single (fun i -> { i with Legacy = [ { i.Legacy[0] with Pattern = "cases/{id:int}" } ] }) |> contains "must start with"
 
                   Assert.isTrue
                       (RouteInventory.problems true { valid with Routes = []; Home = None; NotFound = None; Legacy = [] }
@@ -312,3 +312,24 @@ module RoutingFoundationsTests =
                   Assert.empty (RouteInventory.problems true template)
                   Assert.empty (RouteInventory.problems false (read ".echelon/routes.json"))
                   Assert.empty (RouteInventory.problems false (read ".echelon/routes.hub.json")) } ]
+
+    /// An inventory Limen 0.9.0 itself renders (its url-state conformance
+    /// vector "the views table in hash mode", byte for byte) satisfies the
+    /// contract: Praxis never rejects what Limen's Inventory.render writes.
+    let limenTests =
+        [ { Name = "route inventory rules: Limen 0.9.0's own rendered inventory satisfies the contract"
+            Run =
+              fun () ->
+                  let rendered = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "limen-0.9.0-views.routes.json"))
+                  let parsed = inventory rendered
+                  Assert.isTrue (RouteInventory.isSupportedVersion parsed) "echelon.routes/v1"
+                  Assert.empty (RouteInventory.problems true parsed)
+                  Assert.equal [ "legacy-1"; "legacy-2" ] (parsed.Legacy |> List.map _.Name)
+                  Assert.equal [ "id", "{id}" ] parsed.Legacy[0].Params }
+          { Name = "routing schema: schemas/echelon-routes-v1.schema.json is Limen's published contract/routes.schema.json"
+            Run =
+              fun () ->
+                  let root = praxisRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let text = File.ReadAllText(Path.Combine(root, "schemas", "echelon-routes-v1.schema.json"))
+                  Assert.isTrue (text.Contains "\"$id\": \"https://github.com/kemiller2002/limen/blob/main/contract/routes.schema.json\"") "the vendored schema keeps Limen's $id"
+                  Assert.isTrue (text.Contains "\"const\": \"echelon.routes/v1\"") "the schema id" } ]

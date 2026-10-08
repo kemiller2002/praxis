@@ -59,10 +59,21 @@ module RouteInventoryReader =
           Pattern = textOrEmpty "pattern" element
           Parameters = items "params" element |> List.map parameter }
 
+    /// A legacy entry's `params`: target parameter -> `{source}` or a literal.
+    let private mapping name element =
+        property name element
+        |> Option.filter (fun value -> value.ValueKind = JsonValueKind.Object)
+        |> Option.map (fun value ->
+            value.EnumerateObject()
+            |> Seq.choose (fun entry -> canonical entry.Value |> Option.map (fun text -> entry.Name, text))
+            |> List.ofSeq)
+        |> Option.defaultValue []
+
     let private legacy element : LegacyRoute =
-        { Pattern = textOrEmpty "pattern" element
+        { Name = textOrEmpty "name" element
+          Pattern = textOrEmpty "pattern" element
           To = textOrEmpty "to" element
-          Parameters = items "params" element |> List.map parameter }
+          Params = mapping "params" element }
 
     /// Pure: the inventory, or None when the text is not a JSON object.
     let parse (json: string) : RouteInventory option =

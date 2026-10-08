@@ -1,73 +1,220 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://echelonfoundry.com/schemas/echelon-routes-v1.schema.json",
-  "title": "echelon.routes/v1 route inventory",
-  "description": "Every addressable view of a web application, its parameters and their encoding (SAF-URL-8). Limen owns this document: Inventory.render (F#) and renderRouteInventory (TypeScript) write it (Limen LCP-107), and Limen publishes the canonical schema as contract/routes.schema.json in @echelon-foundry/limen (LCP-108). This file mirrors that contract as fixed in Limen DF-LIMEN-2026-0006, so a repository can be checked without Limen installed; once Limen 0.9.0 publishes its schema, this file is replaced by a byte-for-byte copy of it. Changes within v1 are additive, so unknown properties are allowed.",
+  "$id": "https://github.com/kemiller2002/limen/blob/main/contract/routes.schema.json",
+  "title": "echelon.routes/v1 — a Limen application's route inventory",
+  "description": "The URL space of an application, as .echelon/routes.json (LCP-107, LCP-108). Rendered by the Limen routing libraries (TypeScript renderRouteInventory, F# Inventory.render), byte-identical between them: keys sorted by UTF-16 code unit, two-space indentation, a final newline. Praxis (praxis foundations verify) and Conditor validate it without running the application. Changes within v1 are additive only. Validators accept unknown properties, so a document from a later v1 library still validates under an earlier v1 schema.",
   "type": "object",
-  "required": ["schema", "mode", "home", "routes"],
+  "required": [
+    "schema",
+    "mode",
+    "home",
+    "signIn",
+    "notFound",
+    "routes",
+    "legacy"
+  ],
   "properties": {
-    "schema": { "const": "echelon.routes/v1" },
-    "mode": {
-      "description": "hash: the route follows #/ (index.html#/invoices/42?tab=history), for static hosts such as GitHub Pages; path: for hosts that answer every path with the application (SAF-URL-6, DF-LIMEN-2026-0006).",
-      "enum": ["hash", "path"]
+    "schema": {
+      "const": "echelon.routes/v1"
     },
-    "home": { "type": "string", "minLength": 1, "description": "Full name of the home route." },
-    "signIn": { "type": ["string", "null"], "description": "Full name of the sign-in route, or null." },
-    "notFound": { "type": ["string", "null"], "description": "Full name of the not-found route, or null." },
+    "mode": {
+      "description": "Where the routed location lives: the fragment (#/path?query, the default for static hosts) or the document path and query.",
+      "enum": [
+        "hash",
+        "path"
+      ]
+    },
+    "home": {
+      "$ref": "#/$defs/routeName",
+      "description": "The home route: where a refused return target and the way home lead."
+    },
+    "signIn": {
+      "$ref": "#/$defs/optionalRouteName",
+      "description": "The sign-in route, which carries the return target as its returnTo query parameter."
+    },
+    "notFound": {
+      "$ref": "#/$defs/optionalRouteName",
+      "description": "The route whose match is the NotFound outcome, usually a top-level {*rest}."
+    },
     "routes": {
+      "description": "Every destination that is not a redirect, in table order.",
       "type": "array",
-      "minItems": 1,
-      "items": { "$ref": "#/$defs/route" }
+      "items": {
+        "$ref": "#/$defs/route"
+      }
     },
     "legacy": {
-      "description": "Old URLs that redirect to a current route (SAF-URL-7, Limen LCP-105).",
+      "description": "Every redirect: legacy entries (legacy-1, legacy-2, …) and redirect routes of the table. Never produced when building a location.",
       "type": "array",
-      "items": { "$ref": "#/$defs/legacy" }
+      "items": {
+        "$ref": "#/$defs/redirect"
+      }
     }
   },
   "$defs": {
+    "routeName": {
+      "description": "A destination's full name: its chain's names joined by '.'.",
+      "type": "string",
+      "minLength": 1
+    },
+    "optionalRouteName": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/routeName"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pattern": {
+      "description": "'/' followed by the chain's segments: literals, {name:type} parameters and a final {*name} wildcard.",
+      "type": "string",
+      "pattern": "^/"
+    },
+    "parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "in",
+        "type",
+        "required",
+        "default",
+        "values"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "in": {
+          "enum": [
+            "path",
+            "query"
+          ]
+        },
+        "type": {
+          "enum": [
+            "string",
+            "int",
+            "bool",
+            "date",
+            "month",
+            "enum",
+            "set"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {
+          "description": "The value reported when the key is absent and omitted from the canonical form, as JSON (a date YYYY-MM-DD and a month YYYY-MM as text, a set as a sorted array), or null.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "values": {
+          "description": "The values of an enum or set; null otherwise, and for a set that allows any non-empty member.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
     "route": {
       "type": "object",
-      "required": ["name", "pattern", "params"],
+      "required": [
+        "name",
+        "pattern",
+        "params",
+        "guards",
+        "requires",
+        "returnTarget"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1, "description": "Full, dotted route name, e.g. invoices.invoice.history." },
+        "name": {
+          "$ref": "#/$defs/routeName"
+        },
         "pattern": {
-          "type": "string",
-          "pattern": "^/[^?#]*$",
-          "description": "Path pattern with {name} or {name:type} placeholders, e.g. /invoices/{id:int}/history. Query parameters are declared in params, not written into the pattern."
+          "$ref": "#/$defs/pattern"
         },
         "params": {
-          "description": "Parent first, in declaration order: the canonical URL writes query parameters in this order and omits any equal to its default (SAF-URL-2).",
+          "description": "Path parameters, then query parameters, parent first, in declaration order.",
           "type": "array",
-          "items": { "$ref": "#/$defs/param" }
+          "items": {
+            "$ref": "#/$defs/parameter"
+          }
         },
-        "guard": { "type": ["string", "null"], "description": "Name of the engine guard, an interface decision, not authorization." },
-        "requires": { "type": "array", "items": { "type": "string" }, "description": "Resources the view needs before it can resolve." },
-        "returnTarget": { "type": "boolean", "description": "Whether sign-in may return to this route (SAF-URL-1)." }
+        "guards": {
+          "description": "The guard names along the chain, outermost first. A guard decides the interface, never access.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requires": {
+          "description": "Resource keys the engine loads before rendering, the union along the chain.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "returnTarget": {
+          "description": "Whether a sign-in may return here (never the sign-in or not-found route).",
+          "type": "boolean"
+        }
       }
     },
-    "param": {
+    "redirect": {
       "type": "object",
-      "required": ["name", "in", "type"],
+      "required": [
+        "name",
+        "pattern",
+        "to",
+        "params"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1, "description": "Never a name reserved for credentials (SAF-URL-5, Limen LCP-109)." },
-        "in": { "enum": ["path", "query"] },
-        "type": {
-          "enum": ["string", "int", "bool", "date", "month", "enum", "set"],
-          "description": "int: decimal within ±(2^53-1); date: YYYY-MM-DD; month: YYYY-MM; set: sorted, de-duplicated, comma-joined. Path parameters use string, int, date, month or enum."
+        "name": {
+          "$ref": "#/$defs/routeName"
         },
-        "required": { "type": "boolean" },
-        "default": { "description": "Query parameters only; omitted from the canonical URL when equal." },
-        "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "The values of an enum or set." }
-      }
-    },
-    "legacy": {
-      "type": "object",
-      "required": ["pattern", "to"],
-      "properties": {
-        "pattern": { "type": "string", "pattern": "^/[^?#]*$" },
-        "to": { "type": "string", "minLength": 1, "description": "Full name of the current route." },
-        "params": { "type": "array", "items": { "$ref": "#/$defs/param" } }
+        "pattern": {
+          "$ref": "#/$defs/pattern"
+        },
+        "to": {
+          "$ref": "#/$defs/routeName"
+        },
+        "params": {
+          "description": "The target's parameters: '{source}' copies a parameter of the pattern; anything else is literal.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
       }
     }
   }

@@ -22,11 +22,13 @@ type RouteEntry =
       Parameters: RouteParameter list }
 
 /// A legacy URL that keeps working by redirecting to a current destination
-/// (SAF-URL-7, Limen LCP-105).
+/// (SAF-URL-7, Limen LCP-105). `Params` maps each of the target's parameters
+/// to `{source}` (copied from a placeholder of `Pattern`) or a literal.
 type LegacyRoute =
-    { Pattern: string
+    { Name: string
+      Pattern: string
       To: string
-      Parameters: RouteParameter list }
+      Params: (string * string) list }
 
 /// An application's route inventory (`.echelon/routes.json`, schema
 /// `echelon.routes/v1`, SAF-URL-8). Limen's `Inventory.render` /
@@ -109,8 +111,6 @@ module RouteInventory =
               yield $"{at}: a path parameter's type must be one of {show pathParameterTypes} (SAF-URL-2)"
           if parameter.Location = "path" && parameter.Default.IsSome then
               yield $"{at}: a path parameter has no default; only query parameters may (SAF-URL-2)"
-          if parameter.Location = "path" && not parameter.Required then
-              yield $"{at}: a path parameter is always required (SAF-URL-2)"
           if parameter.Type = "enum" && parameter.Values.IsEmpty then
               yield $"{at}: an enum parameter must list its values (SAF-URL-2)"
           for value in duplicates parameter.Values do
@@ -147,12 +147,21 @@ module RouteInventory =
               yield $"route with pattern '{route.Pattern}' has no name (SAF-URL-8)"
           yield! shapeProblems owner route.Pattern route.Parameters ]
 
+    let private sourcePlaceholder = Regex(@"^\{([A-Za-z][A-Za-z0-9_-]*)\}$", RegexOptions.CultureInvariant)
+
     let private legacyProblems (names: Set<string>) (legacy: LegacyRoute) =
         let owner = $"legacy route '{legacy.Pattern}'"
+        let captured = placeholders legacy.Pattern |> Set.ofList
 
-        [ if not (names.Contains legacy.To) then
+        [ if not (legacy.Pattern.StartsWith("/", StringComparison.Ordinal)) then
+              yield $"{owner}: pattern must start with '/' (SAF-URL-7)"
+          if not (names.Contains legacy.To) then
               yield $"{owner}: 'to' must name a declared route (SAF-URL-7)"
-          yield! shapeProblems owner legacy.Pattern legacy.Parameters ]
+          for target, source in legacy.Params do
+              let matched = sourcePlaceholder.Match source
+
+              if matched.Success && not (captured.Contains matched.Groups[1].Value) then
+                  yield $"{owner}: parameter '{target}' copies '{source}', which the pattern does not capture (SAF-URL-7)" ]
 
     let private reference (names: Set<string>) (field: string) (value: string option) =
         match value with
@@ -213,9 +222,8 @@ module ReleaseVersion =
 module LimenRouting =
     /// The Limen release that ships the routing / URL-state module (Limen
     /// LCP-110: `@echelon-foundry/limen/routing` and
-    /// `EchelonFoundry.Limen.Routing` at 0.9.0). An application on an older
-    /// Limen, including every application while 0.9.0 is unpublished, is
-    /// pending, never failed. A declaration may name another release with
+    /// `EchelonFoundry.Limen.Routing`, published at 0.9.0). An application on
+    /// an older Limen is pending, never failed. A declaration may name another release with
     /// `routing.limenRoutingVersion`.
     let firstRelease = "0.9.0"
 
