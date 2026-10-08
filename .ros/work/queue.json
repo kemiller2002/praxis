@@ -5713,10 +5713,10 @@
         "release"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T21:17:48.113Z",
-      "updatedAt": "2026-10-08T21:17:53.000Z",
+      "updatedAt": "2026-10-08T21:18:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
