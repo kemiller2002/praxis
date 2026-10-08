@@ -24,8 +24,8 @@ TAR = BUILD / "human-coding-packet.tar"
 EPOCH = 1790726400
 
 COPY_FILES = [
-    ("BASELINE.txt", "BASELINE.txt"),
-    ("FILES.tsv", "FILES.tsv"),
+    ("baseline/BASELINE.txt", "BASELINE.txt"),
+    ("baseline/FILES.tsv", "FILES.tsv"),
     ("acceptance-criteria.txt", "acceptance-criteria.txt"),
     ("a021/arm-x.patch", "study-1/arm-X.patch"),
     ("a021/arm-y.patch", "study-1/arm-Y.patch"),
@@ -125,6 +125,8 @@ def verify_absence() -> None:
         "paper.tex",
         "metrics.json",
         "POST-UNBLINDING-METRICS",
+        "work-items-",
+        "blind-mapping",
     ]
     joined = "\n".join(p.relative_to(DEST).as_posix() for p in DEST.rglob("*"))
     bad = [token for token in forbidden if token in joined]
@@ -142,7 +144,22 @@ def main() -> int:
         shutil.rmtree(DEST)
     DEST.mkdir(parents=True)
 
-    shutil.copytree(SOURCE / "baseline", DEST / "baseline")
+    # Do not copy the whole baseline bundle: baseline/ also contains frozen
+    # work-item snapshots that name the study cohort. Give the coder only the
+    # production surfaces needed to understand the feature and baseline rules.
+    safe = DEST / "baseline"
+    safe.mkdir()
+    shutil.copytree(SOURCE / "baseline/source/src", safe / "src")
+    shutil.copytree(SOURCE / "baseline/source/tests", safe / "tests")
+    (safe / "requirements").mkdir()
+    copy_file(
+        SOURCE / "baseline/source/requirements/PLANNING-WORK-GROUPS.md",
+        safe / "requirements/PLANNING-WORK-GROUPS.md",
+    )
+    for name in ("Directory.Build.props", "Ros.slnx"):
+        source_file = SOURCE / "baseline/source" / name
+        if source_file.exists():
+            copy_file(source_file, safe / name)
 
     for src, dst in COPY_FILES:
         copy_file(SOURCE / src, DEST / dst)
