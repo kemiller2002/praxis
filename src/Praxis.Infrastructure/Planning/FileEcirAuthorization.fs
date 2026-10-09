@@ -2,6 +2,7 @@ namespace Praxis.Infrastructure.Planning
 
 open System
 open System.Text.Json
+open System.Collections.Generic
 open Praxis.Domain.Work
 
 /// Read-only, independently derived authorization decision. A positive result
@@ -84,7 +85,7 @@ module FileEcirAuthorization =
                             nodes |> List.choose (fun node ->
                                 match text "kind" node, text "id" node, strings "requirementKeys" node with
                                 | Some "decision", Some decisionId, Some memberKeys
-                                    when memberKeys |> List.exists (fun key -> List.contains key keys) ->
+                                    when (memberKeys |> List.exists (fun key -> List.contains key keys)) ->
                                     Some decisionId
                                 | _ -> None)
                         if decisions.IsEmpty || decisions.Length <> (decisions |> Set.ofList).Count then
