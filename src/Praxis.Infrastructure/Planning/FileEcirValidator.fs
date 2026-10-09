@@ -30,7 +30,7 @@ module FileEcirValidator =
     let private digest bytes =
         "sha256:" + (SHA256.HashData bytes |> Convert.ToHexString).ToLowerInvariant()
 
-    let private property name (json: JsonElement) =
+    let private property (name: string) (json: JsonElement) =
         let mutable value = Unchecked.defaultof<JsonElement>
         if json.ValueKind = JsonValueKind.Object && json.TryGetProperty(name, &value) then Some value
         else None
