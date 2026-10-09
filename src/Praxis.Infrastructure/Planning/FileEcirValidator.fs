@@ -27,7 +27,7 @@ type EcirValidatorResult =
 
 [<RequireQualifiedAccess>]
 module FileEcirValidator =
-    let private digest bytes =
+    let private digest (bytes: byte array) =
         "sha256:" + (SHA256.HashData bytes |> Convert.ToHexString).ToLowerInvariant()
 
     let private property (name: string) (json: JsonElement) =
