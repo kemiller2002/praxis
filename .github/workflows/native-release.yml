@@ -308,12 +308,13 @@ jobs:
   # Praxis rename download through their ./ros launcher (formerly built by the
   # retired npm publish workflow). They are the same praxis binary under the
   # legacy name, shipped until a decision retires them.
+  # On a pull request it builds and verifies them but publishes nothing.
   ros-fs-assets:
     needs: release
-    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/ros-fs-assets.yml
     with:
       tag: v${{ needs.release.outputs.version }}
+      publish: ${{ github.event_name != 'pull_request' }}
 
 
   windows-powershell-syntax:
