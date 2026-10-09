@@ -187,18 +187,18 @@ Praxis is itself an Echelon application and is bound by
 | SAF-FORMA-5 | Met | Forma skip link, focus, responsive data grids; status lozenges carry the status word, not color alone |
 | SAF-FORMA-6 | Met | Faults use Forma's inline fault and fault-banner patterns with the Aegis reference |
 | PRX-UI-030 | Met | As SAF-FORMA-1..6 |
-| PRX-UI-031 | Not applicable (decision) | Script-free, server-rendered UI has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
+| PRX-UI-031 | Not applicable (decision) | Server-rendered, script-optional UI (its one approved enhancement, `url-state.js`, is not a Limen runtime: `DF-ROS-2026-A058`) has no browser runtime for Limen; recorded in `docs/web-interface.md` and `.echelon/foundations.json` |
 | SAF-FOLIO-1..3 | Not applicable | No printable or PDF surface exists (conditional requirement) |
 | SAF-URL-1 | Met | Every GET page is resolved from its path and query alone by `Praxis.Application.Web.UrlState` (Limen.Routing) before rendering; no authentication, so a cold load needs no sign-in round trip |
 | SAF-URL-2 | Met | Limen.Routing's canonical form: empty GET-form fields are dropped, free-text or repeated `tag` values become one sorted set, and any non-canonical location (including `/index.html` and undeclared parameters) answers 303 to the canonical URL; "url state: canonical locations ..." and "web serve: a non-canonical page URL redirects ..." |
-| SAF-URL-3 | Partial | Links and post/redirect/get push; Back, Forward and reload show the URL's view, and canonicalization replaces via redirect. A script-free filter submit still pushes rather than replaces; replacing needs browser script, escalated to the owner (`DF-ROS-2026-A057` item 6, WI-0082) |
+| SAF-URL-3 | Met | Links and post/redirect/get push; Back, Forward and reload show the URL's view, and canonicalization replaces via redirect. A filter refinement replaces the history entry through the one approved script, `url-state.js` (`DF-ROS-2026-A058`); with JavaScript off it pushes, as before. "browser: with the enhancement, a filter refinement replaces the history entry ..." (web and hub) and "browser: with JavaScript off, the filter form still works ..." |
 | SAF-URL-4 | Met | Typed refusals with a way back: unknown page 404 "Not found", invalid parameter 400 "Invalid link", denied view 403 "Not permitted"; an unknown work item keeps its 404 page linking to the queue |
 | SAF-URL-5 | Met | URLs carry only ids and filters; post/redirect/get feedback moved from `?notice=`/`?error=` to a 60-second HttpOnly, SameSite=Strict flash cookie cleared once shown |
 | SAF-URL-6 | Not applicable | Server-rendered on localhost, not statically hosted (`"hosting": "server"`, inventories in `path` mode) |
 | SAF-URL-7 | Met | `/index.html` is a legacy route of both tables and redirects to `/`; no route has been renamed |
 | SAF-URL-8 | Met | `.echelon/routes.json` and `.echelon/routes.hub.json` are `Inventory.render` of the two tables, held byte-equal by "url state: .echelon/routes.json and routes.hub.json are Inventory.render ..."; `foundations verify` checks both |
 | SAF-URL-9 | Met | `RouteTable.define` tables and typed `RouteCodec`s; `UrlState.format` is the route formatter; "url state: format then resolve is the view, for generated views" is the round-trip property test |
-| SAF-URL-10 | Partial | Every page ends with "Link to this view": its canonical URL as a link and a selectable absolute address, copied with the browser's Copy Link. One-action clipboard copy needs browser script, escalated with SAF-URL-3 (`DF-ROS-2026-A057`, WI-0082) |
+| SAF-URL-10 | Met | Every page ends with "Link to this view": its canonical URL as a link, a selectable absolute address, and a `Copy link` button that `url-state.js` reveals and that copies the address in one action (`DF-ROS-2026-A058`); without script the button stays hidden and the address is selected by hand. "browser: with the enhancement, Copy link puts the view's absolute URL on the clipboard ..." |
 | SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
 | SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
@@ -213,8 +213,9 @@ sha256 matches it.
 
 `.echelon/foundations.json` requires Aegis, Forma, Ordo and routing. Folio is not
 applicable: Praxis has no printable or PDF surface (SAF-FOLIO-1 is
-conditional). Limen is not applicable: the web and hub UIs are script-free
-and server-rendered (PRX-UI-031, see `web-interface.md`). Routing is required:
+conditional). Limen is not applicable: the web and hub UIs are server-rendered and
+script-optional (PRX-UI-031, see `web-interface.md`); their one approved
+enhancement script is not a Limen runtime (`DF-ROS-2026-A058`). Routing is required:
 `.echelon/routes.json` and `.echelon/routes.hub.json` are the inventories of the web and hub UIs,
 rendered by Limen.Routing. The UIs consume `EchelonFoundry.Limen.Routing`
 0.9.0 as a pinned engine library (`vendor/nuget/limen-routing.lock`,

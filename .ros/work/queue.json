@@ -5774,7 +5774,7 @@
     },
     {
       "id": "WI-0082",
-      "title": "Owner decision (DF-ROS-2026-A057 item 6): approve a CSP-hashed inline script exception for replace-on-refine and one-action Copy link in praxis web/hub, or accept the script-free deviation from SAF-URL-3/SAF-URL-10",
+      "title": "Approved exception (DF-ROS-2026-A058): one external url-state.js for replace-on-refine and one-action Copy link in praxis web and hub, progressive enhancement under a strict CSP",
       "description": "Praxis's UIs are script-free (PRX-UI-031) and RQ-ROS-2026-A024 prohibits repository-owned JavaScript without an owner-approved exception. Refinement-replaces-history and clipboard copy cannot be done without browser script. Option (a) records one exact-path exception plus a CSP hash; option (b) records the deviation.",
       "tags": [
         "deep-linking",
@@ -5782,10 +5782,10 @@
         "decision"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-08T23:33:42.804Z",
-      "updatedAt": "2026-10-08T23:33:42.804Z",
+      "updatedAt": "2026-10-09T01:26:08.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
