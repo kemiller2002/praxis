@@ -66,3 +66,8 @@ let ``empty requirement set and unknown external authority are not approvals`` (
             DecisionAuthorization = Error [] }
     Assert.Contains("ecir-cohort-requirements-not-exact", EcirGates.problems unknown)
     Assert.Contains("ecir-authorization-without-reason", EcirGates.problems unknown)
+
+[<Fact>]
+let ``ECIR declaration cannot pass as ordinary ungoverned grouped execution`` () =
+    Assert.True(EcirGates.isEcirGroup [ "context"; "ecir/1:COHORT-001" ])
+    Assert.False(EcirGates.isEcirGroup [ "context"; "legacy-group" ])
