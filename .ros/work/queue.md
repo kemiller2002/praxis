@@ -307,6 +307,7 @@
 | WI-0080 | Pin Praxis 3.9.0 (URL-addressable state foundations) in the self-hosting toolchain | complete | release | high |
 | WI-0081 | Pin Praxis 3.9.1 (Limen routes schema vendored) in the self-hosting toolchain | complete | release | high |
 | WI-0082 | Owner decision (DF-ROS-2026-A057 item 6): approve a CSP-hashed inline script exception for replace-on-refine and one-action Copy link in praxis web/hub, or accept the script-free deviation from SAF-URL-3/SAF-URL-10 | captured | deep-linking, web, decision | medium |
+| WI-0083 | Pin Praxis 3.10.0 (web and hub URL state through Limen.Routing) in the self-hosting toolchain | ready | release | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
