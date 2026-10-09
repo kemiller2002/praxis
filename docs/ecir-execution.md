@@ -17,6 +17,17 @@ Ordo owns ECIR parsing and semantic checks. Conditor owns the independent source
 
 The group's source manifest and blueprint must be committed immutable artifacts and reference the Conditor intake digest. `sde ecir validate --manifest ... --blueprint ...` checks structural and semantic validity **only** and prints a canonical SHA-256 digest, never execution authorization. A later adapter must pin the released Ordo binary and artifact SHA, observe that result independently and verify decision authorization with approved provenance before supplying `EcirExecutionObservation`.
 
+## Trusted read-only preflight (implemented on this branch)
+
+The infrastructure now contains two independent adapters:
+
+- `FileEcirPreflight.readCommitted` reads the manifest and candidate blueprint **from one exact full Git commit SHA**. Symbolic branches, tags, shortened hashes, absolute/traversing paths, uncommitted working-tree modifications, and mismatch to the trusted external source-manifest digest fail before code generation. The host, not the agent, supplies the expected source digest and revision.
+- `FileEcirValidator.validate` runs the absolute-path **host-pinned Ordo native executable**, compares the actual executable SHA-256 to the host release pin, supplies only those committed inputs, and accepts Ordo's exact `ecir.validate/1` machine response. Ordo's `executionAuthorized:false` is mandatory. Invalid output, mismatched canonical blueprint digest, nonzero exit and timeouts are refusals. `parseResponse` has adversarial tests for spoofed approval, changed schema, stale blueprint and missing source coverage.
+
+Neither step accepts AI-generated authorization. A committed file's immutability is **not a trust claim about its author**, and an executable hash matches a host-provided pin only if the host actually protects that release pin.
+
+The validator is a **read-only inspection boundary**, not a new bypass around `plan execute-group`: ECIR groups remain denied by `FileGroupExecution.facts`. The next integration must bind the returned observation to a trusted, owner-verified decision approval receipt with the exact blueprint digest, cohort ID and source commit, then use `EcirGates.allowsExecution` as part of an atomic group-execution authorization check.
+
 ## Remaining mandatory implementation before ECIR execution can start
 
 1. Release/qualify the ECIR-enabled Ordo version and its `sde ecir validate` operation through Conditor.
