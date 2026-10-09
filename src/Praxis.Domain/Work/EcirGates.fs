@@ -16,6 +16,11 @@ type EcirExecutionObservation =
       /// Provenance and authorization for architectural decisions are
       /// external to the ECIR blueprint. Empty/unknown means NO authority.
       DecisionAuthorization: Result<unit, string list>
+      /// Trusted decision receipt must bind both the content-addressed
+      /// construction version and the cohort. Reusing an older approval
+      /// is explicitly disallowed, even if the parser and source match.
+      ApprovedBlueprintDigest: string option
+      ApprovedCohortId: string option
       CohortKeys: string list
       GroupRequirementKeys: string list
       BlockedRequirements: string list
@@ -55,7 +60,12 @@ module EcirGates =
           | Error reasons ->
               yield "ecir-authorization-missing"
               if reasons.IsEmpty then yield "ecir-authorization-without-reason"
-          | Ok () -> ()
+          | Ok () ->
+              if value.ApprovedBlueprintDigest <> Some value.ExpectedBlueprintDigest
+                 || value.ApprovedBlueprintDigest <> value.ValidatedBlueprintDigest then
+                  yield "ecir-approval-for-wrong-blueprint"
+              if value.ApprovedCohortId <> Some value.CohortId then
+                  yield "ecir-approval-for-wrong-cohort"
           let actual = value.CohortKeys |> Set.ofList
           let declared = value.GroupRequirementKeys |> Set.ofList
           if actual <> declared
