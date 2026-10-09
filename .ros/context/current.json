@@ -9372,11 +9372,56 @@
         }
       },
       "completedAt": "2026-10-09T03:09:50.000Z"
+    },
+    {
+      "id": "WI-0085",
+      "type": "chore",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/ros-fs-assets.yml"
+        },
+        {
+          "type": "implementation",
+          "path": ".github/workflows/native-release.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/InternalNamingGuardTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-09T03:31:35.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261009T033114465Z-47ead97d"
+      ],
+      "latestCheckpoint": {
+        "id": "c6bc170479d0467d211c3ecb",
+        "recordedAt": "2026-10-09T03:31:32.000Z",
+        "executionId": "EXE-20261009T033114465Z-47ead97d",
+        "repository": "repository-operating-system",
+        "branch": "ci/ros-fs-assets-verify-on-prs",
+        "commit": "35efcf6b199af20fadcde6ab8a785c45b2218516",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "ci/ros-fs-assets-verify-on-prs",
+        "remoteCommit": "35efcf6b199af20fadcde6ab8a785c45b2218516",
+        "summary": "ros-fs-assets verifies on PRs; publish gated",
+        "nextAction": "Merge when every check, including ros-fs-assets / assets, succeeds",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-09T03:31:35.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-09T03:09:50.000Z",
+  "updatedAt": "2026-10-09T03:31:35.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
