@@ -118,32 +118,32 @@ module FileEcirValidator =
                         File.WriteAllText(manifestFile, committed.Manifest)
                         File.WriteAllText(blueprintFile, committed.Blueprint)
 
-                        use process = new Process()
-                        process.StartInfo <- ProcessStartInfo(pinned.Executable)
-                        process.StartInfo.WorkingDirectory <- directory
-                        process.StartInfo.ArgumentList.Add("ecir")
-                        process.StartInfo.ArgumentList.Add("validate")
-                        process.StartInfo.ArgumentList.Add("--manifest")
-                        process.StartInfo.ArgumentList.Add(manifestFile)
-                        process.StartInfo.ArgumentList.Add("--blueprint")
-                        process.StartInfo.ArgumentList.Add(blueprintFile)
-                        process.StartInfo.ArgumentList.Add("--json")
-                        process.StartInfo.UseShellExecute <- false
-                        process.StartInfo.RedirectStandardOutput <- true
-                        process.StartInfo.RedirectStandardError <- true
+                        use validatorProcess = new Process()
+                        validatorProcess.StartInfo <- ProcessStartInfo(pinned.Executable)
+                        validatorProcess.StartInfo.WorkingDirectory <- directory
+                        validatorProcess.StartInfo.ArgumentList.Add("ecir")
+                        validatorProcess.StartInfo.ArgumentList.Add("validate")
+                        validatorProcess.StartInfo.ArgumentList.Add("--manifest")
+                        validatorProcess.StartInfo.ArgumentList.Add(manifestFile)
+                        validatorProcess.StartInfo.ArgumentList.Add("--blueprint")
+                        validatorProcess.StartInfo.ArgumentList.Add(blueprintFile)
+                        validatorProcess.StartInfo.ArgumentList.Add("--json")
+                        validatorProcess.StartInfo.UseShellExecute <- false
+                        validatorProcess.StartInfo.RedirectStandardOutput <- true
+                        validatorProcess.StartInfo.RedirectStandardError <- true
 
-                        if not (process.Start()) then
+                        if not (validatorProcess.Start()) then
                             Error "pinned Ordo executable failed to start"
                         else
-                            let stdout = process.StandardOutput.ReadToEndAsync()
-                            let stderr = process.StandardError.ReadToEndAsync()
-                            if not (process.WaitForExit(30000)) then
-                                process.Kill(true)
+                            let stdout = validatorProcess.StandardOutput.ReadToEndAsync()
+                            let stderr = validatorProcess.StandardError.ReadToEndAsync()
+                            if not (validatorProcess.WaitForExit(30000)) then
+                                validatorProcess.Kill(true)
                                 Error "pinned Ordo validation exceeded 30 seconds"
                             else
                                 let response = stdout.Result
                                 let diagnostics = stderr.Result
-                                if process.ExitCode <> 0 then
+                                if validatorProcess.ExitCode <> 0 then
                                     Error("Ordo refused ECIR: " + (if String.IsNullOrWhiteSpace diagnostics then response else diagnostics))
                                 elif response.Length > 16384 then
                                     Error "pinned Ordo validation response exceeded safe limit"
