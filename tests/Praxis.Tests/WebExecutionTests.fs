@@ -96,7 +96,7 @@ module WebExecutionTests =
                       Http.contains "id=\"executions\"" detail
                       let page = Http.body (server.Get $"/executions/{id}")
                       Http.contains "Legal actions" page
-                      Assert.isTrue (not (page.Contains "<script")) "no script") }
+                      Http.onlyApprovedScript page) }
           { Name = "web serve: a refused execution transition is a structured 409 and changes nothing; a human form transition is recorded as human"
             Run =
               fun () ->

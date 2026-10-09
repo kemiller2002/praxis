@@ -379,6 +379,7 @@ module HttpHost =
         output.StatusCode <- response.Status
         output.ContentType <- response.ContentType
         output.Headers["X-Content-Type-Options"] <- "nosniff"
+        output.Headers["Content-Security-Policy"] <- UrlEnhancement.contentSecurityPolicy
 
         for name, value in response.Headers do
             output.Headers[name] <- value
@@ -492,16 +493,17 @@ module UrlGate =
         HttpMessages.html status (Html.page $"{title} · Praxis" $"<main id=\"main\" tabindex=\"-1\"><h1>{Html.escape title}</h1>{FormaMarkup.alert message}{back}</main>")
 
     let private linkSection (share: string) (location: string) =
-        $"<section class=\"ef-section\" aria-label=\"Link to this view\"><h2>Link to this view</h2><p><a href=\"{Html.escape location}\" rel=\"bookmark\">{Html.escape share}</a></p><p>Copy it with your browser's Copy Link, or select it here:</p><input type=\"text\" readonly value=\"{Html.escape share}\" aria-label=\"Address of this view\" /></section>\n</main>"
+        $"<section class=\"ef-section\" aria-label=\"Link to this view\"><h2>Link to this view</h2><p><a href=\"{Html.escape location}\" rel=\"bookmark\">{Html.escape share}</a></p><p>Copy it with your browser's Copy Link, or select it here:</p><input id=\"share-url\" type=\"text\" readonly value=\"{Html.escape share}\" aria-label=\"Address of this view\" /><p><button type=\"button\" hidden data-copy=\"share-url\" data-status=\"share-status\">Copy link</button> <span id=\"share-status\" role=\"status\"></span></p></section>\n</main>"
 
     let private decorate (share: string) (location: string) (shown: bool) (response: HttpResponseData) =
         let page = response.Status = 200 && response.ContentType.StartsWith("text/html", StringComparison.Ordinal)
-        let body = if page then Encoding.UTF8.GetBytes((Encoding.UTF8.GetString response.Body).Replace("</main>", linkSection share location)) else response.Body
+        let body = if page then Encoding.UTF8.GetBytes((Encoding.UTF8.GetString response.Body).Replace("</main>", linkSection share location).Replace("</head>", UrlEnhancement.scriptTag + "\n</head>")) else response.Body
         { response with Body = body; Headers = response.Headers @ (if shown then [ "Set-Cookie", UrlState.clearFlash ] else []) }
 
     let serve (routing: Result<Routing<'View>, Limen.Routing.DefinitionError list>) (handler: HttpRequestData -> HttpResponseData) (request: HttpRequestData) =
         match request.Method, request.Segments with
         | "GET", ("api" :: _ | [ "styles.css" ]) -> handler request
+        | "GET", [ "url-state.js" ] -> HttpMessages.response 200 "text/javascript; charset=utf-8" UrlEnhancement.bytes
         | "GET", segments ->
             let path = "/" + String.Join("/", segments |> List.map Html.segment)
 

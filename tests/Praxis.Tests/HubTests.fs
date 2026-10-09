@@ -421,7 +421,7 @@ module HubTests =
                       let page = Http.body (server.Get "/?status=captured")
                       Http.contains "From the page" page
                       Http.contains "&lt;Alpha&gt;" page
-                      Assert.isTrue (not (page.Contains "<script")) "the hub page carries no script"
+                      Http.onlyApprovedScript page
                       Http.contains "text/css" (string (server.Get "/styles.css").Content.Headers.ContentType)
                       let unregistered = server.PostForm($"/repos/{repoId}/unregister", [])
                       Http.contains "notice:Unregistered" (Http.flash unregistered)

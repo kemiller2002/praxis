@@ -24,6 +24,14 @@ jobs:
       # Tests use isolated scratch roots. A test that writes into the checkout
       # (for example fixture work items in canonical `.ros/` state, as
       # WI-READY/WI-ACTIVE once were: PRAXIS-HYG-01) fails here.
+      # The approved url-state.js enhancement and its script-free fallback in
+      # a real browser (DF-ROS-2026-A058): headless Chrome, driven over the
+      # DevTools protocol by the F# suite itself. No Node is involved.
+      - name: F# browser tests (headless Chrome)
+        run: |
+          export PRAXIS_TEST_BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)"
+          test -n "$PRAXIS_TEST_BROWSER"
+          dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll --suite browser
       - name: F# tests leave the checkout unchanged
         run: |
           changes="$(git status --porcelain --untracked-files=all)"
