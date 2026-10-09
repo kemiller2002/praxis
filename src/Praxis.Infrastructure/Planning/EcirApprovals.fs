@@ -2,6 +2,7 @@ namespace Praxis.Infrastructure.Planning
 
 open System
 open System.Globalization
+open System.Collections.Generic
 open System.Security.Cryptography
 open System.Text
 open System.Text.Json
@@ -51,7 +52,7 @@ module EcirApprovals =
     [<Literal>]
     let SchemaVersion = "ecir.approval/1"
 
-    let private textBytes = Encoding.UTF8.GetBytes
+    let private textBytes (value: string) = Encoding.UTF8.GetBytes(value)
     let private isBlank (s: string) = String.IsNullOrWhiteSpace s
 
     let private sha256 (value: string) =
@@ -69,8 +70,8 @@ module EcirApprovals =
     let private setExactly (actual: string list) (expected: string list) =
         not (List.isEmpty actual)
         && not (List.isEmpty expected)
-        && actual |> List.forall (isBlank >> not)
-        && expected |> List.forall (isBlank >> not)
+        && (actual |> List.forall (isBlank >> not))
+        && (expected |> List.forall (isBlank >> not))
         && actual.Length = (actual |> Set.ofList).Count
         && expected.Length = (expected |> Set.ofList).Count
         && Set.ofList actual = Set.ofList expected
@@ -91,7 +92,7 @@ module EcirApprovals =
 
         [ s.RequirementKeys; s.DecisionIds ]
         |> List.iter (fun values ->
-            let normalized = values |> List.sortWith String.CompareOrdinal
+            let normalized = values |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
             frame (string normalized.Length)
             normalized |> List.iter frame)
         textBytes (buffer.ToString())
