@@ -74,7 +74,16 @@ module ExecuteGroupTests =
         [ "--config"; path ]
 
     let tests =
-        [ t "a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone" (fun () ->
+        [ t "an explicitly ECIR-declared group refuses execution without trusted authorization" (fun () ->
+              withGroup [ "ITEM-1"; "ITEM-3" ] [ "--shared-context"; "ecir/1:COHORT-001" ] (fun clone ->
+                  let before = File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json"))
+                  let refused = execute clone []
+                  Assert.equal 1 refused.ExitCode
+                  Assert.isTrue (refused.Output.Contains "ECIR group execution refused") refused.Output
+                  Assert.equal before (File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json"))
+                  Assert.empty (changedPaths clone)))
+
+          t "a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone" (fun () ->
               withGroup [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] [] (fun clone ->
                   let qualified = explain clone []
                   Assert.equal true (qualified["qualifies"].GetValue<bool>())
