@@ -130,6 +130,7 @@ let main argv =
     @ PostmergeReconciliationTests.tests
     @ WorkGroupTests.tests
     @ GroupGateTests.tests
+    @ EcirGateTests.tests
     @ ExecuteGroupTests.tests
     @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests
