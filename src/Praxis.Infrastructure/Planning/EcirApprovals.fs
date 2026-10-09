@@ -74,7 +74,7 @@ module EcirApprovals =
         && (expected |> List.forall (isBlank >> not))
         && actual.Length = (actual |> Set.ofList).Count
         && expected.Length = (expected |> Set.ofList).Count
-        && Set.ofList actual = Set.ofList expected
+        && (Set.ofList actual = Set.ofList expected)
 
     /// Canonical, unambiguous versioned byte sequence. All fields are
     /// UTF-8 byte-length framed, with set-valued identities sorted ordinally.
