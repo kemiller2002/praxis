@@ -79,6 +79,7 @@
     <Compile Include="Planning/FileWorkGroupFacts.fs" />
     <Compile Include="Planning/FileGroupGates.fs" />
     <Compile Include="Planning/FileEcirPreflight.fs" />
+    <Compile Include="Planning/FileEcirValidator.fs" />
     <Compile Include="Planning/FileGroupExecution.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
