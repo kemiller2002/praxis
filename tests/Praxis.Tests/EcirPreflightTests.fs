@@ -86,6 +86,48 @@ module EcirPreflightTests =
                       (FileEcirValidator.parseResponse expected pinned corrupted |> Result.isError)
                       "unsafe Ordo output was accepted")
 
+          t "derive a cohort's actual decision and requirement scope from Ordo-reviewed blueprint" (fun () ->
+              let complete =
+                  """{"schemaVersion":"ecir/1","sourceManifestDigest":"sha256:manifest","requirements":[{"source":{"key":"docs/x.md#R1"},"disposition":{"kind":"modeled"}},{"source":{"key":"docs/x.md#R2"},"disposition":{"kind":"modeled"}}],"nodes":[{"id":"COHORT-A","kind":"cohort","requirementKeys":["docs/x.md#R1","docs/x.md#R2"]},{"id":"DEC-A","kind":"decision","requirementKeys":["docs/x.md#R1"]},{"id":"DEC-B","kind":"decision","requirementKeys":["docs/x.md#R2"]},{"id":"DEC-OTHER","kind":"decision","requirementKeys":["docs/z.md#Z1"]}]}"""
+              let docs =
+                  { Commit = String('c', 40)
+                    Manifest = manifest
+                    Blueprint = complete
+                    SourceManifestDigest = digest }
+              let observation: EcirValidatorResult =
+                  { BlueprintDigest = "sha256:" + String('b', 64)
+                    SourceRequirements = 2
+                    RepresentedRequirements = 2
+                    ModeledRequirements = 2
+                    UnresolvedRequirements = 0
+                    DeferredRequirements = 0
+                    ValidatedByExecutableSha256 = digest }
+
+              match FileEcirAuthorization.deriveScope docs observation "GROUP-A" "COHORT-A" [ "docs/x.md#R2"; "docs/x.md#R1" ] with
+              | Error message -> failwith message
+              | Ok scope ->
+                  Assert.equal "GROUP-A" scope.GroupId
+                  Assert.equal docs.Commit scope.SourceCommit
+                  Assert.equal 2 scope.RequirementKeys.Length
+                  Assert.equal [ "DEC-A"; "DEC-B" ] (scope.DecisionIds |> List.sort)
+
+              for invalid in [
+                  [ "docs/x.md#R1" ]
+                  [ "docs/x.md#R1"; "docs/x.md#R1" ]
+                  [ "docs/x.md#R1"; "docs/x.md#R2"; "extra" ] ] do
+                  Assert.isTrue
+                      (FileEcirAuthorization.deriveScope docs observation "GROUP-A" "COHORT-A" invalid |> Result.isError)
+                      "invalid group membership was accepted"
+
+              let blocked =
+                  { docs with Blueprint = complete.Replace("\"kind\":\"modeled\"","\"kind\":\"unresolved\"") }
+              Assert.isTrue
+                  (FileEcirAuthorization.deriveScope blocked observation "GROUP-A" "COHORT-A" [ "docs/x.md#R1"; "docs/x.md#R2" ] |> Result.isError)
+                  "unresolved cohort was declared executable"
+              Assert.isTrue
+                  (FileEcirAuthorization.deriveScope docs observation "GROUP-A" "UNKNOWN" [ "docs/x.md#R1"; "docs/x.md#R2" ] |> Result.isError)
+                  "unknown cohort was accepted")
+
           t "nonexistent committed files and fake Git SHA do not turn into approvals" (fun () ->
               withDocuments (fun clone reference ->
                   Assert.isTrue
