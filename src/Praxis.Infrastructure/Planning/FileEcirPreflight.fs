@@ -46,7 +46,7 @@ module FileEcirPreflight =
             |> Array.forall (fun segment ->
                 segment.Length > 0 && segment <> "." && segment <> ".."))
 
-    let private stringProperty name (json: string) =
+    let private stringProperty (name: string) (json: string) =
         try
             use document = JsonDocument.Parse json
             let root = document.RootElement
