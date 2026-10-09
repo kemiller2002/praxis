@@ -9333,7 +9333,27 @@
       "updatedAt": "2026-10-09T03:07:16.000Z",
       "telemetryExecutionIds": [
         "EXE-20261009T030717010Z-eed128a0"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "79220e57de1c6a3f67ab72b1",
+        "recordedAt": "2026-10-09T03:09:29.000Z",
+        "executionId": "EXE-20261009T030717010Z-eed128a0",
+        "repository": "repository-operating-system",
+        "branch": "chore/pin-praxis-3.11.0",
+        "commit": "8ffed4f5884ddc1e57c8954e24debb1e453a5d4d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "chore/pin-praxis-3.11.0",
+        "remoteCommit": "8ffed4f5884ddc1e57c8954e24debb1e453a5d4d",
+        "summary": "Pinned Praxis 3.11.0",
+        "nextAction": "Merge on green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
