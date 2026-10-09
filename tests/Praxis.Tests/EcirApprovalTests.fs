@@ -117,11 +117,11 @@ module EcirApprovalTests =
           t "canonical signature binding is order-independent but rejects duplicate requirement IDs" (fun () ->
               withApproval (fun trusted sign ->
                   let signed = sign template
-                  let reordered =
-                      { signed with Scope =
-                          { scope with
-                              RequirementKeys = List.rev scope.RequirementKeys
-                              DecisionIds = List.rev scope.DecisionIds } }
+                  let reorderedScope =
+                      { scope with
+                          RequirementKeys = List.rev scope.RequirementKeys
+                          DecisionIds = List.rev scope.DecisionIds }
+                  let reordered = { signed with Scope = reorderedScope }
                   Assert.isTrue (EcirApprovals.verify trusted scope now reordered |> Result.isOk)
                       "reordering reference sets invalidated a valid signature"
                   isRejected trusted scope now
