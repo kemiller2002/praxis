@@ -744,4 +744,4 @@ module HubWeb =
                 port
                 [ $"Praxis hub: http://{host}:{port} (hub root: {root})"
                   "Bound to localhost by default; this server has no authentication and can create work items and run commands in every registered repository -- do not expose it beyond your own machine without adding one." ]
-                (handle root)
+                (UrlGate.serve Praxis.Application.Web.UrlState.hub (handle root))

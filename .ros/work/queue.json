@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 82,
+  "nextSeq": 83,
   "items": [
     {
       "id": "WI-0001",
@@ -5644,10 +5644,10 @@
         "web"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-08T19:13:36.384Z",
-      "updatedAt": "2026-10-08T19:13:36.384Z",
+      "updatedAt": "2026-10-08T23:59:21.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -5761,6 +5761,31 @@
       "attachments": [],
       "createdAt": "2026-10-08T22:27:07.852Z",
       "updatedAt": "2026-10-08T22:27:52.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0082",
+      "title": "Owner decision (DF-ROS-2026-A057 item 6): approve a CSP-hashed inline script exception for replace-on-refine and one-action Copy link in praxis web/hub, or accept the script-free deviation from SAF-URL-3/SAF-URL-10",
+      "description": "Praxis's UIs are script-free (PRX-UI-031) and RQ-ROS-2026-A024 prohibits repository-owned JavaScript without an owner-approved exception. Refinement-replaces-history and clipboard copy cannot be done without browser script. Option (a) records one exact-path exception plus a CSP hash; option (b) records the deviation.",
+      "tags": [
+        "deep-linking",
+        "web",
+        "decision"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-08T23:33:42.804Z",
+      "updatedAt": "2026-10-08T23:33:42.804Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

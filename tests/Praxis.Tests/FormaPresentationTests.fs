@@ -130,7 +130,7 @@ module FormaPresentationTests =
                   | Error problems -> failwith (String.concat "; " problems)
                   | Ok aegis ->
                       let request path =
-                          { Method = "GET"; Segments = path; Query = []; ContentType = None; Body = [||] }
+                          { Method = "GET"; Segments = path; Query = []; ContentType = None; Body = [||]; Headers = [] }
 
                       let css = HttpHost.respond aegis (fun _ -> HttpMessages.text 404 "not found") (request [ "forma"; "0.4.1"; "all.css" ])
                       Assert.equal 200 css.Status

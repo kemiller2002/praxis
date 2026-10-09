@@ -823,4 +823,4 @@ module WebInterface =
                 port
                 [ $"Praxis web interface: http://{host}:{port} (repository root: {root})"
                   "Bound to localhost by default; this server has no authentication -- do not expose it beyond your own machine without adding one. Listen scope: GET /api/control-plane." ]
-                (fun request -> WebExecutions.tryHandle { Host = host; Port = port } (CliProcess.runSelf root) request |> Option.defaultWith (fun () -> handle root request))
+                (UrlGate.serve Praxis.Application.Web.UrlState.web (fun request -> WebExecutions.tryHandle { Host = host; Port = port } (CliProcess.runSelf root) request |> Option.defaultWith (fun () -> handle root request)))

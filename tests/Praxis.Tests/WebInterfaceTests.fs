@@ -125,6 +125,17 @@ module Http =
     let location (response: HttpResponseMessage) =
         response.Headers.Location |> Option.ofObj |> Option.map string |> Option.defaultValue ""
 
+    /// The post/redirect/get feedback a response set in the flash cookie, as
+    /// "notice:..." or "error:..." (SAF-URL-5: never in the Location).
+    let flash (response: HttpResponseMessage) =
+        match response.Headers.TryGetValues "Set-Cookie" with
+        | true, values ->
+            values
+            |> Seq.tryFind (fun value -> value.StartsWith("praxis-flash=", StringComparison.Ordinal))
+            |> Option.map (fun value -> Uri.UnescapeDataString(value.Substring("praxis-flash=".Length).Split(';').[0]))
+            |> Option.defaultValue ""
+        | _ -> ""
+
     let text (node: JsonNode) (name: string) = node[name].GetValue<string>()
 
     let number (node: JsonNode) (name: string) = node[name].GetValue<int>()
@@ -142,7 +153,8 @@ module WebInterfaceTests =
           Segments = HttpMessages.pathSegments path
           Query = query
           ContentType = contentType
-          Body = body }
+          Body = body
+          Headers = [] }
 
     let private jsonRequest methodName path (json: string) =
         request methodName path [] (Some "application/json") (Encoding.UTF8.GetBytes json)
@@ -586,7 +598,8 @@ module WebInterfaceTests =
                           )
 
                       Assert.equal 303 (Http.status created)
-                      Http.contains "/work/WI-0001?notice=" (Http.location created)
+                      Assert.equal "/work/WI-0001" (Http.location created)
+                      Http.contains "notice:Captured WI-0001." (Http.flash created)
                       let item = Http.json (server.Get "/api/work/WI-0001")
                       Assert.equal "<b>Bold</b> plan" (Http.text item "title")
                       Assert.equal [ "ui"; "forms" ] (Http.strings item "tags")
@@ -607,14 +620,15 @@ module WebInterfaceTests =
                       server.PostJson("/api/work", """{"title":"Form driven","id":"WI-FORM","tags":["keep"]}""") |> ignore
                       let blocked = server.PostForm("/work/WI-FORM/block", [ "reason", "" ])
                       Assert.equal 303 (Http.status blocked)
-                      Http.contains "/work/WI-FORM?error=" (Http.location blocked)
+                      Assert.equal "/work/WI-FORM" (Http.location blocked)
+                      Http.contains "error:" (Http.flash blocked)
                       Http.contains "reason" (Http.body (server.Get(Http.location blocked)))
                       Assert.equal 303 (Http.status (server.PostForm("/work/WI-FORM/ready", [])))
 
                       let updated =
                           server.PostForm("/work/WI-FORM/update", [ "title", "Form driven"; "description", ""; "tags", ""; "priority", "high" ])
 
-                      Http.contains "notice=" (Http.location updated)
+                      Http.contains "notice:" (Http.flash updated)
                       let item = Http.json (server.Get "/api/work/WI-FORM")
                       Assert.equal ([]: string list) (Http.strings item "tags")
                       Assert.equal "high" (Http.text item "priority")
@@ -634,7 +648,7 @@ module WebInterfaceTests =
                                 "conclusion", "" ]
                           )
 
-                      Http.contains "notice=Completed" (Http.location completed)
+                      Http.contains "notice:Completed" (Http.flash completed)
                       Assert.equal "complete" (Http.text (Http.json (server.Get "/api/work/WI-FORM")) "status")
                       let validation = Http.body (server.Get "/validate")
                       Http.contains "Validation" validation) }
@@ -656,4 +670,50 @@ module WebInterfaceTests =
                       Assert.equal 404 (Http.status missing)
                       Http.contains "not found" (Http.body missing)) } ]
 
-    let tests = unitTests @ apiTests @ formTests
+    /// SAF-URL-1..10 through the running server (WI-0078, DF-ROS-2026-A057).
+    let private urlStateTests =
+        [ { Name = "web serve: a non-canonical page URL redirects to its canonical form; empty filters and repeated tags collapse"
+            Run =
+              fun () ->
+                  withServer (fun _ server ->
+                      let empty = server.Get "/?tag=&status="
+                      Assert.equal 303 (Http.status empty)
+                      Assert.equal "/" (Http.location empty)
+                      Assert.equal "/?tag=a,b&status=ready" (Http.location (server.Get "/?tag=b,%20a&tag=a&status=ready"))
+                      Assert.equal "/" (Http.location (server.Get "/index.html"))
+                      Assert.equal "/validate" (Http.location (server.Get "/validate?undeclared=1"))
+                      Assert.equal 200 (Http.status (server.Get "/?tag=a,b&status=ready"))) }
+
+          { Name = "web serve: an unknown page, an invalid filter and an unknown item are typed outcomes with a way back, never a bare 404"
+            Run =
+              fun () ->
+                  withServer (fun _ server ->
+                      let missing = server.Get "/nothing-here"
+                      Assert.equal 404 (Http.status missing)
+                      Http.contains "Not found" (Http.body missing)
+                      Http.contains "Back to the start" (Http.body missing)
+                      let invalid = server.Get "/?status=nope"
+                      Assert.equal 400 (Http.status invalid)
+                      Http.contains "Invalid link" (Http.body invalid)
+                      Http.contains "nope" (Http.body invalid)
+                      let item = server.Get "/work/WI-NOPE"
+                      Assert.equal 404 (Http.status item)
+                      Http.contains "Queue" (Http.body item)) }
+
+          { Name = "web serve: every page offers its canonical URL as Link to this view, and a shown flash is cleared"
+            Run =
+              fun () ->
+                  withServer (fun _ server ->
+                      let page = Http.body (server.Get "/?status=ready")
+                      Http.contains "Link to this view" page
+                      Http.contains "href=\"/?status=ready\"" page
+                      Http.contains "/?status=ready\" aria-label" page
+                      server.PostJson("/api/work", """{"title":"Flash","id":"WI-FLASH"}""") |> ignore
+                      let blocked = server.PostForm("/work/WI-FLASH/block", [ "reason", "" ])
+                      Assert.equal "/work/WI-FLASH" (Http.location blocked)
+                      let shown = server.Get(Http.location blocked)
+                      Http.contains "reason" (Http.body shown)
+                      Http.contains "praxis-flash=;" (String.Join("|", (match shown.Headers.TryGetValues "Set-Cookie" with | true, values -> values | _ -> Seq.empty)))
+                      Assert.isTrue (not ((Http.body (server.Get "/work/WI-FLASH")).Contains "ef-fault--inline")) "the flash shows once") } ]
+
+    let tests = unitTests @ apiTests @ formTests @ urlStateTests

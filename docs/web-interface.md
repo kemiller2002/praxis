@@ -52,6 +52,31 @@ the exact error message the CLI reported -- the page never re-implements a
 rule such as "block requires a reason" or "completion requires
 implementation and tests evidence".
 
+### URLs (SAF-URL-1..10)
+
+Every page is addressable, and a copied URL opens the same view. The route
+tables are `Praxis.Application.Web.UrlState`, built on the pinned
+`EchelonFoundry.Limen.Routing` engine library (`DF-ROS-2026-A057`). Their
+inventories are `.echelon/routes.json` (this server) and
+`.echelon/routes.hub.json` (the hub).
+
+- **Canonical URLs.** Filters are `?tag=a,b&status=ready`: tags form one
+  sorted set and empty fields are omitted. Any other spelling answers 303 to
+  the canonical URL, so the address bar always holds it. That covers an empty
+  form field, repeated or space-separated tags, an undeclared parameter, and
+  `/index.html`.
+- **Typed outcomes.** An unknown page is 404 "Not found", and an invalid
+  filter value is 400 "Invalid link". Both have a way back.
+- **Feedback.** The notice or error after a form post travels in a
+  short-lived `praxis-flash` cookie (HttpOnly, SameSite=Strict), shown once,
+  never in the URL.
+- **Link to this view.** Every page ends with its canonical URL as a link,
+  plus the absolute address in a read-only field.
+- **Not yet.** The UI is script-free (PRX-UI-031), so a filter submit pushes
+  history rather than replacing it, and there is no one-click clipboard copy.
+  Both need browser script, which is the owner's call (`DF-ROS-2026-A057`
+  item 6).
+
 ## Architecture
 
 This follows the same layering discipline as the rest of Praxis's work

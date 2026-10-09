@@ -9,7 +9,7 @@
     }
   ],
   "mode": "path",
-  "notFound": null,
+  "notFound": "notFound",
   "routes": [
     {
       "guards": [],
@@ -56,7 +56,7 @@
           "values": null
         }
       ],
-      "pattern": "/work/{id}",
+      "pattern": "/work/{id:string}",
       "requires": [
         "work-item"
       ],
@@ -83,11 +83,28 @@
           "values": null
         }
       ],
-      "pattern": "/executions/{id}",
+      "pattern": "/executions/{id:string}",
       "requires": [
         "execution"
       ],
       "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "notFound",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "rest",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/{*rest}",
+      "requires": [],
+      "returnTarget": false
     }
   ],
   "schema": "echelon.routes/v1",

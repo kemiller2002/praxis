@@ -167,7 +167,8 @@ module HubTests =
                         Segments = HttpMessages.pathSegments path
                         Query = query
                         ContentType = None
-                        Body = [||] }
+                        Body = [||]
+                        Headers = [] }
 
                   Assert.equal (HubWebRoute.Api HubRoute.ListRepos) (HubWeb.route (request "GET" "/api/repos" []))
                   Assert.equal (HubWebRoute.Api(HubRoute.UnregisterRepo "a b")) (HubWeb.route (request "DELETE" "/api/repos/a%20b" []))
@@ -403,16 +404,17 @@ module HubTests =
                       use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
                       let registered = server.PostForm("/repos", [ "path", spokes[0]; "name", "<Alpha>" ])
                       Assert.equal 303 (Http.status registered)
-                      Http.contains "notice=Registered" (Http.location registered)
+                      Assert.equal "/" (Http.location registered)
+                      Http.contains "notice:Registered" (Http.flash registered)
                       let repoId = spokeId spokes[0]
                       let rejected = server.PostForm("/repos", [ "path", spokes[0]; "name", "again" ])
-                      Http.contains "error=already%20registered" (Http.location rejected)
+                      Http.contains "already registered" (Http.flash rejected)
 
                       let created =
                           server.PostMultipart("/work", [ "repo", repoId; "title", "From the page"; "tags", "hub"; "priority", "low"; "name", "brief.md" ], [ "x.md", "brief" ])
 
                       Assert.equal 303 (Http.status created)
-                      Http.contains "notice=Created%20WI-0001" (Http.location created)
+                      Http.contains "notice:Created WI-0001" (Http.flash created)
                       let spokeItem = JsonNode.Parse((CliHarness.rosOk spokes[0] [ "work"; "show"; "WI-0001" ]).Out)
                       Assert.equal "brief.md" (Http.text (spokeItem["attachments"].AsArray()[0]) "name")
                       Assert.equal [ "hub" ] (Http.strings spokeItem "tags")
@@ -422,7 +424,21 @@ module HubTests =
                       Assert.isTrue (not (page.Contains "<script")) "the hub page carries no script"
                       Http.contains "text/css" (string (server.Get "/styles.css").Content.Headers.ContentType)
                       let unregistered = server.PostForm($"/repos/{repoId}/unregister", [])
-                      Http.contains "notice=Unregistered" (Http.location unregistered)
-                      Assert.equal 0 ((hubOk hubRoot [ "repos" ]).AsArray().Count)) } ]
+                      Http.contains "notice:Unregistered" (Http.flash unregistered)
+                      Assert.equal 0 ((hubOk hubRoot [ "repos" ]).AsArray().Count)) }
+
+          { Name = "hub serve: filters have one canonical URL, an unknown page is a typed not-found, and the page links to itself (SAF-URL)"
+            Run =
+              fun () ->
+                  withRepositories 1 (fun hubRoot _ ->
+                      use server = new ServedProcess(hubRoot, [ "hub"; "serve" ])
+                      let empty = server.Get "/?repo=&tag=&status="
+                      Assert.equal 303 (Http.status empty)
+                      Assert.equal "/" (Http.location empty)
+                      Assert.equal "/?tag=a,b" (Http.location (server.Get "/?tag=b&tag=a"))
+                      let missing = server.Get "/somewhere"
+                      Assert.equal 404 (Http.status missing)
+                      Http.contains "Back to the start" (Http.body missing)
+                      Http.contains "Link to this view" (Http.body (server.Get "/?status=ready"))) } ]
 
     let tests = unitTests @ cliTests @ scaffoldTests @ serverTests
