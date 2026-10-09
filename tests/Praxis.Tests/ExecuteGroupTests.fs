@@ -80,7 +80,7 @@ module ExecuteGroupTests =
                   let refused = execute clone []
                   Assert.equal 1 refused.ExitCode
                   Assert.isTrue (refused.Output.Contains "ECIR group execution refused") refused.Output
-                  Assert.equal before (File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json"))
+                  Assert.equal before (File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json")))
                   Assert.empty (changedPaths clone)))
 
           t "a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone" (fun () ->
