@@ -5840,6 +5840,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-11-0",
+      "title": "Release Praxis 3.11.0",
+      "description": "Bump release.json from 3.10.0 to 3.11.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-09T02:34:53.714Z",
+      "updatedAt": "2026-10-09T02:34:53.851Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
