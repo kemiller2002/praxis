@@ -9242,10 +9242,31 @@
     {
       "id": "WI-0082",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-09T01:26:09.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Web/url-state.js"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Web/UrlEnhancement.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/BrowserTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/UrlEnhancementTests.fs"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A058--url-state-script-exception-for-praxis-ui.md"
+        }
+      ],
+      "updatedAt": "2026-10-09T02:19:37.000Z",
       "telemetryExecutionIds": [
         "EXE-20261009T012610078Z-26160b5b"
       ],
@@ -9268,12 +9289,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-09T02:19:37.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "anthropic/claude-code",
-  "updatedAt": "2026-10-09T01:26:09.000Z",
+  "updatedAt": "2026-10-09T02:19:37.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
