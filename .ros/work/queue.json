@@ -5803,10 +5803,10 @@
       "description": "Bump release.json from 3.9.1 to 3.10.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-09T00:44:27.736Z",
-      "updatedAt": "2026-10-09T00:44:27.931Z",
+      "updatedAt": "2026-10-09T00:44:35.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",
