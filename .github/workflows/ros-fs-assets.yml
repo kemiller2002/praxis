@@ -11,6 +11,12 @@ name: ros-fs release assets
 #
 # Assets are immutable: if the release already has checksums.txt, nothing
 # is built or uploaded.
+#
+# With `publish: false` (every pull request, from native-release.yml) the
+# binaries are built from the checked-out commit and verified -- checksums and
+# the linux-x64 binary reporting the release version -- but no release is read,
+# nothing is attested and nothing is uploaded. Only the publish steps are
+# gated, so the check itself always runs and concludes.
 
 on:
   workflow_call:
@@ -19,12 +25,22 @@ on:
         description: "Release tag, e.g. v3.6.0"
         required: true
         type: string
+      publish:
+        description: "Attest and upload to the release; false only builds and verifies"
+        required: false
+        default: true
+        type: boolean
   workflow_dispatch:
     inputs:
       tag:
         description: "Release tag to add ros-fs assets to, e.g. v3.6.0"
         required: true
         type: string
+      publish:
+        description: "Attest and upload to the release; false only builds and verifies"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -32,7 +48,7 @@ permissions:
   attestations: write
 
 concurrency:
-  group: ros-fs-assets-${{ inputs.tag }}
+  group: ros-fs-assets-${{ inputs.tag }}-${{ inputs.publish && 'publish' || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -45,10 +61,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
+          PUBLISH: ${{ inputs.publish }}
         shell: bash
         run: |
           set -euo pipefail
           [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$TAG' is not a vX.Y.Z tag"; exit 1; }
+          if [ "$PUBLISH" != "true" ]; then
+            echo "Verify only: building $TAG from $GITHUB_SHA; no release is read or changed."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null || { echo "::error::release $TAG does not exist"; exit 1; }
           names="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
           case $'\n'"${names}"$'\n' in
@@ -62,7 +84,7 @@ jobs:
       - uses: actions/checkout@v6
         if: steps.need.outputs.build == 'true'
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.publish && inputs.tag || github.sha }}
 
       - uses: actions/setup-dotnet@v6
         if: steps.need.outputs.build == 'true'
@@ -107,8 +129,24 @@ jobs:
           done
           (cd dist/ros-fs && sha256sum ros-fs-* > checksums.txt && cat checksums.txt)
 
-      - name: Attest build provenance
+      - name: Verify the ros-fs binaries
         if: steps.need.outputs.build == 'true'
+        env:
+          TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd dist/ros-fs && sha256sum -c checksums.txt)
+          test "$(wc -l < dist/ros-fs/checksums.txt)" -eq 5
+          reported="$(./dist/ros-fs/ros-fs-linux-x64 --version)"
+          echo "$reported"
+          case "$reported" in
+            *" ${TAG#v}") ;;
+            *) echo "::error::ros-fs-linux-x64 reports '$reported', not ${TAG#v}"; exit 1 ;;
+          esac
+
+      - name: Attest build provenance
+        if: steps.need.outputs.build == 'true' && inputs.publish
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
@@ -116,7 +154,7 @@ jobs:
             dist/ros-fs/checksums.txt
 
       - name: Upload to the release
-        if: steps.need.outputs.build == 'true'
+        if: steps.need.outputs.build == 'true' && inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
