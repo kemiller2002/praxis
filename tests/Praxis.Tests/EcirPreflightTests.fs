@@ -31,6 +31,11 @@ module EcirPreflightTests =
         finally
             GitFixture.cleanup parent
 
+
+    let private validatorOutput digest imported represented modeled unresolved deferred authorization =
+        sprintf """{"schemaVersion":"ecir.validate/1","status":"trace-validated","blueprintDigest":"%s","sourceRequirements":%d,"representedRequirements":%d,"modeledRequirements":%d,"unresolvedRequirements":%d,"deferredRequirements":%d,"executionAuthorized":%s}"""
+            digest imported represented modeled unresolved deferred authorization
+
     let tests =
         [ t "both inputs come from the same immutable Git commit rather than working tree" (fun () ->
               withDocuments (fun clone reference ->
@@ -58,6 +63,28 @@ module EcirPreflightTests =
                       { reference with SourceManifestDigest = "sha256:" + String('b', 64) } ] do
                       Assert.isTrue (FileEcirPreflight.readCommitted clone change |> Result.isError)
                           ("invalid ECIR input was accepted: " + change.ManifestPath)))
+
+          t "host-pinned Ordo response must preserve source cardinality and explicitly refuse authority" (fun () ->
+              let expected = "sha256:" + String('b', 64)
+              let pinned = "sha256:" + String('c', 64)
+              let valid = validatorOutput expected 10 10 8 2 0 "false"
+              match FileEcirValidator.parseResponse expected pinned valid with
+              | Error problem -> failwith problem
+              | Ok observation ->
+                  Assert.equal 10 observation.SourceRequirements
+                  Assert.equal 2 observation.UnresolvedRequirements
+                  Assert.equal pinned observation.ValidatedByExecutableSha256
+
+              for corrupted in [
+                  validatorOutput expected 10 9 8 2 0 "false"
+                  validatorOutput expected 10 10 8 2 0 "true"
+                  validatorOutput "sha256:changed" 10 10 8 2 0 "false"
+                  valid.Replace("trace-validated", "approved")
+                  valid.Replace("ecir.validate/1", "ecir.validate/2")
+                  "{broken}" ] do
+                  Assert.isTrue
+                      (FileEcirValidator.parseResponse expected pinned corrupted |> Result.isError)
+                      "unsafe Ordo output was accepted")
 
           t "nonexistent committed files and fake Git SHA do not turn into approvals" (fun () ->
               withDocuments (fun clone reference ->
