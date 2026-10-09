@@ -88,5 +88,9 @@ module EcirPreflightTests =
 
           t "nonexistent committed files and fake Git SHA do not turn into approvals" (fun () ->
               withDocuments (fun clone reference ->
-                  Assert.isTrue (FileEcirPreflight.readCommitted clone { reference with BlueprintPath = "ecir/missing.json" } |> Result.isError)
-                  Assert.isTrue (FileEcirPreflight.readCommitted clone { reference with Commit = String('f', 40) } |> Result.isError))) ]
+                  Assert.isTrue
+                      (FileEcirPreflight.readCommitted clone { reference with BlueprintPath = "ecir/missing.json" } |> Result.isError)
+                      "missing committed blueprint must fail"
+                  Assert.isTrue
+                      (FileEcirPreflight.readCommitted clone { reference with Commit = String('f', 40) } |> Result.isError)
+                      "unresolvable commit SHA must fail")) ]
