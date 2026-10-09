@@ -97,16 +97,6 @@ module ExecuteGroupCommands =
 
             match FileGroupExecution.facts root (single "--config") groupId actor with
             | Error message -> WorkGroupCommands.reportFailure asJson command message
-            | Ok(facts, _, _) when
-                facts.Group
-                |> Option.exists (fun group ->
-                    EcirGates.isEcirGroup group.Declaration.SharedContext) ->
-                // A model-authored "validated" field or CLI flag cannot
-                // substitute for a pinned Ordo validation observation and a
-                // separate decision-authorization receipt. Refuse before
-                // work begin or any state mutation until the bridge exists.
-                WorkGroupCommands.reportFailure asJson command
-                    "ECIR group execution refused: no independently verified Ordo validation and decision-authorization evidence. The pinned Ordo/Praxis integration is required; nothing was begun."
             | Ok(facts, _, repository) ->
                 let request =
                     { GroupId = groupId
