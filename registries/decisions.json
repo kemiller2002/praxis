@@ -1936,5 +1936,59 @@
     "title": "Praxis's web and hub UIs keep their URL state through the pinned Limen.Routing engine library, stay script-free, and escalate the two SAF-URL behaviours that need browser script",
     "updated": "2026-10-08",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-09",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A057"
+    ],
+    "id": "DF-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A058--url-state-script-exception-for-praxis-ui.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261009T012610078Z-26160b5b": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "claude-opus-5-5",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-09T01:37:15.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0082: records the owner's approval (relayed by the coordinating session) of the url-state.js exception and its limits"
+        }
+      }
+    },
+    "related_documents": [
+      "research/decisions/DF-ROS-2026-A057--praxis-ui-url-state-through-limen-routing.md",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md",
+      "docs/web-interface.md",
+      "docs/application-foundations.md",
+      "RQ-ROS-2026-A024"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "foundations",
+      "deep-linking",
+      "web",
+      "security",
+      "exception",
+      "decision"
+    ],
+    "title": "Praxis's web and hub UIs may load one approved browser script, url-state.js, for replace-on-refine and one-action Copy link, as a progressive enhancement under a strict CSP",
+    "updated": "2026-10-09",
+    "version": "1.0.0"
   }
 ]

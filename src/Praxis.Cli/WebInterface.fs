@@ -496,7 +496,7 @@ module WebInterface =
                   "</section>"
                   "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter work\">"
                   "<h2>Filter</h2>"
-                  "<form method=\"get\" action=\"/\">"
+                  "<form method=\"get\" action=\"/\" data-refine>"
                   $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
                   $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter statuses}</select></label>"""
                   "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"

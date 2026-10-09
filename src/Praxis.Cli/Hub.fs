@@ -682,7 +682,7 @@ module HubWeb =
                   "</section>"
                   "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter aggregated work\">"
                   "<h2>Filter</h2>"
-                  "<form method=\"get\" action=\"/\">"
+                  "<form method=\"get\" action=\"/\" data-refine>"
                   $"<label>Repo <select name=\"repo\"><option value=\"\">all</option>{repoOptions repoFilter}</select></label>"
                   $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
                   $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter WebInterface.statuses}</select></label>"""

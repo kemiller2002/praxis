@@ -1,7 +1,12 @@
 module Praxis.Tests.Program
 
+/// `--suite browser` runs the browser suite (headless Chrome, DF-ROS-2026-A058);
+/// with no argument, every other test runs. CI runs both.
 [<EntryPoint>]
-let main _ =
+let main argv =
+  match argv with
+  | [| "--suite"; "browser" |] -> TestRunner.run BrowserTests.tests
+  | [||] ->
     ArchitectureTests.tests
     @ CliHarnessTests.tests
     @ ArtifactTests.tests
@@ -136,4 +141,6 @@ let main _ =
     @ IdentityTests.tests
     @ CompletionObligationsTests.tests
     @ ProvenanceAcknowledgementTests.tests
+    @ UrlEnhancementTests.tests
     |> TestRunner.run
+  | other -> eprintfn "unknown arguments: %s (expected none, or --suite browser)" (String.concat " " other); 2

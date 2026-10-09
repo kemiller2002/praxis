@@ -146,6 +146,13 @@ module Http =
     let contains (fragment: string) (text: string) =
         Assert.isTrue (text.Contains fragment) $"expected to find '{fragment}' in:\n{text}"
 
+    /// A UI page carries one script element: the approved, integrity-pinned
+    /// `url-state.js` (DF-ROS-2026-A058). No inline script, nothing else.
+    let onlyApprovedScript (html: string) =
+        Assert.equal
+            [ Praxis.Application.Web.UrlEnhancement.scriptTag ]
+            (Text.RegularExpressions.Regex.Matches(html, @"<script\b[^>]*>.*?</script>", Text.RegularExpressions.RegexOptions.Singleline) |> Seq.map _.Value |> List.ofSeq)
+
 [<RequireQualifiedAccess>]
 module WebInterfaceTests =
     let private request methodName (path: string) (query: (string * string) list) contentType (body: byte array) =
@@ -497,7 +504,7 @@ module WebInterfaceTests =
                       Assert.equal 200 (Http.status status)
                       Assert.equal "passed" (Http.text (Http.json status) "validation")) }
 
-          { Name = "web serve: unknown routes 404 and the page is server-rendered HTML with no script"
+          { Name = "web serve: unknown routes 404 and the page is server-rendered HTML whose only script is the approved url-state.js"
             Run =
               fun () ->
                   withServer (fun _ server ->
@@ -509,7 +516,7 @@ module WebInterfaceTests =
                       let html = Http.body page
                       Http.contains "Work Backlog" html
                       Http.contains "ROS-INSTALL" html
-                      Assert.isTrue (not (html.Contains "<script")) "the page must not load JavaScript"
+                      Http.onlyApprovedScript html
                       let css = server.Get "/styles.css"
                       Assert.equal 200 (Http.status css)
                       Http.contains "text/css" (string css.Content.Headers.ContentType)) }

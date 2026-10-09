@@ -72,10 +72,17 @@ inventories are `.echelon/routes.json` (this server) and
   never in the URL.
 - **Link to this view.** Every page ends with its canonical URL as a link,
   plus the absolute address in a read-only field.
-- **Not yet.** The UI is script-free (PRX-UI-031), so a filter submit pushes
-  history rather than replacing it, and there is no one-click clipboard copy.
-  Both need browser script, which is the owner's call (`DF-ROS-2026-A057`
-  item 6).
+- **Replace on refinement, one-action copy.** One approved script,
+  `/url-state.js` (`DF-ROS-2026-A058`), does exactly two things: a filter
+  submit replaces the history entry instead of pushing one (SAF-URL-3), and a
+  `Copy link` button copies "Link to this view" in one click (SAF-URL-10). It
+  is a progressive enhancement. With JavaScript off, filters push as before,
+  the button stays hidden and the address is selected by hand.
+- **Content-Security-Policy.** Every response carries a strict CSP: scripts
+  only from this origin (the page pins `url-state.js` by its SHA-256
+  integrity), no inline script, no `eval`, `connect-src 'none'` and Trusted
+  Types. The script makes no network request and keeps no storage, and
+  `UrlEnhancementTests` fails if it grows any such capability.
 
 ## Architecture
 
@@ -83,7 +90,7 @@ This follows the same layering discipline as the rest of Praxis's work
 protocol: one place owns meaning, everything else is a thin adapter over it.
 
 ```
-browser (server-rendered HTML, plain form posts, no script)
+browser (server-rendered HTML, plain form posts; optional url-state.js)
         | HTTP
         v
 praxis web serve (Praxis.Cli.WebInterface: routing + rendering, no domain logic)
@@ -124,8 +131,10 @@ work list/show, validate --json, status --json  (the kernel)
   present, is loaded after Forma as an optional project override and ships
   empty. To move to a new Forma release, replace the tarball and lock
   together and run the web, hub and Forma tests.
-- **Limen (PRX-UI-031).** The web interface is server-rendered and script-free:
-  every action is a form post, and legality comes from the CLI. There is no
+- **Limen (PRX-UI-031).** The web interface is server-rendered and
+  script-optional: every action is a form post, legality comes from the CLI,
+  and the one approved script (`DF-ROS-2026-A058`) only enhances history and
+  copying. There is no
   browser runtime for Limen to host, so `.echelon/foundations.json` declares
   Limen not applicable for this architecture. A future browser application
   would adopt Limen.

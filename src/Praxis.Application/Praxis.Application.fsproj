@@ -32,5 +32,10 @@
     <Compile Include="Execution/Operations.fs" />
     <Compile Include="Web/HttpHeaders.fs" />
     <Compile Include="Web/UrlState.fs" />
+    <Compile Include="Web/UrlEnhancement.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The one approved browser script (DF-ROS-2026-A058), served by UrlEnhancement. -->
+    <EmbeddedResource Include="Web/url-state.js" LogicalName="url-state.js" />
   </ItemGroup>
 </Project>
