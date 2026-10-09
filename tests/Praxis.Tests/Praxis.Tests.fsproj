@@ -142,6 +142,8 @@
     <Compile Include="PostmergeReconciliationTests.fs" />
     <Compile Include="WorkGroupTests.fs" />
     <Compile Include="GroupGateTests.fs" />
+    <Compile Include="EcirGateTests.fs" />
+    <Compile Include="EcirPreflightTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />

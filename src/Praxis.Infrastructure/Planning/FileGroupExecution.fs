@@ -186,6 +186,14 @@ module FileGroupExecution =
                   Fallback = fallback },
                 input.Configuration,
                 input.Repository))
+        // ECIR groups cannot enter the legacy execution route without
+        // pinned Ordo validation and independent decision authorization.
+        // Fail before the CLI performs work begin or any repository mutation.
+        |> Result.bind (fun (facts, configuration, repository) ->
+            match facts.Group with
+            | Some group when EcirGates.isEcirGroup group.Declaration.SharedContext ->
+                Error "ECIR group execution refused: pinned Ordo verification and independent decision authorization are not yet integrated; nothing was begun."
+            | _ -> Ok(facts, configuration, repository))
 
     /// The execution `work begin` just started for a member: the last one
     /// its live context lists.
