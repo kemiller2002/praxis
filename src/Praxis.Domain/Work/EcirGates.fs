@@ -24,6 +24,14 @@ type EcirExecutionObservation =
 
 [<RequireQualifiedAccess>]
 module EcirGates =
+    /// Explicit opt-in construction cohorts cannot execute through the
+    /// legacy unguarded grouped-work path, even if an agent omits ECIR flags.
+    let isEcirGroup (sharedContext: string list) =
+        sharedContext
+        |> List.exists (fun entry ->
+            not (System.String.IsNullOrWhiteSpace entry)
+            && entry.StartsWith("ecir/1:", System.StringComparison.Ordinal))
+
     /// Failure categories are stable enough for agent disposition and human
     /// review; never return an authorization-free pass on missing observations.
     let problems (value: EcirExecutionObservation) : string list =
