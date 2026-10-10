@@ -13,7 +13,7 @@ module LocalAgentHandoffTests =
     let private t name action = { Name = "local handoff: " + name; Run = action }
     let private now = DateTimeOffset.Parse("2026-10-10T12:00:00Z")
     let private sha c = "sha256:" + String(c, 64)
-    let private packet: LocalWorkerPacket =
+    let internal packet: LocalWorkerPacket =
         { SchemaVersion = LocalAgentHandoff.PacketSchema
           DispatchId = "DISPATCH-1"; AttemptId = "ATTEMPT-1"; ParentExecutionId = "EXE-PARENT"; ChildExecutionId = "EXE-CHILD"; WorkerId = "worker-1"
           Role = ExecutionRole.Implementation; RepositoryIdentity = "repo-42"; SourceCommit = String('a', 40)

@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T13:10:37.989Z
+      last: 2026-10-10T13:27:46.349Z
       actor:
         kind: agent
         id: openai/codex
@@ -105,3 +105,18 @@ means inspection succeeded, not execution authorization. The supplied packet
 set is not evidence of full frozen blueprint coverage. This advisory projection
 can be replaced without migrating execution state. The protected controller,
 local checkpoint profile and actual offline worker loop remain proposed.
+
+
+## Isolated dispatch persistence proposal
+
+The prototype uses `praxis.local-dispatch-reservation/1` and
+`praxis.local-dispatch-event/1` in a provisioned host directory outside the
+repository. An immutable reservation binds the packet and controller-session
+incarnation; exclusive contiguous event files distinguish intent, observed
+start, confirmed no-start and observed exit. Ambiguous starts never return to a
+launchable state. These files grant no worker authority and update no native
+work state. Actual OS observation/protection and policy/repository locks remain
+requirements on the future adapter. File flush and process-interruption tests
+do not qualify metadata persistence across power loss. See
+[the journal prototype](../../docs/local-dispatch-journal.md). This remains a
+draft persistent shape and does not replace remote-verified checkpoints.

@@ -147,6 +147,7 @@
     <Compile Include="EcirApprovalTests.fs" />
     <Compile Include="EcirHostTests.fs" />
     <Compile Include="LocalAgentHandoffTests.fs" />
+    <Compile Include="LocalDispatchJournalTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />

@@ -1741,6 +1741,40 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.started",
+      "occurredAt": "2026-10-10T13:17:19.306Z",
+      "stepId": "STEP-20261010T131719306Z-6cab396b",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-10T13:29:23.154Z",
+      "stepId": "STEP-20261010T131719306Z-6cab396b",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -3826,6 +3860,346 @@
           "to": "completed",
           "occurredAt": "2026-10-10T13:14:08.002Z",
           "reason": "Read-only handoff explain command, bounded infrastructure/application ports, cross-packet dependency/ownership/revision/write diagnostics and sample artifact implemented; Release build, 29 handoff tests, 9 CLI boundary ratchet tests, 33 lifecycle CLI tests and 37 ECIR tests pass; no worker launch or authority activation",
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "stepId": "STEP-20261010T131719306Z-6cab396b",
+      "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
+      "workItemId": "GH-220",
+      "instanceId": "pxi-979d1acb7720455e9a50fa3b4e7b9259",
+      "sequence": 7,
+      "siblingSequence": 7,
+      "parentStepId": null,
+      "name": "Durable local dispatch attempt reservation and restart reconciliation",
+      "description": null,
+      "classification": [],
+      "status": "completed",
+      "plannedAt": "2026-10-10T13:17:19.306Z",
+      "startedAt": "2026-10-10T13:17:19.306Z",
+      "completedAt": "2026-10-10T13:29:23.154Z",
+      "endedAt": "2026-10-10T13:29:23.154Z",
+      "updatedAt": "2026-10-10T13:29:23.154Z",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "identity": {
+        "provider": "openai",
+        "model": null,
+        "modelVersion": null,
+        "runtime": "codex",
+        "runtimeVersion": null,
+        "sessionId": "01a1250e-d442-77a2-97f4-15be3af620ff",
+        "conversationId": "01a1250e-d442-77a2-97f4-15be3af620ff",
+        "runId": null,
+        "agentId": "openai/codex",
+        "subagentId": null,
+        "parentExecutionId": null
+      },
+      "telemetry": {
+        "measurementIds": [],
+        "rawSnapshotIds": [],
+        "checkpoints": [],
+        "deltas": [],
+        "capabilities": [
+          {
+            "metricId": "tokens.input",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.output",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cached_input",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cached_output",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cache_read",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cache_write",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.reasoning",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.tool",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "tokens.total",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.input_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.output_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cached_input_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cached_output_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.reasoning_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.input",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.output",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.reasoning",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.cache",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.tool_api",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.execution_total",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.step_total",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          },
+          {
+            "metricId": "cost.session_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-10T09:12:05.536Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "explicit-or-unmapped-environment"
+            }
+          }
+        ]
+      },
+      "relationships": {
+        "filesObserved": [],
+        "filesChanged": [],
+        "commits": [],
+        "commands": [],
+        "tests": [],
+        "validations": [],
+        "evidence": [],
+        "decisions": [],
+        "requirements": [],
+        "outcomes": []
+      },
+      "transitions": [
+        {
+          "from": null,
+          "to": "active",
+          "occurredAt": "2026-10-10T13:17:19.306Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-10T13:29:23.154Z",
+          "reason": "Isolated immutable dispatch reservation, controller-session binding, uncertain-start/process-incarnation state machine and exclusive file journal implemented; Release build, 10 journal tests with 50 reservation races, 29 handoff tests, 37 ECIR tests and 3 architecture tests pass; native validation/registry pass; actual launcher/OS protection and power-loss qualification remain pending",
           "actor": {
             "kind": "agent",
             "id": "openai/codex",

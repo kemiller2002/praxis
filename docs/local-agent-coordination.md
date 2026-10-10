@@ -132,6 +132,15 @@ not the future dispatch scheduler or integration gate.
    cohort, with outbound network denied, no Git remote, interface compilation,
    independent acceptance, scope/expiry/revocation tests and injected failures.
 
+## Dispatch journal prototype
+
+The isolated [local dispatch journal](local-dispatch-journal.md) now supplies
+exclusive reservation and event files, fresh pre-intent checks, controller
+incarnation binding and explicit uncertain-start reconciliation. It has no
+launcher or native work-state mutation port. Its same-account file fixtures do
+not qualify host protections or the actual-agent pilot. Native recovery and
+process identity remain observations for a future protected adapter.
+
 ## Local and offline
 
 Local orchestration needs no external coordination service. Fully offline
@@ -145,13 +154,17 @@ selection and actual model quality/throughput remain unqualified.
 
 Work-group planning, execution envelopes, worktrees, role launchers, ECIR
 receipt verification and staging/recovery primitives exist. The complete
-coordinator-to-workers loop, protected local delegation adapter, durable
-dispatch journal and local checkpoint profile do not yet exist. Typed
-packet/result contracts and pure adversarial intake checks are now implemented. No adapter authenticates the controller observations yet. This
-plan opens no execution gates and changes no accepted governance. Local
-verification: the tests project and CLI dependencies build in Release with zero warnings/errors; 29 local
-handoff tests and 37 existing ECIR tests pass. Registry check and native Praxis
+coordinator-to-workers loop, protected local delegation adapter and local
+checkpoint profile do not yet exist. The isolated dispatch journal mechanism
+exists; runtime wiring, actual process reconciliation and durable
+result/integration handling remain pending. Typed packet/result contracts and
+pure adversarial intake checks are now implemented. No adapter authenticates
+the controller observations yet. This plan opens no execution gates and
+changes no accepted governance. Local verification: the tests project and CLI
+dependencies build in Release with zero warnings/errors; 29 local handoff
+tests and 37 existing ECIR tests pass. Registry check and native Praxis
 validation cover the accompanying records. These checks do not qualify the
-future offline pilot. The read-only explanation also passes real CLI tests
-for unchanged file inventories without Git, and 33 existing lifecycle CLI
-tests pass; all 9 CLI boundary ratchet tests also pass.
+future offline pilot. The read-only explanation also passes real CLI tests for
+unchanged file inventories without Git, and 33 existing lifecycle CLI tests
+pass; all 9 CLI boundary ratchet tests also pass. Ten local dispatch journal
+tests additionally pass, including 50 reservation race repetitions.
