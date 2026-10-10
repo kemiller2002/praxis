@@ -165,26 +165,31 @@ module EcirHostTests =
               withStore (fun root journal writes ->
                   Assert.equal (Ok()) (EcirDispatchTransaction.prepare root journal writes)
                   let original = File.ReadAllText journal
+                  File.WriteAllText(journal, original.Substring(0, original.Length / 2))
+                  Assert.isTrue (EcirDispatchTransaction.recover root journal ignore |> Result.isError) "partial preparation replayed"
+                  Assert.isTrue (File.Exists journal) "partial preparation evidence was discarded"
+                  Assert.isTrue (writes |> List.forall (fun write -> not (File.Exists(Path.Combine(root, write.Path))))) "partial preparation mutated repository"
                   File.WriteAllText(journal, original.Replace("accepted:", "tampered:"))
                   Assert.isTrue (EcirDispatchTransaction.recover root journal ignore |> Result.isError) "tampered journal replayed"
                   File.WriteAllText(journal, original)
                   Assert.isTrue (EcirDispatchTransaction.recover (Path.GetDirectoryName root) journal ignore |> Result.isError) "journal replayed into different repository"))
 
           t "concurrent preparation never replaces the accepted host journal" (fun () ->
-              withStore (fun root journal writes ->
-                  Directory.CreateDirectory(Path.GetDirectoryName journal) |> ignore
-                  use barrier = new Barrier(2)
-                  let attempt candidate = Task.Run(fun () ->
-                      barrier.SignalAndWait(TimeSpan.FromSeconds 5.) |> ignore
-                      EcirDispatchTransaction.prepare root journal candidate)
-                  let alternate = writes |> List.map (fun w -> { w with Content = "alternate:" + w.Path })
-                  let first = attempt writes
-                  let second = attempt alternate
-                  Task.WaitAll [| first :> Task; second :> Task |]
-                  Assert.equal 1 ([ first.Result; second.Result ] |> List.filter Result.isOk |> List.length)
-                  Assert.equal (Ok()) (EcirDispatchTransaction.recover root journal ignore)
-                  let accepted = if Result.isOk first.Result then writes else alternate
-                  for write in accepted do Assert.equal write.Content (File.ReadAllText(Path.Combine(root, write.Path)))))
+              for _ in 1..100 do
+                  withStore (fun root journal writes ->
+                      Directory.CreateDirectory(Path.GetDirectoryName journal) |> ignore
+                      use barrier = new Barrier(2)
+                      let attempt candidate = Task.Run(fun () ->
+                          barrier.SignalAndWait(TimeSpan.FromSeconds 5.) |> ignore
+                          EcirDispatchTransaction.prepare root journal candidate)
+                      let alternate = writes |> List.map (fun w -> { w with Content = "alternate:" + w.Path })
+                      let first = attempt writes
+                      let second = attempt alternate
+                      Task.WaitAll [| first :> Task; second :> Task |]
+                      Assert.equal 1 ([ first.Result; second.Result ] |> List.filter Result.isOk |> List.length)
+                      Assert.equal (Ok()) (EcirDispatchTransaction.recover root journal ignore)
+                      let accepted = if Result.isOk first.Result then writes else alternate
+                      for write in accepted do Assert.equal write.Content (File.ReadAllText(Path.Combine(root, write.Path)))))
 
           t "dangling links and pre-existing target changes are refused" (fun () ->
               withStore (fun root journal writes ->

@@ -77,4 +77,8 @@ tests passed. They cover changed host pins, unqualified releases, revocation,
 membership changes, expiry during validation and staging, CAS refusal, failed
 administrative audit persistence, incorrect signer output, concurrent journal
 preparation, crashes at every write boundary, repeated recovery, late conflicts,
-unsafe paths, dangling links, tampering and wrong-repository replay.
+unsafe paths, dangling links, tampering and wrong-repository replay. CI found a
+Unix rename reservation race; preparation now exclusively creates and flushes
+the final journal, with 100 two-contender races in the regression test. A crash
+before that flush may leave an incomplete journal: recovery retains it and
+fails closed before any target write, requiring host investigation.

@@ -82,7 +82,16 @@ module EcirDispatchTransaction =
                                   beforeSha256 = write.BeforeSha256 |> Option.toObj
                                   afterSha256 = hashText write.Content
                                   content = write.Content |}) |}
-                writeAtomic journalPath serialized false
+                // CreateNew reserves the final name atomically. Rename with
+                // overwrite=false can race on Unix (check followed by rename).
+                // The caller's host lock excludes recovery until the flush.
+                // An interrupted partial preparation is retained and fails
+                // closed; no repository target has been written at this point.
+                Directory.CreateDirectory(Path.GetDirectoryName journalPath) |> ignore
+                use output = new FileStream(journalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)
+                let bytes = Encoding.UTF8.GetBytes serialized
+                output.Write(bytes, 0, bytes.Length)
+                output.Flush(true)
                 Ok()
         with e -> Error("cannot prepare ECIR host transaction: " + e.Message)
 
