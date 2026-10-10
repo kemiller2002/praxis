@@ -25,6 +25,19 @@ module LocalWorkerFixture =
             Console.OpenStandardOutput().WriteByte 0xffuy
             0
         | "nonzero" -> Console.In.ReadToEnd() |> ignore; 17
+        | "result" ->
+            Console.In.ReadToEnd() |> ignore
+            Console.Write(Praxis.Contracts.Work.LocalAgentHandoffJson.renderResult LocalAgentHandoffTests.result)
+            0
+        | "persist-submission" when List.length arguments = 2 ->
+            // Controller-store fixture, not a worker with access to host state.
+            let submission = Praxis.Contracts.Work.LocalWorkerSubmissionJson.read (Console.In.ReadToEnd()) |> function Ok value -> value | Error error -> failwith error
+            let store = FileLocalWorkerSubmissions.create arguments[0] arguments[1] |> function Ok value -> value | Error error -> failwith error
+            store.Save submission |> function Ok _ -> () | Error error -> failwith error
+            Console.Write "submission-flushed"
+            Console.Out.Flush()
+            Thread.Sleep 30000
+            0
         | _ -> 2
 
 [<RequireQualifiedAccess>]

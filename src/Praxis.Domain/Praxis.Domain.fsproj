@@ -100,6 +100,7 @@
     <Compile Include="Work/LocalAgentHandoff.fs" />
     <Compile Include="Work/LocalHandoffExplanation.fs" />
     <Compile Include="Work/LocalDispatchJournal.fs" />
+    <Compile Include="Work/LocalWorkerSubmission.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />

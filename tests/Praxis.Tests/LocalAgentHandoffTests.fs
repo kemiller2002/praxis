@@ -28,14 +28,14 @@ module LocalAgentHandoffTests =
           TimeoutSeconds = 600; MaxOutputBytes = 1048576 }
     let private authority = { Enabled = true; Revision = "rev-1"; ExpectedPacket = packet }
     let private prerequisites = Map.ofList [ "WI-0", sha 'd' ]
-    let private result: LocalWorkerResult =
+    let internal result: LocalWorkerResult =
         { SchemaVersion = LocalAgentHandoff.ResultSchema; DispatchId = packet.DispatchId; AttemptId = packet.AttemptId
           ChildExecutionId = packet.ChildExecutionId; WorkerId = packet.WorkerId
           PacketDigest = LocalAgentHandoff.packetDigest packet; OutputCommit = String('b', 40); ChangedPaths = [ "src/A.fs" ]
           Members =
               [ { WorkItemId = "WI-1"; ExecutionId = "EXE-WI1"; ChangedPaths = [ "src/A.fs" ]; Outcome = LocalWorkerOutcome.Submitted; Evidence = [ { ObligationId = "VERIFY-1"; ArtifactPath = "reports/one.json"; Digest = sha '2' } ] }
                 { WorkItemId = "WI-2"; ExecutionId = "EXE-WI2"; ChangedPaths = []; Outcome = LocalWorkerOutcome.Submitted; Evidence = [ { ObligationId = "VERIFY-2"; ArtifactPath = "reports/two.json"; Digest = sha '3' } ] } ] }
-    let private observed: LocalWorkerResultObservation =
+    let internal observed: LocalWorkerResultObservation =
         { WorkerId = packet.WorkerId; ChildExecutionId = packet.ChildExecutionId; AttemptId = packet.AttemptId
           ReservedPacketDigest = result.PacketDigest; OutputCommit = Some result.OutputCommit; SourceIsAncestor = true
           ChangedPaths = Ok result.ChangedPaths

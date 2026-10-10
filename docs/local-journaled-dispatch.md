@@ -52,9 +52,9 @@ reservation instead of launching again. Recovery of pending native transactions,
 OS incarnation and uncertain process state remains the protected host's job.
 
 NoStart and Exited close only process tracking. They grant no result acceptance,
-integration or work completion. Worker stdout is still in-memory observation;
-durable result intake, independent validation and integration journals remain
-pending. A crash after root exit but before saving that fact leaves the earlier
+integration or work completion. The [submission archive](local-worker-submissions.md) now persists complete
+stdout before fresh independent intake in isolated composition. Protected
+acceptance and integration journals remain pending. A crash after root exit but before saving that fact leaves the earlier
 state uncertain. No exactly-once spawning or power-loss durability is claimed.
 
 ## Verification

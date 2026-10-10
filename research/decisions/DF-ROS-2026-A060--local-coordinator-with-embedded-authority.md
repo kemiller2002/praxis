@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T14:32:07.280Z
+      last: 2026-10-10T15:02:31.183Z
       actor:
         kind: agent
         id: openai/codex
@@ -138,3 +138,15 @@ incarnation require refusal or reconciliation. Exited/NoStart close only process
 tracking. This is partial launch/recovery coverage in fixtures; protected host
 qualification, durable results, integration and the offline agent pilot remain
 pending.
+
+
+[Durable worker submissions](../../docs/local-worker-submissions.md) add the draft
+`praxis.local-worker-submission/1` archival shape and isolated dispatch/capture
+composition. Bounded unchanged UTF-8 stdout, checksum, exact packet and process
+identity survive successful save and fixture interruption; duplicate records
+cannot replace original claims. Fresh recovery, independent observations and
+authority/dependency/time checks are required on every intake. Stored claims
+never supply approval, accepted-result state, integration or completion. The
+pre-archive crash interval, power-loss metadata durability, qualified protected
+host and integration journaling remain pending. This is partial PRX-LOCAL-009/011
+coverage, not acceptance of the complete runtime or offline pilot.

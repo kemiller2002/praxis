@@ -157,7 +157,7 @@ receipt verification and staging/recovery primitives exist. The complete
 coordinator-to-workers loop, protected local delegation adapter and local
 checkpoint profile do not yet exist. The isolated dispatch journal mechanism
 exists; runtime wiring, actual process reconciliation and durable
-result/integration handling remain pending. Typed packet/result contracts and
+qualified result acceptance/integration handling remain pending. Typed packet/result contracts and
 pure adversarial intake checks are now implemented. No adapter authenticates
 the controller observations yet. This plan opens no execution gates and
 changes no accepted governance. Local verification: the tests project and CLI
@@ -180,4 +180,11 @@ The [journaled application composition](local-journaled-dispatch.md) now connect
 reservation, intent, observed start and root exit to supervision behind explicit
 ports. It refuses existing assignments and failed/uncertain persistence instead
 of retrying a launch. This adds fixture coverage, not controller qualification,
-durable result intake or the actual-agent pilot.
+qualified native result acceptance or the actual-agent pilot.
+
+[Durable submission archival](local-worker-submissions.md) now stores bounded
+unchanged stdout with assignment/process binding before fresh independent intake.
+Nineteen tests pass, including interrupted controller-store recovery and an
+actual subprocess fixture. It stores untrusted claims, not accepted results.
+The pre-archive crash interval, integration journaling and qualified runtime
+remain pending; existing execution and remote-checkpoint gates stay closed.

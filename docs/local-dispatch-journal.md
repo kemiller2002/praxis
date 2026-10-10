@@ -72,6 +72,10 @@ link refusal is checked on Unix; that creation test is conditional on Windows.
 The isolated [journaled application composition](local-journaled-dispatch.md) now
 connects these ports to bounded supervision in fixtures. Next qualify the
 protected controller and actual process observation adapter, then add durable
-result/integration handling.
+qualified result acceptance and integration handling.
 Qualification still needs one coordinator and two actual workers with an
 installed local model, outbound network denied and independent frozen acceptance.
+
+The isolated [submission archive](local-worker-submissions.md) now preserves
+complete stdout and rechecks claims independently after reopening. It supplies
+no integration or work-completion authority.
