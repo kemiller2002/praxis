@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-10T12:55:35.163Z
+      last: 2026-10-10T13:10:26.090Z
       actor:
         kind: agent
         id: openai/codex
@@ -101,4 +101,8 @@ It is partial progress toward PRX-LOCAL-003/004/005/009, not acceptance of those
 criteria as a complete runtime. Its controller observations remain inputs to a
 future authenticated adapter. No local worker process, protected authority,
 durable dispatch journal, local checkpoint profile or offline pilot is delivered
-by this slice. The read-only explanation remains outstanding.
+by this slice. Read-only `handoff explain` now reports packet identity, member
+source coverage, lineage, dependencies, cross-packet conflicts and blocking
+reasons, with real CLI tests proving unchanged file inventories without Git.
+This is partial PRX-LOCAL-015: it inspects supplied proposals and does not yet
+observe complete intake coverage or protected controller facts.

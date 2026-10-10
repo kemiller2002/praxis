@@ -82,6 +82,39 @@ blocked/failed members retain their claims and admit `NoIntegration`. Neither
 outcome completes work. The observations are trusted controller inputs that the
 future adapter must authenticate, not worker-supplied approval fields.
 
+## Read-only local first pass
+
+The built feature-branch CLI now provides the following inspection commands.
+The repository launcher requires its build dependencies to be installed:
+
+```bash
+./praxis handoff explain --packet docs/examples/local-worker-packet.json --as-of 2026-10-10T13:05:00Z
+./praxis handoff explain --packet docs/examples/local-worker-packet.json --as-of 2026-10-10T13:05:00Z --json
+```
+
+The [example packet](examples/local-worker-packet.json) contains deliberately
+invented identities, digests and a fixed time window. It demonstrates inspection;
+it is not an actual source commit, signed receipt or authorized dispatch. Supply
+real packet artifacts for your own proposals, repeat `--packet` for up to 64
+packets, and omit `--as-of` to use the current UTC time.
+
+Text and `praxis.local-handoff-explanation/1` JSON output retain the proposed
+assignment, original source keys, native execution lineage, decisions, budgets,
+acceptance and packet identity. Cross-packet diagnostics identify dependency
+cycles, duplicate work/source ownership and attempt/execution identities,
+inconsistent source/manifest/blueprint revisions, shared-worker serialization
+and case-folded write conflicts within a repository. Prerequisite producers
+are declared proposals; they never count as observed completion evidence.
+
+Inspection requires neither Git nor a remote, reads only supplied files and
+writes no work state, telemetry, files or checkpoints. It has no process-launch,
+network or authority port. Controller authority and the worker adapter remain
+unobserved/unqualified, so every proposal names those blocking reasons. This
+command never reports dispatch eligibility. Exit zero means inspection succeeded;
+malformed input/arguments exit 2. Coverage is limited to supplied packets; a
+complete frozen intake blueprint is not observed by this command. It is advisory,
+not the future dispatch scheduler or integration gate.
+
 ## Bounded implementation
 
 1. Add strict typed packets/results and delegation validation with a read-only
@@ -112,12 +145,13 @@ selection and actual model quality/throughput remain unqualified.
 
 Work-group planning, execution envelopes, worktrees, role launchers, ECIR
 receipt verification and staging/recovery primitives exist. The complete
-coordinator-to-workers loop, protected local delegation adapter, read-only
-explanation, durable dispatch journal and local checkpoint profile do not yet
-exist. Typed packet/result contracts and pure adversarial intake checks are now
-implemented. No adapter authenticates the controller observations yet. This plan opens no execution
-gates and changes no accepted governance. Local verification: the tests project
-and CLI dependencies build in Release with zero warnings/errors; 20 local
+coordinator-to-workers loop, protected local delegation adapter, durable
+dispatch journal and local checkpoint profile do not yet exist. Typed
+packet/result contracts and pure adversarial intake checks are now implemented. No adapter authenticates the controller observations yet. This
+plan opens no execution gates and changes no accepted governance. Local
+verification: the tests project and CLI dependencies build in Release with zero warnings/errors; 29 local
 handoff tests and 37 existing ECIR tests pass. Registry check and native Praxis
 validation cover the accompanying records. These checks do not qualify the
-future offline pilot.
+future offline pilot. The read-only explanation also passes real CLI tests
+for unchanged file inventories without Git, and 33 existing lifecycle CLI
+tests pass; all 9 CLI boundary ratchet tests also pass.

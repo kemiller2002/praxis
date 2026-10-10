@@ -37,5 +37,6 @@
     <Compile Include="Planning/PlanningJson.fs" />
     <Compile Include="Work/WorkGroupJson.fs" />
     <Compile Include="Work/LocalAgentHandoffJson.fs" />
+    <Compile Include="Work/LocalHandoffExplanationJson.fs" />
   </ItemGroup>
 </Project>

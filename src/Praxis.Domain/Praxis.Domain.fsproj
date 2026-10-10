@@ -98,6 +98,7 @@
     <Compile Include="Work/GroupExecutions.fs" />
     <Compile Include="Work/GroupCost.fs" />
     <Compile Include="Work/LocalAgentHandoff.fs" />
+    <Compile Include="Work/LocalHandoffExplanation.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />

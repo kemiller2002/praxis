@@ -1,8 +1,10 @@
 namespace Praxis.Tests
 
 open System
+open System.IO
 open System.Text.Json.Nodes
 open Praxis.Contracts.Work
+open Praxis.Application.Work
 open Praxis.Domain.Execution
 open Praxis.Domain.Work
 
@@ -180,4 +182,94 @@ module LocalAgentHandoffTests =
           t "blocked and failed member results preserve claims but admit no integration" (fun () ->
               for outcome in [ LocalWorkerOutcome.Blocked; LocalWorkerOutcome.Failed ] do
                   let partial = { result with Members = [ { result.Members.Head with Outcome = outcome; Evidence = [] }; result.Members[1] ] }
-                  Assert.equal (Ok LocalResultDisposition.NoIntegration) (checkResult observed partial)) ]
+                  Assert.equal (Ok LocalResultDisposition.NoIntegration) (checkResult observed partial))
+          t "explanation retains proposal identity and never claims controller authority" (fun () ->
+              let report = LocalHandoffExplanation.explain now [ packet ] |> function Ok r -> r | Error e -> failwith e
+              let assignment = report.Assignments.Head
+              Assert.equal (Some result.PacketDigest) assignment.PacketDigest
+              Assert.equal packet.Members assignment.Packet.Members
+              Assert.isTrue (List.contains "local-controller-authority-unobserved" assignment.BlockingReasons) "inspection authorized proposal"
+              Assert.isTrue (List.contains "local-prerequisite-unobserved:WI-0" assignment.BlockingReasons) "unobserved dependency accepted"
+              Assert.isTrue assignment.Dependencies.Head.ProposedProducers.IsEmpty "invented dependency producer"
+              let json = LocalHandoffExplanationJson.render report |> JsonNode.Parse
+              Assert.equal "proposal-inspection" (json.["mode"].GetValue<string>()))
+          t "explanation detects case-folded write conflicts within one repository" (fun () ->
+              let other = { packet with DispatchId = "DISPATCH-2"; AttemptId = "ATTEMPT-2"; ChildExecutionId = "EXE-OTHER"; WorkerId = "worker-2"; AllowedPaths = [ "src/a.fs" ] }
+              let inspect candidate = LocalHandoffExplanation.explain now [ packet; candidate ] |> function Ok r -> r | Error e -> failwith e
+              let report = inspect other
+              Assert.equal [ "src/A.fs" ] report.WriteConflicts.Head.Paths
+              Assert.isTrue (List.contains "local-plan-write-requires-serialization:DISPATCH-2" report.Assignments.Head.BlockingReasons) "overlap omitted"
+              Assert.isTrue (inspect { other with RepositoryIdentity = "other-repo" }).WriteConflicts.IsEmpty "cross-repository path collision")
+          t "explanation detects cycles without promoting declared producers to evidence" (fun () ->
+              let make i memberId depId =
+                  { packet with DispatchId = "D-" + i; AttemptId = "A-" + i; ChildExecutionId = "C-" + i; WorkerId = "W-" + i
+                                Members = [ { WorkItemId = memberId; ExecutionId = "E-" + i; RequirementKeys = [ "R-" + i ] } ]
+                                Acceptance = [ { packet.Acceptance.Head with ObligationId = "V-" + i; WorkItemId = memberId; RequirementKeys = [ "R-" + i ] } ]
+                                Prerequisites = [ { WorkItemId = depId; EvidenceDigest = sha 'd' } ] }
+              let first, second = make "1" "WI-A" "WI-B", make "2" "WI-B" "WI-A"
+              let report = LocalHandoffExplanation.explain now [ first; second ] |> function Ok r -> r | Error e -> failwith e
+              for assignment in report.Assignments do
+                  Assert.isTrue (List.contains "local-plan-dependency-cycle" assignment.BlockingReasons) "cycle missed"
+                  Assert.equal 1 assignment.Dependencies.Head.ProposedProducers.Length
+                  Assert.isTrue (assignment.BlockingReasons |> List.exists _.StartsWith("local-prerequisite-unobserved:")) "proposal treated as dependency proof"
+              let acyclic = LocalHandoffExplanation.explain now [ first; { second with Prerequisites = [] } ] |> function Ok r -> r | Error e -> failwith e
+              Assert.isTrue (acyclic.Assignments |> List.forall (fun a -> not (List.contains "local-plan-dependency-cycle" a.BlockingReasons))) "acyclic dependency reported as cycle")
+          t "explanation refuses ambiguous dispatch and original source ownership" (fun () ->
+              let report = LocalHandoffExplanation.explain now [ packet; packet ] |> function Ok r -> r | Error e -> failwith e
+              for code in [ "local-plan-duplicate-dispatch"; "local-plan-duplicate-attempt"; "local-plan-duplicate-child-execution"; "local-plan-duplicate-member:WI-1"; "local-plan-duplicate-source:docs/spec.md#R1"; "local-plan-duplicate-member-execution:EXE-WI1" ] do
+                  Assert.isTrue (List.contains code report.Assignments.Head.BlockingReasons) ("missing " + code))
+          t "explanation names mixed input revisions and shared worker serialization" (fun () ->
+              let changed = { packet with DispatchId = "D-2"; SourceCommit = String('c', 40) }
+              let report = LocalHandoffExplanation.explain now [ packet; changed ] |> function Ok r -> r | Error e -> failwith e
+              for code in [ "local-plan-input-revision-mismatch:D-2"; "local-plan-worker-requires-serialization:D-2" ] do
+                  Assert.isTrue (List.contains code report.Assignments.Head.BlockingReasons) ("missing " + code))
+          t "explanation bounds input and withholds fingerprints for malformed proposals" (fun () ->
+              Assert.isTrue (Result.isError (LocalHandoffExplanation.explain now [])) "empty plan accepted"
+              Assert.isTrue (Result.isError (LocalHandoffExplanation.explain now (List.replicate 65 packet))) "unbounded plan accepted"
+              Assert.isTrue (Result.isError (LocalHandoffExplanation.explain (now.ToOffset(TimeSpan.FromHours 1.)) [ packet ])) "non-UTC inspection accepted"
+              let report = LocalHandoffExplanation.explain packet.ExpiresAt [ { packet with TimeoutSeconds = 0 } ] |> function Ok r -> r | Error e -> failwith e
+              Assert.equal None report.Assignments.Head.PacketDigest
+              for code in [ "local-packet-budget"; "local-packet-expired-or-future" ] do
+                  Assert.isTrue (List.contains code report.Assignments.Head.BlockingReasons) ("missing " + code))
+          t "inspection ports fail before further reads and use the supplied observation time" (fun () ->
+              let mutable reads = []
+              let mutable clocks = 0
+              let ports = { ReadPacket = fun path -> reads <- reads @ [ path ]; if path = "bad" then Error "unreadable" else Ok(LocalAgentHandoffJson.renderPacket packet)
+                            Now = fun () -> clocks <- clocks + 1; now }
+              Assert.isTrue (Result.isError (LocalHandoffInspection.explain ports None [])) "empty inspection accepted"
+              Assert.equal [] reads
+              Assert.equal 0 clocks
+              Assert.isTrue (Result.isError (LocalHandoffInspection.explain ports None [ "bad"; "next" ])) "unreadable file accepted"
+              Assert.equal [ "bad" ] reads
+              Assert.equal 0 clocks
+              let supplied = LocalHandoffInspection.explain ports (Some now) [ "good" ] |> function Ok r -> r | Error e -> failwith e
+              Assert.equal now supplied.AsOf
+              Assert.equal 0 clocks
+              LocalHandoffInspection.explain ports None [ "good" ] |> ignore
+              Assert.equal 1 clocks)
+          t "real CLI explains local proposals without changing files or requiring Git" (fun () ->
+              let root = CliHarness.temporaryDirectory "praxis-handoff-inspect"
+              try
+                  CliHarness.write root "packet.json" (LocalAgentHandoffJson.renderPacket packet)
+                  CliHarness.write root ".ros/context/current.json" "controller-state-must-not-change"
+                  let inventory () = Directory.GetFiles(root, "*", SearchOption.AllDirectories) |> Array.sort |> Array.map (fun p -> p, File.ReadAllBytes p)
+                  let before = inventory ()
+                  let args = [ "handoff"; "explain"; "--packet"; "packet.json"; "--as-of"; now.ToString("O") ]
+                  let text = CliHarness.rosOk root args
+                  Assert.isTrue (text.Out.Contains("BLOCK local-controller-authority-unobserved")) "authority qualification missing"
+                  Assert.isTrue (text.Out.Contains("WI-1 [EXE-WI1]")) "native member lineage missing"
+                  let json = CliHarness.rosOk root (args @ [ "--json" ]) |> fun r -> JsonNode.Parse r.Out
+                  Assert.equal result.PacketDigest (json.["assignments"].[0].["packetDigest"].GetValue<string>())
+                  Assert.equal before (inventory ())
+                  Assert.isTrue (not (Directory.Exists(Path.Combine(root, ".git")))) "inspection initialized Git"
+              finally Directory.Delete(root, true))
+          t "real CLI refuses approval flags, malformed time, missing and oversized packets" (fun () ->
+              let root = CliHarness.temporaryDirectory "praxis-handoff-invalid"
+              try
+                  CliHarness.write root "packet.json" (LocalAgentHandoffJson.renderPacket packet)
+                  CliHarness.write root "big.json" (String(' ', 65537))
+                  File.WriteAllBytes(Path.Combine(root, "bad-utf8.json"), [| 0xffuy |])
+                  let args = [ "handoff"; "explain"; "--packet"; "packet.json" ]
+                  for changed in [ args @ [ "--approved" ]; args @ [ "--authority"; "packet.json" ]; args @ [ "--as-of"; "2026-10-10T12:00:00" ]; [ "handoff"; "explain"; "--packet"; "missing.json" ]; [ "handoff"; "explain"; "--packet"; "big.json" ]; [ "handoff"; "explain"; "--packet"; "bad-utf8.json" ]; [ "handoff"; "explain" ] ] do
+                      Assert.equal 2 (CliHarness.ros root changed).Exit
+              finally Directory.Delete(root, true)) ]

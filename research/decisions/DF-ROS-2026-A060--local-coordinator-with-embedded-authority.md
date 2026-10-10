@@ -20,8 +20,9 @@ derived_from: [DF-ROS-2026-A059, DF-ROS-2026-A042]
 provenance:
   contributions:
     EXE-20261010T091205536Z-2fa1bdc8:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
+      last: 2026-10-10T13:10:37.989Z
       actor:
         kind: agent
         id: openai/codex
@@ -93,3 +94,14 @@ this new local loop or actual local model quality.
 This decision remains draft; no execution gate or accepted checkpoint policy
 is changed here. Rollback is retaining the existing ECIR refusal and stopping
 new local dispatch. Existing groups and member histories remain authoritative.
+
+## Isolated advisory implementation
+
+`handoff explain` inspects typed packet proposals locally and emits text or
+`praxis.local-handoff-explanation/1` JSON. It accepts no authority or scheduler
+port and has no work-state/process/network effects. Every inspected proposal
+retains authority-unobserved and adapter-unqualified blocking reasons; exit zero
+means inspection succeeded, not execution authorization. The supplied packet
+set is not evidence of full frozen blueprint coverage. This advisory projection
+can be replaced without migrating execution state. The protected controller,
+local checkpoint profile and actual offline worker loop remain proposed.

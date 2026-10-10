@@ -27,6 +27,7 @@
     <Compile Include="Identity/FileIdentityStore.fs" />
     <Compile Include="Architecture/FileImplementationPolicyRepository.fs" />
     <Compile Include="Work/WorkStateTransaction.fs" />
+    <Compile Include="Work/FileLocalHandoffInspection.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
