@@ -40,5 +40,6 @@
     <Compile Include="Work/LocalHandoffExplanationJson.fs" />
     <Compile Include="Work/LocalDispatchJournalJson.fs" />
     <Compile Include="Work/LocalWorkerSubmissionJson.fs" />
+    <Compile Include="Work/LocalIntegrationJournalJson.fs" />
   </ItemGroup>
 </Project>

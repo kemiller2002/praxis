@@ -61,7 +61,10 @@ blueprint, receipt, cohort, decisions or requirements cannot be substituted.
 Successful checking yields only AwaitingIntegration or NoIntegration. No accepted
 marker is stored, no member is completed, no commit is merged and no process is
 started by inspection. Every inspection repeats fresh checks; integration must
-still be separately serialized, revalidated and journaled.
+still be separately serialized, revalidated and journaled. The isolated
+[integration protocol](local-integration-recovery.md) now supplies that journal
+and recovery composition behind unqualified host ports; it does not complete
+native work or activate the runtime.
 
 ## Crash limits and verification
 

@@ -189,5 +189,8 @@ actual subprocess fixture. It stores untrusted claims, not accepted results.
 The optional [host output spool](local-worker-output-spool.md) now flushes bounded
 raw streams and seals before dispatch exit persistence. Sealed output can be
 recovered before archival through independent native/process recovery; partial
-streams remain refused. Integration journaling and the qualified runtime remain
-pending; existing execution and remote-checkpoint gates stay closed.
+streams remain refused. The isolated [integration recovery protocol](local-integration-recovery.md)
+now journals an independently checked candidate and expected target baseline,
+revalidates before mutation and handles lost update acknowledgements without
+reapplying. Qualified staging/target adapters, native member completion and the
+offline runtime remain pending; execution and remote-checkpoint gates stay closed.

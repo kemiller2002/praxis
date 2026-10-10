@@ -32,6 +32,7 @@
     <Compile Include="Work/FileLocalDispatchJournal.fs" />
     <Compile Include="Work/FileLocalWorkerSubmissions.fs" />
     <Compile Include="Work/FileLocalWorkerOutputSpool.fs" />
+    <Compile Include="Work/FileLocalIntegrationJournal.fs" />
     <Compile Include="Work/LocalWorkerProcess.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />

@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T17:14:07.375Z
+      last: 2026-10-10T19:17:23.557Z
       actor:
         kind: agent
         id: openai/codex
@@ -165,3 +165,17 @@ are explicitly refused before reservation. Existing in-memory composition is
 unchanged in scope. Actual filesystem protection, process/containment and storage
 qualification, integration recovery and offline model pilot remain pending. This
 is a reversible isolated proposal; no accepted checkpoint or authority gate changes.
+
+## Isolated candidate integration recovery proposal
+
+The [integration protocol](../../docs/local-integration-recovery.md) adds draft
+`praxis.local-integration-plan/1` and `praxis.local-integration-applied/1` shapes.
+A repository lease and bounded pending inventory serialize candidate preparation
+and expected-head updates. Exact packet/submission identity and fresh independent
+candidate/authority checks precede an immutable plan and any new target mutation.
+Observed already-present candidates close historical tracking without repeating
+the update or extending expired authority. Other target states retain the plan
+and refuse. This does not implement an alternative work lifecycle: native member
+completion remains a separate existing-protocol transaction to wire safely.
+The prototype has no CLI route or qualified production staging/Git adapter;
+host/policy/storage qualification and the actual offline model pilot remain open.

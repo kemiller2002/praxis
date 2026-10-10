@@ -22,6 +22,10 @@ type LocalSubmissionIntakePorts =
 type LocalSubmissionDispatchReport =
     { Dispatch: LocalJournaledDispatchReport
       Archive: Result<LocalSubmissionSaveOutcome, string> }
+/// Checked snapshot for this observation only; never a reusable approval.
+type LocalSubmissionInspection =
+    { Packet: LocalWorkerPacket; Submission: LocalWorkerSubmission
+      Result: LocalWorkerResult; Disposition: LocalResultDisposition }
 
 /// Archive first; interpret only on fresh independent intake. No native work
 /// transition, accepted-result marker or integration operation is exposed.
@@ -59,7 +63,7 @@ module LocalSubmissionIntake =
         return dispatched |> Result.map (fun report ->
             { Dispatch = report; Archive = capture capturePorts packet report }) }
 
-    let inspect (ports: LocalSubmissionIntakePorts) repositoryIdentity dispatchId = protect (fun () ->
+    let readChecked (ports: LocalSubmissionIntakePorts) repositoryIdentity dispatchId = protect (fun () ->
         ports.Journal.Load repositoryIdentity dispatchId |> Result.bind (fun journal ->
             if journal.Reservation.Packet.RepositoryIdentity <> repositoryIdentity || journal.Reservation.Packet.DispatchId <> dispatchId then Error "intake journal differs from requested assignment"
             else ports.Submissions.Load repositoryIdentity dispatchId |> Result.bind (fun submission ->
@@ -77,4 +81,8 @@ module LocalSubmissionIntake =
                                             let now = ports.Now()
                                             if now < submission.CapturedAt then Error "submission capture is in the future"
                                             else LocalAgentHandoff.validateResult authority now prerequisites packet observed result
-                                                 |> Result.mapError (String.concat "; ")))))))))))
+                                                 |> Result.mapError (String.concat "; ")
+                                                 |> Result.map (fun disposition -> { Packet = packet; Submission = submission; Result = result; Disposition = disposition })))))))))))
+
+    let inspect ports repositoryIdentity dispatchId =
+        readChecked ports repositoryIdentity dispatchId |> Result.map _.Disposition

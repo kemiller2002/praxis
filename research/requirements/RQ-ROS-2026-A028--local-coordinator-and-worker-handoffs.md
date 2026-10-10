@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-10T17:14:06.964Z
+      last: 2026-10-10T19:17:23.095Z
       actor:
         kind: agent
         id: openai/codex
@@ -154,3 +154,13 @@ process state remain refused; no automatic relaunch or native completion occurs.
 Sealed-output loss before archival is addressed in this isolated composition;
 bytes not yet flushed/sealed, qualified host recovery, integration, power loss
 and the actual offline agent pilot remain unresolved.
+
+The isolated [integration protocol](../../docs/local-integration-recovery.md)
+adds partial PRX-LOCAL-010/011 coverage: repository lease, bounded pending-journal
+inventory, immutable packet/submission/candidate/baseline identity, fresh candidate
+and authority checks, expected-head update and historical target observation.
+Lost update acknowledgement or applied-receipt persistence can recover without
+duplicate application. Target drift and changed claims refuse. Real Git ref
+fixtures verify the update/recovery mechanism; host acceptance remains synthetic.
+Qualified staging/Git/native completion adapters and the offline agent pilot are
+still pending. No execution gate or accepted checkpoint profile changes.
