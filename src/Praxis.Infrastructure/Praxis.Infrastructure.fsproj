@@ -31,6 +31,7 @@
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
     <Compile Include="Work/FileWorkConfigRepository.fs" />
+    <Compile Include="Work/EcirMemberGuard.fs" />
     <Compile Include="Work/FileEventLogRepository.fs" />
     <Compile Include="Work/RawTelemetrySanitizer.fs" />
     <Compile Include="Work/FileEnvelopeReconciliationTransaction.fs" />
@@ -82,7 +83,11 @@
     <Compile Include="Planning/EcirApprovals.fs" />
     <Compile Include="Planning/FileEcirValidator.fs" />
     <Compile Include="Planning/FileEcirAuthorization.fs" />
+    <Compile Include="Planning/EcirHostPolicy.fs" />
+    <Compile Include="Planning/EcirDispatchTransaction.fs" />
+    <Compile Include="Planning/EcirHostAdministration.fs" />
     <Compile Include="Planning/FileGroupExecution.fs" />
+    <Compile Include="Planning/EcirNativeStage.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

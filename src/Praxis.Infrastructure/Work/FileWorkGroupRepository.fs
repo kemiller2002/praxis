@@ -62,7 +62,7 @@ module FileWorkGroupRepository =
     /// writes under the `work-groups` lock, so concurrent group commands
     /// never lose each other's changes. `decide` returns the new store and
     /// a command-specific outcome.
-    let transactStore (root: string) (dryRun: bool) (decide: GroupStore -> Result<GroupStore * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
+    let private transactStoreLocked (root: string) (dryRun: bool) (decide: GroupStore -> Result<GroupStore * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
         match RegistryLock.acquire root "work-groups" RegistryLock.defaultSettings with
         | Error failure -> Error failure.Message
         | Ok lease ->
@@ -75,6 +75,21 @@ module FileWorkGroupRepository =
                     | Ok(updated, outcome) when updated = store -> Ok(Ok outcome)
                     | Ok(updated, outcome) -> writeStore root updated |> Result.map (fun () -> Ok outcome))
 
+            match lease.Release(), result with
+            | Error failure, Ok _ -> Error failure.Message
+            | _, value -> value
+
+    /// Shared lock order with member transitions: work-protocol, then
+    /// work-groups. A member cannot start while ECIR membership is changing.
+    let transactStore (root: string) (dryRun: bool) (decide: GroupStore -> Result<GroupStore * 'outcome, 'rejection>) : Result<Result<'outcome, 'rejection>, string> =
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure -> Error failure.Message
+        | Ok lease ->
+            let result =
+                try transactStoreLocked root dryRun decide
+                with _ ->
+                    lease.Release() |> ignore
+                    reraise()
             match lease.Release(), result with
             | Error failure, Ok _ -> Error failure.Message
             | _, value -> value

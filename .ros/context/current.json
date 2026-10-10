@@ -9429,20 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "410a4997fb539a887250ba68",
-        "recordedAt": "2026-10-10T09:14:14.000Z",
+        "id": "03b510b494925d3d05179407",
+        "recordedAt": "2026-10-10T10:17:19.697Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
+        "stepId": "STEP-20261010T101512237Z-5c7e0de4",
         "repository": "repository-operating-system",
-        "branch": "ecir-governed-local",
-        "commit": "28f05fee150adaa203af810e483f6942f401d483",
+        "branch": "feat/ecir-host-policy",
+        "commit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
-        "remoteBranch": "GH-220",
-        "remoteCommit": "28f05fee150adaa203af810e483f6942f401d483",
-        "summary": "Exact P-256 verifier correction and adversarial tests published in PR 224; nine receipt tests and Release build passed",
-        "nextAction": "Finish broad CI; implement host policy and atomic authorization-to-member transition before unlocking ECIR",
+        "remoteBranch": "feat/ecir-host-policy",
+        "remoteCommit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
+        "summary": "Published exclusive journal reservation fix for CI-observed Unix rename race. Release build, 37 ECIR tests including 100 two-contender races and partial-preparation refusal, and native validation pass. Latest full CI pending; PR225 draft.",
+        "nextAction": "Finish CI review; provision separately protected host authority with authenticated reviewer/admin credentials, qualify released Ordo ECIR and independent behavioral acceptance, then wire privileged dispatch and run the first real cohort.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
