@@ -134,6 +134,7 @@ let main argv =
     @ EcirPreflightTests.tests
     @ EcirApprovalTests.tests
     @ EcirHostTests.tests
+    @ LocalAgentHandoffTests.tests
     @ ExecuteGroupTests.tests
     @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests

@@ -17,8 +17,9 @@ tags: [ecir, agents, local, coordination, handoff, offline, recovery]
 provenance:
   contributions:
     EXE-20261010T091205536Z-2fa1bdc8:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
+      last: 2026-10-10T12:55:35.163Z
       actor:
         kind: agent
         id: openai/codex
@@ -90,3 +91,14 @@ The installed local model/runtime adapter is an unresolved implementation
 choice. Neither a provider CLI nor a fully offline backend has been qualified
 by this record. Existing ECIR execution remains refused until the local
 controller, release qualification and independent acceptance are complete.
+
+# Implementation status
+
+The typed packet/result slice implements strict decoding, canonical identity,
+original requirement coverage, per-member native execution and file attribution,
+fresh authority/prerequisite checks and independent observed result checks.
+It is partial progress toward PRX-LOCAL-003/004/005/009, not acceptance of those
+criteria as a complete runtime. Its controller observations remain inputs to a
+future authenticated adapter. No local worker process, protected authority,
+durable dispatch journal, local checkpoint profile or offline pilot is delivered
+by this slice. The read-only explanation remains outstanding.

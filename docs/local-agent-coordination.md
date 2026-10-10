@@ -28,26 +28,59 @@ policy or obtaining signing credentials. Same-account unrestricted fixtures
 cannot claim this protection. Fides/Arca integration and remote publication
 are optional later extensions.
 
-## Handoff contract to implement
+## Typed handoff contract
 
-The draft packet/result schemas will be versioned and decoded strictly.
-They extend native execution/work identities rather than inventing another
-work-item system. Model prose is supplementary.
+The first implementation slice supplies versioned domain records and strict
+JSON decoding in `LocalAgentHandoff` and `LocalAgentHandoffJson`. These are pure
+transport and validation contracts; they do not launch workers, establish host
+authority, persist attempts or integrate commits. They extend native
+execution/work identities. Model prose is supplementary.
 
 | Packet fields | Meaning |
 | --- | --- |
 | schemaVersion; dispatchId; attemptId | Version and stable dispatch/retry identity. |
 | parentExecutionId; childExecutionId; workerId | Observed coordinator-to-worker lineage and target identity. |
 | repositoryIdentity; sourceCommit; sourceManifestDigest; blueprintDigest | Exact immutable input and repository scope. |
-| groupId; cohortId; members; originalRequirementKeys; requiredDecisionIds | Exact approved assignment and source conservation. |
-| prerequisiteEvidence; mutationBoundary; acceptanceObligations | Dependency evidence, allowed resource scope and independent verification requirements. |
-| authorityRevision; receiptReference; expiresAt; budgets | Current delegated authority, receipt binding, deadline and bounded resources. |
+| groupId; cohortId; members; decisionIds | Exact assignment; each member retains workItemId, native executionId and original requirementKeys. |
+| prerequisites; allowedPaths; acceptance | Dependency evidence, allowed resource scope and independent verification requirements. |
+| authorityRevision; receiptDigest; issuedAt; expiresAt; timeoutSeconds; maxOutputBytes | Current delegated authority, receipt binding, deadline and bounded resources. |
 
-Results echo the packet identity/revision and supply output commit, changed
-resource inventory, evidence references and per-member outcomes. These are
+Results echo dispatch, attempt, worker and child identities and the canonical
+packet digest. They supply the output commit, global changed resources and
+per-member native execution identity, changed resources, evidence and outcome. These are
 claims until the controller observes the actual worktree/commit and validator
 outputs. A result is never a new authority, command or executable selection.
 Workers cannot merge to the integration branch or blanket-complete a cohort.
+
+The v1 schemas are `praxis.local-worker-packet/1` and
+`praxis.local-worker-result/1`. JSON objects require exactly their declared
+fields, including nested members, obligations and evidence. Duplicate fields,
+unknown fields, malformed types and `completed` outcomes are refused. Documents
+are bounded to 65,536 UTF-8 bytes, nesting to 12 and arrays to 256 elements.
+Commit identities are full lowercase SHA-1 Git hashes; digests are lowercase
+`sha256:` identities. Timestamps explicitly name UTC; validity lasts at most
+24 hours. Per-attempt timeout and output limits are bounded.
+
+Packet fingerprints use versioned UTF-8 byte-length framing and canonical set
+ordering. The fingerprint binds every assignment field, including native
+member executions; it supplies identity, not approval. Fresh controller
+observations must match the exact delegated packet, current authority revision,
+validity window and prerequisite evidence at packet and result boundaries.
+
+Resource scope in v1 is an exact list of portable relative paths, with no globs,
+traversal or case ambiguity. Git and controller state paths are excluded.
+Implementation workers need a mutation boundary; review and verification workers
+are read-only. Administration and integration are controller responsibilities.
+These lexical checks do not establish filesystem containment: a future host
+adapter must observe links, actual changes and protected authority itself.
+
+Result checking requires actual commit/ancestry and changed-path observations,
+per-member execution and file attribution, observed artifact digests and pinned
+independent acceptance results. Member file attribution must cover the global
+inventory. A fully submitted result can reach only `AwaitingIntegration`;
+blocked/failed members retain their claims and admit `NoIntegration`. Neither
+outcome completes work. The observations are trusted controller inputs that the
+future adapter must authenticate, not worker-supplied approval fields.
 
 ## Bounded implementation
 
@@ -79,7 +112,12 @@ selection and actual model quality/throughput remain unqualified.
 
 Work-group planning, execution envelopes, worktrees, role launchers, ECIR
 receipt verification and staging/recovery primitives exist. The complete
-coordinator-to-workers loop, local delegation adapter, strict packet schemas
-and local checkpoint profile do not yet exist. This plan opens no execution
-gates and changes no accepted governance. Prior CI success qualifies its
-existing code, not this future offline pilot.
+coordinator-to-workers loop, protected local delegation adapter, read-only
+explanation, durable dispatch journal and local checkpoint profile do not yet
+exist. Typed packet/result contracts and pure adversarial intake checks are now
+implemented. No adapter authenticates the controller observations yet. This plan opens no execution
+gates and changes no accepted governance. Local verification: the tests project
+and CLI dependencies build in Release with zero warnings/errors; 20 local
+handoff tests and 37 existing ECIR tests pass. Registry check and native Praxis
+validation cover the accompanying records. These checks do not qualify the
+future offline pilot.
