@@ -116,6 +116,7 @@
         "ros.json",
         "ros.ps1",
         "schemas/artifact-metadata.schema.json",
+        "schemas/ecir-approval-v1.schema.json",
         "schemas/evidence.schema.json",
         "schemas/execution-telemetry.schema.json",
         "schemas/experiment.schema.json",
