@@ -30,7 +30,7 @@ module LocalWorkerFixture =
 [<RequireQualifiedAccess>]
 module LocalWorkerProcessTests =
     let private t name run = { Name = "local worker process: " + name; Run = run }
-    let private spec mode arguments =
+    let internal spec mode arguments =
         let executable = Environment.ProcessPath
         use binary = File.OpenRead executable
         let prefix = if Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase) then [ Path.Combine(AppContext.BaseDirectory, "Praxis.Tests.dll") ] else []

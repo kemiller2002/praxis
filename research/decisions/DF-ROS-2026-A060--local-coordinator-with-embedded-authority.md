@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T14:16:05.872Z
+      last: 2026-10-10T14:32:07.280Z
       actor:
         kind: agent
         id: openai/codex
@@ -128,3 +128,13 @@ executable pins, output budgets, cancellation and root-exit observation. Actual
 subprocess fixtures use a synthetic incarnation observer; OS incarnation and
 network sandbox probes remain unqualified in this environment. The mechanism
 has no CLI route, journal wiring, native work transition or local-model pilot.
+
+
+[Journaled application dispatch](../../docs/local-journaled-dispatch.md) now
+connects isolated reservation/intent and bounded process ports. Exact canonical
+stdin and delegated budgets are required. Existing assignments, failed writes,
+uncertain start, repeated/inconsistent observations and changed controller
+incarnation require refusal or reconciliation. Exited/NoStart close only process
+tracking. This is partial launch/recovery coverage in fixtures; protected host
+qualification, durable results, integration and the offline agent pilot remain
+pending.

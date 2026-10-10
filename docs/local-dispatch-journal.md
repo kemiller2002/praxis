@@ -69,7 +69,9 @@ stores, new controller sessions, fresh revocation/expiry/dependency checks,
 process-incarnation mismatch, partial files and sequence gaps. Unix host-root
 link refusal is checked on Unix; that creation test is conditional on Windows.
 
-Next connect the protected controller and actual process observation adapter,
-then bounded executable/argv launching and durable result/integration handling.
+The isolated [journaled application composition](local-journaled-dispatch.md) now
+connects these ports to bounded supervision in fixtures. Next qualify the
+protected controller and actual process observation adapter, then add durable
+result/integration handling.
 Qualification still needs one coordinator and two actual workers with an
 installed local model, outbound network denied and independent frozen acceptance.

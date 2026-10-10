@@ -6,8 +6,9 @@ and draft [DF-ROS-2026-A060](../research/decisions/DF-ROS-2026-A060--local-coord
 
 The isolated F# process mechanism launches a host-selected executable with an
 explicit argument list, bounded UTF-8 stdin and an explicit environment allowlist.
-It has no CLI execution route and is not connected to the controller or dispatch
-journal. It does not authenticate authority, isolate workers or complete work.
+It has no CLI execution route. The isolated
+[journaled application composition](local-journaled-dispatch.md) now connects it
+to journal ports in fixtures; the qualified controller remains pending. It does not authenticate authority, isolate workers or complete work.
 
 ## Launch and observations
 
@@ -58,8 +59,7 @@ and observed root exit; it did not substitute a PID-only identity. A separate
 `Operation not permitted`. No local model executable was found in the checked
 PATH. These observations concern this test environment, not the user's machine.
 
-Next connect this mechanism to journaled application dispatch behind a qualified
-protected host adapter. Actual incarnation recovery, local model execution,
+Next qualify the protected host adapter for the journaled application dispatch. Actual incarnation recovery, local model execution,
 network denial, result intake and independent acceptance still require the
 one-coordinator/two-worker pilot. Existing ECIR and remote-checkpoint gates remain
 unchanged.

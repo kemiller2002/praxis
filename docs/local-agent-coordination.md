@@ -172,6 +172,12 @@ tests additionally pass, including 50 reservation race repetitions.
 The isolated [worker supervision mechanism](local-worker-supervision.md) adds
 explicit argv/environment, executable-pin checks, bounded streams, cancellation
 and root-exit observations. Eight tests pass with actual subprocesses and a
-synthetic fixture identity observer. It is not wired to the journal or runtime;
+synthetic fixture identity observer. It has no runtime execution route;
 actual process-incarnation observation and network sandbox probes failed in this
 environment. No local-model worker pilot is claimed.
+
+The [journaled application composition](local-journaled-dispatch.md) now connects
+reservation, intent, observed start and root exit to supervision behind explicit
+ports. It refuses existing assignments and failed/uncertain persistence instead
+of retrying a launch. This adds fixture coverage, not controller qualification,
+durable result intake or the actual-agent pilot.
