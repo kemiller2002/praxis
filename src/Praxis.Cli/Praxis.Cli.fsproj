@@ -53,6 +53,7 @@
     <Compile Include="IdentityCommands.fs" />
     <Compile Include="PlanEvidenceText.fs" />
     <Compile Include="PlanCommands.fs" />
+    <Compile Include="LocalHandoffCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />
     <Compile Include="WorkGroupCheckpointCommands.fs" />
     <Compile Include="BacklogQueueCommands.fs" />

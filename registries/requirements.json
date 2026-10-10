@@ -1712,5 +1712,54 @@
     "title": "Step lifecycle and evidence have deterministic CLI inspection",
     "updated": "2026-09-27",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-10",
+    "id": "RQ-ROS-2026-A028",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A028--local-coordinator-and-worker-handoffs.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261010T091205536Z-2fa1bdc8": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-10T12:33:03.712Z",
+          "last": "2026-10-10T17:14:06.964Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "User requires one local coordinator delegating to workers with no external services; record acceptance before implementation"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "RQ-ROS-2026-A022",
+      "docs/local-agent-coordination.md",
+      "docs/ecir-host-integration.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "ecir",
+      "agents",
+      "local",
+      "coordination",
+      "handoff",
+      "offline",
+      "recovery"
+    ],
+    "title": "One local coordinator delegates bounded work to local agents without required external services",
+    "updated": "2026-10-10",
+    "version": "1.0.0"
   }
 ]

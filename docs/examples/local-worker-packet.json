@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "praxis.local-worker-packet/1",
+  "dispatchId": "DISPATCH-EXAMPLE",
+  "attemptId": "ATTEMPT-EXAMPLE",
+  "parentExecutionId": "EXE-EXAMPLE-COORDINATOR",
+  "childExecutionId": "EXE-EXAMPLE-WORKER",
+  "workerId": "worker-example",
+  "role": "implementation",
+  "repositoryIdentity": "example-repository",
+  "sourceCommit": "0000000000000000000000000000000000000000",
+  "sourceManifestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "blueprintDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "groupId": "GROUP-EXAMPLE",
+  "cohortId": "COHORT-EXAMPLE",
+  "members": [
+    {
+      "workItemId": "WI-EXAMPLE",
+      "executionId": "EXE-EXAMPLE-MEMBER",
+      "requirementKeys": [
+        "requirements/example.md#EXAMPLE-001"
+      ]
+    }
+  ],
+  "decisionIds": [
+    "DEC-EXAMPLE"
+  ],
+  "allowedPaths": [
+    "src/Example.fs"
+  ],
+  "prerequisites": [],
+  "acceptance": [
+    {
+      "obligationId": "VERIFY-EXAMPLE",
+      "workItemId": "WI-EXAMPLE",
+      "requirementKeys": [
+        "requirements/example.md#EXAMPLE-001"
+      ],
+      "validatorId": "example-independent-validator",
+      "inputDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ],
+  "authorityRevision": "example-unapproved",
+  "receiptDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "issuedAt": "2026-10-10T13:00:00Z",
+  "expiresAt": "2026-10-10T14:00:00Z",
+  "timeoutSeconds": 600,
+  "maxOutputBytes": 1048576
+}

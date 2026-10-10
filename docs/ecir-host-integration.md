@@ -47,12 +47,26 @@ Current Dokimos source provides an ECIR audit explicitly reporting
 source-conservation evidence, but cannot replace the behavioral acceptance
 oracle required before the first real cohort. No such oracle was inferred.
 
+## Local deployment direction (2026-10-10)
+
+The user requires one coordinating agent handing bounded work to other local
+agents without external services. The host authority can be embedded in a
+local Praxis controller: it does not require a remote service or always-on
+daemon. Separate authenticated local operator delegation and actual OS
+protection remain necessary; agent-written approval flags remain insufficient.
+See [the local coordination target](local-agent-coordination.md),
+RQ-ROS-2026-A028, DF-ROS-2026-A060 and issue #226. Hosted Fides/Arca and remote
+publication are optional. Strict offline operation additionally requires an
+installed local model backend and validators. The new local checkpoint profile
+is proposed, not an implicit waiver of current remote durability rules.
+
 ## Next bounded implementation
 
-1. Add a protected host adapter with separate agent/reviewer credentials,
+1. Add an embedded protected local controller adapter with separate agent/operator authority,
    authenticated reviewer/admin identity, anti-rollback policy revisions,
    durable atomic policy/audit updates, and serialized dispatch/revocation.
-   Use Fides identity integration when available; no self-reported actor flag.
+   Use authenticated local operator delegation; no self-reported actor flag.
+   Fides integration may be added later and is not a local prerequisite.
 2. Connect native staging and actual member telemetry to the protected host
    journal; only the private host-authorized execution route may invoke it.
    Use one documented lock order: work-protocol, work-groups, host policy.

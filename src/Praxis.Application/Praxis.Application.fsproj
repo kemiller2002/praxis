@@ -19,6 +19,12 @@
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Work/Checkpoint.fs" />
     <Compile Include="Work/InputInboxOperations.fs" />
+    <Compile Include="Work/LocalHandoffInspection.fs" />
+    <Compile Include="Work/LocalDispatchReservation.fs" />
+    <Compile Include="Work/LocalWorkerSupervision.fs" />
+    <Compile Include="Work/LocalJournaledDispatch.fs" />
+    <Compile Include="Work/LocalSubmissionIntake.fs" />
+    <Compile Include="Work/LocalSpooledDispatch.fs" />
     <Compile Include="Telemetry/Operations.fs" />
     <Compile Include="Pacing/Contracts.fs" />
     <Compile Include="Pacing/Events.fs" />

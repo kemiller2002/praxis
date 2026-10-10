@@ -5,6 +5,7 @@ module Praxis.Tests.Program
 [<EntryPoint>]
 let main argv =
   match argv with
+  | args when args.Length >= 2 && args[0] = "--local-worker-fixture" -> LocalWorkerFixture.run args[1] (args |> Array.skip 2 |> Array.toList)
   | [| "--suite"; "browser" |] -> TestRunner.run BrowserTests.tests
   | [||] ->
     ArchitectureTests.tests
@@ -134,6 +135,12 @@ let main argv =
     @ EcirPreflightTests.tests
     @ EcirApprovalTests.tests
     @ EcirHostTests.tests
+    @ LocalAgentHandoffTests.tests
+    @ LocalDispatchJournalTests.tests
+    @ LocalWorkerProcessTests.tests
+    @ LocalJournaledDispatchTests.tests
+    @ LocalSubmissionIntakeTests.tests
+    @ LocalWorkerOutputSpoolTests.tests
     @ ExecuteGroupTests.tests
     @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests

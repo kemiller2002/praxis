@@ -9429,21 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "03b510b494925d3d05179407",
-        "recordedAt": "2026-10-10T10:17:19.697Z",
+        "id": "b51c4d0de8cb1fee841ce304",
+        "recordedAt": "2026-10-10T17:17:01.000Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
-        "stepId": "STEP-20261010T101512237Z-5c7e0de4",
+        "stepId": "STEP-20261010T170613000Z-654afe7d",
         "repository": "repository-operating-system",
-        "branch": "feat/ecir-host-policy",
-        "commit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
+        "branch": "feat/local-agent-coordination",
+        "commit": "167a1562fc69a022b5b8a3fefa87b8eca6d7fa96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
-        "remoteBranch": "feat/ecir-host-policy",
-        "remoteCommit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
-        "summary": "Published exclusive journal reservation fix for CI-observed Unix rename race. Release build, 37 ECIR tests including 100 two-contender races and partial-preparation refusal, and native validation pass. Latest full CI pending; PR225 draft.",
-        "nextAction": "Finish CI review; provision separately protected host authority with authenticated reviewer/admin credentials, qualify released Ordo ECIR and independent behavioral acceptance, then wire privileged dispatch and run the first real cohort.",
+        "remoteBranch": "feat/local-agent-coordination",
+        "remoteCommit": "167a1562fc69a022b5b8a3fefa87b8eca6d7fa96",
+        "summary": "Published bounded host stdout/stderr spool and seal-before-exit composition with restart archival. Release build, 17 spool tests including forced controller termination and uncertain exit-write recovery, 8 supervisor, 16 dispatch, 20 intake, 10 journal, 29 handoff, 37 ECIR and 3 architecture tests plus native validation passed. Partial streams cannot enter intake; host authority, OS process and containment observations remain unqualified fixtures.",
+        "nextAction": "Implement serialized integration transaction recovery; qualify protected host, actual OS process identity, storage bounds, network denial, local model and explicit local checkpoint profile before enabling the offline coordinator runtime. Incomplete/unsealed streams still require independent reconciliation and are never blindly relaunched.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
