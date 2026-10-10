@@ -29,6 +29,7 @@
     <Compile Include="Work/WorkStateTransaction.fs" />
     <Compile Include="Work/FileLocalHandoffInspection.fs" />
     <Compile Include="Work/FileLocalDispatchJournal.fs" />
+    <Compile Include="Work/LocalWorkerProcess.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />

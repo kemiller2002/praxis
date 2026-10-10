@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-10T13:27:13.640Z
+      last: 2026-10-10T14:16:04.931Z
       actor:
         kind: agent
         id: openai/codex
@@ -114,3 +114,11 @@ concurrent-writer refusal and retained partial-file errors. Reopened-store and
 injected-failure fixtures do not establish actual process reconciliation,
 protected authority, power-loss durability or the local checkpoint profile.
 No launcher/native work transitions or real offline worker pilot are delivered.
+
+
+The isolated [process supervision mechanism](../../docs/local-worker-supervision.md)
+adds partial bounded-launch coverage using explicit host argv/environment,
+executable pins, output budgets, cancellation and root-exit observation. Actual
+subprocess fixtures use a synthetic incarnation observer; OS incarnation and
+network sandbox probes remain unqualified in this environment. The mechanism
+has no CLI route, journal wiring, native work transition or local-model pilot.

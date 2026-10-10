@@ -168,3 +168,10 @@ future offline pilot. The read-only explanation also passes real CLI tests for
 unchanged file inventories without Git, and 33 existing lifecycle CLI tests
 pass; all 9 CLI boundary ratchet tests also pass. Ten local dispatch journal
 tests additionally pass, including 50 reservation race repetitions.
+
+The isolated [worker supervision mechanism](local-worker-supervision.md) adds
+explicit argv/environment, executable-pin checks, bounded streams, cancellation
+and root-exit observations. Eight tests pass with actual subprocesses and a
+synthetic fixture identity observer. It is not wired to the journal or runtime;
+actual process-incarnation observation and network sandbox probes failed in this
+environment. No local-model worker pilot is claimed.
