@@ -9429,21 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "12a79b5d503180b3a1c182d1",
-        "recordedAt": "2026-10-10T13:16:00.003Z",
+        "id": "87ec7cbb5911cd32d91dd5ec",
+        "recordedAt": "2026-10-10T13:32:36.166Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
-        "stepId": "STEP-20261010T130417712Z-9cf498da",
+        "stepId": "STEP-20261010T131719306Z-6cab396b",
         "repository": "repository-operating-system",
         "branch": "feat/local-agent-coordination",
-        "commit": "cec544e4c1418292a1074b147f82160a03e21c3d",
+        "commit": "fcd610f7bec39cc76ef594a6f67d075d268ce38f",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/local-agent-coordination",
-        "remoteCommit": "cec544e4c1418292a1074b147f82160a03e21c3d",
-        "summary": "Published read-only local handoff explain text/JSON, bounded Application/Infrastructure ports, cycle/ownership/revision/write diagnostics and sample artifact in PR227; Release build, 29 handoff, 9 CLI boundary, 33 lifecycle CLI and 37 ECIR tests pass; registry and native validation pass",
-        "nextAction": "Implement protected local controller and explicit local checkpoint/recovery profile; then durable bounded dispatch, actual worker observations and serialized integration; all execution gates remain closed and offline actual-agent pilot is pending",
+        "remoteCommit": "fcd610f7bec39cc76ef594a6f67d075d268ce38f",
+        "summary": "Published isolated local dispatch reservation and journal with session binding, exclusive events and uncertain-start reconciliation in PR227; Release build, 10 journal tests with 50 reservation race repetitions, 29 handoff tests, 37 ECIR tests and 3 architecture tests pass; native registry/validation pass",
+        "nextAction": "Connect bounded explicit-executable/argv worker supervision and actual protected host/process observation, then result integration and local checkpoint profile; actual offline model/agent qualification remains pending",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
