@@ -9429,21 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "6b8826abecf31c2353baaeb6",
-        "recordedAt": "2026-10-10T10:13:40.635Z",
+        "id": "03b510b494925d3d05179407",
+        "recordedAt": "2026-10-10T10:17:19.697Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
-        "stepId": "STEP-20261010T100110000Z-df7de166",
+        "stepId": "STEP-20261010T101512237Z-5c7e0de4",
         "repository": "repository-operating-system",
         "branch": "feat/ecir-host-policy",
-        "commit": "e9f952eb5a3e8d089230b93337876ef735432113",
+        "commit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/ecir-host-policy",
-        "remoteCommit": "e9f952eb5a3e8d089230b93337876ef735432113",
-        "summary": "Verifier merged; native staging and direct/fallback begin guards published in draft PR225. Release build, 37 ECIR, 7 dispatcher and 10 group execution tests plus native validation pass.",
-        "nextAction": "Review protected host authority deployment with separate reviewer credentials; qualify released Ordo ECIR through Conditor and freeze independent behavioral acceptance before wiring privileged dispatch or running a real cohort.",
+        "remoteCommit": "3c3ab282942c5bae45aba9dd7513fa325a929c25",
+        "summary": "Published exclusive journal reservation fix for CI-observed Unix rename race. Release build, 37 ECIR tests including 100 two-contender races and partial-preparation refusal, and native validation pass. Latest full CI pending; PR225 draft.",
+        "nextAction": "Finish CI review; provision separately protected host authority with authenticated reviewer/admin credentials, qualify released Ordo ECIR and independent behavioral acceptance, then wire privileged dispatch and run the first real cohort.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
