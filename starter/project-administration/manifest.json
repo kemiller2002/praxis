@@ -202,6 +202,11 @@
       "template": false
     },
     {
+      "source": "schemas/ecir-approval-v1.schema.json",
+      "destination": "schemas/ecir-approval-v1.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/praxis-completion-readiness.schema.json",
       "destination": "schemas/praxis-completion-readiness.schema.json",
       "template": false

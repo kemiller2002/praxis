@@ -28,6 +28,21 @@ Neither step accepts AI-generated authorization. A committed file's immutability
 
 The validator is a **read-only inspection boundary**, not a new bypass around `plan execute-group`: ECIR groups remain denied by `FileGroupExecution.facts`. The next integration must bind the returned observation to a trusted, owner-verified decision approval receipt with the exact blueprint digest, cohort ID and source commit, then use `EcirGates.allowsExecution` as part of an atomic group-execution authorization check.
 
+## Signed, exact-scope approval receipts (new implementation)
+
+`EcirApprovals` is the narrow authority boundary between architectural validation and execution approval. The `ecir.approval/1` wire artifact has these required fields:
+
+- `schemaVersion`, `keyId`, `approver`, `issuedAt`, `expiresAt`, `signature`
+- `scope.groupId`, `scope.cohortId`, `scope.sourceCommit`, `scope.manifestDigest`, `scope.blueprintDigest`, `scope.requirementKeys`, `scope.decisionIds`
+
+The receipt is **not trusted because it was committed**, because its author was an agent, or because its JSON says "approved". The host injects a protected allow-list mapping `keyId` to a public ECDSA P-256 key and authenticated signer identity. The receipt is a UTF-8 length-framed, domain-separated canonical payload signed by that signer using SHA-256 and a 64-byte IEEE-P1363-format signature, encoded as base64. The verifier does not store or generate private keys.
+
+An approval is accepted only if the signature verifies, the key remains on the host allow-list, identity matches, the UTC interval is valid (maximum 24 hours), and **all** commit, manifest, blueprint, group, cohort, original requirement keys and required decision IDs match the independently supplied scope. A modified or duplicated requirement, newly introduced decision, changed cohort, stale blueprint or revoked signer invalidates the receipt. Removing a signer from the host trust map revokes approvals issued by that key; production must apply changes before dispatch.
+
+`FileEcirAuthorization.verifyReadOnly` composes: verified source commit -> pinned Ordo executable -> independently derived cohort obligations -> signed approval -> `EcirGates`. This adds **read-only evidence**, not an automatic way to start agents. The current `plan execute-group` rejection for ECIR stays in force.
+
+**Remaining host integration:** protect trusted public keys and source pins outside agent-writable files; implement an audited approval issuance/revocation flow; bind the approval and Ordo evidence to work-item membership and the same atomic work-protocol transition; revalidate at the transition boundary to avoid time-of-check/time-of-use races. Never create a default test key or accept unsigned/broad/all-cohorts approval in production. The user approving the PR does not imply approval of every future ECIR blueprint.
+
 ## Remaining mandatory implementation before ECIR execution can start
 
 1. Release/qualify the ECIR-enabled Ordo version and its `sde ecir validate` operation through Conditor.
