@@ -61,7 +61,8 @@ module LocalSubmissionIntake =
 
     let inspect (ports: LocalSubmissionIntakePorts) repositoryIdentity dispatchId = protect (fun () ->
         ports.Journal.Load repositoryIdentity dispatchId |> Result.bind (fun journal ->
-            ports.Submissions.Load repositoryIdentity dispatchId |> Result.bind (fun submission ->
+            if journal.Reservation.Packet.RepositoryIdentity <> repositoryIdentity || journal.Reservation.Packet.DispatchId <> dispatchId then Error "intake journal differs from requested assignment"
+            else ports.Submissions.Load repositoryIdentity dispatchId |> Result.bind (fun submission ->
                 LocalWorkerSubmission.validate journal submission |> Result.bind (fun () ->
                     if submission.ExitCode <> 0 then Error "nonzero worker exit cannot enter integration intake"
                     else ports.NativeRecovery() |> Result.bind (fun () ->

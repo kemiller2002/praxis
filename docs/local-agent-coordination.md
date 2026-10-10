@@ -184,7 +184,7 @@ qualified native result acceptance or the actual-agent pilot.
 
 [Durable submission archival](local-worker-submissions.md) now stores bounded
 unchanged stdout with assignment/process binding before fresh independent intake.
-Nineteen tests pass, including interrupted controller-store recovery and an
+Twenty tests pass, including interrupted controller-store recovery and an
 actual subprocess fixture. It stores untrusted claims, not accepted results.
 The pre-archive crash interval, integration journaling and qualified runtime
 remain pending; existing execution and remote-checkpoint gates stay closed.

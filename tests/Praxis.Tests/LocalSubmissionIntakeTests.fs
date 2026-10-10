@@ -138,6 +138,19 @@ module LocalSubmissionIntakeTests =
                       Assert.equal changed (load store)
                       let ports = { intakePorts journal store with Observe = fun _ _ -> failwith "substituted metadata reached observations" }
                       rejects (inspect ports)))
+          t "a cross-wired storage port cannot return acceptance for another requested assignment" (fun () -> fixture true (fun _ _ _ journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let savedJournal = journal.Load packet.RepositoryIdentity packet.DispatchId |> ok
+              let savedSubmission = load store
+              let mutable observations = 0
+              let ports =
+                  { intakePorts journal store with
+                      Journal = { journal with Load = fun _ _ -> Ok savedJournal }
+                      Submissions = { store with Load = fun _ _ -> Ok savedSubmission }
+                      Observe = fun _ _ -> observations <- observations + 1; Ok LocalAgentHandoffTests.observed }
+              for repository, dispatch in [ "another-repository", packet.DispatchId; packet.RepositoryIdentity, "another-dispatch" ] do
+                  rejects (LocalSubmissionIntake.inspect ports repository dispatch)
+              Assert.equal 0 observations))
           t "revocation and expiry during independent observations are rechecked afterward" (fun () -> fixture true (fun _ _ _ journal store ->
               save journal store payload 0 |> ok |> ignore
               for expire in [ false; true ] do

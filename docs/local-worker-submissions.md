@@ -44,7 +44,8 @@ These mechanics do not establish OS ownership or power-loss metadata durability.
 ## Fresh independent intake
 
 On restart, load the archive and its original dispatch journal. Require the
-exact packet, attempt, process incarnation and an Exited journal, with capture
+requested repository/dispatch, exact packet, attempt, process incarnation and
+an Exited journal, with capture
 not preceding recorded exit. The protected host must reconcile pending native
 transactions and actual process state; decoded files alone do not supply that
 proof. A new controller can inspect the old submission only through these
@@ -73,11 +74,12 @@ relaunch; recovery must reconcile it or receive a newly delegated attempt.
 Actual power-loss, malicious same-account mutation and the full offline pilot
 remain unqualified.
 
-Release build and 19 tests pass. Tests include reopened stores, a controller-store
+Release build and 20 tests pass. Tests include reopened stores, a controller-store
 fixture terminated after its flushed-save acknowledgement, an actual worker
 subprocess fixture followed by reopened independent intake, 50 two-contender
 archive races, immutable replacement refusal, malformed claims, nonzero exits,
-partial/oversized/invalid files, substituted metadata, revoked/expired authority,
+partial/oversized/invalid files, substituted metadata, cross-wired lookup replies,
+revoked/expired authority,
 expiry during observation, unavailable native/process recovery and forged
 acceptance evidence. Unix link creation is tested on Unix; it is conditional on
 Windows. Fixture authority, validator observations and process identities are
