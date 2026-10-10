@@ -143,4 +143,59 @@ module EcirApprovalTests =
                   let missing = valid.Replace("\"schemaVersion\":\"ecir.approval/1\",", "")
                   let malformed = valid.Replace("\"requirementKeys\":[", "\"requirementKeys\":{")
                   for value in [ unknown; duplicated; missing; malformed; "{invalid json}" ] do
-                      Assert.isTrue (EcirApprovals.read value |> Result.isError) "unsafe receipt JSON was accepted")) ]
+                      Assert.isTrue (EcirApprovals.read value |> Result.isError) "unsafe receipt JSON was accepted"))
+
+          t "a valid signature on a different 256-bit curve is denied" (fun () ->
+              // This is a genuinely valid signature, not malformed key material.
+              // Linux/OpenSSL supports secp256k1; no fallback to P-256 is allowed.
+              use otherCurve = ECDsa.Create(ECCurve.CreateFromValue "1.3.132.0.10")
+              Assert.equal 256 otherCurve.KeySize
+              let trusted =
+                  Map.ofList [ template.KeyId,
+                               { Approver = template.Approver
+                                 PublicKeyPem = otherCurve.ExportSubjectPublicKeyInfoPem() } ]
+              let payload = EcirApprovals.signingPayload template
+              let signature =
+                  otherCurve.SignData(payload, HashAlgorithmName.SHA256,
+                                      DSASignatureFormat.IeeeP1363FixedFieldConcatenation)
+              Assert.isTrue
+                  (otherCurve.VerifyData(payload, signature, HashAlgorithmName.SHA256,
+                                         DSASignatureFormat.IeeeP1363FixedFieldConcatenation))
+                  "alternate-curve fixture must have a valid signature"
+              isRejected trusted scope now { template with Signature = Convert.ToBase64String signature })
+
+          t "tampering fails cryptography even when the new scope matches host expectations" (fun () ->
+              withApproval (fun trusted sign ->
+                  let signed = sign template
+                  let variants =
+                      [ { scope with ManifestDigest = blueprint }
+                        { scope with BlueprintDigest = source }
+                        { scope with SourceCommit = String('d', 40) }
+                        { scope with GroupId = "GROUP-2" }
+                        { scope with CohortId = "COHORT-2" }
+                        { scope with RequirementKeys = [ "docs/req.md#R-3" ] }
+                        { scope with DecisionIds = [ "DEC-3" ] } ]
+                  for changed in variants do
+                      // Exact-scope checks pass; only signature binding can refuse.
+                      isRejected trusted changed now { signed with Scope = changed }
+                  isRejected trusted scope now { signed with IssuedAt = "2026-10-09T15:00:00Z" }
+                  isRejected trusted scope now { signed with ExpiresAt = "2026-10-10T14:00:00Z" }))
+
+          t "signature representation and exact time boundaries are enforced" (fun () ->
+              withApproval (fun trusted sign ->
+                  let signed = sign template
+                  let issued = DateTimeOffset(2026, 10, 9, 16, 0, 0, TimeSpan.Zero)
+                  let expires = DateTimeOffset(2026, 10, 10, 15, 0, 0, TimeSpan.Zero)
+                  Assert.isTrue (EcirApprovals.verify trusted scope issued signed |> Result.isOk)
+                      "approval must be valid at issuance"
+                  isRejected trusted scope expires signed
+                  isRejected trusted scope now { signed with Signature = "not-base64!" }
+                  isRejected trusted scope now { signed with Signature = Convert.ToBase64String(Array.zeroCreate<byte> 63) }
+                  use key = ECDsa.Create(ECCurve.NamedCurves.nistP256)
+                  let derTrusted =
+                      Map.ofList [ template.KeyId,
+                                   { Approver = template.Approver
+                                     PublicKeyPem = key.ExportSubjectPublicKeyInfoPem() } ]
+                  let der = key.SignData(EcirApprovals.signingPayload template, HashAlgorithmName.SHA256,
+                                         DSASignatureFormat.Rfc3279DerSequence)
+                  isRejected derTrusted scope now { template with Signature = Convert.ToBase64String der })) ]
