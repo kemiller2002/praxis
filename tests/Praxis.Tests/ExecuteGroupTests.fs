@@ -81,7 +81,19 @@ module ExecuteGroupTests =
                   Assert.equal 1 refused.ExitCode
                   Assert.isTrue (refused.Output.Contains "ECIR group execution refused") refused.Output
                   Assert.equal before (File.ReadAllText(Path.Combine(clone, ".ros", "work", "groups.json")))
-                  Assert.empty (changedPaths clone)))
+                  Assert.empty (changedPaths clone)
+                  let direct = cli clone [ "work"; "begin"; "--id"; "ITEM-1"; "--occurred-at"; now() ]
+                  Assert.equal 1 direct.ExitCode
+                  Assert.isTrue (direct.Error.Contains "ECIR member work begin refused") direct.Error
+                  Assert.empty (changedPaths clone)
+                  let rosPath = Path.Combine(clone, "ros.json")
+                  let ros = JsonNode.Parse(File.ReadAllText rosPath)
+                  ros["planner"] <- JsonNode.Parse(sprintf """{"grouping":{"groups":[{"id":"%s","members":["ITEM-1"],"sharedContext":[]}]}}""" groupId)
+                  File.WriteAllText(rosPath, ros.ToJsonString())
+                  let shadowed = cli clone [ "work"; "begin"; "--id"; "ITEM-1"; "--occurred-at"; now() ]
+                  Assert.equal 1 shadowed.ExitCode
+                  Assert.isTrue (shadowed.Error.Contains "ECIR member work begin refused") shadowed.Error
+                  Assert.equal [ "ros.json" ] (changedPaths clone)))
 
           t "a qualifying group defaults to grouped; each failed threshold is explained; advisory by configuration alone" (fun () ->
               withGroup [ "ITEM-1"; "ITEM-2"; "ITEM-3" ] [] (fun clone ->

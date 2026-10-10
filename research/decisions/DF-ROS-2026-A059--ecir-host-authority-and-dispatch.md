@@ -21,8 +21,9 @@ derived_from: [DF-ROS-2026-A042]
 provenance:
   contributions:
     EXE-20261010T091205536Z-2fa1bdc8:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-10T09:50:15.033Z
+      last: 2026-10-10T10:12:10.716Z
       actor:
         kind: agent
         id: openai/codex
@@ -76,9 +77,13 @@ second time. It refuses changed targets and unsafe paths before any replay.
 
 The new infrastructure modules implement host ports, exact grant resolution,
 issuance/revocation semantics, revalidation sequencing and a protected-journal
-recovery primitive. Tests use isolated fake host authorities and temporary
-repositories. They do not demonstrate OS protection, Fides integration,
-released-tool qualification or native CLI transactional staging.
+recovery primitive. Native staging invokes the existing work-begin and group
+recording paths in an isolated Git repository and recovers their exact member
+execution, telemetry and envelope writes. Direct and fallback-envelope begins
+refuse declared ECIR members, sharing the membership-mutation lock.
+Tests use isolated fake host authorities and temporary repositories. They do
+not demonstrate OS protection, Fides integration, released-tool qualification
+or a host-authorized CLI execution route.
 
 The proposal remains unaccepted for execution activation. `execute-group`
 continues to refuse ECIR. No production signer, private key, host deployment,
@@ -87,7 +92,7 @@ release qualification or real cohort execution was created by these tests.
 # Acceptance before activation
 
 Implement and review a concrete protected host adapter; qualify released Ordo
-ECIR and Conditor metadata; stage native member start and group recording under
+ECIR and Conditor metadata; connect native member staging and group recording under
 one lock order; ensure every mutation/remote route recovers or refuses pending
 host transactions; preserve actual member telemetry and checkpoint identity;
 then run independent behavioral acceptance on a small cohort. Source-trace

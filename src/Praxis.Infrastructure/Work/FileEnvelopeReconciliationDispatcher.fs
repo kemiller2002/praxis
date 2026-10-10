@@ -173,14 +173,19 @@ module FileEnvelopeReconciliationDispatcher =
         | _, Error message -> Error message
         | Ok requestedAction, Ok context ->
             let occurredAt = request.OccurredAt |> Option.defaultValue envelope.Timeline[index].Timestamp |> _.ToString("O")
+            let memberGuard =
+                if requestedAction = WorkAction.Begin then
+                    EcirMemberGuard.refuseUngovernedMembers realRoot [ envelope.WorkItem ]
+                else Ok()
             let gitPaths =
                 if requestedAction = WorkAction.Complete || (requestedAction = WorkAction.Begin && context.StartedAt.IsNone) then
                     observedPaths realRoot
                 else
                     Ok []
-            match gitPaths with
-            | Error message -> Error message
-            | Ok paths ->
+            match memberGuard, gitPaths with
+            | Error message, _ -> Error message
+            | _, Error message -> Error message
+            | Ok(), Ok paths ->
                 let planRequest: WorkContextPlanRequest =
                     { Context = context
                       Action = requestedAction
@@ -242,7 +247,7 @@ module FileEnvelopeReconciliationDispatcher =
                             readContext stagingRoot
                             |> Result.bind (fun updated -> FileBacklogQueueRepository.markComplete stagingRoot envelope.WorkItem occurredAt updated.WorkItems))
 
-    let apply root envelopePath envelopeHash headCommit clock (envelope: EnvelopeReconciliationInput) =
+    let private applyLocked root envelopePath envelopeHash headCommit clock (envelope: EnvelopeReconciliationInput) =
         match actor envelope.Agent, metricDefinitions root envelope, completionWouldLeaveActiveExecution root envelope with
         | Error code, _, _
         | _, Error code, _
@@ -317,3 +322,20 @@ module FileEnvelopeReconciliationDispatcher =
                 with error -> Error(EnvelopeApplyFailure.Invalid [ error.Message ])
             try Directory.Delete(staging, true) with _ -> ()
             outcome
+
+    /// Serialize membership checks with native begin and group mutations.
+    let apply root envelopePath envelopeHash headCommit clock envelope =
+        match Praxis.Infrastructure.Artifacts.RegistryLock.acquire root "work-protocol" Praxis.Infrastructure.Artifacts.RegistryLock.defaultSettings with
+        | Error failure -> Error(EnvelopeApplyFailure.Indeterminate failure.Message)
+        | Ok lease ->
+            let result =
+                try
+                    match WorkStateTransaction.recover root with
+                    | Error failure -> Error(EnvelopeApplyFailure.Indeterminate failure.Message)
+                    | Ok() -> applyLocked root envelopePath envelopeHash headCommit clock envelope
+                with _ ->
+                    lease.Release() |> ignore
+                    reraise()
+            match lease.Release(), result with
+            | Error failure, Ok _ -> Error(EnvelopeApplyFailure.Indeterminate failure.Message)
+            | _, value -> value

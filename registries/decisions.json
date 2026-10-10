@@ -2014,8 +2014,10 @@
             "runtime": "codex"
           },
           "at": "2026-10-10T09:50:15.033Z",
+          "last": "2026-10-10T10:12:10.716Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "GH-220 protected host authority and recoverable dispatch proposal; activation remains gated"
         }

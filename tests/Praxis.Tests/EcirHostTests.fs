@@ -7,6 +7,9 @@ open System.Text.Json
 open System.Threading
 open System.Threading.Tasks
 open Praxis.Infrastructure.Planning
+open Praxis.Infrastructure.Work
+open Praxis.Domain.Provenance
+open Praxis.Domain.Work
 
 [<RequireQualifiedAccess>]
 module EcirHostTests =
@@ -227,6 +230,54 @@ module EcirHostTests =
                   Assert.isTrue (EcirHostPolicy.verifyAfterValidation current current.Grants.Head [ "R-1" ] docs validator now |> Result.isError) "revoked key still authorized"
                   Assert.isTrue (EcirHostAdministration.revoke host "owner-1" |> Result.isError) "duplicate revocation mutated host state"
                   Assert.equal 2 audits.Length))
+
+          t "stages real native member and group effects, then recovers their exact telemetry" (fun () ->
+              withPolicy (fun p _ ->
+                  let parent = GitFixture.temporaryDirectory "ecir-native-stage"
+                  try
+                      let _, clone = PraxisCli.installedRepository parent "repo"
+                      let executor = PraxisCli.agent "example/ecir-stage" "example" "stage" "stage-session"
+                      let actor =
+                          { Kind = ActorKind.Agent; Id = executor.Id; Provider = Some executor.Provider
+                            Model = Some "unknown"; Runtime = Some executor.Runtime }
+                      let cli root args = PraxisCli.run root (Some executor) args |> PraxisCli.ok |> ignore
+                      cli clone [ "add"; "Native fixture"; "--id"; "WI-1" ]
+                      cli clone [ "work"; "backlog-transition"; "--id"; "WI-1"; "--action"; "ready"; "--occurred-at"; PraxisCli.now() ]
+                      cli clone [ "work"; "group"; "create"; "--group"; "GROUP-1"; "--member"; "WI-1"; "--occurred-at"; PraxisCli.now() ]
+                      PraxisCli.pushAll clone "native ECIR staging fixture" |> ignore
+                      let facts, _, repository = FileGroupExecution.facts clone None "GROUP-1" actor |> Result.defaultWith failwith
+                      let occurredAt = PraxisCli.now()
+                      let request =
+                          { GroupId = "GROUP-1"; OccurredAt = occurredAt; Actor = actor; Member = Some "WI-1"
+                            Mode = Some(ExecutionMode.Independent, "native staging fixture")
+                            IndependentMembers = []; NewExecutionId = FileGroupExecution.newIdentifier "GROUP-1" occurredAt actor
+                            Repository = repository }
+                      let plan = GroupExecutions.decide request facts |> Result.defaultWith (fun errors -> failwithf "%A" errors)
+                      let approval = EcirHostPolicy.verifyAfterValidation p p.Grants.Head [ "R-1" ] docs validator now |> Result.defaultWith failwith
+                      let evidence = { PolicyRevision = p.Revision; VerifiedAt = now; Approval = approval; Validator = validator }
+                      let begun stage =
+                          let result = PraxisCli.run stage (Some executor) [ "work"; "begin"; "--id"; "WI-1"; "--occurred-at"; occurredAt ]
+                          if result.ExitCode = 0 then Ok() else Error result.Error
+                      let record stage executionId =
+                          FileWorkGroupRepository.readStore stage
+                          |> Result.bind (fun store ->
+                              let group = WorkGroups.tryFind store.Groups "GROUP-1" |> Option.get
+                              let updated = GroupExecutions.record request group plan (Some executionId)
+                              FileWorkGroupRepository.writeStore stage { store with Groups = WorkGroups.upsert store.Groups updated })
+                      use staged = EcirNativeStage.prepare clone "WI-1" evidence begun record |> Result.defaultWith failwith
+                      Assert.equal None (FileGroupExecution.memberExecution clone "WI-1")
+                      Assert.equal "" (GitFixture.git clone [ "status"; "--porcelain" ])
+                      Assert.isTrue (staged.Writes |> List.exists (fun write -> write.Path.StartsWith(".ros/telemetry/executions/"))) "native member telemetry omitted"
+                      Assert.isTrue (staged.Writes |> List.exists (fun write -> write.Path.StartsWith(".ros/executions/"))) "native execution envelope omitted"
+                      let journal = Path.Combine(parent, "host", "native.json")
+                      Assert.equal (Ok()) (EcirDispatchTransaction.prepare clone journal staged.Writes)
+                      Assert.equal (Ok()) (EcirDispatchTransaction.recover clone journal ignore)
+                      let executionId = FileGroupExecution.memberExecution clone "WI-1" |> Option.get
+                      let group = FileWorkGroupRepository.read clone |> Result.defaultWith failwith |> fun groups -> WorkGroups.tryFind groups "GROUP-1" |> Option.get
+                      Assert.equal executionId group.Executions.Head.Members.Head.ExecutionId
+                      Assert.equal "feature/x" (GitFixture.git clone [ "branch"; "--show-current" ])
+                      Assert.equal (Ok()) (EcirDispatchTransaction.recover clone journal ignore)
+                  finally GitFixture.cleanup parent))
 
           t "failed audit persistence and wrong authenticated issuer never publish approval" (fun () ->
               withPolicy (fun initial key ->

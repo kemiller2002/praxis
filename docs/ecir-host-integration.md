@@ -19,6 +19,14 @@ Proposal: [DF-ROS-2026-A059](../research/decisions/DF-ROS-2026-A059--ecir-host-a
   atomically outside the repository, write an exact bounded state set, recover
   process interruptions without redispatch, and refuse hash/path/repository
   conflicts. The caller must protect the journal and hold repository locks.
+- `EcirNativeStage`: invoke the existing native begin and group-recording
+  planners in an isolated copy; preserve the original branch, worktree and
+  actual execution IDs; emit only the allowed state writes. The integration
+  test commits and recovers those exact member telemetry and envelope writes.
+- `EcirMemberGuard`: refuse direct native and fallback-envelope begins for
+  declared ECIR members. Group mutations and those begins share the
+  work-protocol lock. Repository configuration cannot override a stored ECIR
+  declaration to bypass the guard.
 
 The ports are contracts for a protected host implementation. They do not make
 an arbitrary callback trustworthy. No default host adapter or production test
@@ -45,8 +53,8 @@ oracle required before the first real cohort. No such oracle was inferred.
    authenticated reviewer/admin identity, anti-rollback policy revisions,
    durable atomic policy/audit updates, and serialized dispatch/revocation.
    Use Fides identity integration when available; no self-reported actor flag.
-2. Add staging of the existing native work-begin/group planners and actual
-   member telemetry, then connect their write set to the protected host journal.
+2. Connect native staging and actual member telemetry to the protected host
+   journal; only the private host-authorized execution route may invoke it.
    Use one documented lock order: work-protocol, work-groups, host policy.
    Cover direct work, group mutation and remote routes. A pending journal must
    be recovered or refused before another affected transition.
@@ -64,8 +72,8 @@ PRAXIS_TEST_FILTER=ECIR dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tes
 ./praxis validate
 ```
 
-All 35 compiled ECIR tests passed in this increment, including 12 new host
-cases. They cover changed host pins, unqualified releases, revocation,
+All 37 focused ECIR tests, seven dispatcher tests and ten group execution
+tests passed. They cover changed host pins, unqualified releases, revocation,
 membership changes, expiry during validation and staging, CAS refusal, failed
 administrative audit persistence, incorrect signer output, concurrent journal
 preparation, crashes at every write boundary, repeated recovery, late conflicts,

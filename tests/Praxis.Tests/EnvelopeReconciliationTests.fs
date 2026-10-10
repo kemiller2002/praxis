@@ -96,7 +96,24 @@ module EnvelopeReconciliationTests =
           { Id = "cost.step_total"; Unit = "currency"; Aggregation = "sum"; Collection = "runtime-or-calculated" } ]
 
     let tests =
-        [ { Name = "reconciliation accepts a legal envelope"
+        [ { Name = "ECIR fallback begin refuses configured membership before canonical mutation"
+            Run = fun () ->
+                withGitRepository (fun root baseCommit ->
+                    let rosPath = Path.Combine(root, "ros.json")
+                    let ros = JsonNode.Parse(File.ReadAllText rosPath)
+                    ros["planner"] <- JsonNode.Parse("""{"grouping":{"groups":[{"id":"GROUP-ECIR","members":["WI-0064"],"sharedContext":["ecir/1:COHORT-1"]}]}}""")
+                    File.WriteAllText(rosPath, ros.ToJsonString())
+                    let input = Path.Combine(root, "request.json")
+                    File.WriteAllText(input, "accepted envelope")
+                    let value = { envelope with BaseCommit = baseCommit; Agent = { actor with Model = Some "unknown"; Runtime = Some "codex" } }
+                    match FileEnvelopeReconciliationDispatcher.apply root input "hash" baseCommit (fun () -> DateTimeOffset.Parse("2026-09-26T10:03:00Z")) value with
+                    | Error(EnvelopeApplyFailure.Invalid findings) ->
+                        Assert.isTrue (findings |> List.exists (fun text -> text.Contains "ECIR member work begin refused")) (String.concat "; " findings)
+                    | other -> failwithf "expected ECIR refusal, got %A" other
+                    Assert.isTrue (File.Exists input) "refused input was consumed"
+                    Assert.isTrue (not (File.Exists(Path.Combine(root, ".ros", "context", "current.json")))) "canonical work was begun"
+                    Assert.equal baseCommit (runGit root [ "rev-parse"; "HEAD" ])) }
+          { Name = "reconciliation accepts a legal envelope"
             Run = fun () -> Assert.equal Accept (EnvelopeReconciliation.decide envelope observed) }
           { Name = "reconciliation rejects claimed work-item branch mismatch"
             Run = fun () ->

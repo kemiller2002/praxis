@@ -1264,17 +1264,20 @@ let private runWorkStart root arguments (eventActor: Actor) =
                             let queueItems = FileBacklogQueueRepository.readItems root
 
                             let guard =
-                                ids
-                                |> List.tryPick (fun id ->
-                                    match queueItems |> List.tryFind (fun item -> item.Id = id) with
-                                    | Some item when item.Status <> "ready" ->
-                                        Some(
-                                            if item.Status = "abandoned" then
-                                                $"cannot start backlog item '{id}': it was abandoned"
-                                            else
-                                                $"cannot start backlog item '{id}' from '{item.Status}'; mark it ready first"
-                                        )
-                                    | _ -> None)
+                                match EcirMemberGuard.refuseUngovernedMembers root ids with
+                                | Error message -> Some message
+                                | Ok() ->
+                                    ids
+                                    |> List.tryPick (fun id ->
+                                        match queueItems |> List.tryFind (fun item -> item.Id = id) with
+                                        | Some item when item.Status <> "ready" ->
+                                            Some(
+                                                if item.Status = "abandoned" then
+                                                    $"cannot start backlog item '{id}': it was abandoned"
+                                                else
+                                                    $"cannot start backlog item '{id}' from '{item.Status}'; mark it ready first"
+                                            )
+                                        | _ -> None)
 
                             match guard with
                             | Some message -> Error message
