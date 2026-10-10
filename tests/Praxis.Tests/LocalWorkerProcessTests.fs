@@ -38,6 +38,22 @@ module LocalWorkerFixture =
             Console.Out.Flush()
             Thread.Sleep 30000
             0
+        | "persist-output-spool" when List.length arguments = 3 ->
+            // Host controller-store fixture. No model or worker authority.
+            let reservation = Praxis.Contracts.Work.LocalDispatchJournalJson.readReservation (Console.In.ReadToEnd()) |> function Ok value -> value | Error error -> failwith error
+            let store = FileLocalWorkerOutputSpool.create arguments[0] arguments[1] |> function Ok value -> value | Error error -> failwith error
+            let session = store.Open reservation |> function Ok value -> value | Error error -> failwith error
+            let payload = Praxis.Contracts.Work.LocalAgentHandoffJson.renderResult LocalAgentHandoffTests.result
+            let bytes = System.Text.Encoding.UTF8.GetBytes payload
+            session.Write LocalWorkerOutputStream.StandardOutput bytes |> function Ok() -> () | Error error -> failwith error
+            if arguments[2] = "sealed" then
+                session.Seal { ProcessIdentity = Some "fixture-process-incarnation"; ProcessStarted = Some true; RootExitObserved = true
+                               Outcome = LocalWorkerProcessOutcome.Exited 0; StandardOutput = payload; StandardError = ""; CapturedBytes = bytes.Length }
+                |> function Ok() -> () | Error error -> failwith error
+            Console.Write "spool-flushed"
+            Console.Out.Flush()
+            Thread.Sleep 30000
+            0
         | _ -> 2
 
 [<RequireQualifiedAccess>]

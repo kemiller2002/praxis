@@ -69,7 +69,10 @@ The archive survives controller interruption after its save completes. A crash
 before archival completes can leave no submission or a partial file; intake
 refuses it. Output remains in memory until capture, so a crash between root-exit
 tracking and capture can lose stdout. This slice does not close that interval
-with streaming/spooled output. The immutable dispatch still prevents blind
+with streaming/spooled output. The optional [host output spool](local-worker-output-spool.md)
+now supplies an isolated streaming composition that seals before dispatch exit
+and can recover sealed output before archival. The original in-memory composition
+retains its stated crash limit. The immutable dispatch still prevents blind
 relaunch; recovery must reconcile it or receive a newly delegated attempt.
 Actual power-loss, malicious same-account mutation and the full offline pilot
 remain unqualified.

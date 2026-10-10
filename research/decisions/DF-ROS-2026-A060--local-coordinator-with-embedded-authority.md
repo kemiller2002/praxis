@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T15:02:31.183Z
+      last: 2026-10-10T17:14:07.375Z
       actor:
         kind: agent
         id: openai/codex
@@ -150,3 +150,18 @@ never supply approval, accepted-result state, integration or completion. The
 pre-archive crash interval, power-loss metadata durability, qualified protected
 host and integration journaling remain pending. This is partial PRX-LOCAL-009/011
 coverage, not acceptance of the complete runtime or offline pilot.
+
+## Isolated streamed output recovery proposal
+
+The optional [host output spool](../../docs/local-worker-output-spool.md) places
+raw stdout/stderr beside the original strict reservation in a provisioned host
+root. A draft `praxis.local-worker-output-seal/1` binds packet/controller/process,
+normal exit code and both stream digests/counts, and is flushed before dispatch
+exit persistence. This ordering preserves sealed output through the pre-archive
+crash interval without making partial streams accepted results. Bounded reads,
+exclusive writes and fresh independent native/process recovery precede immutable
+untrusted archival. The combined spool cap is 64 KiB; larger selected budgets
+are explicitly refused before reservation. Existing in-memory composition is
+unchanged in scope. Actual filesystem protection, process/containment and storage
+qualification, integration recovery and offline model pilot remain pending. This
+is a reversible isolated proposal; no accepted checkpoint or authority gate changes.

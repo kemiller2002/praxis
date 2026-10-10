@@ -21,3 +21,12 @@ type LocalWorkerProcessObservation =
       CapturedBytes: int }
 type LocalWorkerProcessPort =
     { Run: LocalWorkerProcessSpec -> (string -> Result<unit, string>) -> CancellationToken -> Task<LocalWorkerProcessObservation> }
+
+[<RequireQualifiedAccess>]
+type LocalWorkerOutputStream = StandardOutput | StandardError
+/// The host consumes owned byte chunks before the supervisor retains them.
+/// A failed sink stops the process and cannot become a normal submission.
+type LocalWorkerStreamingProcessPort =
+    { RunStreaming: LocalWorkerProcessSpec -> (string -> Result<unit, string>) ->
+           (LocalWorkerOutputStream -> byte array -> Result<unit, string>) ->
+           CancellationToken -> Task<LocalWorkerProcessObservation> }

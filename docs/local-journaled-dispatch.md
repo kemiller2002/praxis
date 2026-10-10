@@ -55,7 +55,10 @@ NoStart and Exited close only process tracking. They grant no result acceptance,
 integration or work completion. The [submission archive](local-worker-submissions.md) now persists complete
 stdout before fresh independent intake in isolated composition. Protected
 acceptance and integration journals remain pending. A crash after root exit but before saving that fact leaves the earlier
-state uncertain. No exactly-once spawning or power-loss durability is claimed.
+state uncertain. The optional [host output spool](local-worker-output-spool.md)
+seals bounded raw streams before the exit append, preserving complete output
+while independent reconciliation of an uncertain journal remains required.
+No exactly-once spawning or power-loss durability is claimed.
 
 ## Verification
 

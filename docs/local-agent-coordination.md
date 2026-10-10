@@ -186,5 +186,8 @@ qualified native result acceptance or the actual-agent pilot.
 unchanged stdout with assignment/process binding before fresh independent intake.
 Twenty tests pass, including interrupted controller-store recovery and an
 actual subprocess fixture. It stores untrusted claims, not accepted results.
-The pre-archive crash interval, integration journaling and qualified runtime
-remain pending; existing execution and remote-checkpoint gates stay closed.
+The optional [host output spool](local-worker-output-spool.md) now flushes bounded
+raw streams and seals before dispatch exit persistence. Sealed output can be
+recovered before archival through independent native/process recovery; partial
+streams remain refused. Integration journaling and the qualified runtime remain
+pending; existing execution and remote-checkpoint gates stay closed.

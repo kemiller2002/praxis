@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-10T15:02:30.258Z
+      last: 2026-10-10T17:14:06.964Z
       actor:
         kind: agent
         id: openai/codex
@@ -144,3 +144,13 @@ never supply approval, accepted-result state, integration or completion. The
 pre-archive crash interval, power-loss metadata durability, qualified protected
 host and integration journaling remain pending. This is partial PRX-LOCAL-009/011
 coverage, not acceptance of the complete runtime or offline pilot.
+
+The optional [host output spool](../../docs/local-worker-output-spool.md) adds
+partial PRX-LOCAL-009/011 recovery coverage: bounded raw stdout/stderr flushes,
+exclusive immutable attempt ownership and a draft completion seal before exit
+persistence. Sealed streams can be re-archived after independent native/process
+recovery against the original Exited journal. Partial streams and uncertain
+process state remain refused; no automatic relaunch or native completion occurs.
+Sealed-output loss before archival is addressed in this isolated composition;
+bytes not yet flushed/sealed, qualified host recovery, integration, power loss
+and the actual offline agent pilot remain unresolved.

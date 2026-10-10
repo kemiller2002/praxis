@@ -32,7 +32,7 @@ module LocalWorkerProcess =
             if actual <> spec.ExecutableDigest then Error "host executable changed before start" else Ok()
 
     /// Explicit observer dependency permits mechanism fixtures; it does not confer host trust.
-    let runWithIdentityObservation (observeIdentity: Process -> Result<string, string>) spec onStarted (cancellation: CancellationToken) = task {
+    let runWithOutputObservation (observeIdentity: Process -> Result<string, string>) onOutput spec onStarted (cancellation: CancellationToken) = task {
         let rejected outcome started =
             { ProcessIdentity = None; ProcessStarted = started; RootExitObserved = false; Outcome = outcome
               StandardOutput = ""; StandardError = ""; CapturedBytes = 0 }
@@ -59,7 +59,7 @@ module LocalWorkerProcess =
                 let mutable captured = 0
                 let mutable limitExceeded = false
                 let mutable streamError = None
-                let pump (source: Stream) (sink: MemoryStream) = task {
+                let pump stream (source: Stream) (sink: MemoryStream) = task {
                     let buffer = Array.zeroCreate<byte> 4096
                     let mutable reading = true
                     try
@@ -69,14 +69,18 @@ module LocalWorkerProcess =
                             else
                                 lock gate (fun () ->
                                     let retained = min count (spec.MaxOutputBytes - captured)
-                                    sink.Write(buffer, 0, retained)
-                                    captured <- captured + retained
+                                    let persisted =
+                                        try onOutput stream (buffer.AsSpan(0, retained).ToArray())
+                                        with e -> Error(errorText e.Message)
+                                    match persisted with
+                                    | Ok() -> sink.Write(buffer, 0, retained); captured <- captured + retained
+                                    | Error reason -> streamError <- Some reason; lifetime.Cancel()
                                     if retained < count then limitExceeded <- true; lifetime.Cancel())
                     with
                     | :? OperationCanceledException -> ()
                     | e -> lock gate (fun () -> streamError <- Some(errorText e.Message); lifetime.Cancel()) }
-                let outPump = pump child.StandardOutput.BaseStream stdout
-                let errPump = pump child.StandardError.BaseStream stderr
+                let outPump = pump LocalWorkerOutputStream.StandardOutput child.StandardOutput.BaseStream stdout
+                let errPump = pump LocalWorkerOutputStream.StandardError child.StandardError.BaseStream stderr
                 let identity =
                     try
                         observeIdentity child |> Result.bind (fun value ->
@@ -140,9 +144,16 @@ module LocalWorkerProcess =
                 return { ProcessIdentity = identity |> Result.toOption; ProcessStarted = Some true; RootExitObserved = rootExit
                          Outcome = outcome; StandardOutput = output; StandardError = error; CapturedBytes = captured } }
 
-    let run spec onStarted cancellation =
-        runWithIdentityObservation (fun child ->
+    let private observeIdentity (child: Process) =
             try Ok(sprintf "pid:%d/start-utc-ticks:%d" child.Id (child.StartTime.ToUniversalTime().Ticks))
-            with e -> Error(sprintf "process incarnation unavailable (pid:%d): %s" child.Id (errorText e.Message))) spec onStarted cancellation
+            with e -> Error(sprintf "process incarnation unavailable (pid:%d): %s" child.Id (errorText e.Message))
+
+    let runWithIdentityObservation observer spec onStarted cancellation =
+        runWithOutputObservation observer (fun _ _ -> Ok()) spec onStarted cancellation
+
+    let run spec onStarted cancellation = runWithIdentityObservation observeIdentity spec onStarted cancellation
+
+    let createStreaming () : LocalWorkerStreamingProcessPort =
+        { RunStreaming = fun spec onStarted onOutput cancellation -> runWithOutputObservation observeIdentity onOutput spec onStarted cancellation }
 
     let create () : LocalWorkerProcessPort = { Run = run }

@@ -151,6 +151,7 @@
     <Compile Include="LocalWorkerProcessTests.fs" />
     <Compile Include="LocalJournaledDispatchTests.fs" />
     <Compile Include="LocalSubmissionIntakeTests.fs" />
+    <Compile Include="LocalWorkerOutputSpoolTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
