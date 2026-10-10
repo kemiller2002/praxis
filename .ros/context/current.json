@@ -9429,20 +9429,20 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "410a4997fb539a887250ba68",
-        "recordedAt": "2026-10-10T09:14:14.000Z",
+        "id": "cfa9d13cf5f73769cc0c0c54",
+        "recordedAt": "2026-10-10T09:55:31.000Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
         "repository": "repository-operating-system",
-        "branch": "ecir-governed-local",
-        "commit": "28f05fee150adaa203af810e483f6942f401d483",
+        "branch": "feat/ecir-host-policy",
+        "commit": "297fa998544d8960860264b9a199753b9ec8918f",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
-        "remoteBranch": "GH-220",
-        "remoteCommit": "28f05fee150adaa203af810e483f6942f401d483",
-        "summary": "Exact P-256 verifier correction and adversarial tests published in PR 224; nine receipt tests and Release build passed",
-        "nextAction": "Finish broad CI; implement host policy and atomic authorization-to-member transition before unlocking ECIR",
+        "remoteBranch": "feat/ecir-host-policy",
+        "remoteCommit": "297fa998544d8960860264b9a199753b9ec8918f",
+        "summary": "PR225 host authority ports, audited issuance/revocation and recoverable journal primitives; 35 ECIR and 42 step tests pass; execution gated",
+        "nextAction": "Implement concrete protected host adapter and native work/group transactional staging; qualify released Ordo and independent behavioral acceptance",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
