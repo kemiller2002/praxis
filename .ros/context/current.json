@@ -9429,21 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "53006403bd88d51875a2bcef",
-        "recordedAt": "2026-10-10T15:11:16.335Z",
+        "id": "b51c4d0de8cb1fee841ce304",
+        "recordedAt": "2026-10-10T17:17:01.000Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
-        "stepId": "STEP-20261010T150641996Z-a49a03b7",
+        "stepId": "STEP-20261010T170613000Z-654afe7d",
         "repository": "repository-operating-system",
         "branch": "feat/local-agent-coordination",
-        "commit": "255db55b60ea33bc910b11ecb136db97f14e06b5",
+        "commit": "167a1562fc69a022b5b8a3fefa87b8eca6d7fa96",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/local-agent-coordination",
-        "remoteCommit": "255db55b60ea33bc910b11ecb136db97f14e06b5",
-        "summary": "Published bounded immutable stdout archives, dispatch-and-capture and fresh independent intake bound to requested assignment. Release build, 20 submission tests including terminated-store and actual subprocess recovery, 16 dispatch, 8 supervisor, 10 journal, 29 handoff, 37 ECIR and 3 architecture tests plus native validation passed. Stored claims remain untrusted; pre-archive crash interval and qualified native integration remain pending.",
-        "nextAction": "Close the pre-archive output crash interval with bounded host-owned spool/streaming records and implement serialized integration recovery; qualify protected host, real process identity, network denial, local model and local checkpoint profile before enabling the offline runtime.",
+        "remoteCommit": "167a1562fc69a022b5b8a3fefa87b8eca6d7fa96",
+        "summary": "Published bounded host stdout/stderr spool and seal-before-exit composition with restart archival. Release build, 17 spool tests including forced controller termination and uncertain exit-write recovery, 8 supervisor, 16 dispatch, 20 intake, 10 journal, 29 handoff, 37 ECIR and 3 architecture tests plus native validation passed. Partial streams cannot enter intake; host authority, OS process and containment observations remain unqualified fixtures.",
+        "nextAction": "Implement serialized integration transaction recovery; qualify protected host, actual OS process identity, storage bounds, network denial, local model and explicit local checkpoint profile before enabling the offline coordinator runtime. Incomplete/unsealed streams still require independent reconciliation and are never blindly relaunched.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
