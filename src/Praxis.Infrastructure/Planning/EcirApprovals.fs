@@ -216,9 +216,14 @@ module EcirApprovals =
                     let bytes = Convert.FromBase64String receipt.Signature
                     use publicKey = ECDsa.Create()
                     publicKey.ImportFromPem signer.PublicKeyPem
-                    if publicKey.KeySize <> 256
+                    let curve = publicKey.ExportParameters(false).Curve
+                    // Key size alone also admits other 256-bit curves. The
+                    // protocol pins NIST P-256, independently of key-store input.
+                    if curve.Oid.Value <> ECCurve.NamedCurves.nistP256.Oid.Value
+                       || publicKey.KeySize <> 256
                        || bytes.Length <> 64
-                       || not (publicKey.VerifyData(signingPayload receipt, bytes, HashAlgorithmName.SHA256)) then
+                       || not (publicKey.VerifyData(signingPayload receipt, bytes, HashAlgorithmName.SHA256,
+                                                   DSASignatureFormat.IeeeP1363FixedFieldConcatenation)) then
                         Error "ECIR approval cryptographic signature did not verify"
                     else
                         Ok
