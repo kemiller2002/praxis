@@ -1990,5 +1990,57 @@
     "title": "Praxis's web and hub UIs may load one approved browser script, url-state.js, for replace-on-refine and one-action Copy link, as a progressive enhancement under a strict CSP",
     "updated": "2026-10-09",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-10",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A042"
+    ],
+    "id": "DF-ROS-2026-A059",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A059--ecir-host-authority-and-dispatch.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261010T091205536Z-2fa1bdc8": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-10T09:50:15.033Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "GH-220 protected host authority and recoverable dispatch proposal; activation remains gated"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/ecir-execution.md",
+      "docs/ecir-host-integration.md",
+      "docs/ecir-receipt-handoff.md",
+      "DF-ROS-2026-A042"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "ecir",
+      "authorization",
+      "security",
+      "recovery",
+      "decision"
+    ],
+    "title": "ECIR approval belongs to a protected host authority and dispatch commits one recoverable member transaction",
+    "updated": "2026-10-10",
+    "version": "1.0.0"
   }
 ]

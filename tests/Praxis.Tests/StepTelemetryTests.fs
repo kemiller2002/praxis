@@ -429,6 +429,21 @@ module StepTelemetryTests =
                     use parsed = JsonDocument.Parse(writer.ToString())
                     Assert.equal 1 (parsed.RootElement.GetProperty("count").GetInt32())) }
 
+          { Name = "step inherits a known owning execution agent ID when the same-run request omits it"
+            Run = fun () ->
+                withRoot (fun root ->
+                    writeExecution root
+                    let record = readExecution root
+                    (record["identity"] :?> JsonObject)["agentId"] <- JsonValue.Create actor.Id
+                    File.WriteAllText(executionFile root, record.ToJsonString())
+                    let stepId = beginStep root "2026-01-01T00:01:00Z" None "inherited"
+                    let updated = readExecution root
+                    let step = (updated["steps"] :?> JsonArray)[0] :?> JsonObject
+                    Assert.equal actor.Id ((step["identity"]["agentId"]).GetValue<string>())
+                    Assert.equal "EXE-STEP" ((step["identityInheritance"]["sourceExecutionId"]).GetValue<string>())
+                    Assert.isTrue (FileStepRepository.findings updated |> List.forall (fun finding -> not (finding.Contains "identity.agentId"))) "inherited step contradicts execution"
+                    Assert.isTrue (stepId.StartsWith "STEP-") "step missing") }
+
           { Name = "stored contradictory finalized state is detected by validation"
             Run = fun () ->
                 withRoot (fun root ->
