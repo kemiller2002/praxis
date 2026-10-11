@@ -9539,20 +9539,21 @@
         "EXE-20261011T115701257Z-3ebd7686"
       ],
       "latestCheckpoint": {
-        "id": "05bc7801df465880e0e37fa4",
-        "recordedAt": "2026-10-11T15:24:55.529Z",
+        "id": "127ec26f6a91ab8877b51a0e",
+        "recordedAt": "2026-10-11T20:43:01.373Z",
         "executionId": "EXE-20261011T115701257Z-3ebd7686",
+        "stepId": "STEP-20261011T204019489Z-841d50b2",
         "repository": "repository-operating-system",
         "branch": "feat/GH-231-local-host-authority",
-        "commit": "88648f7f3ec934aeec589e01b8b5c5a51bd6b71e",
+        "commit": "ccf28fce020733faaea1158282d749d6c43855da",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/GH-231-local-host-authority",
-        "remoteCommit": "88648f7f3ec934aeec589e01b8b5c5a51bd6b71e",
-        "summary": "Portable local worker catalog, process platform and explicit development host file access implemented. Release build clean; Linux portability 12/12, subprocess 8/8, signed delegation 13/13, journaled worker 19/19 and ECIR filter 57/57 passed; registry and validation passed; three-OS CI pending.",
-        "nextAction": "Observe Linux/Windows/macOS portability CI and fix concrete failures; add vendor bridges and native runtime composition next. User explicitly deferred equivalent OS isolation, which is not a blocker for this portability milestone.",
+        "remoteCommit": "ccf28fce020733faaea1158282d749d6c43855da",
+        "summary": "Published mandatory native assignment checks and Windows spool flush/close before immutable verification. Release build clean; portability29/29 and spool18/18 plus affected dispatch/delegation/submission/ECIR suites passed locally. Full Linux and macOS CI passed at ee9699c4. Windows disposable Git read-only cleanup corrected and published; corrected three-OS CI pending. WI-0087 records execution-envelope writer serialization gap.",
+        "nextAction": "Verify corrected three-OS worker and spool CI; bind prerequisite evidence, add concrete worker bridges, serialize execution-envelope lifecycle writers (WI-0087), then run coordinator/two-worker pilot. Equivalent OS isolation remains deferred; no execution CLI or result acceptance enabled.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"

@@ -96,6 +96,9 @@ module LocalWorkerOutputSpoolTests =
                   rejects (session.Write LocalWorkerOutputStream.StandardError [| 0x62uy |])
                   rejects (session.Seal (observed (String('a', 65536)) "" 0))
                   rejects (load spool)
+                  // Inspect retained immutable bytes after releasing the writer,
+                  // as required by reciprocal file sharing on Windows.
+                  session.Close()
                   Assert.equal 65536 (File.ReadAllBytes(Path.Combine(spoolDirectory spools, "stdout.bin"))).Length
               finally session.Close()))
           t "mismatched, interrupted and invalid UTF-8 observations cannot seal" (fun () ->

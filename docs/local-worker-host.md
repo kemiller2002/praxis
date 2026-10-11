@@ -60,9 +60,11 @@ can overlap. The Release build completed with zero warnings/errors.
 Native fixtures use actual Git commits and native group/envelope serializers;
 process identities, signing keys and state provisioning are still fixtures.
 
-At implementation commit `ee9699c4`, the full Linux validation, Ubuntu/macOS
-worker portability, all three lifecycle jobs, native release checks and site
-checks passed. Windows exposed read-only Git-object deletion in the new test
-fixtures. Their cleanup now removes the read-only attribute before deletion,
-without suppressing cleanup errors. Windows worker and spool qualification
-remains pending the corrected CI run.
+At implementation commit `ccf28fce`, the 29 portability tests, 8 process tests
+and 13 signed-delegation tests passed on Linux, macOS and Windows. Full Linux
+validation and all three lifecycle jobs passed. The 18 spool tests passed on
+Linux/macOS; Windows passed 17 and exposed the overflow test reading retained
+bytes while its writer was still open. The test now closes the writer before
+immutable inspection, preserving overflow refusal and failed-seal checks.
+The corrected spool matrix remains pending CI. Disposable Git fixture cleanup
+also clears Windows read-only object attributes without suppressing errors.
