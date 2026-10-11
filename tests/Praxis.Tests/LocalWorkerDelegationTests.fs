@@ -18,9 +18,8 @@ module LocalWorkerDelegationTests =
     let private root = Path.GetTempPath()
     let private t name run = { Name = "local delegation: " + name; Run = run }
     let private refused result = Assert.isTrue (Result.isError result) "unauthorized delegation accepted"
-    let internal withFixture run =
+    let internal withFixtureForPacket (original: LocalWorkerPacket) run =
         use key = ECDsa.Create(ECCurve.NamedCurves.nistP256)
-        let original = LocalAgentHandoffTests.packet
         let scope : EcirApprovalScope =
             { GroupId = original.GroupId; CohortId = original.CohortId; SourceCommit = original.SourceCommit
               ManifestDigest = original.SourceManifestDigest; BlueprintDigest = original.BlueprintDigest
@@ -50,6 +49,8 @@ module LocalWorkerDelegationTests =
                              Approver = unsigned.Approver; PacketDigest = LocalAgentHandoff.packetDigest packet; Signature = "" }
             { envelope with Signature = Convert.ToBase64String(key.SignData(LocalWorkerDelegation.signingPayload envelope, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)) }
         run policy packet (sign packet) sign key
+
+    let internal withFixture run = withFixtureForPacket LocalAgentHandoffTests.packet run
 
     let private verify policy (packet: LocalWorkerPacket) envelope = LocalWorkerDelegation.verify root packet.RepositoryIdentity policy now packet envelope
     let tests =

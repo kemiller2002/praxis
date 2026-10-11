@@ -76,6 +76,10 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: local delegation
+      - name: Durable output spool
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: worker output spool
 
   # The lifecycle commands must work on every supported operating system,
   # straight from the F# CLI with its embedded scaffold payload.

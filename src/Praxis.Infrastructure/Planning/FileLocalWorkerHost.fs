@@ -47,7 +47,10 @@ module FileLocalWorkerHost =
                     match stores with
                     | Error error -> return Error error
                     | Ok(journal, spool, submissions) ->
-                        let native () = recover() |> Result.bind (fun () -> bindings.ValidateNative packet)
+                        let native () =
+                            recover()
+                            |> Result.bind (fun () -> FileLocalWorkerAssignment.validate root bindings.RepositoryIdentity packet)
+                            |> Result.bind (fun () -> bindings.ValidateNative packet)
                         let controller : LocalDispatchControllerPorts =
                             { Store = journal
                               Authority = LocalWorkerDelegation.authority root bindings.RepositoryIdentity loadPolicy bindings.LoadDelegation now packet

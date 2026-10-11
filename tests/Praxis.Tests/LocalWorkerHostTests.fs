@@ -15,39 +15,45 @@ module LocalWorkerHostTests =
     let private ok = function Ok v -> v | Error e -> failwith (sprintf "%A" e)
     let private refused r = Assert.isTrue (Result.isError r) "unsafe host dispatch accepted"
     let private run host bindings packet token = FileLocalWorkerHost.run host bindings packet token |> fun task -> task.GetAwaiter().GetResult()
-    let private fixture test = LocalWorkerDelegationTests.withFixture (fun policy packet envelope _ _ ->
+    let private fixture test =
         let directory = CliHarness.temporaryDirectory "praxis-portable-host"
         let repo = Path.Combine(directory, "repo")
         Directory.CreateDirectory repo |> ignore
         CliHarness.rosOk repo [ "init" ] |> ignore
-        let provision name = let path = Path.Combine(directory, name) in Directory.CreateDirectory path |> ignore; path
-        let settings = { RepositoryRoot = repo; HostRoot = provision "policy"; LockTimeout = TimeSpan.FromMilliseconds 100. }
-        let at = ref(packet.IssuedAt.AddMinutes 1.)
-        let host = FileLocalEcirAuthority.createPortableDevelopment settings (fun () -> at.Value)
-        host.Initialize { policy with RepositoryRoot = repo } |> ok
-        let mutable launches = 0
-        let mutable selections = 0
-        let adapter = LocalWorkerAdapters.command "fixture-bridge" packet.WorkerId
-                          (Set.ofList [ LocalWorkerOperatingSystem.Linux; LocalWorkerOperatingSystem.MacOS; LocalWorkerOperatingSystem.Windows ])
-                          (Set.singleton packet.Role) (LocalWorkerProcessTests.spec "result" [])
-        let adapter = { adapter with Prepare = fun admitted -> selections <- selections + 1; adapter.Prepare admitted }
-        let bindings : LocalWorkerHostBindings =
-            { RepositoryIdentity = packet.RepositoryIdentity
-              JournalRoot = provision "journal"; SpoolRoot = provision "spool"; SubmissionRoot = provision "submissions"
-              Catalog = LocalWorkerAdapters.catalog [ adapter ] |> ok
-              Platform = { LocalWorkerProcessPlatform.dotNet with ObserveIdentity = fun child -> launches <- launches + 1; Ok(sprintf "fixture-incarnation:%d" child.Id) }
-              LoadDelegation = fun () -> Ok(LocalWorkerDelegation.render envelope)
-              ValidateNative = fun _ -> Ok() // Explicit native observation fixture, not a model pilot.
-              Prerequisites = fun () -> Ok(packet.Prerequisites |> List.map (fun p -> p.WorkItemId, p.EvidenceDigest) |> Map.ofList)
-              ControllerSessionId = fun () -> Ok "fixture-controller" }
-        try test settings host bindings packet at (fun () -> launches, selections)
-        finally Directory.Delete(directory, true))
+        try
+            CliHarness.git repo [ "init" ] |> ignore
+            CliHarness.git repo [ "-c"; "user.name=Fixture"; "-c"; "user.email=fixture@example.invalid"; "commit"; "--allow-empty"; "-m"; "fixture source" ] |> ignore
+            let packet = { LocalAgentHandoffTests.packet with SourceCommit = CliHarness.git repo [ "rev-parse"; "HEAD" ] }
+            LocalWorkerDelegationTests.withFixtureForPacket packet (fun policy packet envelope _ _ ->
+                LocalWorkerAssignmentTests.provision repo packet
+                let provision name = let path = Path.Combine(directory, name) in Directory.CreateDirectory path |> ignore; path
+                let settings = { RepositoryRoot = repo; HostRoot = provision "policy"; LockTimeout = TimeSpan.FromMilliseconds 100. }
+                let at = ref(packet.IssuedAt.AddMinutes 1.)
+                let host = FileLocalEcirAuthority.createPortableDevelopment settings (fun () -> at.Value)
+                host.Initialize { policy with RepositoryRoot = repo } |> ok
+                let mutable launches = 0
+                let mutable selections = 0
+                let adapter = LocalWorkerAdapters.command "fixture-bridge" packet.WorkerId
+                                  (Set.ofList [ LocalWorkerOperatingSystem.Linux; LocalWorkerOperatingSystem.MacOS; LocalWorkerOperatingSystem.Windows ])
+                                  (Set.singleton packet.Role) (LocalWorkerProcessTests.spec "result" [])
+                let adapter = { adapter with Prepare = fun admitted -> selections <- selections + 1; adapter.Prepare admitted }
+                let bindings : LocalWorkerHostBindings =
+                    { RepositoryIdentity = packet.RepositoryIdentity
+                      JournalRoot = provision "journal"; SpoolRoot = provision "spool"; SubmissionRoot = provision "submissions"
+                      Catalog = LocalWorkerAdapters.catalog [ adapter ] |> ok
+                      Platform = { LocalWorkerProcessPlatform.dotNet with ObserveIdentity = fun child -> launches <- launches + 1; Ok(sprintf "fixture-incarnation:%d" child.Id) }
+                      LoadDelegation = fun () -> Ok(LocalWorkerDelegation.render envelope)
+                      ValidateNative = fun _ -> Ok() // Additional host check; built-in native checks always run.
+                      Prerequisites = fun () -> Ok(packet.Prerequisites |> List.map (fun p -> p.WorkItemId, p.EvidenceDigest) |> Map.ofList)
+                      ControllerSessionId = fun () -> Ok "fixture-controller" }
+                test settings host bindings packet at (fun () -> launches, selections))
+        finally Directory.Delete(directory, true)
 
     let tests =
         [ t "real subprocess seals output, records exit and archives once without granting acceptance" (fun () -> fixture (fun settings host bindings packet _ counts ->
               let report = run host bindings packet CancellationToken.None |> ok
               Assert.equal false report.Dispatch.ReconciliationRequired
-              Assert.isTrue (Result.isOk report.Archive) "complete output not archived"
+              Assert.isTrue (Result.isOk report.Archive) (sprintf "complete output not archived: %A" report)
               let submissions = FileLocalWorkerSubmissions.create settings.RepositoryRoot bindings.SubmissionRoot |> ok
               let captured = submissions.Load packet.RepositoryIdentity packet.DispatchId |> ok
               Assert.equal 0 captured.ExitCode
@@ -117,4 +123,18 @@ module LocalWorkerHostTests =
                   | "native" -> CliHarness.write settings.RepositoryRoot ".ros/context/current.json" "{}"
                   | _ -> at.Value <- at.Value.ToOffset(TimeSpan.FromHours 1.)
                   run host bindings packet CancellationToken.None |> refused
-                  Assert.equal (0, 0) (counts()))) ]
+                  Assert.equal (0, 0) (counts())))
+          t "native member replacement after adapter selection refuses before reservation" (fun () -> fixture (fun settings host bindings packet _ counts ->
+              let adapter = LocalWorkerAdapters.command "changed-member-fixture" packet.WorkerId
+                                (Set.ofList [ LocalWorkerOperatingSystem.Linux; LocalWorkerOperatingSystem.MacOS; LocalWorkerOperatingSystem.Windows ])
+                                (Set.singleton packet.Role) (LocalWorkerProcessTests.spec "result" [])
+              let changed =
+                  { adapter with
+                      Prepare = fun admitted ->
+                          let execution = Praxis.Infrastructure.Execution.ExecutionStore.loadEnvelope settings.RepositoryRoot packet.Members.Head.ExecutionId |> ok
+                          Praxis.Infrastructure.Execution.ExecutionStore.saveEnvelope settings.RepositoryRoot { execution with State = Praxis.Domain.Execution.ExecutionState.Blocked "fixture member changed" }
+                          adapter.Prepare admitted }
+              run host { bindings with Catalog = LocalWorkerAdapters.catalog [ changed ] |> ok } packet CancellationToken.None |> refused
+              Assert.equal 0 (counts() |> fst)
+              let journal = FileLocalDispatchJournal.create settings.RepositoryRoot bindings.JournalRoot |> ok
+              journal.Load packet.RepositoryIdentity packet.DispatchId |> refused)) ]

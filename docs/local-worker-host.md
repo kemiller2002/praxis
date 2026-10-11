@@ -1,7 +1,8 @@
 # Portable local worker host
 
 Work: [#231](https://github.com/kemiller2002/praxis/issues/231).
-Proposal: [DF-ROS-2026-A065](../research/decisions/DF-ROS-2026-A065--portable-host-dispatch-composition.md).
+Proposals: [DF-ROS-2026-A065](../research/decisions/DF-ROS-2026-A065--portable-host-dispatch-composition.md),
+[DF-ROS-2026-A066](../research/decisions/DF-ROS-2026-A066--native-local-worker-assignment-checks.md).
 
 `FileLocalWorkerHost.run` composes the portable catalog/process platform with
 signed delegation, native transaction recovery, launch journaling, output
@@ -13,10 +14,21 @@ The host provisions `LocalWorkerHostBindings`, including outside-repository
 journal/spool/submission roots, independent repository identity, current signed
 delegation loader, native assignment validator, prerequisite observer,
 controller incarnation. The policy store supplies the single UTC clock for
-authorization, journal events and capture. The native validator must independently
-bind the packet to current group/member executions and repository state. It is
-called again at reservation and launch intent; a fixture callback is not a
-production implementation. Callbacks must not reacquire the held native/policy
+authorization, journal events and capture. Built-in native assignment checks
+bind exact group/home/membership and group execution links, active live members,
+current unique active telemetry, member envelopes/baselines, coordinator/worker
+lineage, worker role/identity and the real source Git commit. They run at
+admission, reservation and intent before the additional `ValidateNative` callback.
+Missing, ambiguous, malformed, duplicate-field or linked records refuse. JSON
+files are bounded to 16 MiB and telemetry inventories to 4096 records. Cross-repo
+and successor-mapped assignments require future observers and currently refuse.
+Prerequisite semantics and independent acceptance remain host obligations.
+Execution-envelope writers currently do not all participate in the work/group
+lease protocol. These envelope checks are fresh observations, not a claim that
+every lifecycle writer is serialized. The operational controller must coordinate
+those writers, and intake/integration must recheck current state. Completing that
+serialization remains a follow-up before a qualified controller is enabled.
+Callbacks must not reacquire the held native/policy
 leases and must finish within host-controlled bounds.
 
 The store's internal in-scope policy reader reloads the file at every authority
@@ -35,8 +47,8 @@ become confirmed submissions. Repeated dispatch refuses instead of relaunching.
 This is a library host composition, with no execution CLI. Independent result
 intake, acceptance, integration and native completion remain separate. Tests
 use real bounded subprocesses and file stores, with synthetic process/native
-observations and signing keys. Concrete vendor bridges, native assignment
-observers and a model-worker pilot remain follow-ups. Equivalent OS isolation
+incarnation observations and signing keys. Concrete vendor bridges, prerequisite
+evidence binding and a model-worker pilot remain follow-ups. Equivalent OS isolation
 is deferred by user instruction.
 
 ## Verification
@@ -47,3 +59,11 @@ Local Linux verification passed eight host-composition tests (included in the
 8 subprocess tests. Filters overlap. Release build completed with zero warnings
 or errors. The host tests run under the existing Linux/Windows/macOS portability
 matrix; this new composition's cross-OS results remain pending publication.
+
+The native assignment and Windows sealing update passed locally: 29 portability
+tests (12 adapter, 8 assignment, 9 host), 18 spool tests, 20 submission tests,
+19 journaled-worker tests, 13 delegation tests, 57 ECIR-filter tests and
+8 subprocess tests. The Release build has zero warnings/errors. Native fixtures
+use actual Git commits and native group/envelope serializers; process identities,
+signing keys and state provisioning are still fixtures. Three-OS CI for this
+update is pending publication.
