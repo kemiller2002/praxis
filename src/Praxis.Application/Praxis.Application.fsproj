@@ -23,6 +23,7 @@
     <Compile Include="Work/LocalDispatchReservation.fs" />
     <Compile Include="Work/LocalWorkerSupervision.fs" />
     <Compile Include="Work/LocalJournaledDispatch.fs" />
+    <Compile Include="Work/WorkerChecklist.fs" />
     <Compile Include="Work/LocalSubmissionIntake.fs" />
     <Compile Include="Work/LocalSpooledDispatch.fs" />
     <Compile Include="Work/LocalIntegration.fs" />

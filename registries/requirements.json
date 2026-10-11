@@ -1761,5 +1761,52 @@
     "title": "One local coordinator delegates bounded work to local agents without required external services",
     "updated": "2026-10-10",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-11",
+    "derived_from": [
+      "RQ-ROS-2026-A028"
+    ],
+    "id": "RQ-ROS-2026-A029",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A029--enforced-worker-checklists.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T204811145Z-23f864b2": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T20:57:54.792Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "User-authorized enforced worker checklists; record acceptance and remaining host qualification"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A028",
+      "DF-ROS-2026-A067",
+      "docs/worker-checklists.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "agents",
+      "checklist",
+      "quality",
+      "evidence",
+      "prevention"
+    ],
+    "title": "Worker checklists require independently verified current evidence before accepted handoff",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
   }
 ]

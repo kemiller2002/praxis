@@ -98,6 +98,7 @@
     <Compile Include="Work/GroupExecutions.fs" />
     <Compile Include="Work/GroupCost.fs" />
     <Compile Include="Work/LocalAgentHandoff.fs" />
+    <Compile Include="Work/WorkerChecklist.fs" />
     <Compile Include="Work/LocalHandoffExplanation.fs" />
     <Compile Include="Work/LocalDispatchJournal.fs" />
     <Compile Include="Work/LocalWorkerSubmission.fs" />

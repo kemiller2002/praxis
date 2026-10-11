@@ -23,6 +23,14 @@ module LocalHandoffExplanationJson =
                   obj [ "packet", JsonNode.Parse(LocalAgentHandoffJson.renderPacket a.Packet)
                         "packetDigest", a.PacketDigest |> Option.map str |> Option.defaultValue null
                         "blockingReasons", strings a.BlockingReasons
+                        "checklistRequirements", WorkerChecklist.requirements a.Packet |> Result.defaultValue [] |> List.map (fun row ->
+                            obj [ "checkId", str row.CheckId; "kind", str (WorkerChecklist.kindCode row.Kind)
+                                  "workItemId", str row.WorkItemId; "executionId", str row.ExecutionId
+                                  "requirementKeys", strings row.RequirementKeys
+                                  "required", JsonValue.Create true
+                                  "status", str "unobserved"
+                                  "validatorId", row.Validator |> Option.map (_.ValidatorId >> str) |> Option.defaultValue null
+                                  "validatorInputDigest", row.Validator |> Option.map (_.InputDigest >> str) |> Option.defaultValue null ]) |> array
                         "dependencies", a.Dependencies |> List.map (fun d ->
                             obj [ "workItemId", str d.WorkItemId; "evidenceDigest", str d.EvidenceDigest
                                   "proposedProducers", strings d.ProposedProducers ]) |> array ]) |> array

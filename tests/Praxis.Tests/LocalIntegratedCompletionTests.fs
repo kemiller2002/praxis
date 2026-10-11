@@ -41,7 +41,18 @@ module LocalIntegratedCompletionTests =
         test ports journal native evidence head swaps clock enabled)
 
     let tests =
-        [ t "uses existing native planner with exact member evidence, paths and finalization intents but makes no writes" (fun () -> fixture (fun ports _ native evidence _ swaps _ _ ->
+        [ t "applied integration does not waive current candidate checklist evidence at completion" (fun () -> fixture (fun ports _ native _ head swaps _ _ ->
+              let before = native.Value
+              let baseline = ports.Integration.Intake.Checklists
+              let checklist =
+                  { baseline with
+                      Evaluate = fun checklist ->
+                          if checklist.Context.CandidateCommit = head.Value then Ok [] else baseline.Evaluate checklist }
+              let integration = { ports.Integration with Intake = { ports.Integration.Intake with Checklists = checklist } }
+              rejects (run { ports with Integration = integration })
+              Assert.equal before native.Value
+              Assert.equal 1 swaps.Value))
+          t "uses existing native planner with exact member evidence, paths and finalization intents but makes no writes" (fun () -> fixture (fun ports _ native evidence _ swaps _ _ ->
               let before = native.Value
               let planned = run ports |> ok
               Assert.equal 2 planned.Native.ItemPlans.Length
@@ -54,6 +65,17 @@ module LocalIntegratedCompletionTests =
                   let result = LocalAgentHandoffTests.result.Members |> List.find (fun m -> m.WorkItemId = itemPlan.Item.Id)
                   Assert.equal result.ChangedPaths itemPlan.Event.Paths
                   Assert.equal [ result.ExecutionId ] itemPlan.Event.TelemetryExecutionIds))
+          t "policy changes during native quality checks invalidate candidate evidence before completion planning returns" (fun () -> fixture (fun ports _ native _ _ _ _ _ ->
+              let before = native.Value
+              let mutable changed = false
+              let baseline = ports.Integration.Intake.Checklists
+              let checks =
+                  { baseline with
+                      Observe = fun p r commit -> baseline.Observe p r commit |> Result.map (fun context ->
+                          if changed then { context with Policy = { context.Policy with Revision = "new-policy" } } else context) }
+              let integration = { ports.Integration with Intake = { ports.Integration.Intake with Checklists = checks } }
+              rejects (run { ports with Integration = integration; QualityGate = fun _ _ -> changed <- true; Ok() })
+              Assert.equal before native.Value))
           t "missing, unapplied, crosswired or pending integration never reaches native gates" (fun () ->
               for mode in [ "missing"; "unapplied"; "crosswired"; "pending" ] do fixture (fun ports journal _ _ _ _ _ _ ->
                   let original = journal.Load packet.RepositoryIdentity packet.DispatchId |> ok |> Option.get
