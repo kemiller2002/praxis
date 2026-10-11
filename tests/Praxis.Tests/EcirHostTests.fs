@@ -275,8 +275,22 @@ module EcirHostTests =
                       Assert.isTrue (staged.Writes |> List.exists (fun write -> write.Path.StartsWith(".ros/telemetry/executions/"))) "native member telemetry omitted"
                       Assert.isTrue (staged.Writes |> List.exists (fun write -> write.Path.StartsWith(".ros/executions/"))) "native execution envelope omitted"
                       let journal = Path.Combine(parent, "host", "native.json")
-                      Assert.equal (Ok()) (EcirDispatchTransaction.prepare clone journal staged.Writes)
-                      Assert.equal (Ok()) (EcirDispatchTransaction.recover clone journal ignore)
+                      if OperatingSystem.IsWindows() then
+                          Assert.equal (Ok()) (EcirDispatchTransaction.prepare clone journal staged.Writes)
+                          Assert.equal (Ok()) (EcirDispatchTransaction.recover clone journal ignore)
+                      else
+                          let hostRoot = Path.Combine(parent, "local-authority")
+                          Directory.CreateDirectory hostRoot |> ignore
+                          File.SetUnixFileMode(hostRoot, UnixFileMode.UserRead ||| UnixFileMode.UserWrite ||| UnixFileMode.UserExecute)
+                          let settings = { RepositoryRoot = clone; HostRoot = hostRoot; LockTimeout = TimeSpan.FromSeconds 1. }
+                          let host = FileLocalEcirAuthority.create settings (fun () -> now)
+                          host.Initialize { p with RepositoryRoot = clone } |> Result.defaultWith failwith
+                          let observed =
+                              FileLocalEcirAuthority.dispatchNative settings host "GROUP-1" (fun _ -> Ok(docs, validator))
+                                  (fun actual -> EcirNativeStage.prepare clone "WI-1" actual begun record)
+                              |> Result.defaultWith failwith
+                          Assert.equal evidence.Approval observed.Approval
+                          Assert.isTrue (not (File.Exists(Path.Combine(hostRoot, "dispatch.pending.json")))) "native host journal remained pending"
                       let executionId = FileGroupExecution.memberExecution clone "WI-1" |> Option.get
                       let group = FileWorkGroupRepository.read clone |> Result.defaultWith failwith |> fun groups -> WorkGroups.tryFind groups "GROUP-1" |> Option.get
                       Assert.equal executionId group.Executions.Head.Members.Head.ExecutionId

@@ -96,6 +96,8 @@
     <Compile Include="Planning/EcirHostAdministration.fs" />
     <Compile Include="Planning/FileGroupExecution.fs" />
     <Compile Include="Planning/EcirNativeStage.fs" />
+    <Compile Include="Planning/LocalEcirPolicyJson.fs" />
+    <Compile Include="Planning/FileLocalEcirAuthority.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

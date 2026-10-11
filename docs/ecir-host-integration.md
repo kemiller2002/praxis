@@ -62,6 +62,12 @@ is proposed, not an implicit waiver of current remote durability rules.
 
 ## Next bounded implementation
 
+The isolated [embedded file authority adapter](local-ecir-host-authority.md)
+now implements local policy/audit persistence, revision/expiry compare-and-commit,
+ordered native/group/host locking and native staging journal composition.
+It has no registered runtime route; authenticated operator bindings, exact worker
+delegation observations, rollback witness and actual OS containment remain pending.
+
 1. Add an embedded protected local controller adapter with separate agent/operator authority,
    authenticated reviewer/admin identity, anti-rollback policy revisions,
    durable atomic policy/audit updates, and serialized dispatch/revocation.
