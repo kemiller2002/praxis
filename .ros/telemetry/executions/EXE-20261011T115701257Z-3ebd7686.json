@@ -659,14 +659,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-11T11:57:01.257Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-10-11T12:42:46.562Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-codex-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-10-11T12:42:46.562Z",
+      "recordedAt": "2026-10-11T12:42:46.562Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-codex-environment"
+          },
+          "discoveredAt": "2026-10-11T11:57:01.257Z",
+          "lastAssessedAt": "2026-10-11T11:57:01.257Z",
+          "recordedAt": "2026-10-11T11:57:01.257Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1508,6 +1524,26 @@
       },
       "collectedAt": "2026-10-11T11:57:01.257Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-299caa50886813bbf2a097b9",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-10-11T12:42:46.562Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1554,6 +1590,17 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-10-11T12:42:46.562Z",
+      "reason": "Host authority and native dispatch layer implemented, tested and remotely checkpointed. Actual worker containment cannot be qualified here: bwrap namespace setup refuses; no checked local-model backend is installed. Authenticated operator and exact worker delegation bindings and the worker launch/integration/completion route remain pending.",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-f200335bcf28418fc2d9a3fc"
     }
   ],
   "repository": {

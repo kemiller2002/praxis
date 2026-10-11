@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-10-11T11:57:04.039Z",
-  "state": "active",
-  "stateReason": null,
+  "state": "blocked",
+  "stateReason": "Host authority and native dispatch layer implemented, tested and remotely checkpointed. Actual worker containment cannot be qualified here: bwrap namespace setup refuses; no checked local-model backend is installed. Authenticated operator and exact worker delegation bindings and the worker launch/integration/completion route remain pending.",
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"
