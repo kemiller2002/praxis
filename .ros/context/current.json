@@ -9429,21 +9429,21 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "e223e1d87134fc16cd8ea5db",
-        "recordedAt": "2026-10-10T19:19:21.000Z",
+        "id": "181137cae5e3b33472b66d36",
+        "recordedAt": "2026-10-11T00:33:51.000Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
-        "stepId": "STEP-20261010T190645000Z-af229b97",
+        "stepId": "STEP-20261011T002510000Z-1c4031f1",
         "repository": "repository-operating-system",
         "branch": "feat/local-agent-coordination",
-        "commit": "9ce1be2bf1880dc3ecaac3aba716f1b83dd82403",
+        "commit": "fa4be0582b9e591258e79baf19e386263c44aec5",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/local-agent-coordination",
-        "remoteCommit": "9ce1be2bf1880dc3ecaac3aba716f1b83dd82403",
-        "summary": "Published isolated candidate integration protocol with repository lease, bounded pending inventory, immutable packet/submission/baseline/candidate journal, fresh validation, expected-head update and applied-target observation recovery. Release rebuild, 20 integration tests including actual Git acknowledgement-loss recovery, 20 intake, 17 spool, 37 ECIR and 3 architecture tests plus registry/native validation passed. No CLI route, qualified production host or native completion is enabled.",
-        "nextAction": "Link independently observed integration evidence to the existing native completion transaction without duplicating lifecycle or extending authority. Then qualify protected policy/native locks, staging/candidate validators, Git/worktree adapter, storage, process incarnation, containment, local checkpoint profile and actual local-model coordinator/two-worker network-denied pilot.",
+        "remoteCommit": "fa4be0582b9e591258e79baf19e386263c44aec5",
+        "summary": "Published read-only integrated completion planning bridge through existing native verified planner. Exact applied journal and archive, fresh candidate/authority, original active member executions, per-member evidence/quality and mandatory checkpoint observations required. Release build and 12 bridge, 20 integration, 28 obligations, 7 native completion, 13 ECIR-host and 3 architecture tests passed; registry and native validation passed. Prior checkout native lock acquisition stack overflow retained and captured as WI-0086; fresh-checkout recovery succeeded. No native completion writes or offline runtime enabled.",
+        "nextAction": "Extract and reuse the native completion effect transaction with protected integration/execution binding, telemetry finalization and idempotent recovery; never apply ephemeral plans as approvals. Investigate WI-0086 and qualify protected host/local model coordinator plus two actual workers under network denial.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
