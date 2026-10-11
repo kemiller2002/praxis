@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-10-11T11:57:04.039Z",
-  "state": "active",
-  "stateReason": null,
+  "state": "blocked",
+  "stateReason": "Serialized authority, native dispatch/recovery and exact signed delegation are implemented, tested and remotely checkpointed. This host refuses bwrap isolation and lacks a checked local worker backend. Authenticated signing, native member-execution observations, protected worker adapter closure and actual launch/intake/integration/completion still need qualification on a suitable host; runtime remains disabled.",
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"

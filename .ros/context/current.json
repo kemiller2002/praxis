@@ -9531,39 +9531,39 @@
     {
       "id": "GH-231",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-10-11T12:51:34.421Z",
+      "updatedAt": "2026-10-11T13:10:23.316Z",
       "telemetryExecutionIds": [
         "EXE-20261011T115701257Z-3ebd7686"
       ],
       "latestCheckpoint": {
-        "id": "48e79b697c2f1a73132a1f45",
-        "recordedAt": "2026-10-11T12:42:11.648Z",
+        "id": "f04204847908ae5f7aeaccef",
+        "recordedAt": "2026-10-11T13:09:46.594Z",
         "executionId": "EXE-20261011T115701257Z-3ebd7686",
         "repository": "repository-operating-system",
         "branch": "feat/GH-231-local-host-authority",
-        "commit": "e1c0ac3ffda97e0960b1124d09dc1259ee3816ae",
+        "commit": "873e94a6ef698382fdfbd51dda0b167ca3ab57a2",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/GH-231-local-host-authority",
-        "remoteCommit": "e1c0ac3ffda97e0960b1124d09dc1259ee3816ae",
-        "summary": "Implemented and published serialized local ECIR policy authority, native dispatch/recovery bridge, and bounded registry-lock retry fix; targeted Release checks passed.",
-        "nextAction": "Bind authenticated host identity and exact worker delegation on a host that supports qualified isolation before enabling a single-worker path.",
+        "remoteCommit": "873e94a6ef698382fdfbd51dda0b167ca3ab57a2",
+        "summary": "Published exact signed local worker delegation binding to current ECIR policy, receipt, approver key and complete packet. Release build, 13 new delegation tests and affected handoff/journal/ECIR checks pass.",
+        "nextAction": "Qualify authenticated local signing and worker identity-to-adapter/native-execution bindings on a host that supports worker containment; then exercise actual launch, intake, integration and completion.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
       },
-      "blockReason": "Host authority and native dispatch layer implemented, tested and remotely checkpointed. Actual worker containment cannot be qualified here: bwrap namespace setup refuses; no checked local-model backend is installed. Authenticated operator and exact worker delegation bindings and the worker launch/integration/completion route remain pending."
+      "blockReason": "Serialized authority, native dispatch/recovery and exact signed delegation are implemented, tested and remotely checkpointed. This host refuses bwrap isolation and lacks a checked local worker backend. Authenticated signing, native member-execution observations, protected worker adapter closure and actual launch/intake/integration/completion still need qualification on a suitable host; runtime remains disabled."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-11T12:51:34.421Z",
+  "updatedAt": "2026-10-11T13:10:23.316Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

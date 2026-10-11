@@ -667,8 +667,8 @@
         "name": "ros-work-protocol",
         "mechanism": "blocked-transition"
       },
-      "lastAssessedAt": "2026-10-11T12:42:46.562Z",
-      "recordedAt": "2026-10-11T12:42:46.562Z",
+      "lastAssessedAt": "2026-10-11T13:10:23.316Z",
+      "recordedAt": "2026-10-11T13:10:23.316Z",
       "history": [
         {
           "status": "unknown",
@@ -1580,6 +1580,26 @@
       },
       "collectedAt": "2026-10-11T12:51:34.421Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-841feb161d8d9c3410b206a0",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-10-11T13:10:23.316Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1682,6 +1702,17 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-10-11T13:10:23.316Z",
+      "reason": "Serialized authority, native dispatch/recovery and exact signed delegation are implemented, tested and remotely checkpointed. This host refuses bwrap isolation and lacks a checked local worker backend. Authenticated signing, native member-execution observations, protected worker adapter closure and actual launch/intake/integration/completion still need qualification on a suitable host; runtime remains disabled.",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-3f0b2c93091ab2ef6feca3da"
     }
   ],
   "repository": {
