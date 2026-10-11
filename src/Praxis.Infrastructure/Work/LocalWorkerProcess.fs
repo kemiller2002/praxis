@@ -32,7 +32,7 @@ module LocalWorkerProcess =
             if actual <> spec.ExecutableDigest then Error "host executable changed before start" else Ok()
 
     /// Explicit observer dependency permits mechanism fixtures; it does not confer host trust.
-    let runWithOutputObservation (observeIdentity: Process -> Result<string, string>) onOutput spec onStarted (cancellation: CancellationToken) = task {
+    let runWithPlatform (platform: LocalWorkerProcessPlatform) onOutput spec onStarted (cancellation: CancellationToken) = task {
         let rejected outcome started =
             { ProcessIdentity = None; ProcessStarted = started; RootExitObserved = false; Outcome = outcome
               StandardOutput = ""; StandardError = ""; CapturedBytes = 0 }
@@ -83,7 +83,7 @@ module LocalWorkerProcess =
                 let errPump = pump LocalWorkerOutputStream.StandardError child.StandardError.BaseStream stderr
                 let identity =
                     try
-                        observeIdentity child |> Result.bind (fun value ->
+                        platform.ObserveIdentity child |> Result.bind (fun value ->
                             if String.IsNullOrWhiteSpace value || not (safeText 1024 value) || Seq.exists Char.IsControl value then Error "invalid observed process incarnation"
                             else Ok value)
                     with e -> Error(errorText e.Message)
@@ -117,10 +117,11 @@ module LocalWorkerProcess =
                 | e -> outcome <- LocalWorkerProcessOutcome.ObservationFailed("process wait failed: " + errorText e.Message)
                 let mutable rootExit = false
                 try
-                    if not child.HasExited then child.Kill(true)
                     use cleanup = new CancellationTokenSource(5000)
-                    do! child.WaitForExitAsync(cleanup.Token)
-                    rootExit <- true
+                    let! stopped = platform.StopAndObserveRootExit child cleanup.Token
+                    match stopped with
+                    | Ok() -> rootExit <- true
+                    | Error reason -> outcome <- LocalWorkerProcessOutcome.ObservationFailed("root exit unconfirmed: " + errorText reason)
                 with e -> outcome <- LocalWorkerProcessOutcome.ObservationFailed("root exit unconfirmed: " + errorText e.Message)
                 // Exit does not guarantee descendants closed inherited pipes.
                 // Cancellation bounds stream/input waits independently of EOF.
@@ -144,16 +145,21 @@ module LocalWorkerProcess =
                 return { ProcessIdentity = identity |> Result.toOption; ProcessStarted = Some true; RootExitObserved = rootExit
                          Outcome = outcome; StandardOutput = output; StandardError = error; CapturedBytes = captured } }
 
-    let private observeIdentity (child: Process) =
-            try Ok(sprintf "pid:%d/start-utc-ticks:%d" child.Id (child.StartTime.ToUniversalTime().Ticks))
-            with e -> Error(sprintf "process incarnation unavailable (pid:%d): %s" child.Id (errorText e.Message))
+    let runWithOutputObservation observer onOutput spec onStarted cancellation =
+        runWithPlatform { LocalWorkerProcessPlatform.dotNet with ObserveIdentity = observer } onOutput spec onStarted cancellation
 
     let runWithIdentityObservation observer spec onStarted cancellation =
         runWithOutputObservation observer (fun _ _ -> Ok()) spec onStarted cancellation
 
-    let run spec onStarted cancellation = runWithIdentityObservation observeIdentity spec onStarted cancellation
+    let run spec onStarted cancellation = runWithPlatform LocalWorkerProcessPlatform.dotNet (fun _ _ -> Ok()) spec onStarted cancellation
 
     let createStreaming () : LocalWorkerStreamingProcessPort =
-        { RunStreaming = fun spec onStarted onOutput cancellation -> runWithOutputObservation observeIdentity onOutput spec onStarted cancellation }
+        { RunStreaming = fun spec onStarted onOutput cancellation -> runWithPlatform LocalWorkerProcessPlatform.dotNet onOutput spec onStarted cancellation }
+
+    let createStreamingWithPlatform platform : LocalWorkerStreamingProcessPort =
+        { RunStreaming = fun spec onStarted onOutput cancellation -> runWithPlatform platform onOutput spec onStarted cancellation }
+
+    let createWithPlatform platform : LocalWorkerProcessPort =
+        { Run = fun spec onStarted cancellation -> runWithPlatform platform (fun _ _ -> Ok()) spec onStarted cancellation }
 
     let create () : LocalWorkerProcessPort = { Run = run }

@@ -2252,5 +2252,58 @@
     "title": "Bind local worker delegation to a signed complete packet and current ECIR policy",
     "updated": "2026-10-11",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062",
+      "DF-ROS-2026-A063"
+    ],
+    "id": "DF-ROS-2026-A064",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A064--portable-local-worker-and-host-adapters.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T15:16:51.721Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record user-directed portability priority, worker/OS/file access adapters and explicitly deferred isolation equivalence"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062",
+      "DF-ROS-2026-A063",
+      "docs/local-worker-portability.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "portability",
+      "adapters",
+      "isolation"
+    ],
+    "title": "Separate portable local worker mechanisms from OS isolation qualification",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
   }
 ]

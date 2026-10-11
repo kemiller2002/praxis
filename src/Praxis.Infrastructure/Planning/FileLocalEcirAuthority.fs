@@ -8,28 +8,27 @@ open System.Threading
 open Praxis.Infrastructure.Artifacts
 open Praxis.Infrastructure.Work
 
-/// Concrete local storage, not a worker sandbox or operator identity provider.
-/// Provision this directory outside the repo, inaccessible to worker identities.
-/// Unix permission checks are necessary, not proof of that isolation.
+/// Shared local storage, not a worker sandbox or operator identity provider.
+/// The host file access adapter owns OS permission checks. The portable
+/// development profile deliberately makes no permission/isolation claim.
 type LocalEcirHostSettings =
     { RepositoryRoot: string; HostRoot: string; LockTimeout: TimeSpan }
 
-type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -> DateTimeOffset) =
+type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -> DateTimeOffset, access: LocalHostFileAccess) =
     let root = LocalHostJournalFiles.rootOutside settings.RepositoryRoot settings.HostRoot
     let policyFile = Path.Combine(root, "policy.json")
     let lockFile = Path.Combine(root, "policy.lock")
     let pendingFile = Path.Combine(root, "policy.pending")
-    let mode = UnixFileMode.UserRead ||| UnixFileMode.UserWrite
+    let require = function Ok() -> () | Error reason -> invalidOp reason
     let protect () =
-        if OperatingSystem.IsWindows() then invalidOp "local ECIR host requires a separately qualified Windows ACL adapter"
-        if not (LocalHostJournalFiles.noLinks root) || File.GetUnixFileMode root <> (mode ||| UnixFileMode.UserExecute) then
-            invalidOp "local ECIR host directory must be non-link and mode 0700"
+        LocalHostFileAccess.directory root |> require
+        access.CheckDirectory root |> require
         for path in [ policyFile; lockFile; pendingFile ] do
-            if not (LocalHostJournalFiles.noLinks path) then invalidOp "local ECIR host file is linked"
-            if File.Exists path && File.GetUnixFileMode path <> mode then invalidOp "local ECIR host files must have mode 0600"
+            LocalHostFileAccess.file path |> require
+            access.CheckFile path |> require
     let options create =
         let o = FileStreamOptions(Mode = create, Access = FileAccess.ReadWrite, Share = FileShare.None)
-        o.UnixCreateMode <- mode
+        access.ConfigureCreate o
         o
     let locked action =
         try
@@ -97,6 +96,7 @@ type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -
                         if old.GroupId = groupId then { old with ReceiptJson = grant.ReceiptJson } else old))
                 | _ -> false
             | _ -> false
+    member _.FileAccessProfile = access.Name
     member _.Load() = locked (fun () -> read() |> Result.map (fun (_, policy, _) -> policy))
     member _.Audit() = locked (fun () -> read() |> Result.map (fun (_, _, audit) -> audit))
     member internal _.RecoverNative() = locked (fun () ->
@@ -138,10 +138,15 @@ type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -
 
 [<RequireQualifiedAccess>]
 module FileLocalEcirAuthority =
-    let create settings clock =
+    let createWithFileAccess settings clock access =
         if settings.LockTimeout < TimeSpan.Zero || settings.LockTimeout > TimeSpan.FromSeconds 30. then
             invalidArg "settings" "host lock timeout must be between zero and 30 seconds"
-        new LocalEcirHostStore(settings, clock)
+        new LocalEcirHostStore(settings, clock, access)
+
+    let create settings clock = createWithFileAccess settings clock LocalHostFileAccess.unixPrivate
+
+    /// Explicit cross-OS development profile, without equivalent protection.
+    let createPortableDevelopment settings clock = createWithFileAccess settings clock LocalHostFileAccess.portableDevelopment
 
     /// One lock order for host dispatch: native work, group membership, policy.
     /// Recovery callbacks must use locked native primitives, never reacquire.

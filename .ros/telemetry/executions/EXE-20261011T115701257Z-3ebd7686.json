@@ -694,8 +694,8 @@
         "name": "ros-work-protocol",
         "mechanism": "resume-transition"
       },
-      "lastAssessedAt": "2026-10-11T12:51:34.421Z",
-      "recordedAt": "2026-10-11T12:51:34.421Z",
+      "lastAssessedAt": "2026-10-11T15:07:14.529Z",
+      "recordedAt": "2026-10-11T15:07:14.529Z",
       "history": [
         {
           "status": "unknown",
@@ -1600,6 +1600,26 @@
       },
       "collectedAt": "2026-10-11T13:10:23.316Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-1ab99c65e886c71a62a201b1",
+      "id": "agent.resumes",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "resume-transition"
+      },
+      "collectedAt": "2026-10-11T15:07:14.529Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1713,6 +1733,51 @@
         "mechanism": "work-lifecycle"
       },
       "eventId": "TEVT-3f0b2c93091ab2ef6feca3da"
+    },
+    {
+      "type": "work.resumed",
+      "occurredAt": "2026-10-11T15:07:14.529Z",
+      "reason": null,
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-dd4b26e4cc68dd2dc4f325fd"
+    },
+    {
+      "type": "step.started",
+      "occurredAt": "2026-10-11T15:08:47.308Z",
+      "stepId": "STEP-20261011T150847308Z-198586c2",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-11T15:23:38.297Z",
+      "stepId": "STEP-20261011T150847308Z-198586c2",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -2421,6 +2486,346 @@
           "to": "completed",
           "occurredAt": "2026-10-11T13:07:58.147Z",
           "reason": "Signed exact delegation verifier and fresh authority binding implemented; 13 new tests, 29 handoff, 19 journaled worker and 57 ECIR filtered checks pass; Release build and native validation pass.",
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "stepId": "STEP-20261011T150847308Z-198586c2",
+      "executionId": "EXE-20261011T115701257Z-3ebd7686",
+      "workItemId": "GH-231",
+      "instanceId": "pxi-979d1acb7720455e9a50fa3b4e7b9259",
+      "sequence": 3,
+      "siblingSequence": 3,
+      "parentStepId": null,
+      "name": "Separate portable worker selection, process platform and host file access",
+      "description": null,
+      "classification": [],
+      "status": "completed",
+      "plannedAt": "2026-10-11T15:08:47.308Z",
+      "startedAt": "2026-10-11T15:08:47.308Z",
+      "completedAt": "2026-10-11T15:23:38.297Z",
+      "endedAt": "2026-10-11T15:23:38.297Z",
+      "updatedAt": "2026-10-11T15:23:38.297Z",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "identity": {
+        "provider": "openai",
+        "model": null,
+        "modelVersion": null,
+        "runtime": "codex",
+        "runtimeVersion": null,
+        "sessionId": "01a129d6-193f-7755-8efc-b530f274d0e3",
+        "conversationId": "01a129d6-193f-7755-8efc-b530f274d0e3",
+        "runId": null,
+        "agentId": null,
+        "subagentId": null,
+        "parentExecutionId": null
+      },
+      "telemetry": {
+        "measurementIds": [],
+        "rawSnapshotIds": [],
+        "checkpoints": [],
+        "deltas": [],
+        "capabilities": [
+          {
+            "metricId": "tokens.input",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.output",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cached_input",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cached_output",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cache_read",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.cache_write",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.reasoning",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.tool",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "tokens.total",
+            "status": "supported-unavailable",
+            "reason": "runtime family can expose this metric, but no observation has been ingested for this execution",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.input_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.output_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cached_input_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.cached_output_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "session.tokens.reasoning_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.input",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.output",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.reasoning",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.cache",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.tool_api",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.execution_total",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.step_total",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          },
+          {
+            "metricId": "cost.session_cumulative",
+            "status": "unknown",
+            "reason": "runtime capability not reported or mapped",
+            "discoveredAt": "2026-10-11T11:57:01.257Z",
+            "source": {
+              "type": "environment",
+              "name": "runtime-identity",
+              "mechanism": "whitelisted-codex-environment"
+            }
+          }
+        ]
+      },
+      "relationships": {
+        "filesObserved": [],
+        "filesChanged": [],
+        "commits": [],
+        "commands": [],
+        "tests": [],
+        "validations": [],
+        "evidence": [],
+        "decisions": [],
+        "requirements": [],
+        "outcomes": []
+      },
+      "transitions": [
+        {
+          "from": null,
+          "to": "active",
+          "occurredAt": "2026-10-11T15:08:47.308Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-11T15:23:38.297Z",
+          "reason": "Implemented portable worker catalog, process platform and explicit host file-access adapters; Release build and targeted Linux portability/process/delegation/journal/ECIR checks passed, registry and validation passed; three-OS CI added; equivalent isolation deferred by user",
           "actor": {
             "kind": "agent",
             "id": "openai/codex",

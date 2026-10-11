@@ -82,7 +82,14 @@ module CliHarness =
     let read (root: string) (relativePath: string) = File.ReadAllText(Path.Combine(root, relativePath))
 
     let temporaryDirectory (prefix: string) =
-        let path = Path.Combine(Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}")
+        // macOS exposes its temp directory through /var -> /private/var.
+        // Resolve fixture ancestors so production no-link checks stay intact.
+        let rec canonicalDirectory path =
+            let directory = DirectoryInfo(Path.GetFullPath path)
+            if directory.LinkTarget <> null then directory.ResolveLinkTarget(true).FullName
+            elif isNull directory.Parent then directory.FullName
+            else Path.Combine(canonicalDirectory directory.Parent.FullName, directory.Name)
+        let path = Path.Combine(canonicalDirectory (Path.GetTempPath()), $"{prefix}-{Guid.NewGuid():N}")
         Directory.CreateDirectory path |> ignore
         path
 

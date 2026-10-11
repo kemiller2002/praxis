@@ -13,6 +13,9 @@ authority, and no worker isolation or authenticated operator adapter is inferred
 Provision an existing host directory outside the repository. The Unix adapter
 requires a non-link directory with mode 0700 and policy/lease files with mode 0600. Windows
 requires a separately qualified ACL implementation and is refused here.
+The [portability layer](local-worker-portability.md) now also supplies an explicit
+portable development profile and an injectable file access adapter. That profile
+does not inspect Unix modes or Windows ACLs; it is not an automatic fallback.
 The deployment must separately establish ownership, stable protected ancestors,
 distinct unprivileged worker identities, and a sandbox that prevents workers
 accessing host state and credentials. Same-account unrestricted processes are
