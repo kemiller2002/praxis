@@ -1504,7 +1504,10 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                         | Ok() ->
                             // Durable-completion guard (DF-ROS-2026-A042), before any
                             // state changes; a no-op unless the repository opted in.
-                            match readWorkContext root, CheckpointCommands.completionGuard root ids with
+                            // A prior completion may have committed its native
+                            // context before backlog acknowledgement was lost.
+                            let recovered = FileNativeCompletionEffects.recoverBacklogLocked root
+                            match readWorkContext root, recovered |> Result.bind (fun () -> CheckpointCommands.completionGuard root ids) with
                             | Error message, _
                             | _, Error message -> Error message
                             | Ok context, Ok() ->
@@ -1555,60 +1558,13 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                                         match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) [] (fun _ -> None) (ids.Length + 1) plan with
                                         | Error message -> Error message
                                         | Ok resolvedPlan ->
-                                            let finalizeResult =
-                                                if telemetryEnabled then
-                                                    ids
-                                                    |> List.fold
-                                                        (fun acc workItemId ->
-                                                            match acc with
-                                                            | Error _ -> acc
-                                                            | Ok() -> FileTelemetryFinalizationRepository.finalizeWorkExecutions root workItemId)
-                                                        (Ok())
-                                                else
-                                                    Ok()
-
-                                            match finalizeResult with
-                                            | Error message -> Error message
-                                            | Ok() ->
-                                                // A research item always records a conclusion
-                                                // (defaulting to "inconclusive"); any other item
-                                                // records one exactly when it was supplied, so a
-                                                // conclusion is never accepted and then dropped
-                                                // (PRAXIS-REMOTE-16).
-                                                let explicitConclusion = optionValue "--conclusion" arguments
-
-                                                let conclusions =
-                                                    resolvedPlan.ItemPlans
-                                                    |> List.choose (fun itemPlan ->
-                                                        match itemPlan.Item.WorkType, explicitConclusion with
-                                                        | "research", conclusion -> Some(itemPlan.Item.Id, conclusion |> Option.defaultValue "inconclusive")
-                                                        | _, Some conclusion -> Some(itemPlan.Item.Id, conclusion)
-                                                        | _, None -> None)
-                                                    |> Map.ofList
-
-                                                match FileWorkContextRepository.applyContextPlanWithRecords root repositoryId conclusions readinessRecords readinessRecords eventActor resolvedPlan with
-                                                | Error message -> Error message
-                                                | Ok(writtenItems, eventIds) ->
-                                                    match readWorkContext root with
-                                                    | Error message -> Error message
-                                                    | Ok updatedContext ->
-                                                        let backlogSync =
-                                                            ids
-                                                            |> List.fold
-                                                                (fun acc workItemId ->
-                                                                    match acc with
-                                                                    | Error _ -> acc
-                                                                    | Ok() ->
-                                                                        FileBacklogQueueRepository.markComplete
-                                                                            root
-                                                                            workItemId
-                                                                            timestamp
-                                                                            updatedContext.WorkItems)
-                                                                (Ok())
-
-                                                        match backlogSync with
-                                                        | Error message -> Error message
-                                                        | Ok() -> Ok(writtenItems, eventIds)
+                                            FileNativeCompletionEffects.commitLocked root
+                                                { ExpectedContext = context
+                                                  Plan = resolvedPlan
+                                                  EventActor = eventActor
+                                                  ReadinessRecords = readinessRecords
+                                                  ExplicitConclusion = optionValue "--conclusion" arguments
+                                                  BeforeEffects = fun () -> Ok() }
                 with error ->
                     lease.Release() |> ignore
                     reraise ()

@@ -143,6 +143,7 @@ let main argv =
     @ LocalWorkerOutputSpoolTests.tests
     @ LocalIntegrationTests.tests
     @ LocalIntegratedCompletionTests.tests
+    @ NativeCompletionEffectsTests.tests
     @ ExecuteGroupTests.tests
     @ GroupMeasurementTests.tests
     @ InternalNamingGuardTests.tests

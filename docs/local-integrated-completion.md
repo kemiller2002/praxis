@@ -63,6 +63,11 @@ and reconcile interrupted effects without duplicated lifecycle events. Do not
 apply this returned plan later through a raw context writer or skip native
 checkpoint/quality/ECIR guards. No CLI execution route is added here.
 
+The existing native CLI now uses a [shared completion effect kernel](native-completion-effects.md)
+for telemetry finalization, native journal writes and backlog recovery. This
+removes duplicated effect orchestration as the local adapter is built; the
+protected integration-binding/full-write-set recovery adapter remains pending.
+
 The current tests use real journal/archive stores and the real native planner,
 but synthetic authority, candidate validators, native observations and quality
 and checkpoint host ports. They establish composition/refusal behavior, not

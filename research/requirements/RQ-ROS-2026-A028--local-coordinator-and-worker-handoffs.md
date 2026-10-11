@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-11T00:31:42.751Z
+      last: 2026-10-11T07:11:20.219Z
       actor:
         kind: agent
         id: openai/codex
@@ -173,3 +173,13 @@ mandatory checkpoint observation. Sibling evidence cannot satisfy another
 member's obligations; changed native state, target drift, expiry and revocation
 refuse the entire in-memory plan. No native completion write or recovery effect
 is enabled. The protected effect adapter and actual offline pilot remain pending.
+
+The [shared native completion effect kernel](../../docs/native-completion-effects.md)
+is now used by the actual native completion CLI. It retains native telemetry,
+conclusions, readiness, event/context journaling and backlog transactions while
+checking consistent complete plans and unchanged pre-effect context. Backlog
+acknowledgement loss can recover from completed native context without repeating
+completion events. This is partial PRX-LOCAL-010/011 infrastructure coverage,
+not a qualified local completion adapter or atomic telemetry/context/backlog
+transaction. Protected integration binding and the actual offline pilot remain
+pending; no local model runner was available on PATH for that pilot.

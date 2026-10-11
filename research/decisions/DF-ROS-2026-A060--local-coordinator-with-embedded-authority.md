@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-11T00:32:04.009Z
+      last: 2026-10-11T07:11:20.648Z
       actor:
         kind: agent
         id: openai/codex
@@ -190,3 +190,14 @@ checkpoint guard is mandatory. Changed native state, expiry/revocation, missing
 evidence and target drift refuse the whole in-memory plan. Planning supplies no
 native write or transferable approval. A protected native effect/recovery adapter
 is still required, and no accepted policy or execution gate changes.
+
+## Shared native completion effects
+
+The [shared effect kernel](../../docs/native-completion-effects.md) is extracted
+from the existing completion handler and is now wired into the real native CLI.
+It uses existing telemetry, event/context and backlog persistence rather than
+creating a new local lifecycle or persistent shape. Context is checked before
+and after a boundary guard; backlog recovery projects already-recorded native
+completion and its original timestamp, without emitting another transition.
+This is reversible implementation infrastructure. It does not supply protected
+integration binding, cross-file atomicity or local-host/model qualification.
