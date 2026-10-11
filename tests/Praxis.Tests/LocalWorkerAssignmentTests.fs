@@ -56,7 +56,7 @@ module LocalWorkerAssignmentTests =
             let packet = { LocalAgentHandoffTests.packet with SourceCommit = CliHarness.git directory [ "rev-parse"; "HEAD" ] }
             provision directory packet
             test directory packet
-        finally Directory.Delete(directory, true)
+        finally CliHarness.removeTemporaryGitDirectory directory
     let private validate root packet = FileLocalWorkerAssignment.validate root LocalAgentHandoffTests.packet.RepositoryIdentity packet
     let private change root path edit =
         let node = CliHarness.read root path |> JsonNode.Parse

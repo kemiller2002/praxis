@@ -53,17 +53,16 @@ is deferred by user instruction.
 
 ## Verification
 
-Local Linux verification passed eight host-composition tests (included in the
-20-test portability filter), 57 ECIR-filter tests, 13 signed-delegation tests,
-19 journaled-worker tests, 17 output-spool tests, 23 submission-filter tests and
-8 subprocess tests. Filters overlap. Release build completed with zero warnings
-or errors. The host tests run under the existing Linux/Windows/macOS portability
-matrix; this new composition's cross-OS results remain pending publication.
+Local Linux verification passed 29 portability tests (12 adapter, 8 assignment,
+9 host), 18 spool tests, 20 submission tests, 19 journaled-worker tests,
+13 delegation tests, 57 ECIR-filter tests and 8 subprocess tests. Filters
+can overlap. The Release build completed with zero warnings/errors.
+Native fixtures use actual Git commits and native group/envelope serializers;
+process identities, signing keys and state provisioning are still fixtures.
 
-The native assignment and Windows sealing update passed locally: 29 portability
-tests (12 adapter, 8 assignment, 9 host), 18 spool tests, 20 submission tests,
-19 journaled-worker tests, 13 delegation tests, 57 ECIR-filter tests and
-8 subprocess tests. The Release build has zero warnings/errors. Native fixtures
-use actual Git commits and native group/envelope serializers; process identities,
-signing keys and state provisioning are still fixtures. Three-OS CI for this
-update is pending publication.
+At implementation commit `ee9699c4`, the full Linux validation, Ubuntu/macOS
+worker portability, all three lifecycle jobs, native release checks and site
+checks passed. Windows exposed read-only Git-object deletion in the new test
+fixtures. Their cleanup now removes the read-only attribute before deletion,
+without suppressing cleanup errors. Windows worker and spool qualification
+remains pending the corrected CI run.

@@ -47,7 +47,7 @@ module LocalWorkerHostTests =
                       Prerequisites = fun () -> Ok(packet.Prerequisites |> List.map (fun p -> p.WorkItemId, p.EvidenceDigest) |> Map.ofList)
                       ControllerSessionId = fun () -> Ok "fixture-controller" }
                 test settings host bindings packet at (fun () -> launches, selections))
-        finally Directory.Delete(directory, true)
+        finally CliHarness.removeTemporaryGitDirectory directory
 
     let tests =
         [ t "real subprocess seals output, records exit and archives once without granting acceptance" (fun () -> fixture (fun settings host bindings packet _ counts ->
