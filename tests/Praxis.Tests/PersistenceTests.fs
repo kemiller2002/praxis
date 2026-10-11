@@ -63,6 +63,20 @@ module PersistenceTests =
                 let expectedHash = Convert.ToHexString(SHA256.HashData bytes).ToLowerInvariant()
                 let actual = RegistryLock.lockPath "/repository" resource
                 Assert.equal $"/repository/.ros/locks/{expectedHash}.lock" (actual.Replace('\\', '/')) }
+          { Name = "registry lock repeated disappearance respects the deadline without recursive retry"
+            Run = fun () ->
+                let create () : RegistryLockLease = raise (IOException "lock vanished during open")
+                match RegistryLock.acquireWithOperations "disappearing" noWaitSettings create (fun () -> true) with
+                | Ok _ -> failwith "disappearing lock unexpectedly acquired"
+                | Error failure ->
+                    Assert.equal DependencyOutcome.Failed failure.Outcome
+                    Assert.isTrue (failure.Message.Contains "timed out") "deadline was bypassed" }
+          { Name = "registry lock reclamation failure returns a refusal rather than escaping acquisition"
+            Run = fun () ->
+                let create () : RegistryLockLease = raise (IOException "lock collision")
+                match RegistryLock.acquireWithOperations "unreadable" noWaitSettings create (fun () -> raise (UnauthorizedAccessException "cannot inspect owner")) with
+                | Ok _ -> failwith "unreadable owner unexpectedly acquired"
+                | Error failure -> Assert.equal DependencyOutcome.Failed failure.Outcome }
           { Name = "registry lock reclaims an expired dead-owner lease"
             Run = fun () ->
                 withTemporaryRoot (fun root ->

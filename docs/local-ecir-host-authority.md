@@ -72,6 +72,15 @@ host observations before a command can be enabled.
 
 ## Deployment blockers observed here
 
+Native checkpointing in the implementation checkout exposed the existing
+registry lock's unbounded recursive retry after apparent reclamation. The retry
+loop is now iterative and respects the deadline even when a lock repeatedly
+disappears, while preserving one immediate retry for a legitimate zero-wait
+reclamation. Owner-inspection failure becomes typed refusal. Issue #233 retains
+the incident; the original lock is preserved and its underlying filesystem
+condition remains unestablished. This fix does not qualify PID incarnation or
+all native-lock ownership behavior.
+
 The actual `bwrap --unshare-all` probe refuses network namespace setup with
 `Operation not permitted`; no local model backend was found in PATH. Therefore
 this environment cannot qualify an isolated actual-agent run. The engineering
@@ -83,7 +92,7 @@ the single-worker end-to-end run need a suitable deployment host.
 Release build passed with zero warnings/errors. The normal Praxis test runner
 passed 55 ECIR tests, including 18 new file-authority cases and an extended real
 native member/group staging fixture through `dispatchNative`. Nine existing CLI
-ratchet tests also passed. Registry build, repository validation and diff checks
+ratchet tests and six registry-lock tests also passed. Registry build, repository validation and diff checks
 passed. These are targeted local checks; full-suite CI on the published head is
 pending. The fixture's signer, qualified-release declaration and validator
 observations remain explicitly synthetic, and no real worker launch is claimed.
