@@ -784,3 +784,25 @@ registers installations with Project Administration's inventory. See
 `ros`, the .NET global tool installs `praxis`, and `./praxis` runs this
 checkout. The npm package is no longer published (`DF-ROS-2026-A044`). Every
 name runs the same F# CLI.
+
+## `handoff explain`
+
+```text
+praxis handoff explain --packet FILE [--packet FILE]* [--as-of UTC-TIMESTAMP] [--json]
+```
+
+Read-only local inspection of 1..64 strict worker packet proposals. Relative
+packet paths resolve under `--root`; files are bounded to 65,536 UTF-8 bytes.
+The optional timestamp must explicitly name UTC; otherwise use current UTC.
+Output names assignment identities, source requirements, execution lineage,
+decisions, dependencies, budgets, independent acceptance obligations and
+blocking reasons. It also detects dependency cycles, duplicate ownership,
+mixed input revisions, shared workers and overlapping write scope. See
+[local agent coordination](local-agent-coordination.md#read-only-local-first-pass).
+
+This command reads no host approval or prerequisite evidence. Every proposal
+retains unobserved-authority and unqualified-adapter blockers. It neither starts
+workers nor schedules, integrates or changes native work state. No Git or
+external service is required. `--json` emits
+`praxis.local-handoff-explanation/1`; exit 0 means inspection succeeded even
+when proposals are blocked, while malformed input/arguments exit 2.

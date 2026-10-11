@@ -329,6 +329,29 @@ module FileStepRepository =
             | _, outcome -> outcome
 
     let private save (file: string) (record: JsonObject) =
+        // A same-run request can omit the optional agent ID even though the
+        // owning execution recorded it. Inherit that recorded fact, rather
+        // than persisting a step identity that contradicts its execution.
+        // Preserve evidence of any repair; never replace a conflicting value.
+        match objectField record "identity", actorAndIdentityOf record with
+        | Some executionIdentity, Some(executionActor, _) ->
+            for step in stepNodes record do
+                match objectField step "identity", objectField step "actor" with
+                | Some stepIdentity, Some stepActor when
+                    stringField stepActor "id" = Some executionActor.Id
+                    && (stringField stepIdentity "agentId" |> Option.isNone) ->
+                    match stringField executionIdentity "agentId" with
+                    | Some inherited when inherited = executionActor.Id ->
+                        stepIdentity["agentId"] <- JsonValue.Create inherited
+                        let audit = JsonObject()
+                        audit["field"] <- JsonValue.Create "agentId"
+                        audit["previousValue"] <- null
+                        audit["sourceExecutionId"] <- record["executionId"].DeepClone()
+                        audit["recordedAt"] <- JsonValue.Create(DateTimeOffset.UtcNow.ToString("O"))
+                        step["identityInheritance"] <- audit
+                    | _ -> ()
+                | _ -> ()
+        | _ -> ()
         File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
 
     let create (root: string) (request: StepCreateRequest) : Result<JsonObject, string> =

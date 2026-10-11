@@ -9429,20 +9429,99 @@
         "EXE-20261010T091205536Z-2fa1bdc8"
       ],
       "latestCheckpoint": {
-        "id": "410a4997fb539a887250ba68",
-        "recordedAt": "2026-10-10T09:14:14.000Z",
+        "id": "181137cae5e3b33472b66d36",
+        "recordedAt": "2026-10-11T00:33:51.000Z",
         "executionId": "EXE-20261010T091205536Z-2fa1bdc8",
+        "stepId": "STEP-20261011T002510000Z-1c4031f1",
         "repository": "repository-operating-system",
-        "branch": "ecir-governed-local",
-        "commit": "28f05fee150adaa203af810e483f6942f401d483",
+        "branch": "feat/local-agent-coordination",
+        "commit": "fa4be0582b9e591258e79baf19e386263c44aec5",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
-        "remoteBranch": "GH-220",
-        "remoteCommit": "28f05fee150adaa203af810e483f6942f401d483",
-        "summary": "Exact P-256 verifier correction and adversarial tests published in PR 224; nine receipt tests and Release build passed",
-        "nextAction": "Finish broad CI; implement host policy and atomic authorization-to-member transition before unlocking ECIR",
+        "remoteBranch": "feat/local-agent-coordination",
+        "remoteCommit": "fa4be0582b9e591258e79baf19e386263c44aec5",
+        "summary": "Published read-only integrated completion planning bridge through existing native verified planner. Exact applied journal and archive, fresh candidate/authority, original active member executions, per-member evidence/quality and mandatory checkpoint observations required. Release build and 12 bridge, 20 integration, 28 obligations, 7 native completion, 13 ECIR-host and 3 architecture tests passed; registry and native validation passed. Prior checkout native lock acquisition stack overflow retained and captured as WI-0086; fresh-checkout recovery succeeded. No native completion writes or offline runtime enabled.",
+        "nextAction": "Extract and reuse the native completion effect transaction with protected integration/execution binding, telemetry finalization and idempotent recovery; never apply ephemeral plans as approvals. Investigate WI-0086 and qualify protected host/local model coordinator plus two actual workers under network denial.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "GH-228",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/LocalJournaledDispatch.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalJournaledDispatchTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/agent-mistake-prevention.md"
+        }
+      ],
+      "updatedAt": "2026-10-11T07:34:21.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261011T072344502Z-ce2be555"
+      ],
+      "blockReason": "Implementation and targeted validation complete; automatic approval review rejected GitHub push because publication was not explicitly authorized in this turn",
+      "latestCheckpoint": {
+        "id": "41a7cf7415b2c8a1203402c6",
+        "recordedAt": "2026-10-11T07:33:57.000Z",
+        "executionId": "EXE-20261011T072344502Z-ce2be555",
+        "repository": "repository-operating-system",
+        "branch": "feat/prevalidated-worker-dispatch",
+        "commit": "2a0158727484dfd075e8d6f0b32f597d07b72764",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "feat/prevalidated-worker-dispatch",
+        "remoteCommit": "2a0158727484dfd075e8d6f0b32f597d07b72764",
+        "summary": "Published tested tree in PR 229; 95 targeted tests pass.",
+        "nextAction": "Continue prevention-by-construction work.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-11T07:34:21.000Z",
+      "conclusion": "First prevention slice published in draft PR 229; 95 targeted tests and compiler bypass probes passed, remaining host qualification documented."
+    },
+    {
+      "id": "GH-230",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-11T08:29:36.657Z",
+      "telemetryExecutionIds": [
+        "EXE-20261011T082937276Z-a4d852a6"
+      ],
+      "latestCheckpoint": {
+        "id": "e0ab6ade47cf6aec79f33761",
+        "recordedAt": "2026-10-11T08:31:16.872Z",
+        "executionId": "EXE-20261011T082937276Z-a4d852a6",
+        "repository": "repository-operating-system",
+        "branch": "feat/prevalidated-worker-dispatch",
+        "commit": "965ccd1c04058393f79cea6461a50d245f05473f",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "feat/prevalidated-worker-dispatch",
+        "remoteCommit": "965ccd1c04058393f79cea6461a50d245f05473f",
+        "summary": "Published exact tested baseline correction; all nine ratchet tests pass and native validation passes.",
+        "nextAction": "Complete bookkeeping, qualify the whole Praxis stack against main in CI, then merge after green checks.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
@@ -9452,7 +9531,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-10T09:12:04.000Z",
+  "updatedAt": "2026-10-11T08:29:36.657Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

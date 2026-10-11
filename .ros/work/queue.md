@@ -23,6 +23,9 @@
 | GH-154 | GH-154 | complete |  |  |
 | GH-155 | GH-155 | complete |  |  |
 | GH-167 | GH-167 | complete |  |  |
+| GH-220 | GH-220 | active |  |  |
+| GH-228 | GH-228 | complete |  |  |
+| GH-230 | GH-230 | active |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
@@ -311,6 +314,7 @@
 | WI-0083 | Pin Praxis 3.10.0 (web and hub URL state through Limen.Routing) in the self-hosting toolchain | complete | release | high |
 | WI-0084 | Pin Praxis 3.11.0 in the self-hosting toolchain and record its release compatibility | complete |  | high |
 | WI-0085 | Build and verify the ros-fs assets on pull requests; gate only attestation and upload to releases | complete |  | high |
+| WI-0086 | Investigate work-protocol lock acquisition stack overflow with stale PID metadata in constrained process namespaces | captured | defect,local-host | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

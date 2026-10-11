@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usageBase =
-    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + IdentityCommands.usage + " | " + PlanCommands.usage + " | " + ExecuteGroupCommands.usage + " | " + SyncCommands.usage + " | " + TutelaCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | " + BacklogQueueCommands.reidentifyUsage + " | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* [--change-class CLASS]* [--risk-level LEVEL] [--state-impact] [--protocol-impact] [--security-impact] [--failure-posture POSTURE] [--tier TIER]* [--live-proof TEXT] | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* [--role ROLE] | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] [--rebind-reason TEXT] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | " + WorkGroupCostCommands.usage + " | " + GroupTelemetryCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated|origin-unrecorded} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | " + ProvenanceAcknowledgeCommands.usage + " | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + IdentityCommands.usage + " | " + PlanCommands.usage + " | " + LocalHandoffCommands.usage + " | " + ExecuteGroupCommands.usage + " | " + SyncCommands.usage + " | " + TutelaCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | " + BacklogQueueCommands.reidentifyUsage + " | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* [--change-class CLASS]* [--risk-level LEVEL] [--state-impact] [--protocol-impact] [--security-impact] [--failure-posture POSTURE] [--tier TIER]* [--live-proof TEXT] | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* [--role ROLE] | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] [--rebind-reason TEXT] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | " + WorkGroupCostCommands.usage + " | " + GroupTelemetryCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated|origin-unrecorded} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | " + ProvenanceAcknowledgeCommands.usage + " | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 let private usage =
     usageBase
@@ -1264,17 +1264,20 @@ let private runWorkStart root arguments (eventActor: Actor) =
                             let queueItems = FileBacklogQueueRepository.readItems root
 
                             let guard =
-                                ids
-                                |> List.tryPick (fun id ->
-                                    match queueItems |> List.tryFind (fun item -> item.Id = id) with
-                                    | Some item when item.Status <> "ready" ->
-                                        Some(
-                                            if item.Status = "abandoned" then
-                                                $"cannot start backlog item '{id}': it was abandoned"
-                                            else
-                                                $"cannot start backlog item '{id}' from '{item.Status}'; mark it ready first"
-                                        )
-                                    | _ -> None)
+                                match EcirMemberGuard.refuseUngovernedMembers root ids with
+                                | Error message -> Some message
+                                | Ok() ->
+                                    ids
+                                    |> List.tryPick (fun id ->
+                                        match queueItems |> List.tryFind (fun item -> item.Id = id) with
+                                        | Some item when item.Status <> "ready" ->
+                                            Some(
+                                                if item.Status = "abandoned" then
+                                                    $"cannot start backlog item '{id}': it was abandoned"
+                                                else
+                                                    $"cannot start backlog item '{id}' from '{item.Status}'; mark it ready first"
+                                            )
+                                        | _ -> None)
 
                             match guard with
                             | Some message -> Error message
@@ -1501,7 +1504,10 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                         | Ok() ->
                             // Durable-completion guard (DF-ROS-2026-A042), before any
                             // state changes; a no-op unless the repository opted in.
-                            match readWorkContext root, CheckpointCommands.completionGuard root ids with
+                            // A prior completion may have committed its native
+                            // context before backlog acknowledgement was lost.
+                            let recovered = FileNativeCompletionEffects.recoverBacklogLocked root
+                            match readWorkContext root, recovered |> Result.bind (fun () -> CheckpointCommands.completionGuard root ids) with
                             | Error message, _
                             | _, Error message -> Error message
                             | Ok context, Ok() ->
@@ -1552,60 +1558,13 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                                         match resolveContextTelemetryWithCreation root (ProvenanceCommands.identityOverridesFrom arguments) [] (fun _ -> None) (ids.Length + 1) plan with
                                         | Error message -> Error message
                                         | Ok resolvedPlan ->
-                                            let finalizeResult =
-                                                if telemetryEnabled then
-                                                    ids
-                                                    |> List.fold
-                                                        (fun acc workItemId ->
-                                                            match acc with
-                                                            | Error _ -> acc
-                                                            | Ok() -> FileTelemetryFinalizationRepository.finalizeWorkExecutions root workItemId)
-                                                        (Ok())
-                                                else
-                                                    Ok()
-
-                                            match finalizeResult with
-                                            | Error message -> Error message
-                                            | Ok() ->
-                                                // A research item always records a conclusion
-                                                // (defaulting to "inconclusive"); any other item
-                                                // records one exactly when it was supplied, so a
-                                                // conclusion is never accepted and then dropped
-                                                // (PRAXIS-REMOTE-16).
-                                                let explicitConclusion = optionValue "--conclusion" arguments
-
-                                                let conclusions =
-                                                    resolvedPlan.ItemPlans
-                                                    |> List.choose (fun itemPlan ->
-                                                        match itemPlan.Item.WorkType, explicitConclusion with
-                                                        | "research", conclusion -> Some(itemPlan.Item.Id, conclusion |> Option.defaultValue "inconclusive")
-                                                        | _, Some conclusion -> Some(itemPlan.Item.Id, conclusion)
-                                                        | _, None -> None)
-                                                    |> Map.ofList
-
-                                                match FileWorkContextRepository.applyContextPlanWithRecords root repositoryId conclusions readinessRecords readinessRecords eventActor resolvedPlan with
-                                                | Error message -> Error message
-                                                | Ok(writtenItems, eventIds) ->
-                                                    match readWorkContext root with
-                                                    | Error message -> Error message
-                                                    | Ok updatedContext ->
-                                                        let backlogSync =
-                                                            ids
-                                                            |> List.fold
-                                                                (fun acc workItemId ->
-                                                                    match acc with
-                                                                    | Error _ -> acc
-                                                                    | Ok() ->
-                                                                        FileBacklogQueueRepository.markComplete
-                                                                            root
-                                                                            workItemId
-                                                                            timestamp
-                                                                            updatedContext.WorkItems)
-                                                                (Ok())
-
-                                                        match backlogSync with
-                                                        | Error message -> Error message
-                                                        | Ok() -> Ok(writtenItems, eventIds)
+                                            FileNativeCompletionEffects.commitLocked root
+                                                { ExpectedContext = context
+                                                  Plan = resolvedPlan
+                                                  EventActor = eventActor
+                                                  ReadinessRecords = readinessRecords
+                                                  ExplicitConclusion = optionValue "--conclusion" arguments
+                                                  BeforeEffects = fun () -> Ok() }
                 with error ->
                     lease.Release() |> ignore
                     reraise ()
@@ -2992,6 +2951,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "installation" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> InstallationCommands.run root actor rest)
     | family :: rest when family = "repository" || family = "instance" -> IdentityCommands.run root Version (ProvenanceCommands.withResolvedActor rest) family rest
     | "plan" :: "execute-group" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecuteGroupCommands.run root rest (fun arguments actor -> runWorkStart root arguments actor))
+    | "handoff" :: rest -> LocalHandoffCommands.run root rest
     | "plan" :: rest -> PlanCommands.run root Version rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest
