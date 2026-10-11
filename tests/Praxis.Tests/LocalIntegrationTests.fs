@@ -58,7 +58,7 @@ module LocalIntegrationTests =
                   CompareAndSwap = compare }
             test repo host journal ports head swaps clock enabled
         finally Directory.Delete(root, true)
-    let private fixture test = fixtureWith packet LocalAgentHandoffTests.result LocalAgentHandoffTests.observed test
+    let internal fixture test = fixtureWith packet LocalAgentHandoffTests.result LocalAgentHandoffTests.observed test
 
     let tests =
         [ t "prepared plan precedes target update and an applied target is never updated twice" (fun () -> fixture (fun repo host journal ports head swaps clock _ ->

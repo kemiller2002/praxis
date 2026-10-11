@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 84,
+  "nextSeq": 87,
   "items": [
     {
       "id": "WI-0001",
@@ -5900,6 +5900,29 @@
         "provider": "anthropic",
         "model": "claude-opus-5-5",
         "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0086",
+      "title": "Investigate work-protocol lock acquisition stack overflow with stale PID metadata in constrained process namespaces",
+      "description": null,
+      "tags": [
+        "defect,local-host"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-11T00:32:21.524Z",
+      "updatedAt": "2026-10-11T00:32:21.524Z",
+      "createdBy": "openai/codex",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
       },
       "source": "manual",
       "sourceReference": null

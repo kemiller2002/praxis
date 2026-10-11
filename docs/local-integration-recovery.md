@@ -90,6 +90,9 @@ are conditional on Unix.
 Qualified staging/candidate validators, policy/native lock composition,
 production atomic Git/worktree handling, power-loss metadata durability, hostile
 same-account/path races, and a transaction linking integration evidence to
-existing native member completion remain pending. Accepted checkpoint policy and
+existing native member completion remain pending. A read-only
+[completion planning bridge](local-integrated-completion.md) now feeds exact
+member evidence into the existing native planner, but supplies no completion
+effect or reusable authority. Accepted checkpoint policy and
 execution gates are unchanged. Actual local models, network denial and the
 one-coordinator/two-worker pilot remain required before runtime activation.

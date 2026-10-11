@@ -19,7 +19,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:03.712Z
-      last: 2026-10-10T19:17:23.095Z
+      last: 2026-10-11T00:31:42.751Z
       actor:
         kind: agent
         id: openai/codex
@@ -164,3 +164,12 @@ duplicate application. Target drift and changed claims refuse. Real Git ref
 fixtures verify the update/recovery mechanism; host acceptance remains synthetic.
 Qualified staging/Git/native completion adapters and the offline agent pilot are
 still pending. No execution gate or accepted checkpoint profile changes.
+
+The read-only [native completion planning bridge](../../docs/local-integrated-completion.md)
+adds partial PRX-LOCAL-010 coverage: exact applied integration identity, fresh
+candidate/intake validation, original active native execution ownership,
+per-member quality/evidence planning through the existing native kernel and
+mandatory checkpoint observation. Sibling evidence cannot satisfy another
+member's obligations; changed native state, target drift, expiry and revocation
+refuse the entire in-memory plan. No native completion write or recovery effect
+is enabled. The protected effect adapter and actual offline pilot remain pending.

@@ -22,7 +22,7 @@ provenance:
     EXE-20261010T091205536Z-2fa1bdc8:
       operations: [created, modified]
       at: 2026-10-10T12:33:04.114Z
-      last: 2026-10-10T19:17:23.557Z
+      last: 2026-10-11T00:32:04.009Z
       actor:
         kind: agent
         id: openai/codex
@@ -179,3 +179,14 @@ and refuse. This does not implement an alternative work lifecycle: native member
 completion remains a separate existing-protocol transaction to wire safely.
 The prototype has no CLI route or qualified production staging/Git adapter;
 host/policy/storage qualification and the actual offline model pilot remain open.
+
+## Read-only native completion planning
+
+The [completion planning bridge](../../docs/local-integrated-completion.md)
+composes fresh exact integration/submission identity and delegated active native
+executions with the existing native verified planner. Per-member candidate
+evidence retains work-type requirements and quality checks; the accepted
+checkpoint guard is mandatory. Changed native state, expiry/revocation, missing
+evidence and target drift refuse the whole in-memory plan. Planning supplies no
+native write or transferable approval. A protected native effect/recovery adapter
+is still required, and no accepted policy or execution gate changes.

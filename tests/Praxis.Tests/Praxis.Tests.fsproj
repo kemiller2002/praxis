@@ -153,6 +153,7 @@
     <Compile Include="LocalSubmissionIntakeTests.fs" />
     <Compile Include="LocalWorkerOutputSpoolTests.fs" />
     <Compile Include="LocalIntegrationTests.fs" />
+    <Compile Include="LocalIntegratedCompletionTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />
