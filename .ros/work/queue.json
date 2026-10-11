@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 87,
+  "nextSeq": 88,
   "items": [
     {
       "id": "WI-0001",
@@ -5917,6 +5917,27 @@
       "createdAt": "2026-10-11T00:32:21.524Z",
       "updatedAt": "2026-10-11T00:32:21.524Z",
       "createdBy": "openai/codex",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0087",
+      "title": "Serialize execution-envelope lifecycle writers with local host dispatch; FileExecutionPorts/ExecutionStore currently do not share the work/group lease scope, so fresh assignment observations are not a whole-lifecycle lock",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-11T18:30:33.074Z",
+      "updatedAt": "2026-10-11T18:30:33.074Z",
+      "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
         "id": "openai/codex",

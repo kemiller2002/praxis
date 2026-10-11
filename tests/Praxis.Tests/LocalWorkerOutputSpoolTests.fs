@@ -96,6 +96,9 @@ module LocalWorkerOutputSpoolTests =
                   rejects (session.Write LocalWorkerOutputStream.StandardError [| 0x62uy |])
                   rejects (session.Seal (observed (String('a', 65536)) "" 0))
                   rejects (load spool)
+                  // Inspect retained immutable bytes after releasing the writer,
+                  // as required by reciprocal file sharing on Windows.
+                  session.Close()
                   Assert.equal 65536 (File.ReadAllBytes(Path.Combine(spoolDirectory spools, "stdout.bin"))).Length
               finally session.Close()))
           t "mismatched, interrupted and invalid UTF-8 observations cannot seal" (fun () ->
@@ -111,6 +114,18 @@ module LocalWorkerOutputSpoolTests =
                   let session = spool.Open reservation |> ok
                   try session.Write LocalWorkerOutputStream.StandardOutput [| 0xffuy |] |> ok; rejects (session.Seal (observed "�" "" 0)); rejects (load spool)
                   finally session.Close()))
+          t "failed verification closes writers and retains unsealed raw bytes" (fun () -> fixture (fun _ _ _ spools _ _ spool ->
+              let session = spool.Open reservation |> ok
+              try
+                  session.Write LocalWorkerOutputStream.StandardOutput (bytes "retained") |> ok
+                  rejects (session.Seal (observed "different" "" 0))
+                  rejects (session.Write LocalWorkerOutputStream.StandardOutput (bytes "overwrite"))
+                  // A reader denying writes must succeed on Windows too.
+                  use input = new FileStream(Path.Combine(spoolDirectory spools, "stdout.bin"), FileMode.Open, FileAccess.Read, FileShare.Read)
+                  use reader = new StreamReader(input, UTF8Encoding(false, true))
+                  Assert.equal "retained" (reader.ReadToEnd())
+                  rejects (load spool)
+              finally session.Close()))
           t "seal refuses repeat writes and observed unexpected entries or links" (fun () -> fixture (fun repo _ _ spools _ _ spool ->
               rejects (FileLocalWorkerOutputSpool.create repo (Path.Combine(repo, "spool")))
               let session = spool.Open reservation |> ok

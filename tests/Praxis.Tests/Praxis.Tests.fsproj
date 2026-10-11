@@ -146,9 +146,14 @@
     <Compile Include="EcirPreflightTests.fs" />
     <Compile Include="EcirApprovalTests.fs" />
     <Compile Include="EcirHostTests.fs" />
+    <Compile Include="LocalEcirAuthorityTests.fs" />
     <Compile Include="LocalAgentHandoffTests.fs" />
+    <Compile Include="LocalWorkerDelegationTests.fs" />
     <Compile Include="LocalDispatchJournalTests.fs" />
     <Compile Include="LocalWorkerProcessTests.fs" />
+    <Compile Include="LocalWorkerPortabilityTests.fs" />
+    <Compile Include="LocalWorkerAssignmentTests.fs" />
+    <Compile Include="LocalWorkerHostTests.fs" />
     <Compile Include="LocalJournaledDispatchTests.fs" />
     <Compile Include="LocalSubmissionIntakeTests.fs" />
     <Compile Include="LocalWorkerOutputSpoolTests.fs" />

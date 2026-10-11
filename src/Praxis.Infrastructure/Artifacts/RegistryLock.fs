@@ -111,10 +111,35 @@ module RegistryLock =
                     error.Message
             )
 
+    /// A reclaimed lock gets one immediate retry (including a zero-wait
+    /// caller). Repeated disappearance is still contention, not permission
+    /// to bypass the deadline or recursively consume the process stack.
+    let internal acquireWithOperations resource settings create reclaim : Result<RegistryLockLease, DependencyFailure> =
+        let started = Stopwatch.StartNew()
+        let mutable immediateReclaimRetry = true
+        let mutable result = None
+        while result.IsNone do
+            try
+                result <- Some(Ok(create()))
+            with
+            | :? IOException ->
+                try
+                    let removed = reclaim()
+                    if removed && immediateReclaimRetry then
+                        immediateReclaimRetry <- false
+                    elif started.Elapsed >= settings.Timeout then
+                        result <- Some(Error(lockFailure "acquire artifact registry lock" DependencyOutcome.Failed
+                            $"timed out waiting for Praxis lock '{resource}'"))
+                    else Thread.Sleep settings.RetryDelay
+                with error ->
+                    result <- Some(Error(lockFailure "acquire artifact registry lock" DependencyOutcome.Failed error.Message))
+            | error ->
+                result <- Some(Error(lockFailure "acquire artifact registry lock" DependencyOutcome.Failed error.Message))
+        result.Value
+
     let acquire root resource settings: Result<RegistryLockLease, DependencyFailure> =
         let file = lockPath root resource
         let directory = Path.GetDirectoryName file
-        let started = Stopwatch.StartNew()
         let token = Guid.NewGuid().ToString "N"
         Directory.CreateDirectory directory |> ignore
 
@@ -126,28 +151,10 @@ module RegistryLock =
                    acquiredAt = DateTime.UtcNow.ToString("O") |}
             + "\n"
 
-        let rec tryAcquire () =
-            try
-                use stream = File.Open(file, FileMode.CreateNew, FileAccess.Write, FileShare.None)
-                let bytes = Encoding.UTF8.GetBytes metadata
-                stream.Write(bytes, 0, bytes.Length)
-                stream.Flush(true)
-                Ok { Release = fun () -> release file token }
-            with
-            | :? IOException ->
-                if removeAbandoned file settings.StaleAfter then
-                    tryAcquire ()
-                elif started.Elapsed >= settings.Timeout then
-                    Error(
-                        lockFailure
-                            "acquire artifact registry lock"
-                            DependencyOutcome.Failed
-                            $"timed out waiting for Praxis lock '{resource}'"
-                    )
-                else
-                    Thread.Sleep settings.RetryDelay
-                    tryAcquire ()
-            | error ->
-                Error(lockFailure "acquire artifact registry lock" DependencyOutcome.Failed error.Message)
-
-        tryAcquire ()
+        let create () =
+            use stream = File.Open(file, FileMode.CreateNew, FileAccess.Write, FileShare.None)
+            let bytes = Encoding.UTF8.GetBytes metadata
+            stream.Write(bytes, 0, bytes.Length)
+            stream.Flush(true)
+            { Release = fun () -> release file token }
+        acquireWithOperations resource settings create (fun () -> removeAbandoned file settings.StaleAfter)

@@ -110,12 +110,16 @@ module FileLocalWorkerOutputSpool =
                                 | _ -> invalidOp "only complete normal-exit streams can be sealed"
                             stdout.Flush(true)
                             stderr.Flush(true)
+                            // Windows sharing checks are reciprocal: a reader
+                            // denying writes cannot coexist with these writers.
+                            // Close after flush, before verifying immutable bytes.
+                            // Failed verification leaves an unsealed closed spool.
+                            close()
                             entries target (names |> Array.filter ((<>) "seal.json"))
                             let outputBytes = readBytes (Path.Combine(target, "stdout.bin"))
                             let errorBytes = readBytes (Path.Combine(target, "stderr.bin"))
                             if outputBytes <> utf8.GetBytes observation.StandardOutput || errorBytes <> utf8.GetBytes observation.StandardError
                                || total <> observation.CapturedBytes || total <> outputBytes.Length + errorBytes.Length then invalidOp "spool and supervisor observations differ"
-                            close()
                             let json = JsonSerializer.Serialize
                                            {| schemaVersion = "praxis.local-worker-output-seal/1"; packetDigest = LocalAgentHandoff.packetDigest packet
                                               controllerSessionId = reservation.ControllerSessionId; processIdentity = identity; exitCode = exitCode
