@@ -31,6 +31,15 @@ module LocalDispatchReservation =
                     LocalAgentHandoff.validatePacket authority now dependencies packet
                     |> Result.mapError (String.concat "; ") |> Result.map (fun () -> now))))
 
+    /// Read-only admission before any worker adapter selection. This value is
+    /// ephemeral; reserve and launch intent independently re-read authority.
+    let admit ports packet =
+        ports.NativeRecovery() |> Result.bind (fun () ->
+            ports.Authority() |> Result.bind (fun authority ->
+                ports.Prerequisites() |> Result.bind (fun dependencies ->
+                    LocalAgentHandoff.checkPacket authority (ports.Now()) dependencies packet
+                    |> Result.mapError (String.concat "; "))))
+
     let reserve ports packet =
         ports.ControllerSessionId() |> Result.bind (fun identity ->
             check ports packet |> Result.bind (fun now ->

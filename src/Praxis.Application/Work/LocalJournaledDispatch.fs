@@ -9,7 +9,7 @@ open Praxis.Domain.Work
 type LocalJournaledDispatchPorts =
     { Controller: LocalDispatchControllerPorts
       Worker: LocalWorkerProcessPort
-      SelectSpec: LocalWorkerPacket -> Result<LocalWorkerProcessSpec, string> }
+      SelectSpec: CheckedLocalWorkerPacket -> Result<LocalWorkerProcessSpec, string> }
 type LocalJournaledDispatchReport =
     { Observation: LocalWorkerProcessObservation option
       JournalPhase: LocalDispatchPhase option
@@ -41,7 +41,8 @@ module LocalJournaledDispatch =
                     controller.Store.Append packet.RepositoryIdentity packet.DispatchId event)))
         let prepare () =
             if cancellation.IsCancellationRequested then Error "dispatch cancelled before reservation"
-            else ports.SelectSpec packet |> Result.bind (fun spec ->
+            else LocalDispatchReservation.admit controller packet |> Result.bind (fun admitted ->
+              ports.SelectSpec admitted |> Result.bind (fun spec ->
                 let input = LocalAgentHandoffJson.renderPacket packet
                 if spec.Input <> input then Error "worker input must be the exact canonical delegated packet"
                 elif Encoding.UTF8.GetByteCount input > 65536 then Error "delegated packet exceeds worker input bound"
@@ -51,7 +52,7 @@ module LocalJournaledDispatch =
                     | LocalDispatchReservationOutcome.Existing -> Error "existing dispatch requires reconciliation; automatic launch refused"
                     | LocalDispatchReservationOutcome.Created ->
                         LocalDispatchReservation.recordLaunchIntent controller packet.RepositoryIdentity packet.DispatchId
-                        |> Result.map (fun () -> spec)))
+                        |> Result.map (fun () -> spec))))
         match protect prepare with
         | Error reason -> return Error reason
         | Ok spec ->

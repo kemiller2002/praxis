@@ -12,6 +12,14 @@ launch and observation. Fixture ports are not authentication or qualification.
 
 ## Ordered launch
 
+Before worker selection, dispatch checks native recovery, the complete packet,
+current controller authority, prerequisite evidence and time. Only successful
+admission constructs `CheckedLocalWorkerPacket`; its union case is private.
+`SelectSpec` requires this opaque value, so ordinary typed callers cannot pass
+unchecked JSON transport directly to worker preparation. Selectors inspect it
+with `LocalAgentHandoff.checkedPacket`. This is an in-memory admission snapshot,
+not authenticated authority, a persistent permission or semantic proof.
+
 The host selects the executable, argv, worktree and environment. Its stdin must
 exactly equal the canonical JSON of the delegated packet; timeout and output
 budgets cannot exceed that packet. Cancellation or invalid selection refuses
@@ -62,7 +70,11 @@ No exactly-once spawning or power-loss durability is claimed.
 
 ## Verification
 
-The Release build and 16 journaled-dispatch tests pass.
+The initial composition was verified with 16 journaled-dispatch tests.
+Typed admission adds regressions for invalid packets and unavailable/refused
+host observations before selection, and revocation after selection before
+reservation. See [the prevention work](agent-mistake-prevention.md) for the
+current slice and its validation scope.
 Fixtures exercise actual file journals with fake host authority and process
 ports, including failed writes both before and after bytes become readable,
 revocation between reservation and intent, duplicate calls, uncertain starts,

@@ -82,10 +82,47 @@ module LocalJournaledDispatchTests =
           t "authority revoked between reservation and intent prevents worker invocation" (fun () -> fixture (fun _ _ store ->
               let mutable checks = 0
               let baseline = ports store { Run = fun _ _ _ -> failwith "revoked authority reached worker" }
-              let authority () = checks <- checks + 1; Ok { Enabled = checks = 1; Revision = packet.AuthorityRevision; ExpectedPacket = packet }
+              let authority () = checks <- checks + 1; Ok { Enabled = checks <= 2; Revision = packet.AuthorityRevision; ExpectedPacket = packet }
               Assert.isTrue (Result.isError (run { baseline with Controller = { baseline.Controller with Authority = authority } })) "revocation accepted"
-              Assert.equal 2 checks
+              Assert.equal 3 checks
               Assert.equal LocalDispatchPhase.Reserved (phase store)))
+          t "invalid assignments never reach adapter selection, reservation or launch" (fun () -> fixture (fun _ _ store ->
+              let mutable selections = 0
+              let baseline = ports store { Run = fun _ _ _ -> failwith "invalid assignment launched" }
+              let selected = { baseline with SelectSpec = fun _ -> selections <- selections + 1; Ok spec }
+              for bad in [ { packet with Acceptance = [] }; { packet with AllowedPaths = [ "../escape.fs" ] }
+                           { packet with SourceCommit = "unpinned" }; { packet with TimeoutSeconds = 0 }
+                           { packet with Members = [] } ] do
+                  let report = LocalJournaledDispatch.run selected bad CancellationToken.None |> fun task -> task.GetAwaiter().GetResult()
+                  Assert.isTrue (Result.isError report) "invalid assignment admitted"
+                  Assert.equal 0 selections
+                  Assert.isTrue (Result.isError (store.Load packet.RepositoryIdentity packet.DispatchId)) "invalid assignment reserved"))
+          t "unavailable or refused host observations stop before adapter selection" (fun () -> fixture (fun _ _ store ->
+              let baseline = ports store { Run = fun _ _ _ -> failwith "refused admission launched" }
+              let mutable selections = 0
+              let refused = { baseline with SelectSpec = fun _ -> selections <- selections + 1; Ok spec }
+              for host in [ { baseline.Controller with Authority = fun () -> Error "unavailable" }
+                            { baseline.Controller with Authority = fun () -> Ok { Enabled = false; Revision = packet.AuthorityRevision; ExpectedPacket = packet } }
+                            { baseline.Controller with Authority = fun () -> Ok { Enabled = true; Revision = "stale"; ExpectedPacket = packet } }
+                            { baseline.Controller with Prerequisites = fun () -> Ok Map.empty }
+                            { baseline.Controller with NativeRecovery = fun () -> Error "pending recovery" }
+                            { baseline.Controller with Now = fun () -> packet.ExpiresAt } ] do
+                  Assert.isTrue (Result.isError (run { refused with Controller = host })) "host refusal admitted"
+                  Assert.equal 0 selections
+                  Assert.isTrue (Result.isError (store.Load packet.RepositoryIdentity packet.DispatchId)) "refused admission reserved"))
+          t "checked assignment is canonical and revocation after selection still refuses reservation" (fun () -> fixture (fun _ _ store ->
+              let mutable enabled = true
+              let mutable selections = 0
+              let baseline = ports store { Run = fun _ _ _ -> failwith "revoked selection launched" }
+              let host = { baseline.Controller with Authority = fun () -> Ok { Enabled = enabled; Revision = packet.AuthorityRevision; ExpectedPacket = packet } }
+              let select admitted =
+                  selections <- selections + 1
+                  Assert.equal (LocalAgentHandoff.canonicalPacket packet) (LocalAgentHandoff.checkedPacket admitted)
+                  enabled <- false
+                  Ok spec
+              Assert.isTrue (Result.isError (run { baseline with Controller = host; SelectSpec = select })) "admission snapshot became authority"
+              Assert.equal 1 selections
+              Assert.isTrue (Result.isError (store.Load packet.RepositoryIdentity packet.DispatchId)) "revoked selection reserved"))
           t "failed intent persistence never invokes the worker even if bytes became readable" (fun () ->
               for persistBeforeError in [ false; true ] do fixture (fun _ _ store ->
                   let broken =

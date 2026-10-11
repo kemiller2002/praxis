@@ -22,6 +22,10 @@ type LocalWorkerPacket =
       IssuedAt: DateTimeOffset; ExpiresAt: DateTimeOffset
       TimeoutSeconds: int; MaxOutputBytes: int }
 
+/// Admission snapshot, not a durable permission. Only the validator below can
+/// construct it; consumers can inspect but cannot replace the checked packet.
+type CheckedLocalWorkerPacket = private CheckedLocalWorkerPacket of LocalWorkerPacket
+
 /// This is a controller observation, not a JSON approval or a new authority.
 /// Merely constructing this record does not establish operator authentication.
 type LocalHandoffAuthority = { Enabled: bool; Revision: string; ExpectedPacket: LocalWorkerPacket }
@@ -167,6 +171,14 @@ module LocalAgentHandoff =
               for dependency in packet.Prerequisites do
                   if Map.tryFind dependency.WorkItemId prerequisites <> Some dependency.EvidenceDigest then yield "local-prerequisite-unverified:" + dependency.WorkItemId ]
         if errors.IsEmpty then Ok() else Error errors
+
+    /// The value prevents unchecked transport reaching worker preparation.
+    /// Host observations still require authentication and fresh boundary checks.
+    let checkPacket authority now prerequisites packet =
+        validatePacket authority now prerequisites packet
+        |> Result.map (fun () -> CheckedLocalWorkerPacket(canonicalPacket packet))
+
+    let checkedPacket (CheckedLocalWorkerPacket packet) = packet
 
     let resultProblems (result: LocalWorkerResult) =
         let evidence = result.Members |> List.collect _.Evidence
