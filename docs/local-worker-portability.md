@@ -80,4 +80,9 @@ model-worker pilot and equivalent isolation are separate milestones.
 Local Linux verification passed: 12 portability tests, 8 subprocess tests,
 13 signed-delegation tests, 19 journaled-worker tests and 57 ECIR-filter tests
 (filters overlap). The Release build completed with zero warnings or errors.
-Windows and macOS results remain pending the new CI matrix.
+The published portability head `e9a2568e` passed the functional matrix on Linux,
+Windows and macOS, plus the full Linux validation suite. Subsequent changes
+require their own CI results.
+
+The [portable host composition](local-worker-host.md) now connects these adapters
+to signed authority, native leases/recovery, journaling, spooling and archival.

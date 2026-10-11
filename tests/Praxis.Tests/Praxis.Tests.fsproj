@@ -152,6 +152,7 @@
     <Compile Include="LocalDispatchJournalTests.fs" />
     <Compile Include="LocalWorkerProcessTests.fs" />
     <Compile Include="LocalWorkerPortabilityTests.fs" />
+    <Compile Include="LocalWorkerHostTests.fs" />
     <Compile Include="LocalJournaledDispatchTests.fs" />
     <Compile Include="LocalSubmissionIntakeTests.fs" />
     <Compile Include="LocalWorkerOutputSpoolTests.fs" />

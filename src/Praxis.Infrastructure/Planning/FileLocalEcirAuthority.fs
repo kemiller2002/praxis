@@ -5,6 +5,7 @@ open System.Diagnostics
 open System.IO
 open System.Text
 open System.Threading
+open System.Threading.Tasks
 open Praxis.Infrastructure.Artifacts
 open Praxis.Infrastructure.Work
 
@@ -96,15 +97,42 @@ type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -
                         if old.GroupId = groupId then { old with ReceiptJson = grant.ReceiptJson } else old))
                 | _ -> false
             | _ -> false
-    member _.FileAccessProfile = access.Name
-    member _.Load() = locked (fun () -> read() |> Result.map (fun (_, policy, _) -> policy))
-    member _.Audit() = locked (fun () -> read() |> Result.map (fun (_, _, audit) -> audit))
-    member internal _.RecoverNative() = locked (fun () ->
+    let recoverNative () =
         EcirDispatchTransaction.recover settings.RepositoryRoot (Path.Combine(root, "dispatch.pending.json")) ignore
         |> Result.bind (fun () -> WorkStateTransaction.recover settings.RepositoryRoot |> Result.mapError _.Message)
         |> Result.bind (fun () -> BacklogStateTransaction.recover settings.RepositoryRoot |> Result.mapError _.Message)
         |> Result.bind (fun () -> FileNativeCompletionEffects.recoverBacklogLocked settings.RepositoryRoot)
-        |> Result.bind (fun () -> BacklogStateTransaction.recover settings.RepositoryRoot |> Result.mapError _.Message))
+        |> Result.bind (fun () -> BacklogStateTransaction.recover settings.RepositoryRoot |> Result.mapError _.Message)
+    member _.FileAccessProfile = access.Name
+    member internal _.RepositoryRoot = settings.RepositoryRoot
+    member _.Load() = locked (fun () -> read() |> Result.map (fun (_, policy, _) -> policy))
+    member _.Audit() = locked (fun () -> read() |> Result.map (fun (_, _, audit) -> audit))
+    member internal _.RecoverNative() = locked recoverNative
+    /// Used only by the infrastructure coordinator while native leases are held.
+    /// Callbacks read under this policy lease rather than recursively acquiring it.
+    member internal _.WorkerScope(action: (unit -> Result<EcirHostPolicy, string>) -> (unit -> Result<unit, string>) -> Task<Result<'a, string>>) = task {
+        try
+            protect()
+            let elapsed = Stopwatch.StartNew()
+            let mutable lease: FileStream option = None
+            while lease.IsNone do
+                try lease <- Some(new FileStream(lockFile, options FileMode.OpenOrCreate))
+                with :? IOException when elapsed.Elapsed < settings.LockTimeout -> do! Task.Delay 20
+            use held = lease.Value
+            let load () =
+                protect()
+                if File.Exists pendingFile then Error "host policy has an unresolved pending write; operator reconciliation required"
+                else read() |> Result.bind (fun (_, policy, audit) ->
+                    let now = clock()
+                    if now.Offset <> TimeSpan.Zero || audit |> List.exists (fun prior -> prior.OccurredAt > now) then
+                        Error "host clock is not UTC or precedes policy audit"
+                    else Ok policy)
+            let recover () =
+                load() |> Result.bind (fun _ -> recoverNative())
+            match load() with
+            | Error error -> return Error error
+            | Ok _ -> return! action load recover
+        with e -> return Error("local worker host scope refused: " + e.GetType().Name) }
     // Called only inside Authority.Commit after repository and policy leases.
     member internal _.CommitNative(writes) =
         let journal = Path.Combine(root, "dispatch.pending.json")
