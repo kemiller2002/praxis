@@ -67,8 +67,10 @@ planners and their real execution identities.
 This route does not launch a worker, complete an integrated result, or qualify
 the source/release/validator pins. The supplied native staging and validator
 ports still require trusted production bindings. Worker dispatch/intake uses a
-separate exact local delegation contract that must be bound to authenticated
-host observations before a command can be enabled.
+separate exact local delegation contract. The [signed delegation verifier](local-worker-delegation.md)
+now binds that packet to the current ECIR approver key; authenticated signing,
+fresh native observations and isolation still require host qualification before
+a command can be enabled.
 
 ## Deployment blockers observed here
 
