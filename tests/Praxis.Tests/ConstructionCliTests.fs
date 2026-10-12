@@ -263,7 +263,7 @@ module ConstructionCliTests =
                   let files =
                       outbox host
                           [ "Extensions.fs", handwritten; "ros.json", "{}"; "AGENTS.md", "obey\n"; "ci.yml", "on: push\n"
-                            "Helpers.fs", "module Helpers\n"; "extensions.fs", "module X\n"; "Completion.fs", "module Completion\n" ]
+                            "Helpers.fs", "module Helpers\n"; "Completion.fs", "module Completion\n" ]
                   Directory.CreateDirectory(Path.Combine(files, ".github", "workflows")) |> ignore
                   File.WriteAllText(Path.Combine(files, ".github", "workflows", "x.yml"), "on: push\n")
                   Directory.CreateDirectory(Path.Combine(files, ".claude")) |> ignore
@@ -272,10 +272,14 @@ module ConstructionCliTests =
                   refusedEach host (extend host files)
                       [ ".github", "dot entry"; ".claude", "dot entry"; ".echelon", "dot entry"
                         "ros.json", "repository policy"; "AGENTS.md", "repository policy"; "ci.yml", "repository policy, agent instruction or CI file"
-                        "Helpers.fs", "not a host-declared extension slot"; "extensions.fs", "differs in case from declared slot Extensions.fs"
+                        "Helpers.fs", "not a host-declared extension slot"
                         "Completion.fs", "slot Completion.fs implements no extension contract of this construction" ]
                   if not (OperatingSystem.IsWindows()) then
                       refusedEach host (extend host files) [ "src\\Escape.fs", "contains a path separator" ]
+                  // Alone in its own outbox: on a case-insensitive file system
+                  // (macOS, Windows) it would otherwise be the same file as Extensions.fs.
+                  refusedEach host (extend host (outbox host [ "extensions.fs", "module X\n" ]))
+                      [ "extensions.fs", "differs in case from declared slot Extensions.fs" ]
                   Assert.isTrue (not ((extend host files).Error.Contains "Extensions.fs:")) "the valid slot file was refused"
                   Assert.equal before (tip host)
                   Assert.equal 0 (routes host).Length))
