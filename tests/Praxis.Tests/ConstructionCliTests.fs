@@ -170,7 +170,24 @@ module ConstructionCliTests =
         if Directory.Exists directory then Directory.GetFiles directory |> Array.toList else []
 
     let private extensionTests =
-        [ t "route classifies deterministic, semantic and bounded custom work and persists one content-addressed record" (fun () ->
+        [ t "an Ordo vocabulary 2 plan whose Stop failure is unresolved surfaces it as a semantic decision, never custom code" (fun () ->
+              withHost true ignore (fun host ->
+                  let v2 = Path.Combine(host.Parent, "plan.v2-unresolved.json")
+                  File.WriteAllText(v2, fixture "plan.v2-unresolved.json")
+                  let preview = construct host "preview" v2 |> ok
+                  Assert.equal "ordo.construction/2" (text preview.Json["binding"].["generatorVersion"])
+                  let obligations = preview.Json["obligations"] :?> JsonArray |> Seq.toList
+                  let failure = obligations |> List.filter (fun o -> text o["kind"] = "resolve-effect-failure")
+                  Assert.equal 1 failure.Length
+                  Assert.equal "Stop" (text failure.Head["effect"])
+                  Assert.isTrue ((failure.Head["requirementKeys"] :?> JsonArray).Count > 0) "effect-failure obligation lost its requirement keys"
+                  let routed = route { host with Plan = v2 } |> ok
+                  let record = JsonNode.Parse(File.ReadAllText((routes host).Head))
+                  Assert.equal (text routed.Json["routeId"]) (text record["routeId"])
+                  let semantic = record["semantic"] :?> JsonArray |> Seq.toList
+                  Assert.isTrue (semantic |> List.exists (fun o -> text o["effectFailure"] = "Stop" && text o["subject"] <> "")) (record.ToJsonString())
+                  Assert.isTrue (record["custom"] :?> JsonArray |> Seq.forall (fun r -> text r["id"] <> text failure.Head["id"])) "effect failure routed to custom code"))
+          t "route classifies deterministic, semantic and bounded custom work and persists one content-addressed record" (fun () ->
               withHost true ignore (fun host ->
                   let before = tip host
                   let first = route host |> ok

@@ -4,7 +4,7 @@
 # native-checksums.txt. NuGet restores EchelonFoundry.Ordo.Core only from this
 # folder (NuGet.config package source mapping). Upgrade by replacing the
 # package and this lock together with the PackageReference version.
-ordo 1.6.0
+ordo 1.7.0
 package EchelonFoundry.Ordo.Core
-url https://github.com/kemiller2002/ordo/releases/download/v1.6.0/ordo-core.nupkg
-sha256 b99d426c03593b98227bf316bb061cf49632bc6f1994469564f785bc1abb9662
+url https://github.com/kemiller2002/ordo/releases/download/v1.7.0/ordo-core.nupkg
+sha256 db97421934d22fd4e10f9744170c259a552c8772cfe804142a48c6c775422e07
