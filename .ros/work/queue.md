@@ -27,6 +27,8 @@
 | GH-228 | GH-228 | complete |  |  |
 | GH-230 | GH-230 | active |  |  |
 | GH-231 | GH-231 | active |  |  |
+| GH-234 | GH-234 | active |  |  |
+| GH-235 | GH-235 | active |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
