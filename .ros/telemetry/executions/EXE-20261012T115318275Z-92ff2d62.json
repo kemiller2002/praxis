@@ -1605,6 +1605,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-12T15:23:59.000Z",
+      "stepId": "STEP-20261012T135008000Z-0a91adbf",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -2345,12 +2362,12 @@
       "name": "Live worker qualification, full validation and merge",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-12T13:50:08.000Z",
       "startedAt": "2026-10-12T13:50:08.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-12T13:50:08.000Z",
+      "completedAt": "2026-10-12T15:23:59.000Z",
+      "endedAt": "2026-10-12T15:23:59.000Z",
+      "updatedAt": "2026-10-12T15:23:59.000Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -2649,6 +2666,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-12T13:50:08.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-12T15:23:59.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",
