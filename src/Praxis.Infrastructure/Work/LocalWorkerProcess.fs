@@ -15,6 +15,12 @@ open Praxis.Domain.Work
 /// actual sandbox/network/credential protection and journal intent first.
 [<RequireQualifiedAccess>]
 module LocalWorkerProcess =
+    /// How long the supervisor waits, after the root has exited, for the
+    /// output pumps to drain. A loaded Windows runner needed more than the
+    /// former 500 ms to finish reading a complete result (PR #250, WI-0094).
+    /// A descendant that keeps an inherited pipe open is still reported as
+    /// `ObservationFailed`; it is only detected later.
+    let private streamDrainGrace = TimeSpan.FromSeconds 5.0
     let private errorText (value: string) = if value.Length > 1024 then value.Substring(0, 1024) else value
     let private safeText limit (value: string) = not (isNull value) && value.Length <= limit && not (value.Contains '\u0000')
     let private preflight (spec: LocalWorkerProcessSpec) =
@@ -126,7 +132,7 @@ module LocalWorkerProcess =
                 // Cancellation bounds stream/input waits independently of EOF.
                 let streams = Task.WhenAll [| outPump; errPump; writeInput |]
                 if (match outcome with LocalWorkerProcessOutcome.Exited _ -> true | _ -> false) then
-                    let! completed = Task.WhenAny(streams :> Task, Task.Delay(500))
+                    let! completed = Task.WhenAny(streams :> Task, Task.Delay streamDrainGrace)
                     if not (Object.ReferenceEquals(completed, streams)) then
                         outcome <- LocalWorkerProcessOutcome.ObservationFailed "worker streams did not close after root exit"
                 lifetime.Cancel()
