@@ -113,6 +113,7 @@
     <Compile Include="Planning/LocalHostConfiguration.fs" />
     <Compile Include="Planning/FileLocalRuntime.fs" />
     <Compile Include="Planning/LocalOperator.fs" />
+    <Compile Include="Planning/LocalRuntimeService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

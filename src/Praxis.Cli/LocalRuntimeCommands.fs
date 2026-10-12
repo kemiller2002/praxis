@@ -1,15 +1,9 @@
 namespace Praxis.Cli
 
 open System
-open System.IO
-open System.Text.Json
 open System.Text.Json.Nodes
-open System.Threading
-open Praxis.Application.Work
-open Praxis.Contracts.Work
 open Praxis.Domain.Execution
 open Praxis.Domain.Provenance
-open Praxis.Domain.Work
 open Praxis.Infrastructure.Planning
 open Praxis.Infrastructure.Work
 
@@ -38,16 +32,24 @@ module LocalRuntimeCommands =
     let private value name arguments = values name arguments |> List.tryHead
     let private flag (name: string) (arguments: string list) = List.contains name arguments
 
+    type private ResultBuilder() =
+        member _.Bind(result, next) = Result.bind next result
+        member _.Return result = Ok result
+        member _.ReturnFrom result = result
+
+    let private attempt = ResultBuilder()
+
     let private required name arguments =
         match value name arguments with
         | Some text when not (String.IsNullOrWhiteSpace text) -> Ok text
-        | _ -> Error(name + " is required")
+        | _ -> Error(LocalCommandFailure.Invalid(name + " is required"))
 
     let private pairs (separator: char) name arguments =
-        values name arguments |> List.map (fun (text: string) ->
+        values name arguments
+        |> List.map (fun (text: string) ->
             match text.IndexOf separator with
             | index when index > 0 && index < text.Length - 1 -> Ok(text.Substring(0, index), text.Substring(index + 1))
-            | _ -> Error(sprintf "%s expects KEY%cVALUE, got '%s'" name separator text))
+            | _ -> Error(LocalCommandFailure.Invalid(sprintf "%s expects KEY%cVALUE, got '%s'" name separator text)))
         |> List.fold (fun acc item -> acc |> Result.bind (fun items -> item |> Result.map (fun pair -> items @ [ pair ]))) (Ok [])
 
     let private number name fallback arguments =
@@ -56,138 +58,42 @@ module LocalRuntimeCommands =
         | Some text ->
             match Int32.TryParse text with
             | true, parsed when parsed > 0 -> Ok parsed
-            | _ -> Error(name + " must be a positive integer")
+            | _ -> Error(LocalCommandFailure.Invalid(name + " must be a positive integer"))
 
-    type private ResultBuilder() =
-        member _.Bind(value, next) = Result.bind next value
-        member _.Return value = Ok value
-        member _.ReturnFrom value = value
-        member _.Zero() = Ok()
-
-    let private attempt = ResultBuilder()
-
-    /// Refused operations exit 3; malformed arguments exit 2.
-    type private Failure = Invalid of string | Refused of string
-
-    let private finish (result: Result<int, Failure>) =
+    let private finish (result: Result<int, LocalCommandFailure>) =
         match result with
         | Ok code -> code
-        | Error(Invalid message) ->
+        | Error(LocalCommandFailure.Invalid message) ->
             eprintfn "ERROR %s" message
             2
-        | Error(Refused message) ->
+        | Error(LocalCommandFailure.Refused message) ->
             eprintfn "REFUSED %s" message
             3
 
-    let private invalid result = result |> Result.mapError Invalid
-    let private refused result = result |> Result.mapError Refused
-
-    let private configuration root arguments =
-        required "--host-config" arguments |> invalid |> Result.bind (fun path ->
-            LocalHostConfiguration.load (Path.GetFullPath path) |> refused |> Result.bind (fun loaded ->
-                let normalize (value: string) = Path.TrimEndingDirectorySeparator(Path.GetFullPath value)
-                if normalize loaded.RepositoryRoot <> normalize root then Error(Refused "host configuration names a different repository root")
-                else Ok loaded))
-
-    let private readText path = try Ok(File.ReadAllText(Path.GetFullPath path)) with error -> Error(Invalid(error.Message))
-    let private readBytes path = try Ok(File.ReadAllBytes(Path.GetFullPath path)) with error -> Error(Invalid(error.Message))
-
-    /// Write a new file only; outputs never overwrite existing evidence.
-    let private writeNew (path: string) (bytes: byte array) =
-        try
-            use output = new FileStream(Path.GetFullPath path, FileMode.CreateNew, FileAccess.Write, FileShare.None)
-            output.Write bytes
-            output.Flush true
-            Ok()
-        with error -> Error(Refused("cannot create " + path + ": " + error.Message))
-
-    let private utf8 (text: string) = Text.UTF8Encoding(false).GetBytes text
-
-    let private readPacket path =
-        readText path |> Result.bind (fun text -> LocalAgentHandoffJson.readPacket text |> Result.mapError (fun error -> Invalid(string error)))
-
-    // ---------------------------------------------------------------- policy
-
-    /// The same quality-readiness and durable-checkpoint gates as `work complete`.
-    let private nativePolicy root : LocalRuntimeNativePolicy =
-        let evaluate ids evidence =
-            FileCompletionReadiness.evaluate root ids evidence (FileGroupGates.facet root evidence)
-        { QualityGate = fun id evidence ->
-            match evaluate [ id ] evidence with
-            | CompletionGateOutcome.NotApplicable
-            | CompletionGateOutcome.Ready _ -> Ok()
-            | CompletionGateOutcome.PolicyInvalid reason -> Error("workProtocol.qualityEvidence is invalid: " + reason)
-            | CompletionGateOutcome.Refused items ->
-                Error(items |> List.collect (fun item -> CompletionReadiness.blockingReasons item |> List.map (fun reason -> item.WorkItemId + ": " + reason)) |> String.concat "; ")
-          Readiness = fun plan ->
-            plan.ItemPlans |> List.fold (fun acc item ->
-                acc |> Result.bind (fun (records: Map<string, JsonObject>) ->
-                    match evaluate [ item.Item.Id ] item.Item.Evidence with
-                    | CompletionGateOutcome.NotApplicable -> Ok records
-                    | CompletionGateOutcome.Ready _ as outcome ->
-                        Ok(FileCompletionReadiness.extensions outcome |> Map.fold (fun state key value -> state.Add(key, value)) records)
-                    | _ -> Error("completion readiness changed for " + item.Item.Id))) (Ok Map.empty)
-          CheckpointGuard = CheckpointCommands.completionGuard root }
-
-    // ------------------------------------------------------------------- run
-
-    let private report (outcome: LocalRunReport) =
-        let node = JsonObject()
-        node["dispatchId"] <- JsonValue.Create outcome.DispatchId
-        node["stage"] <- JsonValue.Create(match outcome.Stage with LocalRunStage.Dispatched -> "dispatched" | LocalRunStage.Resumed -> "resumed")
-        node["targetRef"] <- JsonValue.Create outcome.TargetRef
-        node["targetCommit"] <- JsonValue.Create outcome.TargetCommit
-        node["completedMembers"] <- JsonArray(outcome.CompletedMembers |> List.map (fun id -> JsonValue.Create id :> JsonNode) |> List.toArray)
-        outcome.WorkerWorktree |> Option.iter (fun path -> node["workerWorktree"] <- JsonValue.Create path)
-        node
+    let private lines (result: Result<string list, LocalCommandFailure>) =
+        result |> Result.map (fun output -> output |> List.iter (printfn "%s"); 0)
 
     let private run root (actor: Actor) arguments =
-        configuration root arguments |> Result.bind (fun loaded ->
-            required "--target" arguments |> invalid |> Result.bind (fun target ->
-                pairs '=' "--dispatch" arguments |> invalid |> Result.bind (fun dispatches ->
-                    if dispatches.IsEmpty then Error(Invalid "at least one --dispatch PACKET=DELEGATION is required")
-                    else
-                        let policy = nativePolicy root
-                        dispatches |> List.fold (fun acc (packetPath, delegationPath) ->
-                            acc |> Result.bind (fun reports ->
-                                readPacket packetPath |> Result.bind (fun packet ->
-                                    let request = { Packet = packet; DelegationPath = Path.GetFullPath delegationPath; TargetRef = target }
-                                    FileLocalRuntime.run loaded policy actor request CancellationToken.None
-                                    |> Result.mapError (fun error -> Refused(sprintf "dispatch %s stopped: %s" packet.DispatchId error))
-                                    |> Result.map (fun outcome ->
-                                        if not (flag "--json" arguments) then
-                                            printfn "%s: %s -> %s %s; completed %s" outcome.DispatchId
-                                                (match outcome.Stage with LocalRunStage.Dispatched -> "dispatched" | LocalRunStage.Resumed -> "resumed")
-                                                outcome.TargetRef outcome.TargetCommit (String.concat ", " outcome.CompletedMembers)
-                                        reports @ [ outcome ])))) (Ok [])
-                        |> Result.map (fun reports ->
-                            if flag "--json" arguments then
-                                printfn "%s" ((JsonArray(reports |> List.map (report >> fun node -> node :> JsonNode) |> List.toArray)).ToJsonString())
-                            0))))
-
-    let private status root arguments =
-        configuration root arguments |> Result.bind (fun loaded ->
-            required "--dispatch" arguments |> invalid |> Result.bind (fun dispatchId ->
-                FileLocalDispatchJournal.create loaded.RepositoryRoot loaded.JournalRoot |> refused |> Result.bind (fun journal ->
-                    match journal.Load loaded.RepositoryIdentity dispatchId with
-                    | Error error -> Error(Refused("no dispatch journal: " + error))
-                    | Ok saved ->
-                        printfn "dispatch %s: %A" dispatchId (LocalDispatchJournal.phase saved)
-                        FileLocalIntegrationJournal.create loaded.RepositoryRoot loaded.IntegrationRoot |> refused |> Result.map (fun integration ->
-                            match integration.Load loaded.RepositoryIdentity dispatchId with
-                            | Ok(Some recorded) ->
-                                printfn "integration %s: %s -> %s (%s)" recorded.Plan.TargetRef recorded.Plan.BeforeCommit recorded.Plan.CandidateCommit
-                                    (match recorded.AppliedAt with Some at -> "applied " + at.ToString("O") | None -> "prepared, not applied")
-                            | Ok None -> printfn "integration: not prepared"
-                            | Error error -> printfn "integration: unreadable (%s)" error
-                            0))))
-
-    // ---------------------------------------------------------------- packets
+        attempt {
+            let! config = required "--host-config" arguments
+            let! target = required "--target" arguments
+            let! dispatches = pairs '=' "--dispatch" arguments
+            let json = flag "--json" arguments
+            let announce (outcome: LocalRunReport) =
+                if not json then
+                    printfn "%s: %s -> %s %s; completed %s" outcome.DispatchId (LocalRuntimeService.stageName outcome.Stage)
+                        outcome.TargetRef outcome.TargetCommit (String.concat ", " outcome.CompletedMembers)
+            if dispatches.IsEmpty then return! Error(LocalCommandFailure.Invalid "at least one --dispatch PACKET=DELEGATION is required")
+            else
+                let! reports = LocalRuntimeService.run root actor config dispatches target (CheckpointCommands.completionGuard root) announce
+                if json then printfn "%s" ((JsonArray(reports |> List.map (LocalRuntimeService.reportNode >> fun node -> node :> JsonNode) |> List.toArray)).ToJsonString())
+                return 0
+        }
 
     let private propose root arguments =
         attempt {
-            let! loaded = configuration root arguments
-            let text name = required name arguments |> invalid
+            let text name = required name arguments
+            let! config = text "--host-config"
             let! group = text "--group"
             let! worker = text "--worker"
             let! roleText = text "--role"
@@ -196,157 +102,131 @@ module LocalRuntimeCommands =
             let! parent = text "--parent"
             let! child = text "--child"
             let! out = text "--out"
-            let! members = pairs '=' "--member" arguments |> invalid
-            let! acceptance = pairs '=' "--acceptance" arguments |> invalid
-            let! minutes = number "--valid-minutes" 120 arguments |> invalid
-            let! timeout = number "--timeout-seconds" 1800 arguments |> invalid
-            let! output = number "--max-output-bytes" 65536 arguments |> invalid
-            let! role = ExecutionRole.tryParse roleText |> Option.map Ok |> Option.defaultValue (Error(Invalid("unknown role " + roleText)))
+            let! members = pairs '=' "--member" arguments
+            let! acceptance = pairs '=' "--acceptance" arguments
+            let! minutes = number "--valid-minutes" 120 arguments
+            let! timeout = number "--timeout-seconds" 1800 arguments
+            let! output = number "--max-output-bytes" 65536 arguments
+            let! role = ExecutionRole.tryParse roleText |> Option.map Ok |> Option.defaultValue (Error(LocalCommandFailure.Invalid("unknown role " + roleText)))
             let! obligations =
                 acceptance |> List.map (fun (obligation, target: string) ->
                     match target.Split(':') with
                     | [| workItem; validator |] when workItem <> "" && validator <> "" -> Ok(obligation, workItem, validator)
-                    | _ -> Error(Invalid "--acceptance expects OBLIGATION=WI:VALIDATOR"))
+                    | _ -> Error(LocalCommandFailure.Invalid "--acceptance expects OBLIGATION=WI:VALIDATOR"))
                 |> List.fold (fun acc item -> acc |> Result.bind (fun items -> item |> Result.map (fun value -> items @ [ value ]))) (Ok [])
-            let now = DateTimeOffset.UtcNow
-            let issued = DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, TimeSpan.Zero)
             let proposal : LocalPacketProposal =
                 { DispatchId = dispatch; AttemptId = attemptId; ParentExecutionId = parent; ChildExecutionId = child
                   WorkerId = worker; Role = role; GroupId = group; Members = members
                   DecisionIds = values "--decision" arguments; AllowedPaths = values "--allow" arguments
                   Prerequisites = values "--prerequisite" arguments; Acceptance = obligations
-                  IssuedAt = issued; ExpiresAt = issued.AddMinutes(float minutes)
+                  IssuedAt = DateTimeOffset.MinValue; ExpiresAt = DateTimeOffset.MinValue
                   TimeoutSeconds = timeout; MaxOutputBytes = output }
-            let! packet = LocalOperator.propose loaded proposal |> refused
-            do! writeNew out (utf8 (LocalAgentHandoffJson.renderPacket packet))
-            LocalOperator.review packet |> List.iter (printfn "%s")
-            printfn "packet written to %s; it has no authority until the operator delegates it" out
-            return 0
+            return! LocalRuntimeService.propose root config proposal minutes out |> lines
         }
-
-    let private pin root arguments =
-        attempt {
-            let! loaded = configuration root arguments
-            let! id = required "--validator" arguments |> invalid
-            let! digest = FileLocalRuntime.validatorPin loaded id |> refused
-            printfn "%s" digest
-            return 0
-        }
-
-    // --------------------------------------------------------------- operator
 
     let private operator root arguments =
+        let text name rest = required name rest
         match arguments with
         | "init" :: rest ->
             attempt {
-                let! loaded = configuration root rest
-                let! pem = required "--public-key" rest |> invalid |> Result.bind readText
-                let! keyId = required "--key-id" rest |> invalid
-                let! approver = required "--approver" rest |> invalid
-                let! revision = required "--revision" rest |> invalid
-                let qualified = flag "--declare-qualified-release" rest
-                do! LocalOperator.initialize loaded revision keyId approver pem qualified |> refused
-                printfn "host policy %s initialized at %s with signer %s (%s); qualified release declared: %b" revision loaded.PolicyRoot keyId approver qualified
-                return 0
+                let! config = text "--host-config" rest
+                let! pem = text "--public-key" rest
+                let! keyId = text "--key-id" rest
+                let! approver = text "--approver" rest
+                let! revision = text "--revision" rest
+                return! LocalRuntimeService.initialize root config pem keyId approver revision (flag "--declare-qualified-release" rest) |> lines
             }
         | "grant-draft" :: rest ->
             attempt {
-                let! loaded = configuration root rest
-                let text name = required name rest |> invalid
-                let! keyId = text "--key-id"
-                let! approver = text "--approver"
-                let! group = text "--group"
-                let! cohort = text "--cohort"
-                let! source = text "--source"
-                let! manifest = text "--manifest"
-                let! blueprint = text "--blueprint"
-                let! draftPath = text "--draft"
-                let! payloadPath = text "--payload"
-                let! members = pairs '=' "--member" rest |> invalid
-                let! minutes = number "--valid-minutes" 240 rest |> invalid
-                let issued = DateTimeOffset.UtcNow.AddSeconds(-1.)
-                let! draft =
-                    LocalOperator.grantDraft loaded keyId approver group cohort source manifest blueprint (Map.ofList members)
-                        (values "--decision" rest) issued (issued.AddMinutes(float (min minutes 1440))) CancellationToken.None
-                    |> refused
-                do! writeNew draftPath (utf8 (LocalOperator.renderDraft draft))
-                do! writeNew payloadPath (LocalOperator.grantPayload draft)
-                printfn "grant draft %s and signing payload %s written; sign the payload bytes with the operator key (ECDSA P-256, SHA-256)" draftPath payloadPath
-                return 0
+                let! config = text "--host-config" rest
+                let! keyId = text "--key-id" rest
+                let! approver = text "--approver" rest
+                let! group = text "--group" rest
+                let! cohort = text "--cohort" rest
+                let! source = text "--source" rest
+                let! manifest = text "--manifest" rest
+                let! blueprint = text "--blueprint" rest
+                let! draft = text "--draft" rest
+                let! payload = text "--payload" rest
+                let! members = pairs '=' "--member" rest
+                let! minutes = number "--valid-minutes" 240 rest
+                return!
+                    LocalRuntimeService.grantDraft root config
+                        { KeyId = keyId; Approver = approver; GroupId = group; CohortId = cohort; Source = source; Manifest = manifest
+                          Blueprint = blueprint; Members = Map.ofList members; Decisions = values "--decision" rest
+                          ValidMinutes = minutes; DraftPath = draft; PayloadPath = payload }
+                    |> lines
             }
         | "grant" :: rest ->
             attempt {
-                let! loaded = configuration root rest
-                let! text = required "--draft" rest |> invalid |> Result.bind readText
-                let! draft = LocalOperator.readDraft text |> invalid
-                let! signature = required "--signature" rest |> invalid |> Result.bind readBytes
-                let! revision = required "--revision" rest |> invalid
-                do! LocalOperator.applyGrant loaded draft signature revision DateTimeOffset.UtcNow |> refused
-                printfn "group %s granted; host policy is now %s" draft.Approval.Scope.GroupId revision
-                return 0
+                let! config = text "--host-config" rest
+                let! draft = text "--draft" rest
+                let! signature = text "--signature" rest
+                let! revision = text "--revision" rest
+                return! LocalRuntimeService.grant root config draft signature revision |> lines
             }
         | "revoke" :: rest ->
             attempt {
-                let! loaded = configuration root rest
-                let! keyId = required "--key-id" rest |> invalid
-                let! revision = required "--revision" rest |> invalid
-                do! LocalOperator.revoke loaded keyId revision DateTimeOffset.UtcNow |> refused
-                printfn "signer %s revoked; host policy is now %s" keyId revision
-                return 0
+                let! config = text "--host-config" rest
+                let! keyId = text "--key-id" rest
+                let! revision = text "--revision" rest
+                return! LocalRuntimeService.revoke root config keyId revision |> lines
             }
         | "review" :: rest ->
             attempt {
-                let! _ = configuration root rest
-                let! packet = required "--packet" rest |> invalid |> Result.bind readPacket
-                let! keyId = required "--key-id" rest |> invalid
-                let! approver = required "--approver" rest |> invalid
-                let! payloadPath = required "--payload" rest |> invalid
-                LocalOperator.review packet |> List.iter (printfn "%s")
-                do! writeNew payloadPath (LocalOperator.delegationPayload keyId approver packet)
-                printfn "review the assignment above; signing %s delegates exactly this packet" payloadPath
-                return 0
+                let! config = text "--host-config" rest
+                let! packet = text "--packet" rest
+                let! keyId = text "--key-id" rest
+                let! approver = text "--approver" rest
+                let! payload = text "--payload" rest
+                return! LocalRuntimeService.review root config packet keyId approver payload |> lines
             }
         | "delegate" :: rest ->
             attempt {
-                let! loaded = configuration root rest
-                let! packet = required "--packet" rest |> invalid |> Result.bind readPacket
-                let! keyId = required "--key-id" rest |> invalid
-                let! approver = required "--approver" rest |> invalid
-                let! signature = required "--signature" rest |> invalid |> Result.bind readBytes
-                let! out = required "--out" rest |> invalid
-                let! envelope = LocalOperator.assembleDelegation loaded keyId approver packet signature DateTimeOffset.UtcNow |> refused
-                do! writeNew out (utf8 envelope)
-                printfn "delegation for %s verified against the protected policy and written to %s" packet.DispatchId out
-                return 0
+                let! config = text "--host-config" rest
+                let! packet = text "--packet" rest
+                let! keyId = text "--key-id" rest
+                let! approver = text "--approver" rest
+                let! signature = text "--signature" rest
+                let! out = text "--out" rest
+                return! LocalRuntimeService.delegation root config packet keyId approver signature out |> lines
             }
-        | _ -> Error(Invalid("unknown operator command; usage: praxis " + usage))
-
-    // ----------------------------------------------------------------- worker
+        | _ -> Error(LocalCommandFailure.Invalid("unknown operator command; usage: praxis " + usage))
 
     let private bridge arguments =
-        required "--git" arguments |> invalid |> Result.bind (fun git ->
-            let endpoint name fallback =
-                match Uri.TryCreate(value name arguments |> Option.defaultValue fallback, UriKind.Absolute) with
-                | true, uri -> Ok uri
-                | _ -> Error(name + " must be an absolute URL")
-            let backend =
+        let endpoint name fallback =
+            match Uri.TryCreate(value name arguments |> Option.defaultValue fallback, UriKind.Absolute) with
+            | true, uri -> Ok uri
+            | _ -> Error(LocalCommandFailure.Invalid(name + " must be an absolute URL"))
+        attempt {
+            let! git = required "--git" arguments
+            let! backend =
                 match value "--agent-command" arguments, value "--ollama-model" arguments, value "--openai-model" arguments with
                 | Some command, None, None -> Ok(LocalBridgeBackend.Command(command, values "--agent-arg" arguments))
                 | None, Some model, None -> endpoint "--ollama-endpoint" "http://127.0.0.1:11434" |> Result.map (fun uri -> LocalBridgeBackend.Ollama(uri, model))
                 | None, None, Some model -> endpoint "--openai-endpoint" "http://127.0.0.1:8080" |> Result.map (fun uri -> LocalBridgeBackend.OpenAiCompatible(uri, model))
-                | _ -> Error "exactly one of --agent-command, --ollama-model or --openai-model is required"
-            backend |> invalid |> Result.bind (fun backend ->
-                let settings = { Git = git; Backend = backend; Worktree = Directory.GetCurrentDirectory() }
-                LocalWorkerBridge.run settings (Console.In.ReadToEnd()) |> refused |> Result.map (fun result ->
-                    Console.Out.Write(LocalAgentHandoffJson.renderResult result)
-                    0)))
+                | _ -> Error(LocalCommandFailure.Invalid "exactly one of --agent-command, --ollama-model or --openai-model is required")
+            let! result = LocalRuntimeService.bridge git backend
+            Console.Out.Write result
+            return 0
+        }
 
     let route (root: string) (arguments: string list) (withActor: string list -> (Actor -> int) -> int) =
         match arguments with
         | "run" :: rest -> withActor rest (fun actor -> run root actor rest |> finish)
-        | "status" :: rest -> status root rest |> finish
+        | "status" :: rest ->
+            attempt {
+                let! config = required "--host-config" rest
+                let! dispatch = required "--dispatch" rest
+                return! LocalRuntimeService.status root config dispatch |> lines
+            } |> finish
         | "packet" :: "propose" :: rest -> propose root rest |> finish
-        | "validator" :: "pin" :: rest -> pin root rest |> finish
+        | "validator" :: "pin" :: rest ->
+            attempt {
+                let! config = required "--host-config" rest
+                let! id = required "--validator" rest
+                return! LocalRuntimeService.pin root config id |> lines
+            } |> finish
         | "operator" :: rest -> operator root rest |> finish
         | "worker-bridge" :: rest -> bridge rest |> finish
         | _ ->

@@ -144,3 +144,25 @@ module FileExecutionPorts =
     let createSerialized (root: string) = build root (ExecutionLifecycleLease.required root)
 
     let create (root: string) = createSerialized root
+
+    /// Lease routing for `execution` CLI verbs (WI-0087). Verbs that run an
+    /// external step, evaluator or launcher write under a per-write lease, so
+    /// the process never holds native locks; reads need no lease; every other
+    /// mutation holds one lifecycle scope.
+    let runLeased (root: string) (arguments: string list) (dispatch: ExecutionPorts -> int) : Result<int, string> =
+        let perWrite =
+            match arguments with
+            | "start" :: rest -> List.contains "--launch" rest
+            | "step" :: "run" :: _
+            | "evaluate" :: _
+            | "launch" :: _
+            | "show" :: _
+            | "actions" :: _
+            | "boundary" :: _
+            | "containment" :: _
+            | "list" :: _ -> true
+            | _ -> false
+        try
+            if perWrite then Ok(dispatch (createSerialized root))
+            else ExecutionLifecycleLease.within root (fun () -> dispatch (createLocked root))
+        with ExecutionLifecycleLeaseUnavailable reason -> Error reason
