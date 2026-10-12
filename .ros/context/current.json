@@ -9560,11 +9560,42 @@
         }
       },
       "blockReason": "Serialized authority, native dispatch/recovery and exact signed delegation are implemented, tested and remotely checkpointed. This host refuses bwrap isolation and lacks a checked local worker backend. Authenticated signing, native member-execution observations, protected worker adapter closure and actual launch/intake/integration/completion still need qualification on a suitable host; runtime remains disabled."
+    },
+    {
+      "id": "GH-235",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-11T23:40:57.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261011T234058504Z-3b80355e"
+      ],
+      "latestCheckpoint": {
+        "id": "d94bbd8d26543a5e842a69b8",
+        "recordedAt": "2026-10-11T23:59:30.000Z",
+        "executionId": "EXE-20261011T234058504Z-3b80355e",
+        "repository": "repository-operating-system",
+        "branch": "feat/local-controller-activation-published",
+        "commit": "2c6be92c2935164b1a192510c3449d49c7f8cf59",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "feat/local-controller-activation",
+        "remoteCommit": "2c6be92c2935164b1a192510c3449d49c7f8cf59",
+        "summary": "Portable host PR232 merged. Published concrete validator runner, separate transient tool observation, fresh TRX parsing, evidence archive and adversarial coverage. Initial eight runner cases passed; expanded ten-case suite and full/three-OS validation pending. No runtime activation.",
+        "nextAction": "Verify expanded runner and complete regression/CI; then wire protected checklist/native controller and actual worker backend pilot.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-11T15:07:14.529Z",
+  "updatedAt": "2026-10-11T23:40:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
