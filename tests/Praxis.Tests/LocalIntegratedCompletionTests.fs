@@ -12,7 +12,7 @@ module LocalIntegratedCompletionTests =
     let private ok = function Ok value -> value | Error error -> failwith (sprintf "%A" error)
     let private rejects value = Assert.isTrue (Result.isError value) "unsafe completion planned"
     let private run ports = LocalIntegratedCompletion.plan ports packet.RepositoryIdentity packet.DispatchId target
-    let private fixture test = LocalIntegrationTests.fixture (fun _ _ journal integration head swaps clock enabled ->
+    let internal fixture test = LocalIntegrationTests.fixture (fun _ _ journal integration head swaps clock enabled ->
         LocalIntegration.run integration packet.RepositoryIdentity packet.DispatchId target |> ok |> ignore
         let context =
             { WorkItems = packet.Members |> List.map (fun m ->

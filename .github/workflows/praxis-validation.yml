@@ -75,6 +75,18 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: work history merge
+      - name: Concrete checklist execution and evidence custody
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: concrete checklist
+      - name: Native completion effect boundary
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local completion commit
+      - name: Concrete validator and Git acceptance flow
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: concrete acceptance flow
 
   # Functional portability is separate from OS containment qualification.
   local-worker-portability:

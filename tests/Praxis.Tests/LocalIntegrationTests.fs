@@ -20,11 +20,12 @@ module LocalIntegrationTests =
     let private rejects value = Assert.isTrue (Result.isError value) "unsafe integration succeeded"
     let private run ports = LocalIntegration.run ports packet.RepositoryIdentity packet.DispatchId target
     let private load (store: LocalIntegrationJournalStore) = store.Load packet.RepositoryIdentity packet.DispatchId |> ok |> Option.get
-    let private fixtureWith p result observed test =
+    let internal fixtureWith p result observed test =
         let root = CliHarness.temporaryDirectory "praxis-local-integration"
         let repo, journalRoot, archiveRoot, host = Path.Combine(root, "repo"), Path.Combine(root, "dispatch"), Path.Combine(root, "archive"), Path.Combine(root, "host")
         for directory in [ repo; journalRoot; archiveRoot; host ] do Directory.CreateDirectory directory |> ignore
         try
+            let now = if p.IssuedAt = packet.IssuedAt then now else p.IssuedAt.AddSeconds 1.
             let dispatch = FileLocalDispatchJournal.create repo journalRoot |> ok
             dispatch.Reserve { Packet = p; ReservedAt = now; ControllerSessionId = "fixture-controller" } |> ok |> ignore
             for sequence, kind, id in [ 1, LocalDispatchEventKind.LaunchIntent, None; 2, LocalDispatchEventKind.LaunchObserved, Some "fixture-process"; 3, LocalDispatchEventKind.ExitObserved, Some "fixture-process" ] do

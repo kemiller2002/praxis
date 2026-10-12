@@ -1564,7 +1564,7 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                                                   EventActor = eventActor
                                                   ReadinessRecords = readinessRecords
                                                   ExplicitConclusion = optionValue "--conclusion" arguments
-                                                  BeforeEffects = fun () -> Ok() }
+                                                  BeforeEffects = (fun () -> Ok()); BeforeApply = fun () -> Ok() }
                 with error ->
                     lease.Release() |> ignore
                     reraise ()

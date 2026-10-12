@@ -41,6 +41,9 @@ type LocalWorkerResult =
     { SchemaVersion: string; DispatchId: string; AttemptId: string; ChildExecutionId: string; WorkerId: string
       PacketDigest: string; OutputCommit: string; ChangedPaths: string list; Members: LocalWorkerMemberResult list }
 
+[<RequireQualifiedAccess>]
+type LocalResultInputDisposition = NoIntegration | ValidatorsRequired
+
 /// Each result is independently observed by the controller. A worker's exit
 /// code, claimed digest or claimed validator success cannot supply these facts.
 type LocalAcceptanceObservation =
@@ -195,7 +198,7 @@ module LocalAgentHandoff =
 
     /// Admit exact member results only after fresh packet checking and host
     /// evidence observation. Caller must still serialize/revalidate integration.
-    let validateResult authority now prerequisites (packet: LocalWorkerPacket) (observed: LocalWorkerResultObservation) (result: LocalWorkerResult) =
+    let private validateResultWithAcceptance requireAcceptance authority now prerequisites (packet: LocalWorkerPacket) (observed: LocalWorkerResultObservation) (result: LocalWorkerResult) =
         let submitted = result.Members |> List.filter (fun m -> m.Outcome = LocalWorkerOutcome.Submitted)
         let allEvidence = result.Members |> List.collect _.Evidence
         let errors =
@@ -233,7 +236,7 @@ module LocalAgentHandoff =
                   for claim in memberResult.Evidence do
                       if not (isResourcePath claim.ArtifactPath && isDigest claim.Digest)
                          || Map.tryFind claim.ObligationId observed.Evidence <> Some(claim.ArtifactPath, claim.Digest) then yield "local-result-evidence-unverified:" + claim.ObligationId
-                  if memberResult.Outcome = LocalWorkerOutcome.Submitted then
+                  if requireAcceptance && memberResult.Outcome = LocalWorkerOutcome.Submitted then
                       for obligation in required do
                           match Map.tryFind obligation.ObligationId observed.Acceptance with
                           | Some check when check.ValidatorId = obligation.ValidatorId && check.InputDigest = obligation.InputDigest && check.Verdict = Ok() -> ()
@@ -241,3 +244,14 @@ module LocalAgentHandoff =
         if not errors.IsEmpty then Error errors
         elif submitted.Length = result.Members.Length then Ok LocalResultDisposition.AwaitingIntegration
         else Ok LocalResultDisposition.NoIntegration
+
+    /// Structural and independent candidate/evidence observations only. This
+    /// result is not admission: independent acceptance must follow execution.
+    let validateResultInputs authority now prerequisites packet observed result =
+        validateResultWithAcceptance false authority now prerequisites packet observed result
+        |> Result.map (function
+            | LocalResultDisposition.NoIntegration -> LocalResultInputDisposition.NoIntegration
+            | LocalResultDisposition.AwaitingIntegration -> LocalResultInputDisposition.ValidatorsRequired)
+
+    let validateResult authority now prerequisites packet observed result =
+        validateResultWithAcceptance true authority now prerequisites packet observed result

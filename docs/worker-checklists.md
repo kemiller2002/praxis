@@ -44,12 +44,49 @@ worker decoder for a checklist pass and no self-approval option.
 
 ## Protected-host contract and limits
 
-This first slice supplies pure rules, controller ports, mandatory local
-intake/integration/completion gates, inspection and adversarial tests. It does
-**not** yet provide concrete authenticated build/test/architecture runners,
-protected result storage or a production controller entry point. The ordinary
+The first slice supplies pure rules, controller ports, mandatory local
+intake/integration/completion gates, inspection and adversarial tests.
+The controller integration adds concrete runner/evidence mapping and connects
+the protected host API to the existing native effect transaction. The ordinary
 standalone `work complete` CLI still uses its existing completion-readiness
 policy; this change does not silently replace that migration contract.
+
+`FileWorkerChecklist.withEvidenceSession` holds an exclusive evidence-store
+handle and exposes checklist/acceptance observations only for that scope.
+Only actual `FileLocalValidator` reports populate its bounded in-memory cache.
+Every reuse freshly observes candidate/tool inputs and verifies the archived
+evidence bytes and selected access policy. There is no persisted pass decoder.
+Unobserved acceptance is an error, never a synthetic pass. Intake checks
+identities, paths, lineage and artifacts before running validators, then
+requires their observed acceptance. Failed/blocked packages still cannot
+authorize integration.
+
+System validators are candidate-wide: identical host-selected validator pins
+can share one actual process observation across the generated member rows.
+Member acceptance obligations remain independently pinned and mandatory.
+The signed requests, including TRX output paths, must stay stable during a
+session. A new candidate/policy requiring another test run needs a fresh
+host-provisioned output artifact; preexisting TRX is never overwritten or
+silently accepted. Candidate checkout custody remains a host responsibility.
+
+`FileLocalWorkerHost.runAndComplete` dispatches, archives and reopens fresh
+native/group/policy leases for acceptance. It binds concrete checklists and
+their actual acceptance observations, overriding any factory-supplied
+checklist or acceptance pass. Integration uses its durable journal; completion
+uses `FileLocalIntegratedCompletion` and the existing native transaction.
+It repeats the whole plan before finalization, then rechecks candidate,
+evidence, target, authority and prerequisites after finalization before
+persisting completion. A mid-effect failure is an error requiring operator
+reconciliation, not successful completion or permission to repeat blindly.
+
+This is a host-embedding API, not a newly enabled execution CLI. The operator
+must provision the signed delegation/policy, stable pinned validators, candidate
+and Git observation/staging adapters, native readiness/checkpoint adapters and
+the appropriate file-access profile. A portable development profile is not OS
+containment or protection from a worker running with the same identity.
+Execution-envelope lifecycle serialization, standalone CLI policy adoption
+and the live coordinator/two-worker pilot remain required for production
+activation. This executor has no installed Codex, Claude or Ollama worker CLI.
 
 Host implementations must establish the following independently:
 
