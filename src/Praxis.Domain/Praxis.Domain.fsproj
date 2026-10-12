@@ -18,6 +18,7 @@
     <Compile Include="Git/Durability.fs" />
     <Compile Include="Git/Synchronization.fs" />
     <Compile Include="Work/Identity.fs" />
+    <Compile Include="Work/HistoryMerge.fs" />
     <Compile Include="Telemetry/Step.fs" />
     <Compile Include="Work/PathFilter.fs" />
     <Compile Include="Work/Attribution.fs" />
@@ -98,6 +99,7 @@
     <Compile Include="Work/GroupExecutions.fs" />
     <Compile Include="Work/GroupCost.fs" />
     <Compile Include="Work/LocalAgentHandoff.fs" />
+    <Compile Include="Work/WorkerChecklist.fs" />
     <Compile Include="Work/LocalHandoffExplanation.fs" />
     <Compile Include="Work/LocalDispatchJournal.fs" />
     <Compile Include="Work/LocalWorkerSubmission.fs" />

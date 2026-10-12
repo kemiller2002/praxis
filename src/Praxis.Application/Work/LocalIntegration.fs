@@ -37,13 +37,16 @@ module LocalIntegration =
         inspectReady ports plan.RepositoryIdentity plan.DispatchId |> Result.bind (fun snapshot ->
             if not (matches plan snapshot) then Error "prepared integration submission changed"
             else ports.ValidateCandidate snapshot plan |> Result.bind (fun () ->
+                WorkerChecklistOperations.verifyCandidate { ports.Intake.Checklists with Now = ports.Intake.Now }
+                    snapshot.Packet snapshot.Result plan.CandidateCommit |> Result.bind (fun verified ->
                 // Candidate checks can take time. Refresh input/authority again
                 // afterward, including during recovery of a prepared journal.
                 inspectReady ports plan.RepositoryIdentity plan.DispatchId |> Result.bind (fun current ->
                     let now = ports.Intake.Now()
                     if not (matches plan current) || now.Offset <> TimeSpan.Zero || now < plan.PreparedAt
                        || now < current.Packet.IssuedAt || now >= current.Packet.ExpiresAt then Error "integration snapshot or clock changed"
-                    else Ok())))
+                    else WorkerChecklistOperations.recheckCandidate { ports.Intake.Checklists with Now = ports.Intake.Now }
+                             current.Packet current.Result plan.CandidateCommit verified))))
     let private finish ports plan =
         ports.ReadTarget plan.TargetRef |> Result.bind (fun actual ->
             if actual <> plan.CandidateCommit then Error "integration target update remains uncertain or changed"

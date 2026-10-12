@@ -9572,20 +9572,52 @@
         "EXE-20261011T234058504Z-3b80355e"
       ],
       "latestCheckpoint": {
-        "id": "d94bbd8d26543a5e842a69b8",
-        "recordedAt": "2026-10-11T23:59:30.000Z",
+        "id": "dfd931f9c98e25965d515f92",
+        "recordedAt": "2026-10-12T07:09:57.000Z",
         "executionId": "EXE-20261011T234058504Z-3b80355e",
         "repository": "repository-operating-system",
-        "branch": "feat/local-controller-activation-published",
-        "commit": "2c6be92c2935164b1a192510c3449d49c7f8cf59",
+        "branch": "feat/checklist-binding-checkpoint",
+        "commit": "d59e1717188564f6bea8dcaffb11145d8aa83599",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
-        "remoteBranch": "feat/local-controller-activation",
-        "remoteCommit": "2c6be92c2935164b1a192510c3449d49c7f8cf59",
-        "summary": "Portable host PR232 merged. Published concrete validator runner, separate transient tool observation, fresh TRX parsing, evidence archive and adversarial coverage. Initial eight runner cases passed; expanded ten-case suite and full/three-OS validation pending. No runtime activation.",
-        "nextAction": "Verify expanded runner and complete regression/CI; then wire protected checklist/native controller and actual worker backend pilot.",
+        "remoteBranch": "feat/concrete-checklist-binding",
+        "remoteCommit": "d59e1717188564f6bea8dcaffb11145d8aa83599",
+        "summary": "Published concrete checklist adapter, recovered native bookkeeping in an exclusive checkout, native validation passed; local 33 targeted tests and cross-OS adapter jobs pass",
+        "nextAction": "Verify final-head full validation and native release CI, merge PR 238 after all checks pass, then continue qualified native controller activation",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "GH-234",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-11T21:15:24.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261011T204811145Z-23f864b2"
+      ],
+      "blockReason": "Checklist gate implementation and validation complete locally; branch publication awaits explicit GitHub destination authorization after automatic approval review rejected push",
+      "latestCheckpoint": {
+        "id": "2929a5ea8177e461792fd393",
+        "recordedAt": "2026-10-12T00:16:20.000Z",
+        "executionId": "EXE-20261011T204811145Z-23f864b2",
+        "repository": "repository-operating-system",
+        "branch": "feat/checklists-checkpoint",
+        "commit": "0ee018ebbada048772aabd72902712eda1803af4",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "feat/enforced-work-checklists",
+        "remoteCommit": "0ee018ebbada048772aabd72902712eda1803af4",
+        "summary": "Published reconciled checklist/library and native Git history merge slice in PR 236 at 0ee018eb. Integrated Release build clean; 12 history tests passed. Verified both native histories, all 1009 original events and branch ordering. Native validation passes. Full post-integration regression suite and CI still running.",
+        "nextAction": "Check full regression and three-OS, browser, site and native-release CI; merge PR 236 after green checks. GH-234 remains open for authenticated validator runners, evidence custody, native CLI adoption, lifecycle serialization and coordinator/two-worker pilot.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
@@ -9595,7 +9627,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-11T23:40:57.000Z",
+  "updatedAt": "2026-10-11T23:40:57.0000000+00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

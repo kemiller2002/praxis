@@ -18,6 +18,7 @@ type LocalSubmissionIntakePorts =
       Authority: unit -> Result<LocalHandoffAuthority, string>
       Prerequisites: unit -> Result<Map<string, string>, string>
       Observe: LocalWorkerPacket -> LocalWorkerResult -> Result<LocalWorkerResultObservation, string>
+      Checklists: WorkerChecklistPorts
       Now: unit -> DateTimeOffset }
 type LocalSubmissionDispatchReport =
     { Dispatch: LocalJournaledDispatchReport
@@ -63,6 +64,32 @@ module LocalSubmissionIntake =
         return dispatched |> Result.map (fun report ->
             { Dispatch = report; Archive = capture capturePorts packet report }) }
 
+    let private validateCurrent (ports: LocalSubmissionIntakePorts) packet (submission: LocalWorkerSubmission) result observed =
+        ports.Authority() |> Result.bind (fun authority ->
+            ports.Prerequisites() |> Result.bind (fun prerequisites ->
+                let now = ports.Now()
+                if now < submission.CapturedAt then Error "submission capture is in the future"
+                else LocalAgentHandoff.validateResult authority now prerequisites packet observed result
+                     |> Result.mapError (String.concat "; ")))
+
+    let private inspectResult (ports: LocalSubmissionIntakePorts) packet submission result =
+        let inspection disposition =
+            { Packet = packet; Submission = submission; Result = result; Disposition = disposition }
+        let checklists = { ports.Checklists with Now = ports.Now }
+        ports.Observe packet result |> Result.bind (fun observed ->
+            // Reject unassigned or invalid results before invoking validators.
+            // Failed/blocked packages remain inspectable but never integrate.
+            validateCurrent ports packet submission result observed |> Result.bind (function
+                | LocalResultDisposition.NoIntegration -> Ok(inspection LocalResultDisposition.NoIntegration)
+                | LocalResultDisposition.AwaitingIntegration ->
+                    WorkerChecklistOperations.verify checklists packet result |> Result.bind (fun verified ->
+                        // Slow checks cannot preserve stale paths, policy,
+                        // authority or prerequisite observations.
+                        ports.Observe packet result |> Result.bind (fun current ->
+                            if current <> observed then Error "submission observations changed during checklist verification"
+                            else WorkerChecklistOperations.recheckCandidate checklists packet result result.OutputCommit verified
+                                 |> Result.bind (fun () -> validateCurrent ports packet submission result current |> Result.map inspection)))))
+
     let readChecked (ports: LocalSubmissionIntakePorts) repositoryIdentity dispatchId = protect (fun () ->
         ports.Journal.Load repositoryIdentity dispatchId |> Result.bind (fun journal ->
             if journal.Reservation.Packet.RepositoryIdentity <> repositoryIdentity || journal.Reservation.Packet.DispatchId <> dispatchId then Error "intake journal differs from requested assignment"
@@ -71,18 +98,8 @@ module LocalSubmissionIntake =
                     if submission.ExitCode <> 0 then Error "nonzero worker exit cannot enter integration intake"
                     else ports.NativeRecovery() |> Result.bind (fun () ->
                         ports.ProcessRecovery journal |> Result.bind (fun () ->
-                            LocalAgentHandoffJson.readResult submission.Payload |> Result.bind (fun result ->
-                                let packet = journal.Reservation.Packet
-                                ports.Observe packet result |> Result.bind (fun observed ->
-                                    // Validation/observation can take time. Re-read authority,
-                                    // dependencies and time afterward; cached acceptance is not authority.
-                                    ports.Authority() |> Result.bind (fun authority ->
-                                        ports.Prerequisites() |> Result.bind (fun prerequisites ->
-                                            let now = ports.Now()
-                                            if now < submission.CapturedAt then Error "submission capture is in the future"
-                                            else LocalAgentHandoff.validateResult authority now prerequisites packet observed result
-                                                 |> Result.mapError (String.concat "; ")
-                                                 |> Result.map (fun disposition -> { Packet = packet; Submission = submission; Result = result; Disposition = disposition })))))))))))
+                            LocalAgentHandoffJson.readResult submission.Payload
+                            |> Result.bind (inspectResult ports journal.Reservation.Packet submission)))))))
 
     let inspect ports repositoryIdentity dispatchId =
         readChecked ports repositoryIdentity dispatchId |> Result.map _.Disposition

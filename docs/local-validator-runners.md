@@ -72,8 +72,35 @@ three-OS CI. The coordinator/two-worker model pilot remains outstanding. This
 environment has no `claude`, `codex`, `ollama` or `llama-cli` executable on PATH;
 process fixtures must not be presented as a live model-worker pilot.
 
-The next controller integration must map reports to protected checklist rows,
-require the signed validator identities/input pins, bind native prerequisite
+## Concrete checklist binding
+
+`FileWorkerChecklist.create` supplies the existing `WorkerChecklistPorts` from
+an exact host-held packet/result, fresh policy, host-owned request resolver,
+cancellation token, UTC clock and live guard. It observes each requested command
+and candidate before executing. Actual input digests must match protected system
+policy or the assigned acceptance pin. All rows must observe the same candidate
+manifest. Test rows require a fresh TRX path. Evaluate regenerates and compares
+the entire checklist, executes actual pinned commands, checks the archived
+evidence against the directly returned report, and reobserves inputs afterward.
+There is no worker JSON pass decoder or callback supplying a passing verdict.
+
+Identical full requests share a real process observation only within one
+evaluation. Every consuming row still reobserves inputs and verifies the archive.
+This is not a persistent cache or reusable approval. Repeating an evaluation
+with a preexisting TRX file refuses. A live controller must provision fresh
+validator slots or implement a separately qualified immutable cache. Because
+paths/argv are part of the input digest, changing slots requires preparing
+the matching protected policy and signed acceptance pins before delegation.
+
+`FileLocalValidator.verifyEvidence` reads one bounded snapshot, checks its digest,
+generated filename, outside-checkout custody root, exact fields and report
+identity. This proves consistency with a host-held report, not authentication.
+The guard must verify held lifecycle/input/evidence leases and assignment
+authority before and after observations. It does not acquire locks, establish
+OS protection, or replace integration/authority/prerequisite checks. The
+bindings must come from trusted controller code, never from worker artifacts.
+
+Remaining controller integration must bind native prerequisite
 evidence, serialize execution-envelope writers, and recheck inside the native
 completion effect boundary before enabling acceptance. Installation/release
 activation follows that end-to-end qualification, not this library addition.

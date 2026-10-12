@@ -399,6 +399,7 @@ recording. See "Post-hoc attribution reconciliation" in
 ### `work checkpoint`, `work checkpoint show`, `work continue`
 
 ```
+praxis work history merge [--apply]
 praxis work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
                        [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
 praxis work checkpoint show ID [--json] [--offline]
@@ -408,6 +409,11 @@ praxis work block ... [--unrecoverable-reason TEXT]
 praxis work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
 praxis status [--json] [--verbose] [--offline]
 ```
+
+**`work history merge`** previews reconciliation of independent Git-conflicted
+native contexts and event logs; `--apply` writes through the native recovery
+journal. Divergent changes to the same identity refuse. Use an exclusive idle
+checkout, then review and stage the result. See [native history reconciliation](work-history-merge.md).
 
 **`work checkpoint`** records a verified durable checkpoint. The remote itself
 must show that local HEAD, the checkpoint commit, and the upstream branch head

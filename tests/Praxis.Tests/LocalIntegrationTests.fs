@@ -43,6 +43,7 @@ module LocalIntegrationTests =
                   Authority = fun () -> Ok { Enabled = enabled.Value; Revision = p.AuthorityRevision; ExpectedPacket = p }
                   Prerequisites = fun () -> Ok(p.Prerequisites |> List.map (fun item -> item.WorkItemId, item.EvidenceDigest) |> Map.ofList)
                   Observe = fun _ _ -> Ok observed
+                  Checklists = WorkerChecklistTests.ports p result (fun () -> clock.Value)
                   Now = fun () -> clock.Value }
             let compare (plan: LocalIntegrationPlan) =
                 swaps.Value <- swaps.Value + 1
@@ -61,7 +62,46 @@ module LocalIntegrationTests =
     let internal fixture test = fixtureWith packet LocalAgentHandoffTests.result LocalAgentHandoffTests.observed test
 
     let tests =
-        [ t "prepared plan precedes target update and an applied target is never updated twice" (fun () -> fixture (fun repo host journal ports head swaps clock _ ->
+        [ t "successful source checks cannot substitute for checks on the staged integration candidate" (fun () -> fixture (fun _ _ journal ports head swaps _ _ ->
+              let original = head.Value
+              let baseline = ports.Intake.Checklists
+              let mutable candidates = []
+              let checks =
+                  { baseline with
+                      Evaluate = fun checklist ->
+                          candidates <- checklist.Context.CandidateCommit :: candidates
+                          if checklist.Context.CandidateCommit = candidate then Ok [] else baseline.Evaluate checklist }
+              rejects (run { ports with Intake = { ports.Intake with Checklists = checks } })
+              Assert.isTrue (List.contains candidate candidates) "staged candidate was not checked"
+              Assert.equal original head.Value
+              Assert.equal 0 swaps.Value
+              Assert.equal None (journal.Load packet.RepositoryIdentity packet.DispatchId |> ok)))
+          t "prepared recovery rechecks the candidate checklist before updating target" (fun () -> fixture (fun _ _ journal ports head swaps _ _ ->
+              rejects (run { ports with CompareAndSwap = fun _ -> Error "interrupted before target update" })
+              Assert.equal None (load journal).AppliedAt
+              let original = head.Value
+              let baseline = ports.Intake.Checklists
+              let checks = { baseline with Evaluate = fun checklist -> if checklist.Context.CandidateCommit = candidate then Ok [] else baseline.Evaluate checklist }
+              rejects (run { ports with Intake = { ports.Intake with Checklists = checks } })
+              Assert.equal original head.Value
+              Assert.equal 0 swaps.Value))
+          t "policy drift during the final source refresh invalidates earlier candidate checks" (fun () -> fixture (fun _ _ _ ports head swaps _ _ ->
+              let original = head.Value
+              let baseline = ports.Intake.Checklists
+              let mutable candidateChecked = false
+              let mutable changed = false
+              let checklist =
+                  { baseline with
+                      Observe = fun p r commit -> baseline.Observe p r commit |> Result.map (fun context ->
+                          if changed then { context with Policy = { context.Policy with Revision = "new-policy" } } else context)
+                      Evaluate = fun checklist ->
+                          if checklist.Context.CandidateCommit = candidate then candidateChecked <- true
+                          elif candidateChecked then changed <- true
+                          baseline.Evaluate checklist }
+              rejects (run { ports with Intake = { ports.Intake with Checklists = checklist } })
+              Assert.equal original head.Value
+              Assert.equal 0 swaps.Value))
+          t "prepared plan precedes target update and an applied target is never updated twice" (fun () -> fixture (fun repo host journal ports head swaps clock _ ->
               let apply plan =
                   Assert.equal plan (load journal).Plan
                   Assert.equal None (load journal).AppliedAt

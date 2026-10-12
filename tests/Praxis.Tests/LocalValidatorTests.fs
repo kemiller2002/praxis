@@ -19,7 +19,7 @@ module LocalValidatorTests =
                        |> Array.map (fun path -> Path.Combine(path, name)) |> Array.find File.Exists |> Path.GetFullPath
         let file = FileInfo selected
         if file.LinkTarget <> null then file.ResolveLinkTarget(true).FullName else selected
-    let private fixture test =
+    let internal fixture test =
         let root = CliHarness.temporaryDirectory "praxis-local-validator"
         let repo, evidence = Path.Combine(root, "repo"), Path.Combine(root, "evidence")
         Directory.CreateDirectory repo |> ignore
