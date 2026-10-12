@@ -391,16 +391,22 @@ module FileCheckpointRepository =
                     match node["predecessor"] with
                     | :? JsonObject as predecessor -> text predecessor "executionId"
                     | _ -> None
+                  PredecessorDisposition =
+                    match node["predecessor"] with
+                    | :? JsonObject as predecessor -> text predecessor "disposition"
+                    | _ -> None
                   CheckpointId = text node "checkpoint" })
 
+        let records = FileTelemetryQueryRepository.readAll root
+        let interrupted = records |> List.exists (fun record -> (FileStepRepository.finalizationInterruption record).IsSome)
+
         match events, continuations, readItems root with
-        | [], [], Ok items when items |> List.forall (fun item -> item.LatestCheckpoint = Ok None) -> []
+        | [], [], Ok items when not interrupted && items |> List.forall (fun item -> item.LatestCheckpoint = Ok None) -> []
         | _, _, Error message ->
             [ { Path = contextRelativePath
                 Field = "workItems"
                 Message = message } ]
         | _, _, Ok items ->
-            let records = FileTelemetryQueryRepository.readAll root
 
             let parents =
                 records
@@ -419,7 +425,10 @@ module FileCheckpointRepository =
                             { ExecutionId = executionId
                               WorkItemId = workItemId
                               StartedAt = text record "startedAt" |> Option.defaultValue ""
-                              StartedSteps = FileTelemetryFinalizationRepository.stepEvents record |> Steps.project |> List.map _.StepId }
+                              StartedSteps = FileTelemetryFinalizationRepository.stepEvents record |> Steps.project |> List.map _.StepId
+                              Interruption =
+                                FileStepRepository.finalizationInterruption record
+                                |> Option.map (fun interruption -> interruption.ContinuationEventId, interruption.SuccessorExecutionId) }
                     | _ -> None)
 
             CheckpointValidation.findings

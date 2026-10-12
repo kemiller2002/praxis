@@ -12,6 +12,13 @@ open Praxis.Domain.Telemetry
 open Praxis.Infrastructure.Artifacts
 open Praxis.Infrastructure.Json
 
+/// Steps an absent predecessor left unresolved, recorded at finalization as
+/// interrupted by the successor that continued its work (WI-0088).
+type FinalizationInterruption =
+    { ContinuationEventId: string
+      SuccessorExecutionId: string
+      UnresolvedSteps: string list }
+
 type StepCreateRequest =
     { ExecutionId: string option
       Name: string
@@ -220,6 +227,33 @@ module FileStepRepository =
 
     let unresolvedStepIds (record: JsonObject) =
         states record |> Step.unresolved |> List.map _.StepId
+
+    /// The interruption an `execution.finalized` event recorded for steps an
+    /// absent predecessor left unresolved (WI-0088); absent when the record
+    /// carries none or it is not the successor-observed form.
+    let finalizationInterruption (record: JsonObject) : FinalizationInterruption option =
+        let finalized =
+            match record["events"] with
+            | :? JsonArray as events ->
+                events |> Seq.tryPick (function :? JsonObject as event when stringField event "type" = Some "execution.finalized" -> Some event | _ -> None)
+            | _ -> None
+
+        finalized
+        |> Option.bind (fun event -> objectField event "interruption")
+        |> Option.bind (fun node ->
+            let steps =
+                match node["unresolvedSteps"] with
+                | :? JsonArray as values ->
+                    values |> Seq.map (function :? JsonValue as value when value.GetValueKind() = JsonValueKind.String -> Some(value.GetValue<string>()) | _ -> None) |> Seq.toList
+                | _ -> []
+
+            match stringField node "disposition", stringField node "dispositionSource", stringField node "continuationEventId", stringField node "successorExecutionId" with
+            | Some "interrupted", Some "observed-by-successor", Some continuation, Some successor when not steps.IsEmpty && List.forall Option.isSome steps ->
+                Some
+                    { ContinuationEventId = continuation
+                      SuccessorExecutionId = successor
+                      UnresolvedSteps = List.choose id steps }
+            | _ -> None)
 
     let private ensureSteps (record: JsonObject) = arrayField record "steps"
 
@@ -1220,7 +1254,14 @@ module FileStepRepository =
                 results <- $"{executionId}: step metric '{measurementId}' is not referenced by its owning step '{stepId}'" :: results
 
         if stringField record "status" = Some "finalized" then
-            let unresolved = Step.unresolved stepStates
-            if not unresolved.IsEmpty then results <- $"{executionId}: finalized execution has unresolved step '{unresolved.Head.StepId}'" :: results
+            let unresolved = Step.unresolved stepStates |> List.map _.StepId
+
+            match unresolved, finalizationInterruption record with
+            | [], None -> ()
+            | [], Some _ -> results <- $"{executionId}: finalization records interrupted steps but none is unresolved" :: results
+            | first :: _, None -> results <- $"{executionId}: finalized execution has unresolved step '{first}'" :: results
+            | _, Some interruption when Set.ofList interruption.UnresolvedSteps <> Set.ofList unresolved ->
+                results <- $"{executionId}: finalization records interrupted steps {interruption.UnresolvedSteps} but the unresolved steps are {unresolved}" :: results
+            | _, Some _ -> ()
 
         results |> List.rev

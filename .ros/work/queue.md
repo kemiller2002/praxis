@@ -320,6 +320,7 @@
 | WI-0085 | Build and verify the ros-fs assets on pull requests; gate only attestation and upload to releases | complete |  | high |
 | WI-0086 | Investigate work-protocol lock acquisition stack overflow with stale PID metadata in constrained process namespaces | captured | defect,local-host | high |
 | WI-0087 | Serialize execution-envelope lifecycle writers with local host dispatch; FileExecutionPorts/ExecutionStore currently do not share the work/group lease scope, so fresh assignment observations are not a whole-lifecycle lock | captured |  | medium |
+| WI-0088 | Work completion cannot finalize a predecessor execution left with unresolved steps after work continue; finalize it with its open steps recorded as interrupted (observed by successor) instead of requiring the absent owner | ready |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
