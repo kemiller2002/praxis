@@ -35,7 +35,8 @@ module FileWorkerChecklistTests =
         let revision = ref "host-policy-1"
         let validators : LocalChecklistValidators =
             { PolicyRevision = fun () -> Ok revision.Value
-              Select = fun _ row candidate -> Ok(requests row candidate) }
+              Select = fun _ row candidate -> Ok(requests row candidate)
+              Construction = LocalConstructionScopeHost.none }
         test controller repo evidence packet result validators revision)
     let private session controller evidence access validators action =
         FileWorkerChecklist.withSession controller evidence access validators (fun () -> DateTimeOffset.UtcNow) CancellationToken.None action

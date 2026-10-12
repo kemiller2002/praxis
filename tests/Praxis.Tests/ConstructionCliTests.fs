@@ -17,14 +17,14 @@ module ConstructionCliTests =
     open PraxisCli
 
     let private t name run = { Name = "construction cli: " + name; Run = run }
-    let private coordinator = agent "example/coordinator" "example" "coordinator" "coordinator-session"
-    let private target = "refs/heads/construction-target"
-    let private group = "GROUP-CONSTRUCT-001"
-    let private fixtures = Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer")
+    let internal coordinator = agent "example/coordinator" "example" "coordinator" "coordinator-session"
+    let internal target = "refs/heads/construction-target"
+    let internal group = "GROUP-CONSTRUCT-001"
+    let internal fixtures = Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer")
     let private fixture name = File.ReadAllText(Path.Combine(fixtures, name))
-    let private requirement = "kemiller2002/time-entry-state-machine/docs/architecture/business-activity-ledger-state-model.md#L116-L129"
+    let internal requirement = "kemiller2002/time-entry-state-machine/docs/architecture/business-activity-ledger-state-model.md#L116-L129"
 
-    let private onPath (name: string) =
+    let internal onPath (name: string) =
         let file = if OperatingSystem.IsWindows() then name + ".exe" else name
         let selected = Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator)
                        |> Array.map (fun path -> Path.Combine(path, file)) |> Array.find File.Exists |> Path.GetFullPath
@@ -33,7 +33,7 @@ module ConstructionCliTests =
 
     let private digest path = GitWorkspace.fileDigest path |> function Ok value -> value | Error error -> failwith error
 
-    type private Host = { Parent: string; Clone: string; Config: string; Plan: string; Journal: string }
+    type internal Host = { Parent: string; Clone: string; Config: string; Plan: string; Journal: string }
 
     let private echo () =
         let spec = LocalWorkerProcessTests.spec "echo" [ "unused" ]
@@ -42,11 +42,11 @@ module ConstructionCliTests =
 
     /// Host slot policy: one slot for both timer port contracts, and one
     /// declared slot no contract of this construction needs.
-    let private timerSlots =
+    let internal timerSlots =
         """[{"file":"Extensions.fs","contracts":["ITimerPorts.CurrentTime","ITimerPorts.Perform/Stop"],"maxBytes":4096},
             {"file":"Completion.fs","contracts":["ITimerRules.Guard/NotInThisPlan"],"maxBytes":4096}]"""
 
-    let private configurationWith (slots: string) (mount: string) clone host git (construction: bool) =
+    let internal configurationWith (slots: string) (mount: string) clone host git (construction: bool) =
         let roots = JsonObject()
         let names = [ "policy"; "journal"; "spool"; "submissions"; "integration"; "evidence"; "checkouts" ] @ (if construction then [ "construction" ] else [])
         for name in names do
@@ -83,7 +83,7 @@ module ConstructionCliTests =
     let private configurationAt = configurationWith timerSlots
     let private configuration = configurationAt "src/Domain"
 
-    let private withHost (construction: bool) (prepare: string -> unit) test =
+    let internal withHost (construction: bool) (prepare: string -> unit) test =
         let parent = CliHarness.temporaryDirectory "construction"
         use key = ECDsa.Create(ECCurve.NamedCurves.nistP256)
         try
@@ -119,10 +119,10 @@ module ConstructionCliTests =
         finally
             GitFixture.cleanup parent
 
-    let private construct (host: Host) verb plan =
+    let internal construct (host: Host) verb plan =
         PraxisCli.run host.Clone (Some coordinator) [ "construct"; verb; "--host-config"; host.Config; "--group"; group; "--plan"; plan; "--target"; target ]
 
-    let private tip (host: Host) = GitFixture.git host.Clone [ "rev-parse"; target ]
+    let internal tip (host: Host) = GitFixture.git host.Clone [ "rev-parse"; target ]
 
     let private refused (result: PraxisCli.Result) (fragment: string) =
         Assert.equal 3 result.ExitCode
@@ -133,21 +133,21 @@ module ConstructionCliTests =
 
     // ---- Praxis #243: routing and host-declared handwritten extension slots ----
 
-    let private handwritten = File.ReadAllText(Path.Combine(fixtures, "handwritten", "Extensions.fs"))
+    let internal handwritten = File.ReadAllText(Path.Combine(fixtures, "handwritten", "Extensions.fs"))
 
     let private route (host: Host) =
         PraxisCli.run host.Clone (Some coordinator) [ "construct"; "route"; "--host-config"; host.Config; "--group"; group; "--plan"; host.Plan ]
 
-    let private extendWith (host: Host) (groupId: string) (plan: string) (files: string) (role: string) (extra: string list) =
+    let internal extendWith (host: Host) (groupId: string) (plan: string) (files: string) (role: string) (extra: string list) =
         PraxisCli.run host.Clone (Some coordinator)
             ([ "construct"; "extend"; "--host-config"; host.Config; "--group"; groupId; "--plan"; plan; "--target"; target; "--files"; files; "--role"; role ] @ extra)
 
-    let private extend (host: Host) files =
+    let internal extend (host: Host) files =
         PraxisCli.run host.Clone (Some coordinator)
             [ "construct"; "extend"; "--host-config"; host.Config; "--group"; group; "--plan"; host.Plan; "--target"; target; "--files"; files ]
 
     /// A fresh outbox holding exactly these (name, content) regular files.
-    let private outbox (host: Host) (files: (string * string) list) =
+    let internal outbox (host: Host) (files: (string * string) list) =
         let directory = Path.Combine(host.Parent, "outbox-" + Guid.NewGuid().ToString("N"))
         Directory.CreateDirectory directory |> ignore
         for name, content in files do File.WriteAllText(Path.Combine(directory, name), content)
@@ -156,7 +156,7 @@ module ConstructionCliTests =
     let private lines (text: string) = text.Split('\n', StringSplitOptions.RemoveEmptyEntries) |> Array.map _.Trim() |> Set.ofArray
     let private tree (host: Host) (commit: string) = GitFixture.git host.Clone [ "ls-tree"; "-r"; "--full-tree"; commit ] |> lines
 
-    let private reconfigure (host: Host) slots mount =
+    let internal reconfigure (host: Host) slots mount =
         File.WriteAllText(host.Config, configurationWith slots mount host.Clone (Path.GetDirectoryName host.Config) (onPath "git") true)
 
     /// Every refusal names each entry with its own reason, before any effect.
@@ -495,7 +495,7 @@ module ConstructionCliTests =
                   let before = tip host
                   let applied = construct host "apply" host.Plan |> ok
                   let candidate = text applied.Json["candidateCommit"]
-                  let entry = Directory.GetDirectories(host.Journal) |> Array.filter (fun path -> Path.GetFileName path <> "locks") |> Array.exactlyOne
+                  let entry = Directory.GetDirectories(host.Journal) |> Array.filter (fun path -> not (List.contains (Path.GetFileName path) [ "locks"; "plans"; "routes" ])) |> Array.exactlyOne
                   let applied = Directory.GetFiles(entry, "applied.json", SearchOption.AllDirectories) |> Array.exactlyOne
                   // Crash after update-ref, before the applied record.
                   File.Delete applied

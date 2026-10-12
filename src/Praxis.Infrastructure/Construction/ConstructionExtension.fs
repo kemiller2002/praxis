@@ -136,7 +136,9 @@ module ConstructionExtension =
                "Extension-Policy: " + b.PolicyRevision + " approved by " + b.Approver ]
              @ (report.Files |> List.map (fun (file, _) -> "Extension-Slot: " + file.Path + " " + file.Digest + " " + String.concat " " file.Contracts)))
 
-    let private extensionId (routing: ConstructionRouting) targetRef targetCommit (files: ExtensionFile list) =
+    /// Stable per (plan, route, target, observed head, files); the scope check
+    /// (GH-234) recomputes it to match a journal entry to its inputs.
+    let extensionId (routing: ConstructionRouting) targetRef targetCommit (files: ExtensionFile list) =
         let parts = [ routing.Binding.PlanDigest; ConstructionRouting.routeId routing; targetRef; targetCommit ] @ (files |> List.map (fun file -> file.Path + " " + file.Digest))
         "extend-" + (ConstructionTree.digest (String.concat "\n" parts)).Substring(7, 24)
 
@@ -176,7 +178,8 @@ module ConstructionExtension =
                             | _ :: _ as reasons -> Error("extension refused: " + String.concat "; " reasons)
                             | [] ->
                                 let planned = placed |> List.choose (function Ok value -> Some value | Error _ -> None)
-                                ConstructionRouting.record configuration routing |> Result.bind (fun recordPath ->
+                                ConstructionApplication.recordPlan configuration admitted
+                                |> Result.bind (fun _ -> ConstructionRouting.record configuration routing) |> Result.bind (fun recordPath ->
                                     let report =
                                         { Routing = routing; RouteRecord = recordPath; TargetRef = targetRef; TargetCommit = targetCommit
                                           ConstructionCommit = constructionCommit; ConstructionId = constructionId

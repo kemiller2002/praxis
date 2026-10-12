@@ -6,6 +6,10 @@ open System.Security.Cryptography
 
 [<RequireQualifiedAccess>]
 type WorkerCheckKind = Build | Tests | Architecture | Scope | Acceptance
+                     /// Host-implemented construction-package scope verification
+                     /// (GH-234). Mandatory exactly when the host observes that the
+                     /// delegated package is a construction package.
+                     | ConstructionScope
 
 /// Host-selected validator identity and the digest of its complete input closure.
 type WorkerCheckValidator = { ValidatorId: string; InputDigest: string }
@@ -13,9 +17,11 @@ type WorkerChecklistPolicy =
     { Revision: string; Validators: Map<WorkerCheckKind, WorkerCheckValidator> }
 
 /// Independently observed candidate inputs, never supplied by the worker.
+/// `ConstructionScope` is Some exactly when the protected host identified the
+/// package as a construction package; its input digest pins the host facts.
 type WorkerChecklistContext =
     { PacketDigest: string; CandidateCommit: string; CandidateManifestDigest: string
-      Policy: WorkerChecklistPolicy }
+      Policy: WorkerChecklistPolicy; ConstructionScope: WorkerCheckValidator option }
 type WorkerChecklistRow =
     { CheckId: string; Kind: WorkerCheckKind; WorkItemId: string; ExecutionId: string
       RequirementKeys: string list; Validator: WorkerCheckValidator }
@@ -48,6 +54,11 @@ module WorkerChecklist =
         | WorkerCheckKind.Architecture -> "architecture"
         | WorkerCheckKind.Scope -> "scope"
         | WorkerCheckKind.Acceptance -> "acceptance"
+        | WorkerCheckKind.ConstructionScope -> "construction-scope"
+    /// The only validator identity a construction-scope row accepts. It names
+    /// the host's own implementation, never a configurable worker command.
+    [<Literal>]
+    let ConstructionScopeValidatorId = "praxis.construction-scope/1"
     let private clean (value: string) =
         not (String.IsNullOrWhiteSpace value) && value.Length <= 1024 && value = value.Trim()
         && not (value |> Seq.exists Char.IsControl)
@@ -82,12 +93,26 @@ module WorkerChecklist =
               if not (LocalAgentHandoff.isDigest context.CandidateManifestDigest) then yield "checklist-candidate-manifest-invalid"
               if not (clean context.Policy.Revision) then yield "checklist-policy-revision-invalid"
               if context.Policy.Validators |> Map.keys |> Set.ofSeq <> Set.ofList requiredKinds then yield "checklist-required-validators-not-exact"
-              if context.Policy.Validators |> Map.exists (fun _ validator -> not (validValidator validator)) then yield "checklist-validator-invalid" ]
+              if context.Policy.Validators |> Map.exists (fun _ validator -> not (validValidator validator)) then yield "checklist-validator-invalid"
+              match context.ConstructionScope with
+              | Some validator when validator.ValidatorId <> ConstructionScopeValidatorId || not (validValidator validator) ->
+                  yield "checklist-construction-scope-validator-invalid"
+              | _ -> () ]
         if not errors.IsEmpty then Error errors
         else
             requirements packet |> Result.map (fun rows ->
+                // A construction package owes one host scope row per member; it
+                // is added to, never substituted for, the system and acceptance rows.
+                let construction =
+                    match context.ConstructionScope with
+                    | None -> []
+                    | Some validator ->
+                        packet.Members |> List.map (fun memberItem ->
+                            { CheckId = "system/" + memberItem.WorkItemId + "/" + kindCode WorkerCheckKind.ConstructionScope
+                              Kind = WorkerCheckKind.ConstructionScope; WorkItemId = memberItem.WorkItemId; ExecutionId = memberItem.ExecutionId
+                              RequirementKeys = List.sort memberItem.RequirementKeys; Validator = Some validator })
                 { Context = context
-                  Rows = rows |> List.map (fun row ->
+                  Rows = rows @ construction |> List.sortBy _.CheckId |> List.map (fun row ->
                       { CheckId = row.CheckId; Kind = row.Kind; WorkItemId = row.WorkItemId; ExecutionId = row.ExecutionId
                         RequirementKeys = row.RequirementKeys
                         Validator = row.Validator |> Option.defaultWith (fun () -> context.Policy.Validators[row.Kind]) }) })
@@ -100,6 +125,9 @@ module WorkerChecklist =
         let frames values = frame (string (List.length values)); List.iter frame values
         frames [ "praxis.worker-checklist/1"; checklist.Context.PacketDigest; checklist.Context.CandidateCommit
                  checklist.Context.CandidateManifestDigest; checklist.Context.Policy.Revision ]
+        // Present only for construction packages, so other identities are unchanged.
+        checklist.Context.ConstructionScope |> Option.iter (fun validator ->
+            frames [ kindCode WorkerCheckKind.ConstructionScope; validator.ValidatorId; validator.InputDigest ])
         frame (string checklist.Context.Policy.Validators.Count)
         for kind, validator in checklist.Context.Policy.Validators |> Map.toList do
             frames [ kindCode kind; validator.ValidatorId; validator.InputDigest ]
@@ -135,6 +163,9 @@ module WorkerChecklist =
                           yield "checklist-no-tests-executed"
                       match run.Verdict with
                       | WorkerCheckVerdict.Passed -> ()
+                      | WorkerCheckVerdict.Failed reason when row.Kind = WorkerCheckKind.ConstructionScope ->
+                          // Host-observed refusal reasons, so the operator sees every one.
+                          yield "checklist-check-failed: " + reason
                       | WorkerCheckVerdict.Failed _ -> yield "checklist-check-failed"
                       | WorkerCheckVerdict.Skipped _ -> yield "checklist-check-skipped"
                       | WorkerCheckVerdict.Unavailable _ -> yield "checklist-check-unavailable" ]

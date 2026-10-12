@@ -15,7 +15,8 @@ module WorkerChecklistTests =
     let internal context (packet: LocalWorkerPacket) (result: LocalWorkerResult) : WorkerChecklistContext =
         { PacketDigest = LocalAgentHandoff.packetDigest packet; CandidateCommit = result.OutputCommit; CandidateManifestDigest = sha '9'
           Policy = { Revision = "fixture-policy-1"; Validators = WorkerChecklist.requiredKinds |> List.map (fun kind ->
-              kind, { ValidatorId = "fixture-" + WorkerChecklist.kindCode kind; InputDigest = sha '8' }) |> Map.ofList } }
+              kind, { ValidatorId = "fixture-" + WorkerChecklist.kindCode kind; InputDigest = sha '8' }) |> Map.ofList }
+          ConstructionScope = None }
     let internal runs (now: DateTimeOffset) (checklist: WorkerChecklist) : WorkerCheckRun list =
         checklist.Rows |> List.map (fun row ->
             { ChecklistDigest = WorkerChecklist.digest checklist; CheckId = row.CheckId; Validator = row.Validator
@@ -144,4 +145,41 @@ module WorkerChecklistTests =
                   let mutable calls = 0
                   let clock () = calls <- calls + 1; if calls = 1 then now else later
                   let baseline = ports packet result clock
-                  WorkerChecklistOperations.verify { baseline with Evaluate = fun checklist -> Ok(runs now checklist) } packet result |> refused code) ]
+                  WorkerChecklistOperations.verify { baseline with Evaluate = fun checklist -> Ok(runs now checklist) } packet result |> refused code)
+          // GH-234 construction-package scope verification (DF-ROS-2026-A074).
+          t "a construction package owes one host construction-scope row per member, bound into the identity" (fun () ->
+              let scope = { ValidatorId = WorkerChecklist.ConstructionScopeValidatorId; InputDigest = sha '4' }
+              let plain = checklist ()
+              let constructed = WorkerChecklist.generate packet { context packet result with ConstructionScope = Some scope } |> ok
+              Assert.equal (plain.Rows.Length + packet.Members.Length) constructed.Rows.Length
+              for memberItem in packet.Members do
+                  let row = constructed.Rows |> List.find (fun row -> row.CheckId = "system/" + memberItem.WorkItemId + "/construction-scope")
+                  Assert.equal WorkerCheckKind.ConstructionScope row.Kind
+                  Assert.equal scope row.Validator
+              // Every existing row is kept exactly; the construction row is added.
+              Assert.isTrue (Set.isSubset (Set.ofList plain.Rows) (Set.ofList constructed.Rows)) "an existing checklist row was removed or changed"
+              Assert.isTrue (WorkerChecklist.digest plain <> WorkerChecklist.digest constructed) "construction scope is not bound into the checklist identity"
+              let changed = WorkerChecklist.generate packet { context packet result with ConstructionScope = Some { scope with InputDigest = sha '3' } } |> ok
+              Assert.isTrue (WorkerChecklist.digest changed <> WorkerChecklist.digest constructed) "pinned host facts are not bound into the identity")
+          t "the construction-scope row is host-only, mandatory and reports every host refusal reason" (fun () ->
+              for invalid in [ { ValidatorId = "worker-scope"; InputDigest = sha '4' }; { ValidatorId = WorkerChecklist.ConstructionScopeValidatorId; InputDigest = "x" } ] do
+                  match WorkerChecklist.generate packet { context packet result with ConstructionScope = Some invalid } with
+                  | Error errors -> Assert.isTrue (List.contains "checklist-construction-scope-validator-invalid" errors) (sprintf "%A" errors)
+                  | Ok _ -> failwith "a non-host construction-scope validator was accepted"
+              let scope = { ValidatorId = WorkerChecklist.ConstructionScopeValidatorId; InputDigest = sha '4' }
+              let constructed = WorkerChecklist.generate packet { context packet result with ConstructionScope = Some scope } |> ok
+              let all = runs now constructed
+              Assert.isTrue (WorkerChecklist.isReady (WorkerChecklist.assess packet now constructed all)) "host-observed construction scope refused"
+              let omitted = all |> List.filter (fun run -> not (run.CheckId.EndsWith "/construction-scope"))
+              WorkerChecklist.assess packet now constructed omitted |> rejects "construction-scope:checklist-evidence-missing"
+              let failed = all |> List.map (fun run ->
+                  if run.CheckId.EndsWith "/construction-scope" then { run with Verdict = WorkerCheckVerdict.Failed "construction-scope-evidence-stale: x; construction-scope-unexpected-file: y" } else run)
+              let assessment = WorkerChecklist.assess packet now constructed failed
+              assessment |> rejects "checklist-check-failed: construction-scope-evidence-stale: x"
+              assessment |> rejects "construction-scope-unexpected-file: y"
+              // A host that drops the construction validator generates a different
+              // checklist, so evidence for one never satisfies the other.
+              let observed = { ports packet result (fun () -> now) with
+                                 Observe = fun _ _ candidate -> Ok { context packet result with CandidateCommit = candidate; ConstructionScope = Some scope }
+                                 Evaluate = fun checklist -> Ok(runs now checklist |> List.filter (fun run -> not (run.CheckId.EndsWith "/construction-scope"))) }
+              WorkerChecklistOperations.verify observed packet result |> refused "construction-scope:checklist-evidence-missing") ]
