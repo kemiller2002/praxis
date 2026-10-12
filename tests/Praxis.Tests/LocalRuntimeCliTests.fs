@@ -255,7 +255,8 @@ module LocalRuntimeCliTests =
                   // persistence leaves, produced by the same native writer.
                   FileTelemetryFinalizationRepository.finalizeWorkExecutions pilot.Clone "WI-A" |> function Ok() -> () | Error error -> failwith error
                   edit (fun node -> node["completionEvidence"] <- JsonNode.Parse """{"implementation":"member-changes","tests":"acceptance-artifacts"}""")
-                  let resumed = dispatch pilot delegation |> ok
+                  let resumed = dispatch pilot delegation
+                  if resumed.ExitCode <> 0 then failwithf "resume failed: %s (first refusal: %s)" resumed.Error refused.Error
                   Assert.equal "resumed" (text ((JsonNode.Parse resumed.Output).AsArray().[0].["stage"]))
                   Assert.equal integrated (tip pilot)
                   Assert.equal "complete" (state pilot "WI-A")
@@ -270,9 +271,22 @@ module LocalRuntimeCliTests =
                   let workers () = Directory.GetDirectories checkouts |> Array.filter (fun path -> Path.GetFileName(path).StartsWith "worker-") |> Array.length
                   Assert.equal 1 (workers ())
                   GitFixture.git pilot.Clone [ "update-ref"; target; pilot.Source ] |> ignore
-                  let resumed = dispatch pilot delegation |> ok
+                  let resumed = dispatch pilot delegation
+                  if resumed.ExitCode <> 0 then failwithf "resume failed: %s (first refusal: %s)" resumed.Error refused.Error
                   Assert.equal "resumed" (text ((JsonNode.Parse resumed.Output).AsArray().[0].["stage"]))
                   Assert.equal 1 (workers ())
+                  Assert.equal "complete" (state pilot "WI-A")))
+          t "an exit whose archive was lost is archived from the host spool on resume, without relaunching" (fun () ->
+              withPilot (fun pilot ->
+                  let delegation = delegated pilot "A" []
+                  GitFixture.git pilot.Clone [ "update-ref"; "-d"; target ] |> ignore
+                  Assert.equal 3 (dispatch pilot delegation).ExitCode
+                  // Simulates a refused or interrupted archival after the journaled exit.
+                  let submissions = Path.Combine(Path.GetDirectoryName pilot.Config, "submissions")
+                  for entry in Directory.GetDirectories submissions do Directory.Delete(entry, true)
+                  GitFixture.git pilot.Clone [ "update-ref"; target; pilot.Source ] |> ignore
+                  let resumed = dispatch pilot delegation |> ok
+                  Assert.equal "resumed" (text ((JsonNode.Parse resumed.Output).AsArray().[0].["stage"]))
                   Assert.equal "complete" (state pilot "WI-A")))
           t "failed acceptance, forged delegation and replay refuse integration and completion" (fun () ->
               withPilot (fun pilot ->

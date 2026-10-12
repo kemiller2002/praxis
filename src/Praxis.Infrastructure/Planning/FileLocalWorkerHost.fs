@@ -106,6 +106,28 @@ module FileLocalWorkerHost =
                     match stores with
                     | Error error -> return Error error
                     | Ok(dispatch, submissions, journal) ->
+                        // An exit whose archival was refused or interrupted is
+                        // archived now from the host spool, under the same
+                        // checks as the original capture; the spool grants no
+                        // authority and intake still verifies everything.
+                        let archived =
+                            match submissions.Load worker.RepositoryIdentity packet.DispatchId with
+                            | Ok _ -> Ok()
+                            | Error _ ->
+                                FileLocalWorkerOutputSpool.create root worker.SpoolRoot |> Result.bind (fun spool ->
+                                    LocalSpooledDispatch.recover
+                                        { Journal = dispatch; Spool = spool; Submissions = submissions
+                                          NativeRecovery = fun () -> recover() |> Result.bind (fun () -> FileLocalWorkerAssignment.validate root worker.RepositoryIdentity packet)
+                                          ProcessRecovery = fun journal -> LocalDispatchJournal.phase journal |> Result.bind (function
+                                              | LocalDispatchPhase.Exited _ -> Ok()
+                                              | _ -> Error "spool recovery requires an independently journaled worker root exit")
+                                          Now = now }
+                                        worker.RepositoryIdentity packet.DispatchId
+                                    |> Result.map ignore)
+                                |> Result.mapError ((+) "submission was not archived and spool recovery refused: ")
+                        match archived with
+                        | Error error -> return Error error
+                        | Ok() ->
                         let policyRevision () =
                             loadPolicy() |> Result.bind (fun policy ->
                                 bindings.Validators.PolicyRevision() |> Result.map (fun revision -> policy.Revision + "/" + revision))
