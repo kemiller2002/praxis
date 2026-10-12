@@ -24,12 +24,10 @@ still have complete regular-file conflict stages. A modified index cannot
 substitute invented history. The planner preserves both
 independent work-item records, unknown fields, execution/checkpoint provenance
 and original event lines. Shared events occur once. Base events cannot be
-removed, rewritten or reordered, but may have independent events inserted
-between them by a prior branch integration. Shared events anchor the merge:
-both branches must agree on their relative order. Independent events between
-anchors retain each branch's order, with the local branch first where neither
-branch establishes a cross-branch order. This tie is deterministic bookkeeping,
-not a claim about chronological or causal order. Context `updatedAt` is the later
+removed, rewritten or reordered, including across successive merges. A
+deterministic topological merge preserves each branch's relative event order;
+contradictory ordering cycles refuse in ordinary mode. Independent ties are
+serialization, not a claim of chronological or causal order. Context `updatedAt` is the later
 existing UTC observation; lifecycle states are never chosen by timestamp.
 
 Divergent updates to the same work-item/event identity, contradictory order of

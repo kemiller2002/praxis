@@ -322,6 +322,24 @@ module WorkHistoryMergeTests =
                   merge {left with Events = events} right |> refuses
               let b = {baseline with Events = baseline.Events @ ["old2", "original2"]}
               WorkHistoryMerge.plan b {left with Events = List.rev b.Events} {right with Events = b.Events} |> refuses)
+          t "upstream regression: preserves both orders when appended histories overlap" (fun () ->
+              let merged = merge left {right with Events = baseline.Events @ ["e2", "right-event"; "e1", "left-event"]} |> ok
+              Assert.equal ["e0"; "e2"; "e1"] (merged.Events |> List.map fst))
+          t "upstream regression: refuses cyclic ordering even when event identities and contents agree" (fun () ->
+              merge {left with Events = baseline.Events @ ["e1", "left-event"; "e2", "right-event"]}
+                    {right with Events = baseline.Events @ ["e2", "right-event"; "e1", "left-event"]} |> refuses)
+          t "upstream regression: successive merges retain a shared base as an immutable ordered subsequence" (fun () ->
+              let first = merge left right |> ok
+              let next = {right with UpdatedAt = at.AddMinutes 3.; Events = right.Events @ ["e3", "later-event"]}
+              let merged = WorkHistoryMerge.plan right first next |> ok
+              Assert.equal ["e0"; "e1"; "e2"; "e3"] (merged.Events |> List.map fst)
+              Assert.equal (Map.ofList first.Items) (Map.ofList merged.Items))
+          t "upstream regression: refuses removed rewritten reordered or duplicated historical events" (fun () ->
+              let b = {baseline with Events = baseline.Events @ ["e0b", "second base event"]}
+              let l = {left with Events = b.Events @ ["e1", "left-event"]}
+              let r = {right with Events = b.Events @ ["e2", "right-event"]}
+              for events in [ []; ["e0", "rewritten"; "e0b", "second base event"]; List.rev b.Events; b.Events @ b.Events ] do
+                  WorkHistoryMerge.plan b {l with Events = events} r |> refuses)
           t "refuses item removal, duplicate identities and missing identities" (fun () ->
               for items in [ []; baseline.Items @ baseline.Items; baseline.Items @ ["", "missing"] ] do
                   merge {left with Items = items} right |> refuses)
