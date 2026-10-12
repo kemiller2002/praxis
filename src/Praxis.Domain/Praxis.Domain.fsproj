@@ -104,6 +104,7 @@
     <Compile Include="Work/LocalDispatchJournal.fs" />
     <Compile Include="Work/LocalWorkerSubmission.fs" />
     <Compile Include="Work/LocalIntegrationJournal.fs" />
+    <Compile Include="Work/LocalContainment.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />

@@ -22,6 +22,7 @@
     <Compile Include="Work/LocalHandoffInspection.fs" />
     <Compile Include="Work/LocalDispatchReservation.fs" />
     <Compile Include="Work/LocalWorkerSupervision.fs" />
+    <Compile Include="Work/LocalContainedLaunch.fs" />
     <Compile Include="Work/LocalValidator.fs" />
     <Compile Include="Work/LocalWorkerAdapters.fs" />
     <Compile Include="Work/LocalJournaledDispatch.fs" />

@@ -24,6 +24,7 @@ module LocalRuntimeCommands =
         + " | local operator revoke --host-config FILE --key-id ID --revision REV"
         + " | local operator review --host-config FILE --packet FILE --key-id ID --approver NAME --payload FILE"
         + " | local operator delegate --host-config FILE --packet FILE --key-id ID --approver NAME --signature FILE --out FILE"
+        + " | " + LocalContainmentCommands.usage
         + " | local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])"
 
     let private values (name: string) (arguments: string list) =
@@ -232,6 +233,7 @@ module LocalRuntimeCommands =
             } |> finish
         | "operator" :: rest -> operator root rest |> finish
         | "worker-bridge" :: rest -> bridge rest |> finish
+        | "containment" :: rest -> LocalContainmentCommands.run root rest
         | _ ->
             eprintfn "Usage: praxis %s" usage
             2

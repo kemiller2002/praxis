@@ -24,7 +24,17 @@ type LocalValidatorTemplate = { Id: string; Tests: bool; Command: LocalCommandTe
 type LocalWorkerTemplate =
     { AdapterId: string; WorkerId: string
       Roles: Set<ExecutionRole>; OperatingSystems: Set<LocalWorkerOperatingSystem>
-      Command: LocalCommandTemplate }
+      Command: LocalCommandTemplate
+      /// The worker launches only inside a containment profile qualified on
+      /// this host by passing probes; otherwise every launch refuses.
+      RequiresContainment: bool }
+
+/// Host containment profile selection (`praxis.local-host/1` `containment`).
+/// The evidence file is written only by `praxis local containment qualify`.
+type LocalContainmentConfiguration =
+    { Evidence: string
+      Settings: LinuxContainmentSettings
+      MaxEvidenceAge: TimeSpan }
 
 /// Operator-owned controller configuration. It lives outside the repository
 /// and is never read from repository configuration or worker output. It
@@ -42,7 +52,8 @@ type LocalHostConfiguration =
       SystemValidators: Map<WorkerCheckKind, LocalValidatorTemplate>
       AcceptanceValidators: Map<string, LocalValidatorTemplate>
       Workers: LocalWorkerTemplate list
-      CompletionEvidence: (string * LocalEvidenceSource) list }
+      CompletionEvidence: (string * LocalEvidenceSource) list
+      Containment: LocalContainmentConfiguration option }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -167,7 +178,12 @@ module LocalHostConfiguration =
         | other -> fail ("unknown operating system: " + other)
 
     let private worker (element: JsonElement) =
-        exactly element [ "adapterId"; "workerId"; "roles"; "operatingSystems"; "command" ] []
+        exactly element [ "adapterId"; "workerId"; "roles"; "operatingSystems"; "command" ] [ "containment" ]
+        let contained =
+            match (property element "containment") |> Option.map (fun _ -> text element "containment") with
+            | None | Some "none" -> false
+            | Some "required" -> true
+            | Some other -> fail ("unknown worker containment requirement: " + other)
         let roles = strings element "roles" |> List.map role |> Set.ofList
         let systems = strings element "operatingSystems" |> List.map operatingSystem |> Set.ofList
         let template = command (element.GetProperty "command")
@@ -175,7 +191,40 @@ module LocalHostConfiguration =
         if roles.IsEmpty || systems.IsEmpty then fail "invalid worker template"
         // The archived output spool bounds combined stdout/stderr at 64 KiB.
         if template.MaxOutputBytes > 65536 then fail "worker maxOutputBytes must be at most 65536"
-        { AdapterId = text element "adapterId"; WorkerId = text element "workerId"; Roles = roles; OperatingSystems = systems; Command = template }
+        { AdapterId = text element "adapterId"; WorkerId = text element "workerId"; Roles = roles; OperatingSystems = systems; Command = template
+          RequiresContainment = contained }
+
+    /// Defaults are the merged-/usr toolchain and a minimal /etc subset; an
+    /// operator adds pinned toolchains (for example a dotnet root) explicitly.
+    let defaultReadOnlyPaths =
+        [ "/usr"; "/bin"; "/sbin"; "/lib"; "/lib64"; "/lib32"; "/etc/passwd"; "/etc/group"; "/etc/nsswitch.conf"
+          "/etc/hosts"; "/etc/ld.so.cache"; "/etc/localtime"; "/etc/alternatives"; "/etc/ssl/certs" ]
+
+    let private containment repository (element: JsonElement) =
+        exactly element [ "evidence" ] [ "readOnlyPaths"; "environmentAllowlist"; "maxProcesses"; "maxOpenFiles"; "maxFileBytes"; "scratchMegabytes"; "maxEvidenceAgeMinutes" ]
+        let evidence = absolute element "evidence"
+        LocalHostJournalFiles.rootOutside repository (Path.GetDirectoryName evidence) |> ignore
+        let optionalNumber name low high fallback = if (property element name).IsSome then number element name low high else fallback
+        let fileBytes =
+            match property element "maxFileBytes" with
+            | None -> 1073741824L
+            | Some value when value.ValueKind = JsonValueKind.Number ->
+                match value.TryGetInt64() with
+                | true, parsed when parsed >= 4096L && parsed <= 68719476736L -> parsed
+                | _ -> fail "out-of-range number: maxFileBytes"
+            | _ -> fail "invalid number field: maxFileBytes"
+        let settings : LinuxContainmentSettings =
+            { ReadOnlyPaths = (if (property element "readOnlyPaths").IsSome then strings element "readOnlyPaths" else defaultReadOnlyPaths)
+              EnvironmentAllowlist = (if (property element "environmentAllowlist").IsSome then strings element "environmentAllowlist" else [ "PATH"; "LANG"; "HOME"; "TMPDIR" ]) |> Set.ofList
+              MaxProcesses = optionalNumber "maxProcesses" 8 65536 256
+              MaxOpenFiles = optionalNumber "maxOpenFiles" 16 1048576 1024
+              MaxFileBytes = fileBytes
+              ScratchMegabytes = optionalNumber "scratchMegabytes" 1 65536 256 }
+        match LinuxContainment.checkSettings settings with
+        | Error reason -> fail ("containment settings refused: " + reason)
+        | Ok() ->
+            { Evidence = evidence; Settings = settings
+              MaxEvidenceAge = TimeSpan.FromMinutes(float (optionalNumber "maxEvidenceAgeMinutes" 1 43200 1440)) }
 
     let private evidenceSource = function
         | "member-changes" -> LocalEvidenceSource.MemberChanges
@@ -195,7 +244,7 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds" ]
+                         [ "lockTimeoutMilliseconds"; "containment" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
@@ -225,6 +274,10 @@ module LocalHostConfiguration =
                 if entry.Value.ValueKind <> JsonValueKind.String || not (clean entry.Name) then fail "invalid completion evidence entry"
                 entry.Name, evidenceSource (entry.Value.GetString())) |> Seq.toList
             if completion.IsEmpty then fail "completionEvidence must name at least one native evidence type"
+            let parsedWorkers = workers.EnumerateArray() |> Seq.map worker |> Seq.toList
+            let containmentSettings = property root "containment" |> Option.map (containment repository)
+            if containmentSettings.IsNone && parsedWorkers |> List.exists _.RequiresContainment then
+                fail "a worker requires containment but the host configuration has no containment profile"
             Ok { Path = Path.GetFullPath path
                  Digest = "sha256:" + (SHA256.HashData content |> Convert.ToHexString).ToLowerInvariant()
                  RepositoryRoot = repository; RepositoryIdentity = text root "repositoryIdentity"
@@ -239,8 +292,9 @@ module LocalHostConfiguration =
                  ValidatorPolicyRevision = text root "validatorPolicyRevision"
                  SystemValidators = systemValidators
                  AcceptanceValidators = acceptanceValidators |> List.map (fun item -> item.Id, item) |> Map.ofList
-                 Workers = workers.EnumerateArray() |> Seq.map worker |> Seq.toList
-                 CompletionEvidence = completion }
+                 Workers = parsedWorkers
+                 CompletionEvidence = completion
+                 Containment = containmentSettings }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->
