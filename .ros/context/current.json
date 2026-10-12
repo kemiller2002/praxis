@@ -9806,18 +9806,48 @@
     {
       "id": "WI-0094",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T20:30:21.260Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/LocalWorkerProcess.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalWorkerPortabilityTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T20:42:44.342Z",
       "telemetryExecutionIds": [
         "EXE-20261012T203022523Z-0f3c3833"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "2ab15df62231ea4fff698891",
+        "recordedAt": "2026-10-12T20:42:41.116Z",
+        "executionId": "EXE-20261012T203022523Z-0f3c3833",
+        "repository": "repository-operating-system",
+        "branch": "fix/worker-stream-drain-grace",
+        "commit": "e6110b7820f520009b4e09e65f8305aa3070c5f3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/worker-stream-drain-grace",
+        "remoteCommit": "e6110b7820f520009b4e09e65f8305aa3070c5f3",
+        "summary": "Stream drain grace after root exit raised from 500 ms to a named 5 s constant; portability 29/29, local worker process 8/8, local runtime cli 5/5",
+        "nextAction": "Complete WI-0094 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T20:42:44.342Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T20:30:21.260Z",
+  "updatedAt": "2026-10-12T20:42:44.342Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
