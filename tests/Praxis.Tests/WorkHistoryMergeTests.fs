@@ -113,14 +113,17 @@ module WorkHistoryMergeTests =
           t "refuses a forged index stage even when all three stages exist" (fun () -> fixture (fun root context events ->
               let before = File.ReadAllText context, File.ReadAllText events
               let replacement = CliHarness.git root ["rev-parse"; "other:.ros/context/current.json"]
+              let originalStage = CliHarness.git root ["rev-parse"; ":2:.ros/context/current.json"]
+              Assert.isTrue (replacement <> originalStage) "fixture branches must have different committed histories"
               let start = ProcessStartInfo("git", WorkingDirectory = root, RedirectStandardInput = true, UseShellExecute = false)
               start.ArgumentList.Add "update-index"
               start.ArgumentList.Add "--index-info"
               use child = Process.Start start
-              child.StandardInput.WriteLine($"100644 {replacement} 2\t.ros/context/current.json")
+              child.StandardInput.Write($"100644 {replacement} 2\t.ros/context/current.json\n")
               child.StandardInput.Close()
               child.WaitForExit()
               Assert.equal 0 child.ExitCode
+              Assert.equal replacement (CliHarness.git root ["rev-parse"; ":2:.ros/context/current.json"])
               FileWorkHistoryMerge.run root true |> refuses
               Assert.equal before (File.ReadAllText context, File.ReadAllText events)))
           t "resumes an exact interrupted transaction without duplicating events" (fun () -> fixture (fun root context events ->
