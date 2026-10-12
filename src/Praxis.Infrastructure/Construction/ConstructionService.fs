@@ -40,6 +40,11 @@ module ConstructionService =
             node["kind"] <- JsonValue.Create "resolve"
             node["subject"] <- JsonValue.Create subject
             node["question"] <- JsonValue.Create question
+        | Artifacts.ResolveEffectFailure(effect, subject, question) ->
+            node["kind"] <- JsonValue.Create "resolve-effect-failure"
+            node["effect"] <- JsonValue.Create effect
+            node["subject"] <- JsonValue.Create subject
+            node["question"] <- JsonValue.Create question
         | Artifacts.VerifyIndependently what ->
             node["kind"] <- JsonValue.Create "verify-independently"
             node["what"] <- JsonValue.Create what
