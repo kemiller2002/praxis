@@ -1,7 +1,7 @@
 # Host containment for local workers
 
 Work: [#231](https://github.com/kemiller2002/praxis/issues/231),
-[#235](https://github.com/kemiller2002/praxis/issues/235) (phase 6), local item `WI-0089`.
+[#235](https://github.com/kemiller2002/praxis/issues/235) (phase 6), local item `WI-0092` (re-identified from WI-0089 after an ID collision).
 Decision: [DF-ROS-2026-A073](../research/decisions/DF-ROS-2026-A073--probe-qualified-linux-worker-containment.md).
 
 A Git worktree, a prompt, a provider permission mode or a post-hoc diff is
