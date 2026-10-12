@@ -155,3 +155,46 @@ module ConstructionTree =
                 if kind.Trim() <> "blob" then Error("source document is not a committed file: " + path)
                 else succeed git repository Map.empty "" [ "cat-file"; "blob"; commit + ":" + path ])
             |> Result.map (fun content -> content, digest content)
+
+    /// The entry at an exact path in a commit's tree: None when absent,
+    /// otherwise its mode and, for a regular file, its content. Nothing is
+    /// followed; a link, submodule or tree is reported by its mode.
+    let entryAt git repository (commit: string) (path: string) : Result<(string * string option) option, string> =
+        if not (LocalAgentHandoff.isResourcePath path) then Error("not a portable repository path: " + path)
+        else
+            succeed git repository Map.empty "" [ "ls-tree"; "-z"; "--full-tree"; commit; "--"; ":(literal)" + path ] |> Result.bind (fun listing ->
+                match listing.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
+                | [] -> Ok None
+                | [ entry ] ->
+                    match entry.Split('\t', 2) with
+                    | [| header; listed |] when listed = path ->
+                        match header.Split(' ') with
+                        | [| "100644"; "blob"; objectId |] when isObject objectId ->
+                            succeed git repository Map.empty "" [ "cat-file"; "blob"; objectId ] |> Result.map (fun content -> Some("100644", Some content))
+                        | [| mode; _; _ |] -> Ok(Some(mode, None))
+                        | _ -> Error "unexpected Git tree listing"
+                    | _ -> Error "unexpected Git tree listing"
+                | _ -> Error "unexpected Git tree listing")
+
+    /// The most recent commit reachable from `commit` whose message carries
+    /// every one of `trailers` as an exact line, or None.
+    let findCommitWithTrailers git repository (commit: string) (trailers: string list) : Result<string option, string> =
+        let greps = trailers |> List.map (fun trailer -> "--grep=" + trailer)
+        succeed git repository Map.empty "" ([ "rev-list"; "--fixed-strings"; "--all-match" ] @ greps @ [ commit; "--" ])
+        |> Result.bind (fun listing ->
+            listing.Split('\n', StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+            |> List.fold (fun acc candidate ->
+                acc |> Result.bind (function
+                    | Some found -> Ok(Some found)
+                    | None ->
+                        let candidate = candidate.Trim()
+                        succeed git repository Map.empty "" [ "log"; "-1"; "--format=%B"; candidate ] |> Result.map (fun body ->
+                            let lines = body.Split('\n') |> Array.map _.TrimEnd('\r') |> Set.ofArray
+                            if trailers |> List.forall lines.Contains then Some candidate else None))) (Ok None))
+
+    /// The first parent of a commit, or None for a root commit.
+    let parentOf git repository (commit: string) =
+        succeed git repository Map.empty "" [ "rev-list"; "--parents"; "-n"; "1"; commit ] |> Result.map (fun line ->
+            match line.Trim().Split(' ') |> Array.toList with
+            | _ :: parent :: _ -> Some parent
+            | _ -> None)
