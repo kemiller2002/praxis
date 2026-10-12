@@ -76,7 +76,7 @@ module ConcreteAcceptanceFlowTests =
                     { Integration = integration; ObserveNative = native; CandidateEvidence = candidateEvidence
                       Evidence = FileEvidenceRepository.create root; QualityGate = (fun _ _ -> Ok()); CheckpointGuard = fun _ -> Ok() }
                 let applied = LocalIntegration.run integration packet.RepositoryIdentity packet.DispatchId target
-                let outcome = applied |> Result.bind (fun _ -> FileLocalIntegratedCompletion.commitLockedWith effects completion packet.RepositoryIdentity packet.DispatchId target Actor.unknown Map.empty None)
+                let outcome = applied |> Result.bind (fun _ -> FileLocalIntegratedCompletion.commitLockedWith effects completion packet.RepositoryIdentity packet.DispatchId target Actor.unknown (fun _ -> Ok Map.empty) None)
                 test root effects source output (readTarget target |> ok) outcome
                 Ok()) |> ok))
 

@@ -113,6 +113,7 @@ let main argv =
     @ ExecutionBindingTests.tests
     @ ExecutionLifecycleLeaseTests.tests
     @ FileLocalGitCandidatesTests.tests
+    @ LocalRuntimeCliTests.tests
     @ WebExecutionTests.tests
     @ InstallationRegistrationTests.tests
     @ CommitOwnershipTests.tests

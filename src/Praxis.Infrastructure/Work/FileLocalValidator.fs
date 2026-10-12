@@ -60,6 +60,11 @@ module FileLocalValidator =
                 @ [ string request.Dependencies.Count ]
                 @ (request.Dependencies |> Map.toList |> List.collect (fun (path, value) -> [ path; value ])))
 
+    /// The signed pin for a host-selected request; never a passing result.
+    let inputDigest request =
+        try Ok(inputs request)
+        with error -> Error("validator input pin refused: " + error.Message)
+
     let private run spec cancellation =
         LocalWorkerProcess.runControllerTool spec cancellation
 

@@ -51,8 +51,19 @@ module FileLocalWorkerAssignment =
         if node["schema"].GetValue<string>() <> "ordo.execution/1" then invalidOp "native execution schema differs"
         ExecutionJson.readEnvelope node |> function Ok value -> value | Error error -> invalidOp error
 
+    /// Envelopes qualify work items exactly as the execution binding does:
+    /// with the repository observed from the origin remote, else unqualified.
+    let private envelopeWorkItem root =
+        let repository = Praxis.Infrastructure.Execution.GitWorkspace.remoteUrl root |> Option.bind Praxis.Domain.Installation.Target.repositoryFromRemote
+        (fun (id: string) -> match repository with Some repo -> repo + ":" + id | None -> id),
+        (fun (workItem: string) ->
+            match repository with
+            | Some repo -> workItem.StartsWith(repo + ":", StringComparison.Ordinal)
+            | None -> not (workItem.Contains ':' || workItem.Contains '#'))
+
     let validate root repositoryIdentity (packet: LocalWorkerPacket) =
         try
+            let qualified, ownWorkItem = envelopeWorkItem root
             let require condition reason = if not condition then invalidOp reason
             require ((LocalAgentHandoff.packetProblems packet).IsEmpty) "native assignment packet is malformed"
             let config = read (Path.Combine(root, "ros.json")) |> JsonNode.Parse
@@ -65,14 +76,22 @@ module FileLocalWorkerAssignment =
             let groups = read (FileWorkGroupRepository.path root) |> WorkGroupJson.readGroupStore |> function Ok store -> store.Groups | Error error -> invalidOp error
             let group = match groups |> List.filter (fun g -> g.Declaration.Id = packet.GroupId) with [ g ] -> g | _ -> invalidOp "native assignment group is missing or ambiguous"
             let members = packet.Members |> List.map _.WorkItemId |> Set.ofList
-            require (group.HomeRepository = Some repositoryIdentity && not group.Declaration.CrossRepository
+            // Groups record their home and executions under the repository name
+            // observed from the origin remote; the packet's identity is the
+            // configured repository identity checked above.
+            let home = FileWorkGroupFacts.thisRepository root
+            require (home.IsSome && group.HomeRepository = home && not group.Declaration.CrossRepository
                      && group.Declaration.Members.Length = packet.Members.Length
-                     && Set.ofList group.Declaration.Members = members) "native assignment group membership or home differs"
+                     && Set.ofList group.Declaration.Members = members)
+                (sprintf "native assignment group membership or home differs (observed home %A, group home %A, cross-repository %b)"
+                    home group.HomeRepository group.Declaration.CrossRepository)
             let links = packet.Members |> List.map (fun m -> m.WorkItemId, m.ExecutionId) |> Set.ofList
             let runs = group.Executions |> List.filter (fun e ->
                 e.GroupId = packet.GroupId && e.Repository = repositoryIdentity
                 && (e.Members |> List.map (fun m -> m.WorkItemId, m.ExecutionId) |> Set.ofList) = links)
-            require (runs.Length = 1 && runs.Head.Members.Length = packet.Members.Length) "native assignment group execution links differ or are ambiguous"
+            require (runs.Length = 1 && runs.Head.Members.Length = packet.Members.Length)
+                (sprintf "native assignment group execution links differ or are ambiguous (%d matching of %A)" runs.Length
+                    (group.Executions |> List.map (fun e -> e.Repository, e.Members |> List.map (fun m -> m.WorkItemId, m.ExecutionId))))
             let context = read (Path.Combine(root, ".ros", "context", "current.json")) |> WorkContextPlanContract.parseJson |> function Ok view -> view.WorkItems | Error error -> invalidOp error
             let telemetryRoot = Path.Combine(root, ".ros", "telemetry", "executions")
             require (LocalHostJournalFiles.noLinks telemetryRoot) "native telemetry directory is linked"
@@ -92,11 +111,11 @@ module FileLocalWorkerAssignment =
                 let active = telemetry |> Array.filter (fun (_, work, state) -> work = memberItem.WorkItemId && state = "active")
                 require (active = [| memberItem.ExecutionId, memberItem.WorkItemId, "active" |]) "native member active telemetry differs or is ambiguous"
                 let execution = envelope root memberItem.ExecutionId
-                require (execution.ExecutionId = memberItem.ExecutionId && execution.WorkItem = repositoryIdentity + ":" + memberItem.WorkItemId
+                require (execution.ExecutionId = memberItem.ExecutionId && execution.WorkItem = qualified memberItem.WorkItemId
                          && execution.State = ExecutionState.Active && execution.BaselineRevision = packet.SourceCommit) "native member envelope or baseline differs"
             let parent, child = envelope root packet.ParentExecutionId, envelope root packet.ChildExecutionId
             require (parent.ExecutionId = packet.ParentExecutionId && parent.State = ExecutionState.Active
-                     && parent.WorkItem.StartsWith(repositoryIdentity + ":", StringComparison.Ordinal)) "native coordinator envelope differs"
+                     && ownWorkItem parent.WorkItem) "native coordinator envelope differs"
             require (child.ExecutionId = packet.ChildExecutionId && child.State = ExecutionState.Active
                      && child.WorkItem = parent.WorkItem && child.Parent = Some parent.ExecutionId
                      && child.Authority.Role = packet.Role && child.Actor.Id = packet.WorkerId

@@ -96,6 +96,18 @@ type LocalEcirHostStore internal (settings: LocalEcirHostSettings, clock: unit -
                     && updated.Grants = (current.Grants |> List.map (fun old ->
                         if old.GroupId = groupId then { old with ReceiptJson = grant.ReceiptJson } else old))
                 | _ -> false
+            | "granted", Some groupId, Some receiptHash ->
+                // A new cohort grant for a group the policy does not yet name,
+                // carrying a receipt from a currently trusted signer.
+                match current.TrustedSigners |> Map.tryFind audit.KeyId,
+                      updated.Grants |> List.filter (fun grant -> grant.GroupId = groupId) with
+                | Some signer, [ grant ] when signer.Approver = audit.Approver ->
+                    updated.TrustedSigners = current.TrustedSigners
+                    && not (current.Grants |> List.exists (fun old -> old.GroupId = groupId))
+                    && not (String.IsNullOrWhiteSpace grant.ReceiptJson)
+                    && receiptHash = EcirDispatchTransaction.hashText grant.ReceiptJson
+                    && updated.Grants = current.Grants @ [ grant ]
+                | _ -> false
             | _ -> false
     let recoverNative () =
         EcirDispatchTransaction.recover settings.RepositoryRoot (Path.Combine(root, "dispatch.pending.json")) ignore

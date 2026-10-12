@@ -25,6 +25,19 @@ module LocalWorkerFixture =
             Console.OpenStandardOutput().WriteByte 0xffuy
             0
         | "nonzero" -> Console.In.ReadToEnd() |> ignore; 17
+        // Deterministic stand-in for an agent command: edits the checkout it
+        // runs in. Never presented as a model worker.
+        | "agent-write" when arguments.Length = 2 ->
+            Console.In.ReadToEnd() |> ignore
+            let path = Path.Combine(Directory.GetCurrentDirectory(), arguments[0])
+            Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+            File.WriteAllText(path, arguments[1])
+            0
+        // Independent acceptance fixture: the candidate file must contain text.
+        | "require-file" when arguments.Length = 2 ->
+            Console.In.ReadToEnd() |> ignore
+            let path = Path.Combine(Directory.GetCurrentDirectory(), arguments[0])
+            if File.Exists path && File.ReadAllText(path).Contains arguments[1] then 0 else 1
         | "validator-trx" when arguments.Length = 2 || arguments.Length = 3 ->
             Console.In.ReadToEnd() |> ignore
             let ns = System.Xml.Linq.XNamespace.Get "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"

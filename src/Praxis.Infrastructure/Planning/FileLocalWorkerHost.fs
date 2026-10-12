@@ -28,7 +28,10 @@ type LocalWorkerAcceptanceBindings =
       ObserveResult: LocalWorkerPacket -> LocalWorkerResult -> Result<LocalWorkerResultObservation, string>
       Integration: LocalSubmissionIntakePorts -> LocalIntegrationJournalStore -> LocalIntegrationPorts
       Completion: LocalIntegrationPorts -> LocalIntegratedCompletionPorts
-      EventActor: Actor; ReadinessRecords: Map<string, JsonObject>; Conclusion: string option }
+      EventActor: Actor
+      /// Quality readiness records for the exact planned completion.
+      Readiness: WorkContextPlan -> Result<Map<string, JsonObject>, string>
+      Conclusion: string option }
 
 /// Concrete portable composition. Native/policy leases span admission, launch,
 /// observation, spool sealing and immutable archival. No acceptance is inferred.
@@ -134,7 +137,7 @@ module FileLocalWorkerHost =
                             LocalIntegration.run integration worker.RepositoryIdentity packet.DispatchId targetRef
                             |> Result.bind (fun _ ->
                                 FileLocalIntegratedCompletion.commitLocked root completion worker.RepositoryIdentity packet.DispatchId targetRef
-                                    bindings.EventActor bindings.ReadinessRecords bindings.Conclusion)) })))
+                                    bindings.EventActor bindings.Readiness bindings.Conclusion)) })))
 
     /// Dispatch and acceptance are separate scopes; acceptance always reopens
     /// current policy and native state after the worker has exited and archived.
