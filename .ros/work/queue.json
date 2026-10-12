@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 89,
+  "nextSeq": 90,
   "items": [
     {
       "id": "WI-0001",
@@ -5970,15 +5970,36 @@
       "sourceReference": null
     },
     {
-      "id": "WI-0090",
-      "title": "Host stamps the construction plan binding so agents never hand-copy cohort digests (pilot 01 finding F1)",
+      "id": "WI-0089",
+      "title": "Resuming an exited local dispatch whose submission was never archived fails instead of archiving from the host spool (Windows CI intermittent)",
       "description": null,
       "tags": [],
       "priority": "medium",
       "status": "complete",
       "attachments": [],
-      "createdAt": "2026-10-12T18:43:23.446Z",
-      "updatedAt": "2026-10-12T18:46:40.243Z",
+      "createdAt": "2026-10-12T17:12:11.717Z",
+      "updatedAt": "2026-10-12T17:57:12.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0093",
+      "title": "work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows.",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-12T19:22:26.023Z",
+      "updatedAt": "2026-10-12T19:22:26.023Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
