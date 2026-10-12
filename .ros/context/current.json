@@ -9929,10 +9929,19 @@
     {
       "id": "WI-0093",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T22:31:34.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkHistoryMerge.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkBacklogMergeTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T23:21:47.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T223135083Z-f84233da"
       ],
@@ -9955,7 +9964,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-12T23:21:47.000Z"
     },
     {
       "id": "WI-0098",
@@ -10001,7 +10011,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T22:37:59.7300000+00:00",
+  "updatedAt": "2026-10-12T23:21:47.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
