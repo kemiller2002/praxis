@@ -6012,15 +6012,15 @@
       "sourceReference": null
     },
     {
-      "id": "WI-0095",
-      "title": "Self-hosted containment qualification workflow: real probes only on an explicitly provisioned, disposable runner; hosted CI stays a fail-closed gate; CI qualification reported unavailable until provisioned (owner decision 2026-10-12)",
+      "id": "WI-0094",
+      "title": "Windows CI: the worker supervisor allowed only 500 ms for output pumps to drain after root exit, truncating a complete result on a loaded runner (portability host test on PR #250)",
       "description": null,
       "tags": [],
       "priority": "medium",
       "status": "complete",
       "attachments": [],
-      "createdAt": "2026-10-12T20:52:16.597Z",
-      "updatedAt": "2026-10-12T20:53:45.338Z",
+      "createdAt": "2026-10-12T20:30:20.438Z",
+      "updatedAt": "2026-10-12T20:42:44.342Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
