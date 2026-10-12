@@ -406,7 +406,23 @@ module ExecutionGovernanceTests =
                   Assert.isTrue (domain.Contains $"<PackageReference Include=\"EchelonFoundry.Ordo.Core\" Version=\"{version}\" />") "Praxis.Domain pins the locked version"
                   let config = File.ReadAllText(Path.Combine(root, "NuGet.config"))
                   Assert.isTrue (config.Contains "<package pattern=\"EchelonFoundry.Ordo.Core\" />") "the package restores only from the vendored source"
-                  Assert.equal [ $"echelonfoundry.ordo.core.{version}.nupkg"; "ordo-core.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.filter (fun name -> name.Contains "ordo") |> Array.sort |> List.ofArray) }
+                  Assert.equal [ $"echelonfoundry.ordo.core.{version}.nupkg"; "ordo-core.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.filter (fun name -> name.Contains "ordo.core" || name.Contains "ordo-core") |> Array.sort |> List.ofArray) }
+          { Name = "ordo construction: the engine package is the pinned, checksum-verified Ordo release artifact of the same version (Praxis #242)"
+            Run =
+              fun () ->
+                  let root = repositoryRoot (DirectoryInfo AppContext.BaseDirectory)
+                  let lock = File.ReadAllText(Path.Combine(root, "vendor", "nuget", "ordo-construction.lock"))
+                  let version = lockValue lock "ordo"
+                  Assert.equal (lockValue (File.ReadAllText(Path.Combine(root, "vendor", "nuget", "ordo-core.lock"))) "ordo") version
+                  let package = Path.Combine(root, "vendor", "nuget", $"echelonfoundry.ordo.construction.{version}.nupkg")
+                  let digest = Convert.ToHexString(Security.Cryptography.SHA256.HashData(File.ReadAllBytes package)).ToLowerInvariant()
+                  Assert.equal (lockValue lock "sha256") digest
+                  Assert.equal $"https://github.com/kemiller2002/ordo/releases/download/v{version}/ordo-construction.nupkg" (lockValue lock "url")
+                  let infrastructure = File.ReadAllText(Path.Combine(root, "src", "Praxis.Infrastructure", "Praxis.Infrastructure.fsproj"))
+                  Assert.isTrue (infrastructure.Contains $"<PackageReference Include=\"EchelonFoundry.Ordo.Construction\" Version=\"{version}\" />") "Praxis.Infrastructure pins the locked version"
+                  let config = File.ReadAllText(Path.Combine(root, "NuGet.config"))
+                  Assert.isTrue (config.Contains "<package pattern=\"EchelonFoundry.Ordo.Construction\" />") "the package restores only from the vendored source"
+                  Assert.equal [ $"echelonfoundry.ordo.construction.{version}.nupkg"; "ordo-construction.lock" ] (Directory.GetFiles(Path.Combine(root, "vendor", "nuget")) |> Array.map Path.GetFileName |> Array.filter (fun name -> name.Contains "construction") |> Array.sort |> List.ofArray) }
           { Name = "limen routing: the package is the pinned, checksum-verified Limen release asset, restored only from vendor/nuget (DF-ROS-2026-A057)"
             Run =
               fun () ->

@@ -2951,7 +2951,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "installation" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> InstallationCommands.run root actor rest)
     | family :: rest when family = "repository" || family = "instance" -> IdentityCommands.run root Version (ProvenanceCommands.withResolvedActor rest) family rest
     | "plan" :: "execute-group" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecuteGroupCommands.run root rest (fun arguments actor -> runWorkStart root arguments actor))
-    | ("handoff" | "local") as family :: rest -> LocalRuntimeCommands.route root family rest ProvenanceCommands.withResolvedActor
+    | ("handoff" | "local" | "construct") as family :: rest -> LocalRuntimeCommands.route root family rest ProvenanceCommands.withResolvedActor
     | "plan" :: rest -> PlanCommands.run root Version rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest

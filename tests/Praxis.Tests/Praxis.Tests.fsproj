@@ -169,6 +169,7 @@
     <Compile Include="ConcreteAcceptanceFlowTests.fs" />
     <Compile Include="FileLocalGitCandidatesTests.fs" />
     <Compile Include="LocalRuntimeCliTests.fs" />
+    <Compile Include="ConstructionCliTests.fs" />
     <Compile Include="LocalOperatorTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
@@ -186,5 +187,6 @@
     <None Include="Golden/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Fixtures/claude-session-transcript.jsonl" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Fixtures/limen-0.9.0-views.routes.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures/construction/**/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
