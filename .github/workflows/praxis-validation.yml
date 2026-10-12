@@ -104,7 +104,8 @@ jobs:
         env:
           PRAXIS_TEST_FILTER: local runtime cli
 
-  # Functional portability is separate from OS containment qualification.
+  # Functional portability is separate from OS containment qualification;
+  # the containment step qualifies Linux only and asserts refusal elsewhere.
   local-worker-portability:
     strategy:
       fail-fast: false
@@ -137,6 +138,15 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: "local validator:"
+      # Containment is qualified only by real probes (docs/containment.md).
+      # Linux: an independent unshare precheck decides; where user namespaces
+      # work every probe must pass, otherwise qualification and launch must
+      # refuse. macOS/Windows have no mechanism and must refuse. No parity.
+      - name: Host containment qualification (Linux probes or refusal; macOS/Windows refuse)
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: "local containment:"
+          PRAXIS_TEST_CONTAINMENT: ${{ runner.os == 'Linux' && 'auto' || 'unavailable' }}
 
   # The lifecycle commands must work on every supported operating system,
   # straight from the F# CLI with its embedded scaffold payload.
