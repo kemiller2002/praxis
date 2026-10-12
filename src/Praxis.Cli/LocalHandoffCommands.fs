@@ -34,6 +34,8 @@ module LocalHandoffCommands =
             printfn "  Decisions: %s" (String.concat ", " p.DecisionIds)
             for memberItem in p.Members do printfn "  Member %s [%s]: %s" memberItem.WorkItemId memberItem.ExecutionId (String.concat ", " memberItem.RequirementKeys)
             for obligation in p.Acceptance do printfn "  Acceptance %s for %s: %s [%s]" obligation.ObligationId obligation.WorkItemId obligation.ValidatorId obligation.InputDigest
+            for row in WorkerChecklist.requirements p |> Result.defaultValue [] do
+                printfn "  REQUIRED %s [%s]: unobserved" row.CheckId row.ExecutionId
             for dependency in assignment.Dependencies do
                 printfn "  Dependency %s [%s]; proposed producers: %s" dependency.WorkItemId dependency.EvidenceDigest (if dependency.ProposedProducers.IsEmpty then "outside supplied packets" else String.concat ", " dependency.ProposedProducers)
             for reason in assignment.BlockingReasons do printfn "  BLOCK %s" reason

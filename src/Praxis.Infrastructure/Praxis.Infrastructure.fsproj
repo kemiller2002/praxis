@@ -54,6 +54,7 @@
     <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
     <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileWorkHistoryMerge.fs" />
     <Compile Include="Work/FileCompletionReadiness.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />

@@ -121,6 +121,8 @@ module LocalIntegratedCompletion =
                                    || integration.TargetRef <> targetRef || journal.AppliedAt.IsNone then Error "completion integration journal differs or is not applied"
                                 else fresh ports journal |> Result.bind (fun snapshot ->
                                     ports.Integration.ValidateCandidate snapshot integration |> Result.bind (fun () ->
+                                        WorkerChecklistOperations.verifyCandidate { ports.Integration.Intake.Checklists with Now = ports.Integration.Intake.Now }
+                                            snapshot.Packet snapshot.Result integration.CandidateCommit |> Result.bind (fun verified ->
                                         ports.CandidateEvidence snapshot integration |> Result.bind (fun evidence ->
                                             ports.ObserveNative() |> Result.bind (fun observed ->
                                                 ports.CheckpointGuard (snapshot.Packet.Members |> List.map _.WorkItemId) |> Result.bind (fun () ->
@@ -132,5 +134,7 @@ module LocalIntegratedCompletion =
                                                             else ports.Integration.ReadTarget targetRef |> Result.bind (fun actual ->
                                                                 if actual <> integration.CandidateCommit then Error "completion target no longer equals candidate"
                                                                 else fresh ports journal |> Result.bind (fun _ ->
-                                                                    if ports.Integration.Intake.Now() < DateTimeOffset.Parse(planned.Native.UpdatedAt) then Error "completion clock moved backwards"
-                                                                    else Ok planned)))))))))))))))
+                                                                    WorkerChecklistOperations.recheckCandidate { ports.Integration.Intake.Checklists with Now = ports.Integration.Intake.Now }
+                                                                        snapshot.Packet snapshot.Result integration.CandidateCommit verified |> Result.bind (fun () ->
+                                                                            if ports.Integration.Intake.Now() < DateTimeOffset.Parse(planned.Native.UpdatedAt) then Error "completion clock moved backwards"
+                                                                            else Ok planned)))))))))))))))))

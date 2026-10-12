@@ -38,6 +38,7 @@ module LocalSubmissionIntakeTests =
           Authority = fun () -> Ok { Enabled = true; Revision = packet.AuthorityRevision; ExpectedPacket = packet }
           Prerequisites = fun () -> Ok(packet.Prerequisites |> List.map (fun p -> p.WorkItemId, p.EvidenceDigest) |> Map.ofList)
           Observe = fun _ _ -> Ok LocalAgentHandoffTests.observed
+          Checklists = WorkerChecklistTests.ports packet LocalAgentHandoffTests.result (fun () -> now)
           Now = fun () -> now }
     let private inspect ports = LocalSubmissionIntake.inspect ports packet.RepositoryIdentity packet.DispatchId
     let private exitJournal journal =
@@ -63,7 +64,37 @@ module LocalSubmissionIntakeTests =
         node.ToJsonString()
 
     let tests =
-        [ t "saved bytes survive reopened stores and reach only independently checked awaiting integration" (fun () -> fixture true (fun repo journals submissions journal store ->
+        [ t "missing or forged checklist evidence blocks intake despite passing worker acceptance claims" (fun () -> fixture true (fun _ _ _ journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let baseline = intakePorts journal store
+              for evaluate in [ (fun _ -> Ok []); (fun checklist -> Ok(WorkerChecklistTests.runs now checklist |> List.map (fun run -> { run with ChecklistDigest = "sha256:" + String('0', 64) }))) ] do
+                  rejects (inspect { baseline with Checklists = { baseline.Checklists with Evaluate = evaluate } })))
+          t "invalid worker results are refused before any checklist validators run" (fun () -> fixture true (fun _ _ _ journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let baseline = intakePorts journal store
+              let mutable calls = 0
+              let ports = { baseline with Observe = fun _ _ -> Ok { LocalAgentHandoffTests.observed with ChangedPaths = Error "unverified paths" }
+                                          Checklists = { baseline.Checklists with Evaluate = fun _ -> calls <- calls + 1; Error "must not run" } }
+              rejects (inspect ports)
+              Assert.equal 0 calls))
+          t "revocation and path changes during checklist verification refuse fresh intake" (fun () -> fixture true (fun _ _ _ journal store ->
+              save journal store payload 0 |> ok |> ignore
+              for revoke in [ false; true ] do
+                  let mutable evaluated = false
+                  let baseline = intakePorts journal store
+                  let ports =
+                      { baseline with
+                          Observe = fun _ _ -> Ok(if evaluated && not revoke then { LocalAgentHandoffTests.observed with ChangedPaths = Ok [] } else LocalAgentHandoffTests.observed)
+                          Authority = fun () -> Ok { Enabled = not (evaluated && revoke); Revision = packet.AuthorityRevision; ExpectedPacket = packet }
+                          Checklists = { baseline.Checklists with Evaluate = fun checklist -> evaluated <- true; Ok(WorkerChecklistTests.runs now checklist) } }
+                  rejects (inspect ports)))
+          t "blocked packages can be inspected but never use validators or authorize integration" (fun () -> fixture true (fun _ _ _ journal store ->
+              let blocked = { LocalAgentHandoffTests.result with Members = LocalAgentHandoffTests.result.Members |> List.map (fun memberItem -> { memberItem with Outcome = LocalWorkerOutcome.Blocked }) }
+              save journal store (LocalAgentHandoffJson.renderResult blocked) 0 |> ok |> ignore
+              let baseline = intakePorts journal store
+              let ports = { baseline with Checklists = { baseline.Checklists with Evaluate = fun _ -> failwith "blocked package ran validators" } }
+              Assert.equal (Ok LocalResultDisposition.NoIntegration) (inspect ports)))
+          t "saved bytes survive reopened stores and reach only independently checked awaiting integration" (fun () -> fixture true (fun repo journals submissions journal store ->
               let raw = "\n " + payload + "\n"
               Assert.equal (Ok LocalSubmissionSaveOutcome.Created) (save journal store raw 0)
               let reopenedJournal = FileLocalDispatchJournal.create repo journals |> ok
