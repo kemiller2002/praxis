@@ -6017,10 +6017,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-12T20:52:16.597Z",
-      "updatedAt": "2026-10-12T20:52:16.890Z",
+      "updatedAt": "2026-10-12T20:53:45.338Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

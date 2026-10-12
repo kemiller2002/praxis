@@ -9859,18 +9859,48 @@
     {
       "id": "WI-0095",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T20:52:17.245Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/containment-qualification.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalContainmentTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T20:53:45.338Z",
       "telemetryExecutionIds": [
         "EXE-20261012T205218071Z-8cccd597"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "870ee7159c3cf95cb79c3c58",
+        "recordedAt": "2026-10-12T20:53:41.676Z",
+        "executionId": "EXE-20261012T205218071Z-8cccd597",
+        "repository": "repository-operating-system",
+        "branch": "feat/gh-231-linux-containment",
+        "commit": "ba1aa5e6707db7a74e3f49f5376945473c261a92",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/gh-231-linux-containment",
+        "remoteCommit": "ba1aa5e6707db7a74e3f49f5376945473c261a92",
+        "summary": "Added containment-qualification.yml (self-hosted, dispatch-only, no secrets, marker-checked, per-runner record, cleanup); renamed hosted step to fail-closed gate; docs and A073 updated; local evidence preserved; step dry-run locally qualified 35/35",
+        "nextAction": "Complete WI-0095 and drive PR #248 green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T20:53:45.338Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T20:52:17.245Z",
+  "updatedAt": "2026-10-12T20:53:45.338Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

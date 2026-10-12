@@ -325,7 +325,7 @@
 | WI-0090 | WI-0090 | complete |  |  |
 | WI-0092 | WI-0092 | complete |  |  |
 | WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | captured |  | medium |
-| WI-0095 | Self-hosted containment qualification workflow: real probes only on an explicitly provisioned, disposable runner; hosted CI stays a fail-closed gate; CI qualification reported unavailable until provisioned (owner decision 2026-10-12) | ready |  | medium |
+| WI-0095 | Self-hosted containment qualification workflow: real probes only on an explicitly provisioned, disposable runner; hosted CI stays a fail-closed gate; CI qualification reported unavailable until provisioned (owner decision 2026-10-12) | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
