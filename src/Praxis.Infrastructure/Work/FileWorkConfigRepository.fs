@@ -317,6 +317,14 @@ module WorkerChecklistCompletionPolicy =
                     (blocked |> List.map _.Id |> String.concat ", ")
                     (blocked |> List.map _.WorkType |> List.distinct |> String.concat ", "))
 
+    /// Reads the native work context itself, for standalone completion paths.
+    let refuseStandaloneAt (root: string) (ids: string list) =
+        let path = Path.Combine(root, ".ros", "context", "current.json")
+        if not (File.Exists path) then Ok()
+        else
+            Praxis.Contracts.Work.WorkContextPlanContract.parseJson (File.ReadAllText path)
+            |> Result.bind (fun context -> refuseStandalone root context.WorkItems ids)
+
     /// The runtime refuses members whose type is not delegated, so no member
     /// it dispatched can later complete through a standalone path.
     let requireDelegated (root: string) (items: LiveWorkItem list) (ids: string list) =

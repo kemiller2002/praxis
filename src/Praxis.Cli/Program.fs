@@ -1507,15 +1507,10 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                             // A prior completion may have committed its native
                             // context before backlog acknowledgement was lost.
                             let recovered = FileNativeCompletionEffects.recoverBacklogLocked root
-                            match readWorkContext root, recovered |> Result.bind (fun () -> CheckpointCommands.completionGuard root ids) with
+                            match readWorkContext root, recovered |> Result.bind (fun () -> CheckpointCommands.completionGuard root ids) |> Result.bind (fun () -> WorkerChecklistCompletionPolicy.refuseStandaloneAt root ids) with
                             | Error message, _
                             | _, Error message -> Error message
                             | Ok context, Ok() ->
-                                // Delegated work types complete only through the
-                                // checklist-enforcing local runtime.
-                                match WorkerChecklistCompletionPolicy.refuseStandalone root context.WorkItems ids with
-                                | Error message -> Error message
-                                | Ok() ->
                                 let repositoryId = FileWorkConfigRepository.readRepositoryId root
 
                                 match realObservedGitPaths root with
@@ -2956,8 +2951,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "installation" :: rest -> ProvenanceCommands.withResolvedActor rest (fun actor -> InstallationCommands.run root actor rest)
     | family :: rest when family = "repository" || family = "instance" -> IdentityCommands.run root Version (ProvenanceCommands.withResolvedActor rest) family rest
     | "plan" :: "execute-group" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecuteGroupCommands.run root rest (fun arguments actor -> runWorkStart root arguments actor))
-    | "handoff" :: rest -> LocalHandoffCommands.run root rest
-    | "local" :: rest -> LocalRuntimeCommands.route root rest ProvenanceCommands.withResolvedActor
+    | ("handoff" | "local") as family :: rest -> LocalRuntimeCommands.route root family rest ProvenanceCommands.withResolvedActor
     | "plan" :: rest -> PlanCommands.run root Version rest
     | "adapter" :: "call" :: rest -> runAdapterCall root rest
     | "adapter" :: "publish" :: rest -> runAdapterPublish root rest

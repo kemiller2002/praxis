@@ -86,7 +86,8 @@ module LocalRuntimeCommands =
             if dispatches.IsEmpty then return! Error(LocalCommandFailure.Invalid "at least one --dispatch PACKET=DELEGATION is required")
             else
                 let! reports = LocalRuntimeService.run root actor config dispatches target (CheckpointCommands.completionGuard root) announce
-                if json then printfn "%s" ((JsonArray(reports |> List.map (LocalRuntimeService.reportNode >> fun node -> node :> JsonNode) |> List.toArray)).ToJsonString())
+                let rendered = JsonArray(reports |> List.map (LocalRuntimeService.reportNode >> fun node -> node :> JsonNode) |> List.toArray)
+                let () = if json then printfn "%s" (rendered.ToJsonString())
                 return 0
         }
 
@@ -211,8 +212,10 @@ module LocalRuntimeCommands =
             return 0
         }
 
-    let route (root: string) (arguments: string list) (withActor: string list -> (Actor -> int) -> int) =
+    /// `handoff` (read-only inspection) and `local` share one CLI entry.
+    let route (root: string) (family: string) (arguments: string list) (withActor: string list -> (Actor -> int) -> int) =
         match arguments with
+        | _ when family = "handoff" -> LocalHandoffCommands.run root arguments
         | "run" :: rest -> withActor rest (fun actor -> run root actor rest |> finish)
         | "status" :: rest ->
             attempt {
