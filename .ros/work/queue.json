@@ -5975,10 +5975,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-12T18:43:23.446Z",
-      "updatedAt": "2026-10-12T18:43:23.725Z",
+      "updatedAt": "2026-10-12T18:46:40.243Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
