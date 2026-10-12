@@ -9894,7 +9894,27 @@
       "updatedAt": "2026-10-12T22:31:34.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T223135083Z-f84233da"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "0cb1b86d347331ea9f4bcf27",
+        "recordedAt": "2026-10-12T22:43:42.000Z",
+        "executionId": "EXE-20261012T223135083Z-f84233da",
+        "repository": "repository-operating-system",
+        "branch": "fix/history-merge-backlog",
+        "commit": "040f6ed4a713c277594cb1a59c9066f28634f343",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/history-merge-backlog",
+        "remoteCommit": "040f6ed4a713c277594cb1a59c9066f28634f343",
+        "summary": "Backlog queue merge implemented in native history merge with planner, adapter, tests and docs",
+        "nextAction": "Merge origin/main using the new merge, run full suite, complete WI-0093, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
