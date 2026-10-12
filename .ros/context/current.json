@@ -9564,10 +9564,23 @@
     {
       "id": "GH-234",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-11T21:15:24.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "docs/local-runtime.md"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A070--concrete-local-coordinator-worker-runtime.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T16:46:18.000Z",
       "telemetryExecutionIds": [
         "EXE-20261011T204811145Z-23f864b2",
         "EXE-20261012T115318275Z-92ff2d62"
@@ -9592,7 +9605,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-12T16:46:18.000Z"
     },
     {
       "id": "GH-235",
@@ -9628,10 +9642,19 @@
     {
       "id": "WI-0088",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T15:58:51.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileTelemetryFinalizationRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ContinuationCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T16:46:08.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T155852350Z-6072fb45"
       ],
@@ -9654,12 +9677,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-12T16:46:08.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T15:58:51.000Z",
+  "updatedAt": "2026-10-12T16:46:18.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
