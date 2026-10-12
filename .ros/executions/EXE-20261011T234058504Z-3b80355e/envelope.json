@@ -30,7 +30,7 @@
   "workspace": "checkout:EXE-20261011T234058504Z-3b80355e",
   "workspaceBinding": {
     "id": "checkout:EXE-20261011T234058504Z-3b80355e",
-    "branch": "feat/local-controller-activation",
+    "branch": "feat/approved-order-amendment",
     "path": null,
     "mechanism": "working-directory"
   },

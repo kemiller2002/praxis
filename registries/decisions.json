@@ -2538,8 +2538,10 @@
             "runtime": "codex"
           },
           "at": "2026-10-12T00:43:35.000Z",
+          "last": "2026-10-12T11:34:08.551Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "User-approved extension after strict-prefix refusal; preserve both ordered branch histories"
         }
@@ -2561,6 +2563,6 @@
     ],
     "title": "Preserve ordered native histories across prior branch insertions",
     "updated": "2026-10-12",
-    "version": "1.0.0"
+    "version": "1.2.0"
   }
 ]
