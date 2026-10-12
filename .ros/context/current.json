@@ -9683,10 +9683,19 @@
     {
       "id": "WI-0089",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T17:12:16.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/FileLocalWorkerHost.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T17:57:12.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T171217219Z-d54381c9"
       ],
@@ -9709,12 +9718,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-12T17:57:12.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T17:12:16.0000000+00:00",
+  "updatedAt": "2026-10-12T17:57:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
