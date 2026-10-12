@@ -51,6 +51,10 @@ incarnation observations and signing keys. Concrete vendor bridges, prerequisite
 evidence binding and a model-worker pilot remain follow-ups. Equivalent OS isolation
 is deferred by user instruction.
 
+The [concrete validator runner](local-validator-runners.md) now supplies bounded
+candidate/tool observations and fresh TRX evidence. Controller/checklist wiring,
+protected custody and native effects remain separate activation prerequisites.
+
 ## Verification
 
 Local Linux verification passed 29 portability tests (12 adapter, 8 assignment,

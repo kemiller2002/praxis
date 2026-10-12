@@ -73,25 +73,25 @@ module WorkerChecklistTests =
           t "failed, skipped and unavailable checks cannot be marked complete" (fun () ->
               for verdict, code in [ WorkerCheckVerdict.Failed "bad", "check-failed"; WorkerCheckVerdict.Skipped "not run", "check-skipped"
                                      WorkerCheckVerdict.Unavailable "missing runtime", "check-unavailable" ] do
-                  runs now (checklist()) |> modifyFirst (fun run -> { run with Verdict = verdict }) |> assessment |> rejects code)
+                  runs now (checklist()) |> modifyFirst (fun (run: WorkerCheckRun) -> { run with Verdict = verdict }) |> assessment |> rejects code)
           t "a passing test command with zero or unknown test count refuses" (fun () ->
               for count in [ None; Some 0; Some -1 ] do
-                  runs now (checklist()) |> List.map (fun run -> if run.CheckId.EndsWith("/tests", StringComparison.Ordinal) then { run with TestsExecuted = count } else run)
+                  runs now (checklist()) |> List.map (fun (run: WorkerCheckRun) -> if run.CheckId.EndsWith("/tests", StringComparison.Ordinal) then { run with TestsExecuted = count } else run)
                   |> assessment |> rejects "no-tests-executed")
           t "wrong validator, stale checklist and malformed evidence digest refuse" (fun () ->
               for change, code in [ (fun (run: WorkerCheckRun) -> { run with Validator = { run.Validator with ValidatorId = "worker-self-approval" } }), "validator-mismatch";
                                    (fun (run: WorkerCheckRun) -> { run with Validator = { run.Validator with InputDigest = sha '3' } }), "validator-mismatch";
-                                   (fun run -> { run with ChecklistDigest = sha '3' }), "evidence-stale";
-                                   (fun run -> { run with EvidenceDigest = "passed" }), "evidence-digest-invalid" ] do
+                                   (fun (run: WorkerCheckRun) -> { run with ChecklistDigest = sha '3' }), "evidence-stale";
+                                   (fun (run: WorkerCheckRun) -> { run with EvidenceDigest = "passed" }), "evidence-digest-invalid" ] do
                   runs now (checklist()) |> modifyFirst change |> assessment |> rejects code)
           t "future, reversed, pre-assignment and non-UTC run times refuse" (fun () ->
-              for change in [ (fun run -> { run with FinishedAt = now.AddSeconds 1. })
-                              (fun run -> { run with StartedAt = now.AddSeconds 1. })
-                              (fun run -> { run with StartedAt = packet.IssuedAt.AddSeconds(-1.) })
-                              (fun run -> { run with FinishedAt = now.ToOffset(TimeSpan.FromHours 1.) }) ] do
+              for change in [ (fun (run: WorkerCheckRun) -> { run with FinishedAt = now.AddSeconds 1. })
+                              (fun (run: WorkerCheckRun) -> { run with StartedAt = now.AddSeconds 1. })
+                              (fun (run: WorkerCheckRun) -> { run with StartedAt = packet.IssuedAt.AddSeconds(-1.) })
+                              (fun (run: WorkerCheckRun) -> { run with FinishedAt = now.ToOffset(TimeSpan.FromHours 1.) }) ] do
                   runs now (checklist()) |> modifyFirst change |> assessment |> rejects "evidence-time-invalid")
           t "a member cannot borrow a sibling's successful evidence" (fun () ->
-              runs now (checklist()) |> List.map (fun run -> { run with CheckId = run.CheckId.Replace("WI-2", "WI-1").Replace("VERIFY-2", "VERIFY-1") })
+              runs now (checklist()) |> List.map (fun (run: WorkerCheckRun) -> { run with CheckId = run.CheckId.Replace("WI-2", "WI-1").Replace("VERIFY-2", "VERIFY-1") })
               |> assessment |> rejects "evidence-missing")
           t "removing or rewriting a generated checklist row refuses" (fun () ->
               let original = checklist()

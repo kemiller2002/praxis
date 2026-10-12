@@ -17,8 +17,10 @@ Preview changes no history files. Apply reads only Git's regular-file stages
 to match the actual single merge base, HEAD and incoming commit. A modified
 index cannot substitute an invented history. It preserves both
 independent work-item records, unknown fields, execution/checkpoint provenance
-and original event lines. Shared events occur once. The immutable base prefix
-cannot be removed, rewritten or reordered. Context `updatedAt` is the later
+and original event lines. Shared events occur once. Base events cannot be
+removed, rewritten or reordered, including across successive merges. A
+deterministic topological merge preserves each branch's relative event order;
+contradictory ordering cycles refuse. Context `updatedAt` is the later
 existing UTC observation; lifecycle states are never chosen by timestamp.
 
 Divergent updates to the same work-item/event identity, duplicate/missing IDs,

@@ -31,8 +31,7 @@ module LocalWorkerProcess =
             let actual = "sha256:" + (SHA256.HashData executable |> Convert.ToHexString).ToLowerInvariant()
             if actual <> spec.ExecutableDigest then Error "host executable changed before start" else Ok()
 
-    /// Explicit observer dependency permits mechanism fixtures; it does not confer host trust.
-    let runWithPlatform (platform: LocalWorkerProcessPlatform) onOutput spec onStarted (cancellation: CancellationToken) = task {
+    let private runCore (platform: LocalWorkerProcessPlatform) identify onOutput spec onStarted (cancellation: CancellationToken) = task {
         let rejected outcome started =
             { ProcessIdentity = None; ProcessStarted = started; RootExitObserved = false; Outcome = outcome
               StandardOutput = ""; StandardError = ""; CapturedBytes = 0 }
@@ -83,9 +82,9 @@ module LocalWorkerProcess =
                 let errPump = pump LocalWorkerOutputStream.StandardError child.StandardError.BaseStream stderr
                 let identity =
                     try
-                        platform.ObserveIdentity child |> Result.bind (fun value ->
-                            if String.IsNullOrWhiteSpace value || not (safeText 1024 value) || Seq.exists Char.IsControl value then Error "invalid observed process incarnation"
-                            else Ok value)
+                        identify child |> Result.bind (function
+                            | Some value when String.IsNullOrWhiteSpace value || not (safeText 1024 value) || Seq.exists Char.IsControl value -> Error "invalid observed process incarnation"
+                            | value -> Ok value)
                     with e -> Error(errorText e.Message)
                 let recorded = identity |> Result.bind (fun id -> try onStarted id with e -> Error(errorText e.Message))
                 let writeInput = task {
@@ -142,8 +141,24 @@ module LocalWorkerProcess =
                         | _ -> ()
                         Encoding.UTF8.GetString bytes
                 let output, error = decode (stdout.ToArray()), decode (stderr.ToArray())
-                return { ProcessIdentity = identity |> Result.toOption; ProcessStarted = Some true; RootExitObserved = rootExit
+                return { ProcessIdentity = identity |> Result.toOption |> Option.flatten; ProcessStarted = Some true; RootExitObserved = rootExit
                          Outcome = outcome; StandardOutput = output; StandardError = error; CapturedBytes = captured } }
+
+    /// Worker dispatch still requires an actual observed incarnation before
+    /// input delivery. There is no PID-only or controller-tool fallback.
+    let runWithPlatform (platform: LocalWorkerProcessPlatform) onOutput spec onStarted cancellation =
+        runCore platform (fun child -> platform.ObserveIdentity child |> Result.map Some) onOutput spec
+            (function Some identity -> onStarted identity | None -> Error "worker incarnation required") cancellation
+
+    /// Short-lived, host-selected tools such as Git can exit before StartTime
+    /// can be queried. Supervise their actual Process handle, not a persistent
+    /// worker reservation. Return a different type with no worker identity.
+    let runControllerTool spec cancellation = task {
+        let! result = runCore LocalWorkerProcessPlatform.dotNet (fun _ -> Ok None) (fun _ _ -> Ok()) spec (fun _ -> Ok()) cancellation
+        return { LocalControllerToolObservation.ProcessStarted = result.ProcessStarted
+                 RootExitObserved = result.RootExitObserved; Outcome = result.Outcome
+                 StandardOutput = result.StandardOutput; StandardError = result.StandardError
+                 CapturedBytes = result.CapturedBytes } }
 
     let runWithOutputObservation observer onOutput spec onStarted cancellation =
         runWithPlatform { LocalWorkerProcessPlatform.dotNet with ObserveIdentity = observer } onOutput spec onStarted cancellation

@@ -11,7 +11,7 @@ open Praxis.Infrastructure.Work
 /// Deterministic subprocess fixtures, not agents or a local model pilot.
 [<RequireQualifiedAccess>]
 module LocalWorkerFixture =
-    let run mode arguments =
+    let run mode (arguments: string list) =
         match mode with
         | "echo" ->
             let input = Console.In.ReadToEnd()
@@ -25,6 +25,23 @@ module LocalWorkerFixture =
             Console.OpenStandardOutput().WriteByte 0xffuy
             0
         | "nonzero" -> Console.In.ReadToEnd() |> ignore; 17
+        | "validator-trx" when arguments.Length = 2 ->
+            Console.In.ReadToEnd() |> ignore
+            let ns = System.Xml.Linq.XNamespace.Get "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"
+            let attr (name: string) (value: string) : obj = System.Xml.Linq.XAttribute(System.Xml.Linq.XName.Get name, value) :> obj
+            let element name (children: obj list) = System.Xml.Linq.XElement(ns + name, children |> List.toArray)
+            let passed = arguments[1] = "pass"
+            let counters = element "Counters" [ attr "total" "1"; attr "executed" "1"; attr "passed" (if passed then "1" else "0")
+                                                attr "failed" (if passed then "0" else "1"); attr "error" "0"; attr "notExecuted" "0" ]
+            let result = element "UnitTestResult" [ attr "executionId" "fixture-execution"; attr "outcome" (if passed then "Passed" else "Failed") ]
+            element "TestRun" [ element "Results" [ result ]; element "ResultSummary" [ attr "outcome" "Completed"; counters ] ]
+            |> fun document -> document.Save arguments[0]
+            // A failing test artifact deliberately accompanies exit zero.
+            0
+        | "validator-edit" when arguments.Length = 1 ->
+            Console.In.ReadToEnd() |> ignore
+            File.WriteAllText(arguments[0], "changed during validation")
+            0
         | "result" ->
             Console.In.ReadToEnd() |> ignore
             Console.Write(Praxis.Contracts.Work.LocalAgentHandoffJson.renderResult LocalAgentHandoffTests.result)

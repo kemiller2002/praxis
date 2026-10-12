@@ -36,6 +36,7 @@
     <Compile Include="Work/FileLocalIntegrationJournal.fs" />
     <Compile Include="Work/LocalWorkerProcessPlatform.fs" />
     <Compile Include="Work/LocalWorkerProcess.fs" />
+    <Compile Include="Work/FileLocalValidator.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
