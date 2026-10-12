@@ -15,16 +15,16 @@ confidence: medium
 derived_from: [DF-ROS-2026-A064]
 provenance:
   contributions:
-    EXE-20261012T180755548Z-a8f00e5c:
+    EXE-20261012T185235269Z-42495e91:
       operations: [created]
-      at: 2026-10-12T18:38:41.568Z
+      at: 2026-10-12T18:53:03.126Z
       actor:
         kind: agent
         id: anthropic/claude-code
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "Record probe-qualified Linux worker containment and honest refusal on macOS/Windows (WI-0089, GH-231/GH-235 phase 6)"
+      reason: "Record probe-qualified Linux worker containment and honest refusal on macOS/Windows (WI-0092, re-identified from WI-0089 after an ID collision with PR #246; GH-231/GH-235 phase 6)"
 ---
 
 # Context

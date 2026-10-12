@@ -1,7 +1,7 @@
 {
   "schema": "ordo.execution/1",
-  "executionId": "EXE-20261012T180755548Z-a8f00e5c",
-  "workItem": "kemiller2002/praxis:WI-0089",
+  "executionId": "EXE-20261012T185235269Z-42495e91",
+  "workItem": "kemiller2002/praxis:WI-0092",
   "actor": {
     "id": "anthropic/claude-code",
     "kind": "agent",
@@ -25,11 +25,11 @@
     "verification.verdict",
     "review.accept"
   ],
-  "baselineRevision": "3f6e5622a267149be0b35aaacc5e9dc0e002e069",
+  "baselineRevision": "9175ee60a3e48837d6dbd79c2f2857f873e33820",
   "candidateRevision": null,
-  "workspace": "checkout:EXE-20261012T180755548Z-a8f00e5c",
+  "workspace": "checkout:EXE-20261012T185235269Z-42495e91",
   "workspaceBinding": {
-    "id": "checkout:EXE-20261012T180755548Z-a8f00e5c",
+    "id": "checkout:EXE-20261012T185235269Z-42495e91",
     "branch": "feat/gh-231-linux-containment",
     "path": null,
     "mechanism": "working-directory"
@@ -49,7 +49,7 @@
   "evaluator": null,
   "humanOnlyTransitions": [],
   "parentExecution": null,
-  "startedAt": "2026-10-12T18:07:56.551Z",
+  "startedAt": "2026-10-12T18:52:36.283Z",
   "state": "active",
   "stateReason": null,
   "origin": {
