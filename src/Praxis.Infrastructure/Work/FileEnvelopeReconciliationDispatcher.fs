@@ -176,6 +176,8 @@ module FileEnvelopeReconciliationDispatcher =
             let memberGuard =
                 if requestedAction = WorkAction.Begin then
                     EcirMemberGuard.refuseUngovernedMembers realRoot [ envelope.WorkItem ]
+                elif requestedAction = WorkAction.Complete then
+                    WorkerChecklistCompletionPolicy.refuseStandalone realRoot context.WorkItems [ envelope.WorkItem ]
                 else Ok()
             let gitPaths =
                 if requestedAction = WorkAction.Complete || (requestedAction = WorkAction.Begin && context.StartedAt.IsNone) then

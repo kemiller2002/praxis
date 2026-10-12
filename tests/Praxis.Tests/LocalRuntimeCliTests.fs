@@ -110,6 +110,10 @@ module LocalRuntimeCliTests =
         try
             let _, clone = installedRepository parent "repo"
             let repository = FileWorkConfigRepository.readRepositoryId clone
+            let rosJson = Path.Combine(clone, "ros.json")
+            let settings = JsonNode.Parse(File.ReadAllText rosJson)
+            settings["workProtocol"].["workerChecklists"] <- JsonNode.Parse """{"delegatedTypes":["delegated-task"]}"""
+            File.WriteAllText(rosJson, settings.ToJsonString())
             CliHarness.write clone "docs/spec.md" "R-A: src/a.txt contains alpha\nR-B: src/b.txt contains beta\nR-C: src/c.txt contains gamma\n"
             CliHarness.write clone "docs/manifest.json" "{\"source\":\"local runtime fixture\"}"
             CliHarness.write clone "docs/blueprint.json" "{\"cohorts\":[\"A\",\"B\",\"C\"]}"
@@ -166,7 +170,7 @@ module LocalRuntimeCliTests =
                             "--decision"; "DEC-" + id; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
                 sign pilot payload signature
                 run pilot [ "local"; "operator"; "grant"; "--host-config"; config; "--draft"; draft; "--signature"; signature; "--revision"; revision ] |> ok |> ignore
-                PraxisCli.run clone (Some coordinator) [ "plan"; "execute-group"; "GROUP-LOCAL-" + groupNumber id; "--occurred-at"; now (); "--member"; "WI-" + id ] |> ok |> ignore
+                PraxisCli.run clone (Some coordinator) [ "plan"; "execute-group"; "GROUP-LOCAL-" + groupNumber id; "--occurred-at"; now (); "--member"; "WI-" + id; "--type"; "delegated-task" ] |> ok |> ignore
                 // Every member has begun; this closes the coordinator's group execution.
                 PraxisCli.run clone (Some coordinator) [ "plan"; "execute-group"; "GROUP-LOCAL-" + groupNumber id; "--occurred-at"; now () ] |> ok |> ignore
             for id in [ "a"; "b"; "c" ] do
@@ -246,6 +250,10 @@ module LocalRuntimeCliTests =
                   Assert.equal 3 failed.ExitCode
                   Assert.isTrue (failed.Error.Contains "acceptance") failed.Error
                   Assert.equal pilot.Source (tip pilot)
+                  Assert.equal "active" (state pilot "WI-C")
+                  // Delegated work cannot bypass its checklist through standalone completion.
+                  let standalone = run pilot [ "work"; "complete"; "--id"; "WI-C"; "--occurred-at"; now (); "--evidence"; "implementation=docs/spec.md"; "--evidence"; "tests=docs/spec.md" ]
+                  Assert.isTrue (standalone.ExitCode <> 0 && standalone.Error.Contains "praxis local run") standalone.Error
                   Assert.equal "active" (state pilot "WI-C")
                   // Re-running resumes acceptance of the archived exit; it never relaunches.
                   let again = dispatch pilot (packet, delegation)

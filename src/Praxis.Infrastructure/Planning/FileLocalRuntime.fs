@@ -260,7 +260,10 @@ module FileLocalRuntime =
             elif not (LocalIntegrationJournal.isTargetRef request.TargetRef) then Error "invalid integration target ref"
             else
                 let host = hostStore configuration
-                bindings configuration policy actor request registry worktrees sessionId cancellation
+                readContext configuration.RepositoryRoot
+                |> Result.bind (fun context ->
+                    WorkerChecklistCompletionPolicy.requireDelegated configuration.RepositoryRoot context.WorkItems (packet.Members |> List.map _.WorkItemId))
+                |> Result.bind (fun () -> bindings configuration policy actor request registry worktrees sessionId cancellation)
                 |> Result.bind (fun (worker, acceptance) ->
                     dispatchPhase configuration packet.DispatchId |> Result.bind (fun phase ->
                         let outcome, stage =

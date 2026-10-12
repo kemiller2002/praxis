@@ -1,5 +1,6 @@
 namespace Praxis.Infrastructure.Work
 
+open System
 open System.IO
 open System.Text.Json
 open Praxis.Domain.Work
@@ -223,6 +224,23 @@ module FileWorkConfigRepository =
     /// way when absent) and every other type-keyed entry, matching
     /// production's own `config.evidence[item.type] ?? config.evidence.default`
     /// per-type fallback.
+    /// `workProtocol.workerChecklists.delegatedTypes`: native work types that
+    /// complete only through the checklist-enforcing local runtime. Absent or
+    /// empty means no type is delegated (the documented legacy policy).
+    let readDelegatedTypes (root: string) : Set<string> =
+        match readWorkProtocol root with
+        | None -> Set.empty
+        | Some element ->
+            match element.TryGetProperty "workerChecklists" with
+            | true, checklists when checklists.ValueKind = JsonValueKind.Object ->
+                match checklists.TryGetProperty "delegatedTypes" with
+                | true, types when types.ValueKind = JsonValueKind.Array ->
+                    types.EnumerateArray()
+                    |> Seq.choose (fun item -> if item.ValueKind = JsonValueKind.String && not (String.IsNullOrWhiteSpace(item.GetString())) then Some(item.GetString()) else None)
+                    |> Set.ofSeq
+                | _ -> Set.empty
+            | _ -> Set.empty
+
     let readCompletionEvidence (root: string) : Set<string> * Map<string, Set<string>> =
         let fallbackDefault = Set.ofList [ "implementation"; "tests" ]
 
@@ -281,3 +299,30 @@ module FileWorkConfigRepository =
                     None
 
         fromConfig |> Option.defaultValue (Path.GetFileName(root.TrimEnd('/', '\\')))
+
+/// Migration contract for generated worker checklists. Work types listed in
+/// `workProtocol.workerChecklists.delegatedTypes` complete only through the
+/// local runtime, which enforces each member's independently observed
+/// checklist before integration and native completion. Standalone completion
+/// paths refuse them; unlisted types keep the previous readiness policy.
+[<RequireQualifiedAccess>]
+module WorkerChecklistCompletionPolicy =
+    let refuseStandalone (root: string) (items: LiveWorkItem list) (ids: string list) =
+        let delegated = FileWorkConfigRepository.readDelegatedTypes root
+        match items |> List.filter (fun item -> List.contains item.Id ids && delegated.Contains item.WorkType) with
+        | [] -> Ok()
+        | blocked ->
+            Error(
+                sprintf "%s is delegated work (%s); complete it through `praxis local run` so its generated worker checklist is enforced (workProtocol.workerChecklists.delegatedTypes)"
+                    (blocked |> List.map _.Id |> String.concat ", ")
+                    (blocked |> List.map _.WorkType |> List.distinct |> String.concat ", "))
+
+    /// The runtime refuses members whose type is not delegated, so no member
+    /// it dispatched can later complete through a standalone path.
+    let requireDelegated (root: string) (items: LiveWorkItem list) (ids: string list) =
+        let delegated = FileWorkConfigRepository.readDelegatedTypes root
+        if delegated.IsEmpty then Error "workProtocol.workerChecklists.delegatedTypes is not configured; the local runtime requires it"
+        else
+            match ids |> List.filter (fun id -> not (items |> List.exists (fun item -> item.Id = id && delegated.Contains item.WorkType))) with
+            | [] -> Ok()
+            | missing -> Error(sprintf "members are not of a delegated work type: %s" (String.concat ", " missing))

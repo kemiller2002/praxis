@@ -1511,6 +1511,11 @@ let private runWorkComplete root arguments (eventActor: Actor) =
                             | Error message, _
                             | _, Error message -> Error message
                             | Ok context, Ok() ->
+                                // Delegated work types complete only through the
+                                // checklist-enforcing local runtime.
+                                match WorkerChecklistCompletionPolicy.refuseStandalone root context.WorkItems ids with
+                                | Error message -> Error message
+                                | Ok() ->
                                 let repositoryId = FileWorkConfigRepository.readRepositoryId root
 
                                 match realObservedGitPaths root with

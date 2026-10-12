@@ -21,6 +21,9 @@ open Praxis.Domain.Work
 type LocalBridgeBackend =
     | Command of executable: string * arguments: string list
     | Ollama of endpoint: Uri * model: string
+    /// An unauthenticated local server speaking the OpenAI-compatible chat
+    /// protocol (llama.cpp, vLLM, LM Studio, Ollama's /v1). No API key is read.
+    | OpenAiCompatible of endpoint: Uri * model: string
 
 type LocalBridgeSettings = { Git: string; Backend: LocalBridgeBackend; Worktree: string }
 
@@ -105,39 +108,67 @@ module LocalWorkerBridge =
             line "Reply with only a JSON object: {\"files\":[{\"path\":\"<allowed path>\",\"content\":\"<complete new file content>\"}]}"
         buffer.ToString()
 
+    /// Apply a model's proposed complete file contents, only for exact
+    /// delegated paths inside the checkout.
+    let private applyFiles settings (packet: LocalWorkerPacket) (reply: string) =
+        let proposal = JsonNode.Parse reply
+        match proposal with
+        | :? JsonObject as body when (body["files"] :? JsonArray) ->
+            (body["files"] :?> JsonArray) |> Seq.fold (fun acc file ->
+                acc |> Result.bind (fun () ->
+                    let path = file["path"].GetValue<string>()
+                    let text = file["content"].GetValue<string>()
+                    match inside settings path with
+                    | Some full when List.contains path packet.AllowedPaths ->
+                        Directory.CreateDirectory(Path.GetDirectoryName full) |> ignore
+                        File.WriteAllText(full, text, UTF8Encoding(false))
+                        Ok()
+                    | _ -> Error("model proposed a path outside the delegation: " + path))) (Ok())
+        | _ -> Error "model reply is not a {\"files\":[...]} object"
+
+    let private post (endpoint: Uri) (path: string) (request: JsonObject) (timeout: TimeSpan) =
+        use client = new HttpClient(Timeout = timeout)
+        use content = new StringContent(request.ToJsonString(), Encoding.UTF8, "application/json")
+        let target = Uri(endpoint, path)
+        use response = client.PostAsync(target, content).GetAwaiter().GetResult()
+        let body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+        if response.IsSuccessStatusCode then Ok body
+        else Error(sprintf "model server returned %d: %s" (int response.StatusCode) (bounded body 512))
+
     let private ollama settings (endpoint: Uri) model (packet: LocalWorkerPacket) (timeout: TimeSpan) =
         try
-            use client = new HttpClient(Timeout = timeout)
             let request = JsonObject()
             request["model"] <- JsonValue.Create(model: string)
             request["prompt"] <- JsonValue.Create(prompt settings packet true)
             request["stream"] <- JsonValue.Create false
             request["format"] <- JsonValue.Create "json"
-            use content = new StringContent(request.ToJsonString(), Encoding.UTF8, "application/json")
-            let target = Uri(endpoint, "/api/generate")
-            use response = client.PostAsync(target, content).GetAwaiter().GetResult()
-            let body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-            if not response.IsSuccessStatusCode then Error(sprintf "Ollama returned %d: %s" (int response.StatusCode) (bounded body 512))
-            else
+            post endpoint "/api/generate" request timeout |> Result.bind (fun body ->
                 let envelope = JsonNode.Parse body
-                let reply = envelope["response"].GetValue<string>()
-                let proposal = JsonNode.Parse reply
-                let files = proposal["files"] :?> JsonArray
-                files |> Seq.fold (fun acc file ->
-                    acc |> Result.bind (fun () ->
-                        let path = file["path"].GetValue<string>()
-                        let text = file["content"].GetValue<string>()
-                        match inside settings path with
-                        | Some full when List.contains path packet.AllowedPaths ->
-                            Directory.CreateDirectory(Path.GetDirectoryName full) |> ignore
-                            File.WriteAllText(full, text, UTF8Encoding(false))
-                            Ok()
-                        | _ -> Error("model proposed a path outside the delegation: " + path))) (Ok())
+                applyFiles settings packet (envelope["response"].GetValue<string>()))
         with error -> Error("Ollama backend failed: " + error.Message)
+
+    let private openAi settings (endpoint: Uri) model (packet: LocalWorkerPacket) (timeout: TimeSpan) =
+        try
+            let message = JsonObject()
+            message["role"] <- JsonValue.Create "user"
+            message["content"] <- JsonValue.Create(prompt settings packet true)
+            let request = JsonObject()
+            request["model"] <- JsonValue.Create(model: string)
+            request["messages"] <- JsonArray([| message :> JsonNode |])
+            request["temperature"] <- JsonValue.Create 0.0
+            let format = JsonObject()
+            format["type"] <- JsonValue.Create "json_object"
+            request["response_format"] <- format
+            post endpoint "/v1/chat/completions" request timeout |> Result.bind (fun body ->
+                let envelope = JsonNode.Parse body
+                let choice = envelope["choices"].AsArray()[0]
+                applyFiles settings packet (choice["message"].["content"].GetValue<string>()))
+        with error -> Error("OpenAI-compatible backend failed: " + error.Message)
 
     let private backend settings (packet: LocalWorkerPacket) (timeout: TimeSpan) =
         match settings.Backend with
         | LocalBridgeBackend.Ollama(endpoint, model) -> ollama settings endpoint model packet timeout
+        | LocalBridgeBackend.OpenAiCompatible(endpoint, model) -> openAi settings endpoint model packet timeout
         | LocalBridgeBackend.Command(executable, arguments) ->
             let text = prompt settings packet false
             let expanded = arguments |> List.map (fun value -> value.Replace("{prompt}", text).Replace("{worktree}", settings.Worktree))

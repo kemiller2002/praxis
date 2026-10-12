@@ -30,7 +30,7 @@ module LocalRuntimeCommands =
         + " | local operator revoke --host-config FILE --key-id ID --revision REV"
         + " | local operator review --host-config FILE --packet FILE --key-id ID --approver NAME --payload FILE"
         + " | local operator delegate --host-config FILE --packet FILE --key-id ID --approver NAME --signature FILE --out FILE"
-        + " | local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL])"
+        + " | local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])"
 
     let private values (name: string) (arguments: string list) =
         arguments |> List.pairwise |> List.choose (fun (flag, value) -> if flag = name then Some value else None)
@@ -325,15 +325,16 @@ module LocalRuntimeCommands =
 
     let private bridge arguments =
         required "--git" arguments |> invalid |> Result.bind (fun git ->
+            let endpoint name fallback =
+                match Uri.TryCreate(value name arguments |> Option.defaultValue fallback, UriKind.Absolute) with
+                | true, uri -> Ok uri
+                | _ -> Error(name + " must be an absolute URL")
             let backend =
-                match value "--agent-command" arguments, value "--ollama-model" arguments with
-                | Some command, None -> Ok(LocalBridgeBackend.Command(command, values "--agent-arg" arguments))
-                | None, Some model ->
-                    let endpoint = value "--ollama-endpoint" arguments |> Option.defaultValue "http://127.0.0.1:11434"
-                    match Uri.TryCreate(endpoint, UriKind.Absolute) with
-                    | true, uri -> Ok(LocalBridgeBackend.Ollama(uri, model))
-                    | _ -> Error "--ollama-endpoint must be an absolute URL"
-                | _ -> Error "exactly one of --agent-command or --ollama-model is required"
+                match value "--agent-command" arguments, value "--ollama-model" arguments, value "--openai-model" arguments with
+                | Some command, None, None -> Ok(LocalBridgeBackend.Command(command, values "--agent-arg" arguments))
+                | None, Some model, None -> endpoint "--ollama-endpoint" "http://127.0.0.1:11434" |> Result.map (fun uri -> LocalBridgeBackend.Ollama(uri, model))
+                | None, None, Some model -> endpoint "--openai-endpoint" "http://127.0.0.1:8080" |> Result.map (fun uri -> LocalBridgeBackend.OpenAiCompatible(uri, model))
+                | _ -> Error "exactly one of --agent-command, --ollama-model or --openai-model is required"
             backend |> invalid |> Result.bind (fun backend ->
                 let settings = { Git = git; Backend = backend; Worktree = Directory.GetCurrentDirectory() }
                 LocalWorkerBridge.run settings (Console.In.ReadToEnd()) |> refused |> Result.map (fun result ->
