@@ -49,7 +49,9 @@ journal's root-exit record, and complete output is archived as untrusted input.
 Archive refusal is retained in the dispatch report; uncertain starts do not
 become confirmed submissions. Repeated dispatch refuses instead of relaunching.
 
-This is a library host composition, with no execution CLI. Independent result
+[`praxis local run`](local-runtime.md) composes this host with acceptance,
+integration and native completion. On its own, this module is the dispatch
+half. Independent result
 intake, acceptance, integration and native completion remain separate. Tests
 use real bounded subprocesses and file stores, with synthetic process/native
 incarnation observations and signing keys. Concrete vendor bridges, prerequisite
