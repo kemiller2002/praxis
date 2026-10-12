@@ -19,7 +19,10 @@ type ExecutionFacts =
     { ExecutionId: string
       WorkItemId: string
       StartedAt: string
-      StartedSteps: string list }
+      StartedSteps: string list
+      /// The continuation event and successor execution a finalization cited
+      /// for steps this execution left unresolved (WI-0088).
+      Interruption: (string * string) option }
 
 type ProjectionFacts =
     { WorkItemId: string
@@ -32,6 +35,7 @@ type ContinuationFacts =
       WorkItemId: string
       SuccessorExecutionId: string option
       PredecessorExecutionId: string option
+      PredecessorDisposition: string option
       CheckpointId: string option }
 
 type CheckpointValidationInput =
@@ -188,9 +192,34 @@ module CheckpointValidation =
               finding "checkpoint" $"continuation names checkpoint '{id}', which is not a checkpoint of '{event.WorkItemId}'"
           | _ -> () ]
 
+    /// A finalization may leave steps unresolved only when it cites a
+    /// continuation of the same work item that took this exact execution
+    /// over as interrupted, for the successor it names.
+    let private interruptionFindings (input: CheckpointValidationInput) (execution: ExecutionFacts) =
+        match execution.Interruption with
+        | None -> []
+        | Some(continuationId, successor) ->
+            let cited =
+                input.Continuations
+                |> List.exists (fun event ->
+                    event.EventId = continuationId
+                    && event.IdMatchesContent
+                    && event.WorkItemId = execution.WorkItemId
+                    && event.PredecessorExecutionId = Some execution.ExecutionId
+                    && event.PredecessorDisposition = Some "interrupted"
+                    && event.SuccessorExecutionId = Some successor)
+
+            if cited then
+                []
+            else
+                [ { Path = $".ros/telemetry/executions/{execution.ExecutionId}.json"
+                    Field = "interruption"
+                    Message = $"finalization records steps interrupted under continuation '{continuationId}', which does not take '{execution.ExecutionId}' over as interrupted for '{successor}'" } ]
+
     let findings (input: CheckpointValidationInput) : CheckpointFinding list =
         (input.Events |> List.collect (eventFindings input))
         @ chronologyFindings input.Events
         @ duplicateFindings input.Events
         @ projectionFindings input.Events input.Projections
         @ (input.Continuations |> List.collect (continuationFindings input))
+        @ (input.Executions |> List.collect (interruptionFindings input))

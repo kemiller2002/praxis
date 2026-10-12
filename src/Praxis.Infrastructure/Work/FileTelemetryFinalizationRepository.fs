@@ -201,7 +201,50 @@ module FileTelemetryFinalizationRepository =
                                             commits
                                     )
 
-    let private finalizeOne (root: string) (repositoryId: string) (executionId: string) : Result<unit, string> =
+    /// A recorded `work.continued` event that took over an interrupted
+    /// predecessor (WI-0088).
+    type ContinuedPredecessor = { ContinuationEventId: string; Successor: string }
+
+    /// The interrupted predecessors of a work item's recorded continuations,
+    /// by execution ID. Only the successor's own observation, never the
+    /// predecessor's record, says the predecessor was interrupted.
+    let private continuedPredecessors (root: string) (workItemId: string) : Result<Map<string, ContinuedPredecessor>, string> =
+        let path = Path.Combine(root, ".ros", "events", "events.jsonl")
+
+        let continued (event: JsonObject) =
+            match stringField event "type", stringField event "workItem", stringField event "eventId", stringField event "execution", event["predecessor"] with
+            | Some "work.continued", Some item, Some eventId, Some successor, (:? JsonObject as predecessor) when item = workItemId ->
+                match stringField predecessor "executionId", stringField predecessor "disposition", stringField predecessor "dispositionSource" with
+                | Some id, Some "interrupted", Some "observed-by-successor" when id <> successor ->
+                    Some(id, { ContinuationEventId = eventId; Successor = successor })
+                | _ -> None
+            | _ -> None
+
+        if not (File.Exists path) then
+            Ok Map.empty
+        else
+            try
+                File.ReadAllLines path
+                |> Array.filter (String.IsNullOrWhiteSpace >> not)
+                |> Array.choose (fun line -> match JsonNode.Parse line with :? JsonObject as event -> continued event | _ -> None)
+                |> Map.ofArray
+                |> Ok
+            with :? JsonException as error ->
+                Error $".ros/events/events.jsonl is not valid JSON Lines: {error.Message}"
+
+    /// The `execution.finalized` record of steps an absent executor left
+    /// unresolved: they stay as they were, attributed to the successor's
+    /// observation through the continuation event.
+    let private interruptionNode (unresolved: string list) (continuation: ContinuedPredecessor) : JsonObject =
+        let node = JsonObject()
+        node["disposition"] <- JsonValue.Create "interrupted"
+        node["dispositionSource"] <- JsonValue.Create "observed-by-successor"
+        node["continuationEventId"] <- JsonValue.Create continuation.ContinuationEventId
+        node["successorExecutionId"] <- JsonValue.Create continuation.Successor
+        node["unresolvedSteps"] <- JsonArray(unresolved |> List.map (fun id -> JsonValue.Create id :> JsonNode) |> List.toArray)
+        node
+
+    let private finalizeOne (root: string) (repositoryId: string) (continuation: ContinuedPredecessor option) (executionId: string) : Result<unit, string> =
         match RegistryLock.acquire root $"telemetry-execution:{executionId}" RegistryLock.defaultSettings with
         | Error failure -> Error failure.Message
         | Ok lease ->
@@ -216,10 +259,16 @@ module FileTelemetryFinalizationRepository =
                         | :? JsonObject as record ->
                             match stringField record "status" with
                             | Some "finalized" -> Ok()
-                            | _ when not (FileStepRepository.unresolvedStepIds record).IsEmpty ->
+                            | _ when not (FileStepRepository.unresolvedStepIds record).IsEmpty && continuation.IsNone ->
                                 let unresolved = FileStepRepository.unresolvedStepIds record |> String.concat ", "
                                 Error $"execution '{executionId}' has unresolved steps ({unresolved}); complete or abandon them before finalizing"
                             | _ ->
+                                let interruption =
+                                    match FileStepRepository.unresolvedStepIds record, continuation with
+                                    | [], _
+                                    | _, None -> None
+                                    | unresolved, Some continued -> Some(interruptionNode unresolved continued)
+
                                 let finalizedAt = FileTelemetryExecutionRepository.nowIso ()
                                 let startedAt = stringField record "startedAt" |> Option.defaultValue finalizedAt
 
@@ -454,6 +503,7 @@ module FileTelemetryFinalizationRepository =
                                 finalizedEvent["occurredAt"] <- JsonValue.Create finalizedAt
                                 finalizedEvent["source"] <- FileTelemetryExecutionRepository.sourceNode { Type = "ros-clock"; Name = "ros"; Mechanism = "work-lifecycle" }
                                 finalizedEvent["eventId"] <- JsonValue.Create eventId
+                                interruption |> Option.iter (fun node -> finalizedEvent["interruption"] <- node)
 
                                 match record["events"] with
                                 | :? JsonArray as events -> events.Add(finalizedEvent: JsonNode)
@@ -472,19 +522,20 @@ module FileTelemetryFinalizationRepository =
     /// Mirrors production `finalizeWorkExecutions`: finalize every currently
     /// `active` execution linked to a work item. A work item this migration
     /// never observed telemetry for (or one whose executions are already
-    /// finalized) is a legitimate no-op, not an error.
+    /// finalized) is a legitimate no-op, not an error. A predecessor that a
+    /// recorded continuation took over as interrupted is finalized with its
+    /// unresolved steps recorded as interrupted rather than refused: its
+    /// executor is gone and nobody else may resolve them (WI-0088).
     let finalizeWorkExecutions (root: string) (workItemId: string) : Result<unit, string> =
         let repositoryId = FileWorkConfigRepository.readRepositoryId root
 
-        let rec loop remaining =
-            match remaining with
-            | [] -> Ok()
-            | executionId :: rest ->
-                match finalizeOne root repositoryId executionId with
-                | Error message -> Error message
-                | Ok() -> loop rest
-
-        loop (activeExecutionIds root workItemId)
+        continuedPredecessors root workItemId
+        |> Result.bind (fun predecessors ->
+            activeExecutionIds root workItemId
+            |> List.fold
+                (fun outcome executionId ->
+                    outcome |> Result.bind (fun () -> finalizeOne root repositoryId (predecessors |> Map.tryFind executionId) executionId))
+                (Ok()))
 
     /// Mirrors production `recordTelemetryLifecycle`: appends a
     /// `work.blocked`/`work.resumed` event (deduped by its sorted-key
@@ -742,7 +793,7 @@ module FileTelemetryFinalizationRepository =
                     Ok()
                 else
                     let repositoryId = FileWorkConfigRepository.readRepositoryId root
-                    finalizeOne root repositoryId executionId
+                    finalizeOne root repositoryId None executionId
 
             match result with
             | Error message -> Error message
