@@ -26,7 +26,7 @@
     "review.accept"
   ],
   "baselineRevision": "28e710ddbb9c273fa766f10ad3ce4df4319f113b",
-  "candidateRevision": null,
+  "candidateRevision": "e466db96d635f6002c64db22ab74ac27fe7ff129",
   "workspace": "checkout:EXE-20261012T115318275Z-92ff2d62",
   "workspaceBinding": {
     "id": "checkout:EXE-20261012T115318275Z-92ff2d62",
@@ -50,7 +50,7 @@
   "humanOnlyTransitions": [],
   "parentExecution": "EXE-20261011T204811145Z-23f864b2",
   "startedAt": "2026-10-12T11:53:19.050Z",
-  "state": "active",
+  "state": "completed",
   "stateReason": null,
   "origin": {
     "kind": "work-transition",
