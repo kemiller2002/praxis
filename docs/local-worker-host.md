@@ -23,11 +23,16 @@ Missing, ambiguous, malformed, duplicate-field or linked records refuse. JSON
 files are bounded to 16 MiB and telemetry inventories to 4096 records. Cross-repo
 and successor-mapped assignments require future observers and currently refuse.
 Prerequisite semantics and independent acceptance remain host obligations.
-Execution-envelope writers currently do not all participate in the work/group
-lease protocol. These envelope checks are fresh observations, not a claim that
-every lifecycle writer is serialized. The operational controller must coordinate
-those writers, and intake/integration must recheck current state. Completing that
-serialization remains a follow-up before a qualified controller is enabled.
+Execution-envelope writers share the same lock order (WI-0087):
+`ExecutionLifecycleLease` acquires `work-protocol` then `work-groups` around
+every `execution` CLI mutation and every post-transition envelope mirror. Verbs
+that run an external step, evaluator or launcher take the lease per write, so
+the external process never holds native locks. While a host scope holds its
+leases, those writers wait and then refuse without writing (exit 3). A work
+transition releases its lease before its envelope mirror; a host observing that
+interval sees an inactive item or missing/active envelope mismatch and refuses,
+so the interval fails closed rather than authorizing. Direct file edits by a
+same-account process are outside this cooperative protocol.
 Callbacks must not reacquire the held native/policy
 leases and must finish within host-controlled bounds.
 

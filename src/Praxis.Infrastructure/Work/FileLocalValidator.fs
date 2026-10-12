@@ -37,13 +37,26 @@ module FileLocalValidator =
             invalidOp "validator tool pin changed"
         for KeyValue(path, expected) in request.Dependencies do
             if not (LocalAgentHandoff.isDigest expected) || fileDigest path <> expected then invalidOp "validator dependency pin changed"
-        if not (LocalHostJournalFiles.noLinks request.Process.WorkingDirectory) then invalidOp "validator checkout is linked"
-        framed ([ "praxis.local-validator-inputs/1"; request.ValidatorId; request.GitExecutable; request.GitExecutableDigest
-                  request.Process.Executable; request.Process.ExecutableDigest; request.Process.WorkingDirectory
-                  string request.Process.TimeoutMilliseconds; string request.Process.MaxOutputBytes; request.Process.Input
-                  request.TrxPath |> Option.defaultValue ""; string request.Process.Arguments.Length ]
-                @ request.Process.Arguments @ [ string request.Process.Environment.Count ]
-                @ (request.Process.Environment |> Map.toList |> List.collect (fun (key, value) -> [ key; value ]))
+        if not (Path.IsPathFullyQualified request.Process.WorkingDirectory && LocalHostJournalFiles.noLinks request.Process.WorkingDirectory) then
+            invalidOp "validator checkout is relative or linked"
+        // Host-provisioned locations are bound by role, not by literal path, so
+        // one signed pin covers the worker candidate, the staged integration
+        // candidate, retries and reopened sessions. Each run still needs a fresh
+        // checkout of the exact candidate and a fresh, non-existent TRX path.
+        let locations =
+            [ match request.TrxPath with Some path -> yield path, "{trx}" | None -> ()
+              yield Path.TrimEndingDirectorySeparator request.Process.WorkingDirectory, "{candidate}" ]
+        if locations |> List.exists (fun (path, _) -> path.Contains '{' || path.Contains '}') then
+            invalidOp "validator host location contains a role token delimiter"
+        let relocate (value: string) =
+            if value.Contains '{' || value.Contains '}' then invalidOp "validator input contains a reserved role token delimiter"
+            locations |> List.fold (fun (text: string) (path, token) -> text.Replace(path, token, StringComparison.Ordinal)) value
+        framed ([ "praxis.local-validator-inputs/2"; request.ValidatorId; request.GitExecutable; request.GitExecutableDigest
+                  request.Process.Executable; request.Process.ExecutableDigest
+                  string request.Process.TimeoutMilliseconds; string request.Process.MaxOutputBytes; relocate request.Process.Input
+                  (if request.TrxPath.IsSome then "trx" else "no-trx"); string request.Process.Arguments.Length ]
+                @ (request.Process.Arguments |> List.map relocate) @ [ string request.Process.Environment.Count ]
+                @ (request.Process.Environment |> Map.toList |> List.collect (fun (key, value) -> [ key; relocate value ]))
                 @ [ string request.Dependencies.Count ]
                 @ (request.Dependencies |> Map.toList |> List.collect (fun (path, value) -> [ path; value ])))
 

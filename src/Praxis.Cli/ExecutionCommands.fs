@@ -202,8 +202,7 @@ module ExecutionCommands =
         | id :: rest when not (id.StartsWith "--") -> ExecutionService.snapshot ports actorKind id |> Result.bind (fun s -> f s rest)
         | _ -> Error(ExecutionFailure.Invalid "an execution id is required")
 
-    let run (root: string) (actor: Actor) (arguments: string list) =
-        let ports = FileExecutionPorts.create root
+    let private dispatch (ports: ExecutionPorts) (actor: Actor) (arguments: string list) =
         let requester = { Actor = executionActor actor }
         let kind = ActorKind.code actor.Kind
         let on = withExecution ports kind
@@ -273,3 +272,35 @@ module ExecutionCommands =
         | _ ->
             eprintfn "Usage: praxis %s" usage
             2
+
+    /// Verbs that run an external step, evaluator or launcher take the
+    /// lifecycle lease per write, so the process never holds native locks.
+    /// Reads need no lease. Every other mutation holds one lease scope.
+    let private perWrite (arguments: string list) =
+        match arguments with
+        | "start" :: rest -> hasFlag "--launch" rest
+        | "step" :: "run" :: _
+        | "evaluate" :: _
+        | "launch" :: _
+        | "show" :: _
+        | "actions" :: _
+        | "boundary" :: _
+        | "containment" :: _
+        | "list" :: _ -> true
+        | _ -> false
+
+    /// Envelope writers share the native lock order (WI-0087): a refused lease
+    /// writes nothing and exits 3.
+    let run (root: string) (actor: Actor) (arguments: string list) =
+        try
+            if perWrite arguments then
+                dispatch (FileExecutionPorts.createSerialized root) actor arguments
+            else
+                match ExecutionLifecycleLease.within root (fun () -> dispatch (FileExecutionPorts.createLocked root) actor arguments) with
+                | Ok code -> code
+                | Error reason ->
+                    eprintfn "REFUSED %s" reason
+                    3
+        with ExecutionLifecycleLeaseUnavailable reason ->
+            eprintfn "REFUSED %s" reason
+            3

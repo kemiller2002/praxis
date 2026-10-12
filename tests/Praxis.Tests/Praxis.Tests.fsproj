@@ -120,6 +120,7 @@
     <Compile Include="ExecutionGovernanceTests.fs" />
     <Compile Include="ExecutionRuntimeTests.fs" />
     <Compile Include="ExecutionBindingTests.fs" />
+    <Compile Include="ExecutionLifecycleLeaseTests.fs" />
     <Compile Include="WebExecutionTests.fs" />
     <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="CommitOwnershipTests.fs" />

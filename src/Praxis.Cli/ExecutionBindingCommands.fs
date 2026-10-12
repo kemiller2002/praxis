@@ -47,6 +47,15 @@ module ExecutionBindingCommands =
     let private role (arguments: string list) =
         optionValue "--role" arguments |> Option.bind ExecutionRole.tryParse |> Option.defaultValue ExecutionRole.Implementation
 
+    /// Envelope writes after a work transition share the native lock order
+    /// (WI-0087). The transition itself has already released its lease, so a
+    /// host scope may observe the transition before this mirror; every such
+    /// interval reads as inactive or unbound and fails closed.
+    let private lifecycle root (mirror: ExecutionPorts -> unit) =
+        match ExecutionLifecycleLease.within root (fun () -> mirror (FileExecutionPorts.createLocked root)) with
+        | Ok() -> ()
+        | Error reason -> eprintfn "WARN execution envelopes not updated: %s" reason
+
     let private origin (ports: ExecutionPorts) transition =
         match ports.Host.RemoteExecutor() with
         | Some executor -> ExecutionOrigin.Remote executor
@@ -57,20 +66,19 @@ module ExecutionBindingCommands =
     /// (so `plan execute-group`, which begins members in-process, binds
     /// too); it never changes the transition's exit code.
     let bindBegun (root: string) (arguments: string list) (actor: Actor) (workItems: string list) =
-        let ports = FileExecutionPorts.create root
-
-        for workItem in workItems do
-            ExecutionBinding.bind
-                ports
-                (requester actor)
-                { WorkItem = workItem
-                  ExecutionId = FileExecutionPorts.activeTelemetryExecution root workItem actor.Id
-                  Origin = origin ports "work.begin"
-                  Role = role arguments
-                  Parent = None
-                  Baseline = None
-                  Branch = None }
-            |> warn workItem
+        lifecycle root (fun ports ->
+            for workItem in workItems do
+                ExecutionBinding.bind
+                    ports
+                    (requester actor)
+                    { WorkItem = workItem
+                      ExecutionId = FileExecutionPorts.activeTelemetryExecution root workItem actor.Id
+                      Origin = origin ports "work.begin"
+                      Role = role arguments
+                      Parent = None
+                      Baseline = None
+                      Branch = None }
+                |> warn workItem)
 
         0
 
@@ -93,7 +101,7 @@ module ExecutionBindingCommands =
     /// Wrap a work transition: refuse before it when bound executions say
     /// so, and mirror its outcome after it succeeds.
     let guard (root: string) (gate: WorkGate) (arguments: string list) (inner: Actor -> int) (actor: Actor) =
-        let ports = FileExecutionPorts.create root
+        let ports = FileExecutionPorts.createSerialized root
         let who = requester actor
         let items = ids arguments
         let reason = optionValue "--reason" arguments
@@ -118,19 +126,20 @@ module ExecutionBindingCommands =
             let code = inner actor
 
             if code = 0 then
-                for item in items do
-                    match gate with
-                    | WorkGate.Begin -> ()
-                    | WorkGate.Resume ->
-                        ExecutionBinding.mirror ports who item "work.resume" ExecutionState.Active None |> ignore
-                        bindSuccessor root ports arguments actor "work.resume" item (ExecutionBinding.forWorkItem ports item |> List.tryLast |> Option.map _.ExecutionId)
-                    | WorkGate.Block -> ExecutionBinding.mirror ports who item "work.block" (ExecutionState.Blocked(reason |> Option.defaultValue "")) reason |> ignore
-                    | WorkGate.Complete -> ExecutionBinding.mirror ports who item "work.complete" ExecutionState.Completed None |> ignore
-                    | WorkGate.Abandon -> ExecutionBinding.mirror ports who item "work.abandon" (ExecutionState.Abandoned(reason |> Option.defaultValue "")) reason |> ignore
-                    | WorkGate.Continue ->
-                        let parent = predecessors |> List.tryFind (fst >> (=) item) |> Option.bind (snd >> List.tryLast) |> Option.map _.ExecutionId
-                        ExecutionBinding.mirror ports who item "work.continue" ExecutionState.Interrupted (Some "taken over by a successor execution") |> ignore
-                        bindSuccessor root ports arguments actor "work.continue" item parent
+                lifecycle root (fun ports ->
+                    for item in items do
+                        match gate with
+                        | WorkGate.Begin -> ()
+                        | WorkGate.Resume ->
+                            ExecutionBinding.mirror ports who item "work.resume" ExecutionState.Active None |> ignore
+                            bindSuccessor root ports arguments actor "work.resume" item (ExecutionBinding.forWorkItem ports item |> List.tryLast |> Option.map _.ExecutionId)
+                        | WorkGate.Block -> ExecutionBinding.mirror ports who item "work.block" (ExecutionState.Blocked(reason |> Option.defaultValue "")) reason |> ignore
+                        | WorkGate.Complete -> ExecutionBinding.mirror ports who item "work.complete" ExecutionState.Completed None |> ignore
+                        | WorkGate.Abandon -> ExecutionBinding.mirror ports who item "work.abandon" (ExecutionState.Abandoned(reason |> Option.defaultValue "")) reason |> ignore
+                        | WorkGate.Continue ->
+                            let parent = predecessors |> List.tryFind (fst >> (=) item) |> Option.bind (snd >> List.tryLast) |> Option.map _.ExecutionId
+                            ExecutionBinding.mirror ports who item "work.continue" ExecutionState.Interrupted (Some "taken over by a successor execution") |> ignore
+                            bindSuccessor root ports arguments actor "work.continue" item parent)
 
             code
 
@@ -139,7 +148,7 @@ module ExecutionBindingCommands =
     let afterFallback (root: string) (envelopePath: string) (code: int) =
         if code = 0 then
             match Praxis.Infrastructure.Work.ReconciliationEnvelopeJson.read envelopePath with
-            | Ok input -> ExecutionBinding.fallback (FileExecutionPorts.create root) input |> warn input.WorkItem
+            | Ok input -> lifecycle root (fun ports -> ExecutionBinding.fallback ports input |> warn input.WorkItem)
             | Error codes -> eprintfn "WARN execution envelope not bound: %s" (String.concat "," codes)
 
         code

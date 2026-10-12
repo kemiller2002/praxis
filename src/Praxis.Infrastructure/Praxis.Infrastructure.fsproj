@@ -81,6 +81,7 @@
     <Compile Include="Remote/FileStateCompatibility.fs" />
     <Compile Include="Remote/FileRemoteRepository.fs" />
     <Compile Include="Execution/ExecutionStore.fs" />
+    <Compile Include="Execution/ExecutionLifecycleLease.fs" />
     <Compile Include="Tutela/TutelaStore.fs" />
     <Compile Include="Execution/ExecutionContracts.fs" />
     <Compile Include="Execution/FileExecutionPorts.fs" />

@@ -25,7 +25,7 @@ module LocalWorkerFixture =
             Console.OpenStandardOutput().WriteByte 0xffuy
             0
         | "nonzero" -> Console.In.ReadToEnd() |> ignore; 17
-        | "validator-trx" when arguments.Length = 2 ->
+        | "validator-trx" when arguments.Length = 2 || arguments.Length = 3 ->
             Console.In.ReadToEnd() |> ignore
             let ns = System.Xml.Linq.XNamespace.Get "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"
             let attr (name: string) (value: string) : obj = System.Xml.Linq.XAttribute(System.Xml.Linq.XName.Get name, value) :> obj
