@@ -111,8 +111,15 @@ module FileLocalWorkerHost =
                                 bindings.Validators.PolicyRevision() |> Result.map (fun revision -> policy.Revision + "/" + revision))
                         let validators = { bindings.Validators with PolicyRevision = policyRevision }
                         return FileWorkerChecklist.withEvidenceSession root bindings.EvidenceRoot bindings.EvidenceAccess validators now cancellation (fun session ->
+                            // An applied integration for this exact dispatch means a
+                            // previous completion may have finalized member telemetry
+                            // before it was interrupted; that state is resumable.
+                            let resumable () =
+                                match journal.Load worker.RepositoryIdentity packet.DispatchId with
+                                | Ok(Some applied) when applied.AppliedAt.IsSome -> packet.Members |> List.map _.ExecutionId |> Set.ofList
+                                | _ -> Set.empty
                             let native () =
-                                recover() |> Result.bind (fun () -> FileLocalWorkerAssignment.validate root worker.RepositoryIdentity packet)
+                                recover() |> Result.bind (fun () -> FileLocalWorkerAssignment.validateResuming root worker.RepositoryIdentity (resumable()) packet)
                                 |> Result.bind (fun () -> worker.ValidateNative packet)
                             let observe packet result =
                                 bindings.ObserveResult packet result |> Result.bind (fun observation ->

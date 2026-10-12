@@ -61,7 +61,11 @@ module FileLocalWorkerAssignment =
             | Some repo -> workItem.StartsWith(repo + ":", StringComparison.Ordinal)
             | None -> not (workItem.Contains ':' || workItem.Contains '#'))
 
-    let validate root repositoryIdentity (packet: LocalWorkerPacket) =
+    /// `resumable` names member executions whose telemetry an interrupted
+    /// local completion already finalized (the host's integration journal for
+    /// this dispatch is applied). They may be finalized instead of active; the
+    /// member must still be active and linked to exactly that execution.
+    let validateResuming root repositoryIdentity (resumable: Set<string>) (packet: LocalWorkerPacket) =
         try
             let qualified, ownWorkItem = envelopeWorkItem root
             let require condition reason = if not condition then invalidOp reason
@@ -109,7 +113,11 @@ module FileLocalWorkerAssignment =
                 require (item.SemanticState = LiveWorkState.Active && List.contains memberItem.ExecutionId item.TelemetryExecutionIds
                          && item.TelemetryExecutionIds.Length = (Set.ofList item.TelemetryExecutionIds).Count) "native member is inactive or execution link changed"
                 let active = telemetry |> Array.filter (fun (_, work, state) -> work = memberItem.WorkItemId && state = "active")
-                require (active = [| memberItem.ExecutionId, memberItem.WorkItemId, "active" |]) "native member active telemetry differs or is ambiguous"
+                let interrupted =
+                    resumable.Contains memberItem.ExecutionId && active.Length = 0
+                    && item.TelemetryExecutionIds = [ memberItem.ExecutionId ]
+                    && (telemetry |> Array.contains (memberItem.ExecutionId, memberItem.WorkItemId, "finalized"))
+                require (interrupted || active = [| memberItem.ExecutionId, memberItem.WorkItemId, "active" |]) "native member active telemetry differs or is ambiguous"
                 let execution = envelope root memberItem.ExecutionId
                 require (execution.ExecutionId = memberItem.ExecutionId && execution.WorkItem = qualified memberItem.WorkItemId
                          && execution.State = ExecutionState.Active && execution.BaselineRevision = packet.SourceCommit) "native member envelope or baseline differs"
@@ -126,3 +134,5 @@ module FileLocalWorkerAssignment =
                 else ProcessGitRepository.readLines root [ "merge-base"; "--is-ancestor"; packet.SourceCommit; "HEAD" ]
                      |> Result.mapError _.Message |> Result.map ignore)
         with e -> Error("native local assignment refused: " + e.GetType().Name + ": " + e.Message)
+
+    let validate root repositoryIdentity packet = validateResuming root repositoryIdentity Set.empty packet

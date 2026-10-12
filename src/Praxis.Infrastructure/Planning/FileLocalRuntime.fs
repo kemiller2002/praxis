@@ -161,7 +161,29 @@ module FileLocalRuntime =
             |> List.filter (fun item -> item.SemanticState = LiveWorkState.Complete)
             |> List.map (fun item -> item.Id, prerequisiteDigest item) |> Map.ofList)
 
-    let private observeNative root (actor: Actor) () =
+    /// Members whose only linked execution an interrupted local completion
+    /// finalized count as that execution's owner when this dispatch's
+    /// integration is applied; every other completion check still runs.
+    let private resumedExecutions (configuration: LocalHostConfiguration) (packet: LocalWorkerPacket) (context: WorkContextPlanningView) (views: Praxis.Infrastructure.Provenance.ExecutionRecordView list) =
+        let applied =
+            FileLocalIntegrationJournal.create configuration.RepositoryRoot configuration.IntegrationRoot
+            |> Result.bind (fun journal -> journal.Load configuration.RepositoryIdentity packet.DispatchId)
+            |> function Ok(Some journal) -> journal.AppliedAt.IsSome | _ -> false
+        if not applied then Map.empty
+        else
+            packet.Members |> List.choose (fun memberItem ->
+                let item = context.WorkItems |> List.tryFind (fun item -> item.Id = memberItem.WorkItemId)
+                let statuses = views |> List.filter (fun (view: Praxis.Infrastructure.Provenance.ExecutionRecordView) -> view.WorkItemId = memberItem.WorkItemId)
+                match item with
+                | Some item when item.SemanticState = LiveWorkState.Active && item.TelemetryExecutionIds = [ memberItem.ExecutionId ]
+                                 && statuses |> List.forall (fun view -> view.Status <> "active")
+                                 && statuses |> List.exists (fun view -> view.ExecutionId = memberItem.ExecutionId && view.Status = "finalized") ->
+                    Some(memberItem.WorkItemId, [ memberItem.ExecutionId ])
+                | _ -> None)
+            |> Map.ofList
+
+    let private observeNative (configuration: LocalHostConfiguration) (packet: LocalWorkerPacket) (actor: Actor) () =
+        let root = configuration.RepositoryRoot
         readContext root |> Result.map (fun context ->
             let required, byType = FileWorkConfigRepository.readCompletionEvidence root
             let request : WorkContextPlanRequest =
@@ -172,13 +194,15 @@ module FileLocalRuntime =
                   ProtocolVersion = FileWorkConfigRepository.readProtocolVersion root
                   Actor = actor.Id; OccurredAt = ""; MeaningfulChangedPaths = []; ObservedGitPaths = []
                   TelemetryEnabled = FileWorkConfigRepository.readTelemetryEnabled root }
+            let views = Praxis.Infrastructure.Provenance.FileProvenanceRepository.readExecutions root
             let active =
-                Praxis.Infrastructure.Provenance.FileProvenanceRepository.readExecutions root
+                views
                 |> List.filter (fun view -> view.Status = "active")
                 |> List.groupBy _.WorkItemId
                 |> List.map (fun (id, views) -> id, views |> List.map _.ExecutionId |> List.sort)
                 |> Map.ofList
-            { Request = request; ActiveExecutions = active })
+            let resumed = resumedExecutions configuration packet context views
+            { Request = request; ActiveExecutions = resumed |> Map.fold (fun map id executions -> map.Add(id, executions)) active })
 
     let private readDelegation (path: string) () =
         try
@@ -212,7 +236,7 @@ module FileLocalRuntime =
                   CompareAndSwap = fun plan -> FileLocalGitCandidates.compareAndSwap git root plan cancellation }
             let completion (ports: LocalIntegrationPorts) : LocalIntegratedCompletionPorts =
                 { Integration = ports
-                  ObserveNative = observeNative root actor
+                  ObserveNative = observeNative configuration request.Packet actor
                   CandidateEvidence = fun snapshot plan -> FileLocalGitCandidates.candidateEvidence git root configuration.CompletionEvidence snapshot plan cancellation
                   Evidence = FileLocalGitCandidates.evidenceRepository git root request.TargetRef cancellation
                   QualityGate = policy.QualityGate
@@ -227,15 +251,24 @@ module FileLocalRuntime =
             worker, acceptance)
 
     /// Mirror completed members into their execution envelopes under the
-    /// lifecycle lease, as the standalone completion command does.
-    let private mirrorCompleted root (actor: Actor) (members: string list) =
+    /// lifecycle lease, as the standalone completion command does, and close
+    /// the worker's own child execution with the integrated candidate.
+    let private mirrorCompleted root (actor: Actor) (packet: LocalWorkerPacket) (target: string) =
         ExecutionLifecycleLease.within root (fun () ->
             let ports = FileExecutionPorts.createLocked root
             let requester = { Actor = { Id = actor.Id; Kind = ActorKind.code actor.Kind
                                         Provider = actor.Provider |> Option.filter ((<>) Actor.UnknownValue)
                                         Model = actor.Model |> Option.filter ((<>) Actor.UnknownValue)
                                         Runtime = actor.Runtime |> Option.filter ((<>) Actor.UnknownValue) } }
-            for id in members do ExecutionBinding.mirror ports requester id "work.complete" ExecutionState.Completed None |> ignore)
+            for item in packet.Members do ExecutionBinding.mirror ports requester item.WorkItemId "work.complete" ExecutionState.Completed None |> ignore
+            match ports.Store.Load packet.ChildExecutionId with
+            | Ok child when child.State = ExecutionState.Active ->
+                ports.Store.Save { child with State = ExecutionState.Completed; CandidateRevision = Some target }
+                ports.Store.AppendRecord child.ExecutionId "transition"
+                    [ "transition", Some "execution.complete"; "state", Some(ExecutionState.toWire ExecutionState.Completed)
+                      "reason", Some("worker output integrated by local dispatch " + packet.DispatchId)
+                      "actor", Some requester.Actor.Id; "actorKind", Some requester.Actor.Kind; "candidate", Some target ]
+            | _ -> ())
 
     let private dispatchPhase (configuration: LocalHostConfiguration) dispatchId =
         FileLocalDispatchJournal.create configuration.RepositoryRoot configuration.JournalRoot
@@ -275,11 +308,11 @@ module FileLocalRuntime =
                                 LocalRunStage.Resumed
                         outcome.GetAwaiter().GetResult() |> Result.bind (fun (_: Text.Json.Nodes.JsonArray * string list) ->
                             let members = packet.Members |> List.map _.WorkItemId
-                            mirrorCompleted configuration.RepositoryRoot actor members
-                            |> Result.mapError (fun error -> "native completion succeeded but execution envelopes were not mirrored: " + error)
-                            |> Result.bind (fun () ->
-                                FileLocalGitCandidates.readTarget configuration.Git configuration.RepositoryRoot request.TargetRef cancellation
-                                |> Result.map (fun target ->
+                            FileLocalGitCandidates.readTarget configuration.Git configuration.RepositoryRoot request.TargetRef cancellation
+                            |> Result.bind (fun target ->
+                                mirrorCompleted configuration.RepositoryRoot actor packet target
+                                |> Result.mapError (fun error -> "native completion succeeded but execution envelopes were not mirrored: " + error)
+                                |> Result.map (fun () ->
                                     { DispatchId = packet.DispatchId; Stage = stage; TargetRef = request.TargetRef; TargetCommit = target
                                       CompletedMembers = members; WorkerWorktree = worktrees |> Seq.tryHead })))))
         finally cleanup ()

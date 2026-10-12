@@ -8,6 +8,7 @@ open System.Security.Cryptography
 open System.Text
 open System.Text.Json
 open System.Text.Json.Nodes
+open System.Linq
 open System.Threading
 open Praxis.Contracts.Work
 open Praxis.Domain.Work
@@ -77,6 +78,28 @@ module LocalWorkerBridge =
         | Some path when File.Exists path -> Some(bounded (File.ReadAllText path) excerptLimit)
         | _ -> None
 
+    /// For `document#anchor` keys into Markdown, only the section whose
+    /// heading text is the anchor; otherwise the whole (bounded) document.
+    let private requirementText settings (key: string) =
+        let document, anchor =
+            match key.IndexOf '#' with
+            | -1 -> key, None
+            | index -> key.Substring(0, index), Some(key.Substring(index + 1))
+        readExcerpt settings document |> Option.map (fun text ->
+            match anchor with
+            | Some name when document.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ->
+                let lines = text.Replace("\r\n", "\n").Split('\n') |> Array.toList
+                let heading (line: string) = line.TrimStart().StartsWith "#"
+                let title (line: string) = line.TrimStart('#', ' ').Trim()
+                match lines |> List.tryFindIndex (fun line -> heading line && title line = name) with
+                | Some start ->
+                    let level = lines[start].TrimStart().TakeWhile(fun c -> c = '#') |> Seq.length
+                    lines |> List.skip (start + 1)
+                    |> List.takeWhile (fun line -> not (heading line && (line.TrimStart().TakeWhile(fun c -> c = '#') |> Seq.length) <= level))
+                    |> String.concat "\n" |> fun section -> section.Trim()
+                | None -> text
+            | _ -> text)
+
     /// The prompt carries the assignment, the referenced requirement text and
     /// the allowed files. It grants nothing: validators decide acceptance.
     let prompt settings (packet: LocalWorkerPacket) jsonFiles =
@@ -90,9 +113,8 @@ module LocalWorkerBridge =
         for item in packet.Members do
             for key in item.RequirementKeys do
                 line (sprintf "- %s: %s" item.WorkItemId key)
-                let document = key.Split('#').[0]
-                match readExcerpt settings document with
-                | Some text -> line (sprintf "  Text of %s:\n%s" document text)
+                match requirementText settings key with
+                | Some text -> line (sprintf "  Requirement text:\n%s" text)
                 | None -> ()
         line ""
         line "You may create or modify only these files (exact paths):"
@@ -105,6 +127,7 @@ module LocalWorkerBridge =
         line "do not claim that checks passed. Independent validators build, test and check the result."
         if jsonFiles then
             line ""
+            line "Each file's content must be the complete source code that satisfies the requirement, not the requirement text."
             line "Reply with only a JSON object: {\"files\":[{\"path\":\"<allowed path>\",\"content\":\"<complete new file content>\"}]}"
         buffer.ToString()
 

@@ -229,8 +229,51 @@ module LocalRuntimeCliTests =
                   Assert.equal "alpha" (GitFixture.git pilot.Clone [ "show"; afterB + ":src/a.txt" ])
                   Assert.equal "beta" (GitFixture.git pilot.Clone [ "show"; afterB + ":src/b.txt" ])
                   Assert.equal "complete" (state pilot "WI-B")
+                  // Each worker's child execution closes with the integrated candidate.
+                  for workerId, candidate in [ "worker-a", afterA; "worker-b", afterB ] do
+                      let closed = envelopes pilot |> List.find (fun e -> e.Actor.Id = workerId && e.Parent.IsSome)
+                      Assert.equal Praxis.Domain.Execution.ExecutionState.Completed closed.State
+                      Assert.equal (Some candidate) closed.CandidateRevision
                   // The controller's own working tree was never used for staging.
                   Assert.isTrue (not (File.Exists(Path.Combine(pilot.Clone, "src", "b.txt")))) "staging touched the controller checkout"))
+          t "completion interrupted after integration and telemetry finalization resumes without a second update" (fun () ->
+              withPilot (fun pilot ->
+                  let edit (change: JsonNode -> unit) =
+                      let node = JsonNode.Parse(File.ReadAllText pilot.Config)
+                      change node
+                      File.WriteAllText(pilot.Config, node.ToJsonString())
+                  // Native completion requires implementation and tests evidence;
+                  // this host maps only one, so completion refuses after integration.
+                  edit (fun node -> node["completionEvidence"] <- JsonNode.Parse """{"implementation":"member-changes"}""")
+                  let delegation = delegated pilot "A" []
+                  let refused = dispatch pilot delegation
+                  Assert.equal 3 refused.ExitCode
+                  let integrated = tip pilot
+                  Assert.isTrue (integrated <> pilot.Source) "integration was not applied before the completion refusal"
+                  Assert.equal "active" (state pilot "WI-A")
+                  // The state a crash between telemetry finalization and native
+                  // persistence leaves, produced by the same native writer.
+                  FileTelemetryFinalizationRepository.finalizeWorkExecutions pilot.Clone "WI-A" |> function Ok() -> () | Error error -> failwith error
+                  edit (fun node -> node["completionEvidence"] <- JsonNode.Parse """{"implementation":"member-changes","tests":"acceptance-artifacts"}""")
+                  let resumed = dispatch pilot delegation |> ok
+                  Assert.equal "resumed" (text ((JsonNode.Parse resumed.Output).AsArray().[0].["stage"]))
+                  Assert.equal integrated (tip pilot)
+                  Assert.equal "complete" (state pilot "WI-A")
+                  Assert.equal 1 (GitFixture.git pilot.Clone [ "reflog"; "show"; "--format=%H"; target ] |> fun log -> log.Split('\n') |> Array.filter ((=) integrated) |> Array.length)))
+          t "a refusal after the worker exits resumes at acceptance without relaunching it" (fun () ->
+              withPilot (fun pilot ->
+                  let delegation = delegated pilot "A" []
+                  GitFixture.git pilot.Clone [ "update-ref"; "-d"; target ] |> ignore
+                  let refused = dispatch pilot delegation
+                  Assert.equal 3 refused.ExitCode
+                  let checkouts = Path.Combine(Path.GetDirectoryName pilot.Config, "checkouts")
+                  let workers () = Directory.GetDirectories checkouts |> Array.filter (fun path -> Path.GetFileName(path).StartsWith "worker-") |> Array.length
+                  Assert.equal 1 (workers ())
+                  GitFixture.git pilot.Clone [ "update-ref"; target; pilot.Source ] |> ignore
+                  let resumed = dispatch pilot delegation |> ok
+                  Assert.equal "resumed" (text ((JsonNode.Parse resumed.Output).AsArray().[0].["stage"]))
+                  Assert.equal 1 (workers ())
+                  Assert.equal "complete" (state pilot "WI-A")))
           t "failed acceptance, forged delegation and replay refuse integration and completion" (fun () ->
               withPilot (fun pilot ->
                   let packet, delegation = delegated pilot "C" []
