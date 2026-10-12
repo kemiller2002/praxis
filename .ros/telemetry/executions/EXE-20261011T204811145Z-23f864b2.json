@@ -1699,6 +1699,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-12T07:30:13.000Z",
+      "stepId": "STEP-20261011T210221000Z-52eab741",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -2089,12 +2106,12 @@
       "name": "Validate and publish checklist enforcement slice",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-11T21:02:21.000Z",
       "startedAt": "2026-10-11T21:02:21.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-11T21:15:25.000Z",
+      "completedAt": "2026-10-12T07:30:13.000Z",
+      "endedAt": "2026-10-12T07:30:13.000Z",
+      "updatedAt": "2026-10-12T07:30:13.000Z",
       "actor": {
         "kind": "agent",
         "id": "openai/codex",
@@ -2419,6 +2436,19 @@
           "from": "blocked",
           "to": "active",
           "occurredAt": "2026-10-11T21:15:25.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-12T07:30:13.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",
