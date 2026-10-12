@@ -466,6 +466,19 @@ module ConstructionCliTests =
                   let stamped = construct host "preview" unbound |> ok
                   Assert.equal (text bound.Json["binding"].["planDigest"]) (text stamped.Json["binding"].["planDigest"])
                   Assert.equal (writes bound.Json) (writes stamped.Json)
+                  // The output carries the exact admitted plan and its canonical
+                  // binding, distinct from the committed files' byte digests.
+                  let fixtureBinding = (JsonNode.Parse(File.ReadAllText host.Plan))["binding"]
+                  let reported = stamped.Json["binding"]
+                  Assert.equal (text fixtureBinding["sourceManifestDigest"]) (text reported["planSourceManifestDigest"])
+                  Assert.equal (text fixtureBinding["blueprintDigest"]) (text reported["planBlueprintDigest"])
+                  Assert.isTrue (text reported["planBlueprintDigest"] <> text reported["blueprintDigest"]) "canonical and byte blueprint digests were conflated"
+                  Assert.equal (text fixtureBinding["sourceManifestDigest"]) (text stamped.Json["plan"].["binding"].["sourceManifestDigest"])
+                  let reportedPlan = Path.Combine(host.Parent, "reported-plan.json")
+                  File.WriteAllText(reportedPlan, stamped.Json["plan"].ToJsonString())
+                  let replayed = construct host "preview" reportedPlan |> ok
+                  Assert.equal (text stamped.Json["binding"].["planDigest"]) (text replayed.Json["binding"].["planDigest"])
+                  Assert.equal (writes stamped.Json) (writes replayed.Json)
                   // Stamping supplies only the binding: an unbound plan with an
                   // operation outside the vocabulary is still refused by Ordo.
                   let injected =

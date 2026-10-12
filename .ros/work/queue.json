@@ -6031,6 +6031,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0098",
+      "title": "construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-12T22:37:50.828Z",
+      "updatedAt": "2026-10-12T22:37:51.052Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
