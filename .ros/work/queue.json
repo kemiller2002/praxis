@@ -5989,6 +5989,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0093",
+      "title": "work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows.",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-12T19:22:26.023Z",
+      "updatedAt": "2026-10-12T19:22:26.023Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

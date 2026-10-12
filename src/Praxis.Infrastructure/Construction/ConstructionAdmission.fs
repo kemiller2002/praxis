@@ -1,7 +1,9 @@
 namespace Praxis.Infrastructure.Construction
 
 open System
+open System.Collections.Generic
 open System.Reflection
+open System.Text.Json.Nodes
 open Praxis.Infrastructure.Planning
 open Praxis.Infrastructure.Work
 open Ordo.Core
@@ -71,6 +73,33 @@ module ConstructionAdmission =
                       RequirementKeys = keys; DecisionIds = receipt.Scope.DecisionIds }
                 EcirApprovals.verify policy.TrustedSigners expected now receipt |> Result.map (fun evidence -> grant, evidence)))
 
+    /// The binding a plan must carry, derived from the prepared cohort and never
+    /// from agent text. In the timer pilot, every construction agent first
+    /// copied a file hash where Ordo expects the canonical blueprint digest
+    /// (research-documents#7, F1). A plan that omits `binding` gets this one; a
+    /// plan that supplies one is still checked by Ordo exactly as before.
+    let private cohortBinding (prepared: ConstructionIr.PreparedCohort) : JsonNode =
+        let cohort = ConstructionIr.preparedCohortView prepared
+        let text (value: string) = JsonValue.Create value :> JsonNode
+        let decisions =
+            Set.union cohort.RequiredDecisionIds cohort.RequiredRationaleIds
+            |> Seq.map text |> Seq.toArray |> JsonArray :> JsonNode
+        JsonObject(
+            [ KeyValuePair("sourceManifestDigest", text cohort.Manifest.Digest)
+              KeyValuePair("blueprintDigest", text (ConstructionIrWire.blueprintDigest cohort.Blueprint))
+              KeyValuePair("cohortId", text cohort.CohortId)
+              KeyValuePair("decisionIds", decisions) ]) :> JsonNode
+
+    /// Fills an omitted binding; any other plan text passes through untouched
+    /// so Ordo's strict reader reports its own refusals.
+    let private stampBinding prepared (planText: string) =
+        let parsed = try Some(JsonNode.Parse planText) with _ -> None
+        match parsed with
+        | Some(:? JsonObject as plan) when not (plan.ContainsKey "binding") ->
+            plan["binding"] <- cohortBinding prepared
+            plan.ToJsonString()
+        | _ -> planText
+
     /// Ordo's own semantics over the exact committed documents: manifest and
     /// blueprint identity, cohort readiness under the signed decisions, then
     /// the plan bound to that prepared cohort.
@@ -83,7 +112,7 @@ module ConstructionAdmission =
                 ConstructionIr.prepareCohort manifest blueprint cohortId (Set.ofList decisions)
                 |> Result.mapError (fun violations -> "cohort is not ready for construction: " + describe violations)))
         |> Result.bind (fun prepared ->
-            ConstructionPlanWire.readPlan planText |> Result.mapError ((+) "construction plan refused: ")
+            ConstructionPlanWire.readPlan (stampBinding prepared planText) |> Result.mapError ((+) "construction plan refused: ")
             |> Result.bind (fun draft -> ConstructionPlan.validate prepared draft |> Result.mapError (fun violations -> "construction plan refused: " + describe violations))
             |> Result.bind (fun validated ->
                 if not (ConstructionPlan.isBoundTo prepared validated) then Error "construction plan is not bound to the approved cohort"
