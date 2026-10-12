@@ -42,7 +42,12 @@ type LocalHostConfiguration =
       SystemValidators: Map<WorkerCheckKind, LocalValidatorTemplate>
       AcceptanceValidators: Map<string, LocalValidatorTemplate>
       Workers: LocalWorkerTemplate list
-      CompletionEvidence: (string * LocalEvidenceSource) list }
+      CompletionEvidence: (string * LocalEvidenceSource) list
+      /// Host-owned construction journal root; construction is disabled without it.
+      ConstructionRoot: string option
+      /// Repository-relative directory under which Ordo's generated ownership
+      /// roots are placed. Chosen by the host, never by the plan or agent.
+      ConstructionMount: string }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -195,14 +200,17 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds" ]
+                         [ "lockTimeoutMilliseconds"; "constructionMount" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
-            let names = [ "policy"; "journal"; "spool"; "submissions"; "integration"; "evidence"; "checkouts" ]
-            exactly roots names []
+            let required = [ "policy"; "journal"; "spool"; "submissions"; "integration"; "evidence"; "checkouts" ]
+            exactly roots required [ "construction" ]
+            let names = required @ (if (property roots "construction").IsSome then [ "construction" ] else [])
             let located = names |> List.map (fun name -> name, LocalHostJournalFiles.rootOutside repository (absolute roots name)) |> Map.ofList
             if (located |> Map.values |> Set.ofSeq).Count <> names.Length then fail "host roots must be distinct directories"
+            let mount = textOr root "constructionMount" "."
+            if mount <> "." && not (LocalAgentHandoff.isResourcePath mount) then fail "constructionMount must be a portable repository-relative directory"
             let git = root.GetProperty "git"
             exactly git [ "executable"; "sha256" ] [ "timeoutMilliseconds" ]
             let committer = root.GetProperty "committer"
@@ -240,7 +248,9 @@ module LocalHostConfiguration =
                  SystemValidators = systemValidators
                  AcceptanceValidators = acceptanceValidators |> List.map (fun item -> item.Id, item) |> Map.ofList
                  Workers = workers.EnumerateArray() |> Seq.map worker |> Seq.toList
-                 CompletionEvidence = completion }
+                 CompletionEvidence = completion
+                 ConstructionRoot = located |> Map.tryFind "construction"
+                 ConstructionMount = mount }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->
