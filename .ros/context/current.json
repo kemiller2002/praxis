@@ -9634,7 +9634,27 @@
       "updatedAt": "2026-10-12T16:36:50.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T163651312Z-c1d5cf88"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "69fa380bb3dbbfa46c926100",
+        "recordedAt": "2026-10-12T17:26:34.000Z",
+        "executionId": "EXE-20261012T163651312Z-c1d5cf88",
+        "repository": "repository-operating-system",
+        "branch": "feat/gh-242-construction-application",
+        "commit": "fd0986feddf63a19f9d71191a103f10f72bdcbd1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/gh-242-construction-application",
+        "remoteCommit": "fd0986feddf63a19f9d71191a103f10f72bdcbd1",
+        "summary": "praxis construct preview|apply: admission against the signed operator grant and committed ECIR blobs, pinned Ordo 1.6.0 engine in-process, deterministic Git-tree preview, journaled Git-object application with expected-head CAS and recovery. 8 real-CLI construction tests; ordo construction pin test; affected suites pass (local 173, execution 209, ecir 57, architecture 11, ratchet 9).",
+        "nextAction": "Open PR, exact-head CI, merge; then Dokimos verification of an applied construction.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",

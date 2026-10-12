@@ -1537,6 +1537,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-12T17:26:33.000Z",
+      "stepId": "STEP-20261012T163655000Z-2742fd3c",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1607,12 +1624,12 @@
       "name": "Host-controlled construction admission, preview and journaled application",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-12T16:36:55.000Z",
       "startedAt": "2026-10-12T16:36:55.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-12T16:36:55.000Z",
+      "completedAt": "2026-10-12T17:26:33.000Z",
+      "endedAt": "2026-10-12T17:26:33.000Z",
+      "updatedAt": "2026-10-12T17:26:33.000Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -1911,6 +1928,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-12T16:36:55.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-12T17:26:33.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",
