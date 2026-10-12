@@ -1,0 +1,9 @@
+status=qualified
+exitCode=0
+commit=a6b4dc2bd42aea4194b696e600ce4c052e872793
+runner=local development container (not a CI runner; workflow step run by hand)
+os=Linux
+kernel=6.18.44-fc-v114
+architecture=x86_64
+utilLinux=unshare from util-linux 2.39.3
+recordedAt=2026-10-12T20:51:59Z

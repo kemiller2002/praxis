@@ -2646,6 +2646,20 @@
             "created"
           ],
           "reason": "Record probe-qualified Linux worker containment and honest refusal on macOS/Windows (WI-0092, re-identified from WI-0089 after an ID collision with PR #246; GH-231/GH-235 phase 6)"
+        },
+        "EXE-20261012T205218071Z-8cccd597": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T20:53:00.741Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Record the owner's CI qualification decision: self-hosted disposable runner only, hosted CI fail-closed, CI status unavailable until provisioned (WI-0095)"
         }
       }
     },

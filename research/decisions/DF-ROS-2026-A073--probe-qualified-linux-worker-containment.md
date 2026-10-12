@@ -25,6 +25,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Record probe-qualified Linux worker containment and honest refusal on macOS/Windows (WI-0092, re-identified from WI-0089 after an ID collision with PR #246; GH-231/GH-235 phase 6)"
+    EXE-20261012T205218071Z-8cccd597:
+      operations: [modified]
+      at: 2026-10-12T20:53:00.741Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Record the owner's CI qualification decision: self-hosted disposable runner only, hosted CI fail-closed, CI status unavailable until provisioned (WI-0095)"
 ---
 
 # Context
@@ -124,3 +134,36 @@ passed). The 9 `local containment:` tests passed; forcing the wrong
 expectation failed the three real-probe tests; removing `--net` from the
 adapter produced `network unrestricted` with three failed probes and an
 unqualified record. Three-OS CI results are recorded only after they run.
+
+# CI qualification (owner decision, 2026-10-12)
+
+The repository owner rejected relaxing
+`kernel.apparmor_restrict_unprivileged_userns` on GitHub-hosted runners, and
+any other weakening of their security configuration. They approved a
+dedicated, disposable self-hosted Linux runner for real qualification.
+
+- **Hosted CI stays a fail-closed gate.** The step was renamed "Host
+  containment fail-closed gate (hosted; not qualification)". It proves that
+  qualification and launch refuse where namespaces are blocked, and that
+  macOS and Windows refuse.
+- **Separate qualification workflow.** `containment-qualification.yml` runs
+  the real denied-operation probes only on an explicitly provisioned,
+  isolated, ephemeral self-hosted runner.
+  - **Trigger:** manual dispatch on `main` only, never PR code.
+  - **Approval:** a protected environment.
+  - **Token:** `contents: read`, no secrets, no persisted credentials.
+  - **Runner checks:** a provisioner-written marker that declares the
+    runner ephemeral and dedicated.
+  - **Record:** OS, kernel, mechanism, profile digest, tool digests, every
+    probe, each dimension's status and the qualification status.
+  - **Cleanup:** disposable, even on failure.
+- **Per environment.** A pass qualifies only that runner. The launch gate
+  already rejects evidence whose host facts differ.
+- **Status until provisioned.** CI containment qualification is reported
+  **unavailable**, not passed. The development-container record is kept
+  separately in `docs/containment-evidence/local-dev-host-2026-10-12/` as
+  local evidence only.
+- **Remaining blocker.** No runner has been provisioned. The requirements are
+  in `docs/containment.md` ("Runner provisioning requirements"). Until a
+  qualification exists for the host that would launch a custom-code worker,
+  autonomous custom-code execution stays disabled (#243).

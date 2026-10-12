@@ -180,3 +180,114 @@ bwrap/nsjail/firejail): `PRAXIS_TEST_FILTER="local containment:"` ran 9 tests,
 real-probe tests fail, showing they are not vacuous; removing `--net` from the
 adapter made `qualify` report `network unrestricted` with three failed probes.
 CI results are reported only after the jobs run.
+
+## CI qualification
+
+Qualification describes one machine, never a platform. A passing record
+qualifies only the host whose kernel, architecture, profile digest and tool
+digests it names. The launch gate already rejects evidence from any other
+host. CI therefore reports qualification per runner, and a pass on one
+runner never qualifies another.
+
+| Where | What runs | What it proves | Reported as |
+|---|---|---|---|
+| GitHub-hosted runners (`praxis-validation.yml`, `local-worker-portability`, step "Host containment fail-closed gate") | `local containment:` tests | Fail-closed behavior. On hosted Ubuntu, unprivileged user namespaces are blocked, so qualification and contained launch must **refuse**. macOS and Windows must refuse. | a passing gate, **not** a qualification |
+| A provisioned, disposable self-hosted runner (`containment-qualification.yml`) | `praxis local containment qualify` with the real denied-operation probes | The five dimensions are enforced on that runner | `qualified`, `unqualified` or `error` for that runner only |
+| Anywhere else | — | — | **unavailable** |
+
+Hosted runners are never reconfigured to make probes pass. The workflows do
+not change `kernel.apparmor_restrict_unprivileged_userns` or any other
+security setting.
+
+**Current status: CI containment qualification is unavailable.** No
+qualification runner has been provisioned yet, so nothing has run on one.
+Until a run on a provisioned runner records `qualified`, the containment
+status in CI is "unavailable", not "passed". Autonomous custom-code execution
+stays disabled (#243).
+
+### The qualification workflow
+
+`.github/workflows/containment-qualification.yml`:
+
+- **Trigger.** Manual `workflow_dispatch` only, and only for `main`. There are
+  no `pull_request` or `pull_request_target` triggers, so untrusted PR code
+  never reaches the runner. The workflow definition comes from the
+  protected default branch.
+- **Approval.** It uses the `containment-qualification` environment, which
+  must be protected with required reviewers.
+- **Token and secrets.** `permissions: contents: read`, no secrets, and
+  checkout with `persist-credentials: false`.
+- **Runner check.** It refuses unless the runner is self-hosted and carries
+  the labels `self-hosted, linux, x64, praxis-containment-qualification`. The
+  provisioner must also have written `/etc/praxis-containment-runner` with
+  the lines `ephemeral=true` and `dedicated=true`, and `unshare`, `setpriv`,
+  `prlimit`, `git` and `sha256sum` must be present.
+- **Host state.** It builds the CLI and writes a private host configuration
+  and host roots under `$RUNNER_TEMP`, outside the checkout.
+- **Probes.** It runs `qualify` and `status`, which execute the real probe
+  suite described under [Probes](#probes).
+- **Record.** It produces and uploads, for 90 days, a record of:
+  - OS, kernel and architecture;
+  - util-linux version;
+  - isolation mechanism and profile digest (the policy);
+  - tool digests;
+  - every probe outcome;
+  - each dimension's status;
+  - unsupported controls;
+  - the qualification status;
+  - the commit and runner name.
+
+  It also writes a summary to the job page.
+- **Cleanup.** It deletes all host state, even on failure. The job fails
+  unless the record says `qualified`.
+
+### Runner provisioning requirements
+
+The qualification runner must be all of the following.
+
+- **Dedicated and disposable.** Use a fresh VM or bare-metal image per job,
+  registered with `--ephemeral` so it takes exactly one job and is destroyed
+  afterwards. Never reuse it for other workflows or repositories, and never
+  attach it to a runner group that untrusted workflows can target.
+- **Isolated.** It holds no production credentials, cloud metadata access,
+  SSH keys, package-publish tokens or network paths to internal systems.
+  Outbound access is only what `actions/checkout`, `setup-dotnet` and NuGet
+  restore need.
+- **Unprivileged runner account.** The runner service must not run as root.
+  Qualification exercises unprivileged user namespaces, which is the
+  deployment shape the gate admits.
+- **Kernel and tools.**
+  - Linux with unprivileged user namespaces enabled on that disposable VM by
+    its own image policy. This is never done on GitHub-hosted runners.
+  - util-linux providing `unshare`, `setpriv` and `prlimit`.
+  - `git`.
+  - A merged-`/usr` layout, or `readOnlyPaths` adjusted in a reviewed change.
+- **Registered labels.** `self-hosted`, `linux`, `x64`,
+  `praxis-containment-qualification`, plus the marker file above, written by
+  the provisioning image and not by a workflow.
+- **Repository settings.**
+  - Create the `containment-qualification` environment with required
+    reviewers and no secrets.
+  - Restrict the runner group to this repository and to this workflow.
+  - Keep fork PR workflows from self-hosted runners (the GitHub default for
+    public repositories; enforce it for private ones).
+
+A qualification on that runner does not qualify developer machines or other
+runners. Each host that will launch contained workers runs its own `qualify`
+and keeps its own evidence file, and the launch gate checks that the evidence
+matches the host.
+
+### Preserved local evidence
+
+`docs/containment-evidence/local-dev-host-2026-10-12/` holds a qualification
+record from the development container where this feature was built. It was
+produced by running the workflow's qualification step by hand at commit
+`a6b4dc2`:
+- `qualified`;
+- 35/35 probes;
+- all five dimensions `enforced`;
+- Linux `6.18.44-fc-v114`, x86_64, util-linux 2.39.3;
+- the process runs as root inside a container.
+
+It shows that the mechanism works on that machine. It is **not** CI
+qualification and qualifies no other host.

@@ -6010,6 +6010,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0095",
+      "title": "Self-hosted containment qualification workflow: real probes only on an explicitly provisioned, disposable runner; hosted CI stays a fail-closed gate; CI qualification reported unavailable until provisioned (owner decision 2026-10-12)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-12T20:52:16.597Z",
+      "updatedAt": "2026-10-12T20:52:16.890Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

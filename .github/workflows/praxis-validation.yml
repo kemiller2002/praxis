@@ -142,11 +142,13 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: "local validator:"
-      # Containment is qualified only by real probes (docs/containment.md).
-      # Linux: an independent unshare precheck decides; where user namespaces
-      # work every probe must pass, otherwise qualification and launch must
-      # refuse. macOS/Windows have no mechanism and must refuse. No parity.
-      - name: Host containment qualification (Linux probes or refusal; macOS/Windows refuse)
+      # Fail-closed gate on GitHub-hosted runners. This is NOT containment
+      # qualification: hosted runners are never reconfigured to permit user
+      # namespaces. Where namespaces are blocked (expected on hosted Ubuntu)
+      # qualification and launch must refuse; macOS/Windows have no mechanism
+      # and must refuse. Real qualification runs only on a provisioned,
+      # disposable self-hosted runner (containment-qualification.yml).
+      - name: Host containment fail-closed gate (hosted; not qualification)
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: "local containment:"

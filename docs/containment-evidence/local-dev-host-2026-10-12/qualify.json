@@ -1,0 +1,391 @@
+{
+  "schema": "praxis.containment-evidence/1",
+  "host": "praxis-linux-namespaces",
+  "restrictions": [
+    {
+      "dimension": "filesystem",
+      "status": "enforced",
+      "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+      "evidence": "12 probe(s) passed under sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44 at 2026-10-12T20:51:59.413Z: fs.write-inside,fs.write-repository,fs.write-policy,fs.write-signer,fs.write-journal,fs.write-spool,fs.write-submissions,fs.write-evidence,fs.write-host-config,fs.write-sibling-worktree,fs.write-host-tmp,fs.symlink-escape"
+    },
+    {
+      "dimension": "process",
+      "status": "enforced",
+      "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+      "evidence": "9 probe(s) passed under sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44 at 2026-10-12T20:51:59.413Z: proc.host-visibility,proc.subprocess-isolated,proc.signal-host,proc.ptrace-host,proc.no-new-privs,proc.setuid,proc.remount-rw,proc.nested-userns,proc.rlimits"
+    },
+    {
+      "dimension": "network",
+      "status": "enforced",
+      "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+      "evidence": "3 probe(s) passed under sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44 at 2026-10-12T20:51:59.413Z: net.loopback-host,net.external,net.interfaces"
+    },
+    {
+      "dimension": "credential",
+      "status": "enforced",
+      "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+      "evidence": "9 probe(s) passed under sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44 at 2026-10-12T20:51:59.413Z: cred.read-policy,cred.read-signer,cred.read-journal,cred.read-spool,cred.read-submissions,cred.read-evidence,cred.read-host-config,cred.read-via-symlink,cred.host-credentials"
+    },
+    {
+      "dimension": "environment",
+      "status": "enforced",
+      "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+      "evidence": "2 probe(s) passed under sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44 at 2026-10-12T20:51:59.413Z: env.allowlist,env.non-allowlisted-refused"
+    }
+  ],
+  "qualified": true,
+  "profile": "linux-userns-pivot/1",
+  "profileDigest": "sha256:2d36f27514297652cc4f0257121b5895e7e44add708c369ea719e7bf7bf4ec44",
+  "mechanism": "unshare(user,net,mount,pid,ipc,uts,kill-child)\u002Bpivot_root(read-only binds)\u002Bprlimit\u002Bsetpriv(no_new_privs,caps=-all,securebits locked)",
+  "platform": {
+    "operatingSystem": "linux",
+    "kernel": "6.18.44-fc-v114",
+    "architecture": "x64"
+  },
+  "tools": [
+    {
+      "name": "unshare",
+      "path": "/usr/bin/unshare",
+      "sha256": "sha256:a23c8863860669003dc4660039fe642f5795c8c2195898ebc5d01afa1ac3d11c"
+    },
+    {
+      "name": "sh",
+      "path": "/usr/bin/sh",
+      "sha256": "sha256:86d31f6fb799e91fa21bad341484564510ca287703a16e9e46c53338776f4f42"
+    },
+    {
+      "name": "prlimit",
+      "path": "/usr/bin/prlimit",
+      "sha256": "sha256:17064f67e650d6152a6902b013aab496b54c87587c8eea6f5023aafee6154069"
+    },
+    {
+      "name": "setpriv",
+      "path": "/usr/bin/setpriv",
+      "sha256": "sha256:62ec0120791f3afcfb689fed52384ec2b0accc6e118a6b9a1d6fcfa7450aaf37"
+    },
+    {
+      "name": "mount",
+      "path": "/usr/bin/mount",
+      "sha256": "sha256:fde2b1540ca79ea42df942653bdfd09b9b3e3ff1d4713602bd280f754033957a"
+    },
+    {
+      "name": "umount",
+      "path": "/usr/bin/umount",
+      "sha256": "sha256:186774a008ad69cf60bce6af35a850608d1c6ba410d3eca4113ea55b3a8b54d6"
+    },
+    {
+      "name": "pivot_root",
+      "path": "/usr/sbin/pivot_root",
+      "sha256": "sha256:b8cb609a03e7b7fc999cb2fccba77bc1ec1c5e39e6ae65667d42def62a57ba1e"
+    },
+    {
+      "name": "mkdir",
+      "path": "/usr/bin/mkdir",
+      "sha256": "sha256:430c3f949d7d328cd835722f5bbddeac0956fbdfbbb6a197e0abb1def3ed27e2"
+    },
+    {
+      "name": "ln",
+      "path": "/usr/bin/ln",
+      "sha256": "sha256:059a363e62adcc10e14e55b5c82df6945509303eb32370b02c461311329ad261"
+    },
+    {
+      "name": "readlink",
+      "path": "/usr/bin/readlink",
+      "sha256": "sha256:4c6117ae99adf14e90ee49c860ca6f827db657423d0d0b3e4f6eb29d39daebe0"
+    },
+    {
+      "name": "rmdir",
+      "path": "/usr/bin/rmdir",
+      "sha256": "sha256:a5f021a2a7ebbde761e035114aacc1ef071bbc81d85e6431b843d9e25a0ce85f"
+    }
+  ],
+  "probes": [
+    {
+      "id": "fs.write-inside",
+      "dimension": "filesystem",
+      "expected": "allowed",
+      "observed": "allowed",
+      "result": "pass",
+      "detail": "host read back the nonce"
+    },
+    {
+      "id": "fs.write-repository",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-policy",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-signer",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-journal",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-spool",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-submissions",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-evidence",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-host-config",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-sibling-worktree",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "fs.write-host-tmp",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "written",
+      "result": "pass",
+      "detail": "write landed only in the private namespace"
+    },
+    {
+      "id": "fs.symlink-escape",
+      "dimension": "filesystem",
+      "expected": "no host effect",
+      "observed": "denied,denied",
+      "result": "pass",
+      "detail": "host unchanged"
+    },
+    {
+      "id": "cred.read-policy",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-signer",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-journal",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-spool",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-submissions",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-evidence",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-host-config",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.read-via-symlink",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "no planted secret in output"
+    },
+    {
+      "id": "cred.host-credentials",
+      "dimension": "credential",
+      "expected": "denied (no planted secret in output)",
+      "observed": "absent",
+      "result": "pass",
+      "detail": "in-sandbox observation"
+    },
+    {
+      "id": "net.loopback-host",
+      "dimension": "network",
+      "expected": "denied",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host listener accepted nothing"
+    },
+    {
+      "id": "net.external",
+      "dimension": "network",
+      "expected": "denied",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "in-sandbox observation"
+    },
+    {
+      "id": "net.interfaces",
+      "dimension": "network",
+      "expected": "lo only",
+      "observed": "lo",
+      "result": "pass",
+      "detail": "in-sandbox observation"
+    },
+    {
+      "id": "proc.host-visibility",
+      "dimension": "process",
+      "expected": "isolated",
+      "observed": "isolated",
+      "result": "pass",
+      "detail": "host sentinel not visible"
+    },
+    {
+      "id": "proc.subprocess-isolated",
+      "dimension": "process",
+      "expected": "isolated",
+      "observed": "isolated",
+      "result": "pass",
+      "detail": "host sentinel not visible"
+    },
+    {
+      "id": "proc.signal-host",
+      "dimension": "process",
+      "expected": "denied",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "host sentinel alive"
+    },
+    {
+      "id": "proc.ptrace-host",
+      "dimension": "process",
+      "expected": "denied",
+      "observed": "absent",
+      "result": "pass",
+      "detail": "in-sandbox observation"
+    },
+    {
+      "id": "proc.no-new-privs",
+      "dimension": "process",
+      "expected": "NoNewPrivs=1, all capability sets 0",
+      "observed": "CapInh:=0000000000000000;CapPrm:=0000000000000000;CapEff:=0000000000000000;CapBnd:=0000000000000000;CapAmb:=0000000000000000;NoNewPrivs:=1;",
+      "result": "pass",
+      "detail": "in-sandbox /proc/self/status"
+    },
+    {
+      "id": "proc.setuid",
+      "dimension": "process",
+      "expected": "denied",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "setuid su under no_new_privs"
+    },
+    {
+      "id": "proc.remount-rw",
+      "dimension": "process",
+      "expected": "denied",
+      "observed": "denied,denied,denied",
+      "result": "pass",
+      "detail": "host /usr unchanged"
+    },
+    {
+      "id": "proc.nested-userns",
+      "dimension": "process",
+      "expected": "denied",
+      "observed": "denied",
+      "result": "pass",
+      "detail": "in-sandbox observation"
+    },
+    {
+      "id": "proc.rlimits",
+      "dimension": "process",
+      "expected": "profile limits",
+      "observed": "nproc=256,nofile=1024",
+      "result": "pass",
+      "detail": "in-sandbox ulimit"
+    },
+    {
+      "id": "env.allowlist",
+      "dimension": "environment",
+      "expected": "only allowlisted names",
+      "observed": "HOME,LANG,PATH,PWD,SHLVL,TMPDIR",
+      "result": "pass",
+      "detail": "names only, values never reported"
+    },
+    {
+      "id": "env.non-allowlisted-refused",
+      "dimension": "environment",
+      "expected": "adapter refuses",
+      "observed": "refused",
+      "result": "pass",
+      "detail": "static adapter check"
+    }
+  ],
+  "unsupportedControls": [
+    "seccomp syscall filtering (no pinned seccomp tool; setpriv has none)",
+    "distinct host uid: the worker runs as the invoking uid mapped to namespace root, without capabilities",
+    "cgroup memory/CPU accounting (prlimit bounds processes, files and file size only)",
+    "Git commits from a linked worktree (its common .git directory is sealed)"
+  ],
+  "qualifiedAt": "2026-10-12T20:51:59.413Z"
+}
