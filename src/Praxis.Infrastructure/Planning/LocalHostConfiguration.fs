@@ -58,7 +58,10 @@ type LocalHostConfiguration =
       /// Repository-relative directory under which Ordo's generated ownership
       /// roots are placed. Chosen by the host, never by the plan or agent.
       ConstructionMount: string
-      Containment: LocalContainmentConfiguration option }
+      Containment: LocalContainmentConfiguration option
+      /// Handwritten extension slots directly under the construction mount
+      /// (Praxis #243). Empty unless the operator declares them.
+      ExtensionSlots: ConstructionExtensionSlot list }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -231,6 +234,33 @@ module LocalHostConfiguration =
             { Evidence = evidence; Settings = settings
               MaxEvidenceAge = TimeSpan.FromMinutes(float (optionalNumber "maxEvidenceAgeMinutes" 1 43200 1440)) }
 
+    let private extensionSlot (element: JsonElement) =
+        exactly element [ "file"; "contracts"; "maxBytes" ] []
+        let file = text element "file"
+        match ConstructionExtensionSlot.denied file with
+        | Some reason -> fail ("extension slot " + file + " refused: " + reason)
+        | None -> ()
+        let contracts = strings element "contracts"
+        if contracts.IsEmpty || contracts |> List.exists (clean >> not) || contracts.Length <> (Set.ofList contracts).Count then
+            fail ("extension slot " + file + " must name distinct extension contracts")
+        { File = file; Contracts = contracts; MaxBytes = number element "maxBytes" 1 ConstructionExtensionSlot.MaxSlotBytes }
+
+    /// Slots land directly under the mount; the mount may not sit under any
+    /// dot directory, and no file name or contract may be claimed twice.
+    let private extensionSlots (root: JsonElement) (mount: string) =
+        match property root "extensionSlots" with
+        | None -> []
+        | Some value when value.ValueKind = JsonValueKind.Array && value.GetArrayLength() <= ConstructionExtensionSlot.MaxSlots ->
+            let slots = value.EnumerateArray() |> Seq.map extensionSlot |> Seq.toList
+            if not slots.IsEmpty && mount.Split('/') |> Array.exists (fun segment -> segment.StartsWith '.' && segment <> ".") then
+                fail "extension slots may not be placed under CI, agent or repository configuration"
+            if (slots |> List.map (fun slot -> slot.File.ToLowerInvariant()) |> Set.ofList).Count <> slots.Length then
+                fail "extension slot file names must be unique (case-insensitively)"
+            let contracts = slots |> List.collect _.Contracts
+            if contracts.Length <> (Set.ofList contracts).Count then fail "an extension contract may be assigned to only one slot"
+            slots
+        | _ -> fail ("extensionSlots must be an array of at most " + string ConstructionExtensionSlot.MaxSlots + " slots")
+
     let private evidenceSource = function
         | "member-changes" -> LocalEvidenceSource.MemberChanges
         | "acceptance-artifacts" -> LocalEvidenceSource.AcceptanceArtifacts
@@ -249,7 +279,7 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment" ]
+                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
@@ -260,6 +290,7 @@ module LocalHostConfiguration =
             if (located |> Map.values |> Set.ofSeq).Count <> names.Length then fail "host roots must be distinct directories"
             let mount = textOr root "constructionMount" "."
             if mount <> "." && not (LocalAgentHandoff.isResourcePath mount) then fail "constructionMount must be a portable repository-relative directory"
+            let slots = extensionSlots root mount
             let git = root.GetProperty "git"
             exactly git [ "executable"; "sha256" ] [ "timeoutMilliseconds" ]
             let committer = root.GetProperty "committer"
@@ -304,7 +335,8 @@ module LocalHostConfiguration =
                  CompletionEvidence = completion
                  ConstructionRoot = located |> Map.tryFind "construction"
                  ConstructionMount = mount
-                 Containment = containmentSettings }
+                 Containment = containmentSettings
+                 ExtensionSlots = slots }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->

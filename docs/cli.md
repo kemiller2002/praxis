@@ -844,6 +844,8 @@ admitted (exit 3 when unqualified, including on macOS and Windows; see
 ```text
 praxis construct preview --host-config FILE --group ID --plan FILE --target REF
 praxis construct apply --host-config FILE --group ID --plan FILE --target REF
+praxis construct route --host-config FILE --group ID --plan FILE
+praxis construct extend --host-config FILE --group ID --plan FILE --target REF --files DIR [--role implementation]
 ```
 
 Host-controlled application of an Ordo construction plan. The plan is the only
@@ -851,5 +853,27 @@ agent input; when it omits `binding`, the host stamps the binding from the
 approved cohort. `preview` is read-only and deterministic. `apply` builds the
 planned generated files as Git objects, journals the construction and moves
 `--target` with an expected-head update. Both re-verify the operator grant and
-the committed ECIR sources, and run the pinned Ordo engine in-process. Exit 0
-success, 2 invalid arguments, 3 refused. See [the construction guide](construction.md).
+the committed ECIR sources, and run the pinned Ordo engine in-process.
+
+`route` classifies the admitted construction's work. Generated artifacts are
+deterministic. `resolve` obligations are semantic decisions. `implement`
+obligations are bounded custom work in host-declared `extensionSlots`. An
+`implement` obligation without a slot is a typed exception that keeps its
+requirement keys. The content-addressed routing record goes to the host
+construction root.
+
+`extend` commits handwritten files from `DIR` into declared slots on a target
+that already carries this exact construction. It names every refused entry:
+- undeclared names, symlinks and subdirectories;
+- dot entries, generated, project, package, policy and CI files;
+- ECIR and requirement sources;
+- oversized files.
+
+It re-admits the plan like `apply`, and moves `--target` by expected-head
+update. It never runs a worker or submitted code. Worker-execution flags
+(`--worker`, `--command`, `--run`, and others) are refused until host
+containment is qualified. Only the `implementation` role (the default) may
+extend.
+
+Exit 0 success, 2 invalid arguments, 3 refused. See
+[the construction guide](construction.md).

@@ -3,6 +3,7 @@ namespace Praxis.Infrastructure.Construction
 open System
 open System.IO
 open System.Text.Json.Nodes
+open Praxis.Domain.Execution
 open Praxis.Infrastructure.Planning
 open Ordo.Construction
 
@@ -104,3 +105,63 @@ module ConstructionService =
                     node["candidateCommit"] <- JsonValue.Create candidate
                 | ConstructionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
                 node))
+
+    /// Classify the admitted construction's work and persist the routing
+    /// record in the host construction root. Never touches the repository.
+    let route root hostConfig groupId planPath =
+        admitted root hostConfig groupId planPath |> Result.bind (fun (configuration, admitted) ->
+            let routing = ConstructionRouting.classify configuration admitted
+            ConstructionRouting.record configuration routing |> Result.map (fun path ->
+                let node = ConstructionRouting.render routing
+                node["recordPath"] <- JsonValue.Create path
+                node))
+
+    /// Only the implementation role may fill slots: verification and review
+    /// stay independent of the code they judge. The role is a routing
+    /// constraint on this request, not an authenticated identity.
+    let private implementationRole (role: string) =
+        match ExecutionRole.tryParse role with
+        | Some ExecutionRole.Implementation -> Ok()
+        | Some other -> Error(sprintf "role %s may not submit handwritten extensions; only the implementation role fills slots" (ExecutionRole.toWire other))
+        | None -> Error("unknown role: " + role)
+
+    let private kindName' = function
+        | ExtensionWriteKind.Create -> "create"
+        | ExtensionWriteKind.Replace -> "replace"
+        | ExtensionWriteKind.Unchanged -> "unchanged"
+
+    let extend root hostConfig groupId planPath targetRef filesDirectory role =
+        implementationRole role |> Result.bind (fun () ->
+            admitted root hostConfig groupId planPath |> Result.bind (fun (configuration, admitted) ->
+                ConstructionExtension.extend configuration admitted targetRef filesDirectory DateTimeOffset.UtcNow |> Result.map (fun report ->
+                    let node = JsonObject()
+                    node["schemaVersion"] <- JsonValue.Create "praxis.construction-extension/1"
+                    node["extensionId"] <- JsonValue.Create report.ExtensionId
+                    node["constructionId"] <- JsonValue.Create report.ConstructionId
+                    node["constructionCommit"] <- JsonValue.Create report.ConstructionCommit
+                    node["planDigest"] <- JsonValue.Create report.Routing.Binding.PlanDigest
+                    node["routeId"] <- JsonValue.Create(ConstructionRouting.routeId report.Routing)
+                    node["routeRecord"] <- JsonValue.Create report.RouteRecord
+                    node["targetRef"] <- JsonValue.Create report.TargetRef
+                    node["targetCommit"] <- JsonValue.Create report.TargetCommit
+                    node["files"] <-
+                        JsonArray(
+                            report.Files
+                            |> List.map (fun (file, kind) ->
+                                let item = JsonObject()
+                                item["kind"] <- JsonValue.Create(kindName' kind)
+                                item["path"] <- JsonValue.Create file.Path
+                                item["sha256"] <- JsonValue.Create file.Digest
+                                item["contracts"] <- strings file.Contracts
+                                item :> JsonNode)
+                            |> List.toArray)
+                    let routed = ConstructionRouting.render report.Routing
+                    node["exceptions"] <- routed["exceptions"].DeepClone()
+                    node["measurement"] <- routed["measurement"].DeepClone()
+                    match report.Outcome with
+                    | ExtensionOutcome.Applied candidate ->
+                        node["outcome"] <- JsonValue.Create "applied"
+                        node["candidateCommit"] <- JsonValue.Create candidate
+                    | ExtensionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
+                    node["notice"] <- JsonValue.Create "Handwritten files committed into host-declared slots. No worker or submitted code ran; obligations remain open until independently verified."
+                    node)))
