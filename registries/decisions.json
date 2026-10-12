@@ -2618,5 +2618,57 @@
     "title": "Apply Ordo construction through host-built Git objects bound to a signed cohort grant",
     "updated": "2026-10-12",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A071"
+    ],
+    "id": "DF-ROS-2026-A072",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A072--capability-scoped-construction-extensions.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T185257851Z-f0478885": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T19:07:40.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record capability-scoped construction extensions and mechanical-first routing (GH-243)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A071",
+      "docs/construction.md",
+      "docs/cli.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "construction",
+      "ordo",
+      "routing",
+      "extensions",
+      "authority",
+      "containment"
+    ],
+    "title": "Route construction work mechanically first and admit handwritten code only into host-declared slots",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
   }
 ]
