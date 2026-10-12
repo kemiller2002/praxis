@@ -140,6 +140,24 @@ execution stays disabled until host containment is qualified (#231, #235).
 `--worker`, `--command`, `--run`, `--exec`, `--agent-command` and `--adapter`
 are refused with that reason; they are never ignored.
 
+## Acceptance: construction-package scope verification
+
+Worker checklists (GH-234) add a mandatory, host-implemented
+construction-scope row for construction packages. It treats this journal,
+the routing records and the plan records as evidence only:
+
+- `apply` and `extend` record the admitted plan write-once as
+  `plans/HEX.json` in the construction root;
+- authority is re-derived from the protected policy and signed approval at
+  check time;
+- every applied write is compared with the candidate's Git objects.
+
+The contract, every refusal reason and the freshness rules are in
+[worker-checklists.md](worker-checklists.md#construction-package-scope-verification).
+This check verifies the scope and provenance of host-applied writes. It is
+not OS containment. `preview` stays read-only and usable while that
+acceptance refuses.
+
 ## Recovery
 
 | Interruption | What a rerun of the same command does |
