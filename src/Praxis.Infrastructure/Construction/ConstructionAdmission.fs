@@ -27,6 +27,15 @@ type ConstructionBinding =
       Approver: string
       ApprovalExpiresAt: string
       PlanDigest: string
+      /// The canonical digests the admitted plan is bound to (Ordo's own
+      /// manifest digest and recomputed blueprint digest), as opposed to the
+      /// committed files' byte digests above. Equal to the stamped binding
+      /// when the plan omitted one.
+      PlanSourceManifestDigest: string
+      PlanBlueprintDigest: string
+      /// The admitted plan in Ordo's canonical form; its SHA-256 is PlanDigest.
+      /// Independent verifiers read this instead of reconstructing the plan.
+      PlanCanonicalJson: string
       GeneratorVersion: string
       OrdoCoreVersion: string
       OrdoConstructionVersion: string }
@@ -138,5 +147,9 @@ module ConstructionAdmission =
                                       BlueprintPath = source.BlueprintPath; BlueprintDigest = blueprintDigest
                                       RequirementKeys = approval.RequirementKeys; DecisionIds = approval.DecisionIds
                                       Approver = approval.Approver; ApprovalExpiresAt = approval.ExpiresAt
-                                      PlanDigest = ConstructionPlan.digest validated; GeneratorVersion = built.GeneratorVersion
+                                      PlanDigest = ConstructionPlan.digest validated
+                                      PlanSourceManifestDigest = (ConstructionPlan.view validated).Binding.SourceManifestDigest
+                                      PlanBlueprintDigest = (ConstructionPlan.view validated).Binding.BlueprintDigest
+                                      PlanCanonicalJson = ConstructionPlan.canonicalJson validated
+                                      GeneratorVersion = built.GeneratorVersion
                                       OrdoCoreVersion = ordoCoreVersion (); OrdoConstructionVersion = ordoConstructionVersion () } })))))

@@ -9681,6 +9681,47 @@
       "completedAt": "2026-10-12T16:46:08.000Z"
     },
     {
+      "id": "WI-0089",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/FileLocalWorkerHost.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T17:57:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T171217219Z-d54381c9"
+      ],
+      "latestCheckpoint": {
+        "id": "7073fb71fc7420dbf64c7421",
+        "recordedAt": "2026-10-12T17:57:08.000Z",
+        "executionId": "EXE-20261012T171217219Z-d54381c9",
+        "repository": "repository-operating-system",
+        "branch": "fix/resume-archives-from-spool",
+        "commit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/resume-archives-from-spool",
+        "remoteCommit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
+        "summary": "Resume archives an exited dispatch from the host spool when its submission archive is missing; deterministic test added; CI green (24 checks) on 4024faf; main merged via native history merge.",
+        "nextAction": "Complete WI-0089 and merge PR 246.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T17:57:12.000Z"
+    },
+    {
       "id": "GH-242",
       "type": "feature",
       "state": "complete",
@@ -9720,6 +9761,47 @@
         }
       },
       "completedAt": "2026-10-12T17:26:38.000Z"
+    },
+    {
+      "id": "WI-0091",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionExtension.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T19:42:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T185257851Z-f0478885"
+      ],
+      "latestCheckpoint": {
+        "id": "fbcc2d2ec6c7080629e716a1",
+        "recordedAt": "2026-10-12T19:42:49.000Z",
+        "executionId": "EXE-20261012T185257851Z-f0478885",
+        "repository": "repository-operating-system",
+        "branch": "construct/gh-243-scoped-extensions",
+        "commit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "construct/gh-243-scoped-extensions",
+        "remoteCommit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
+        "summary": "Implementation merged with origin/main f1a08bf; construction cli 17/17 pass",
+        "nextAction": "Complete WI-0091, build registries, validate, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T19:42:52.000Z"
     },
     {
       "id": "WI-0090",
@@ -9763,45 +9845,45 @@
       "completedAt": "2026-10-12T18:46:40.243Z"
     },
     {
-      "id": "WI-0089",
+      "id": "WI-0096",
       "type": "task",
       "state": "complete",
       "semanticState": "complete",
       "evidence": [
         {
           "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Planning/FileLocalWorkerHost.fs"
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionRouting.fs"
         },
         {
           "type": "tests",
-          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
         }
       ],
-      "updatedAt": "2026-10-12T17:57:12.000Z",
+      "updatedAt": "2026-10-12T21:27:27.649Z",
       "telemetryExecutionIds": [
-        "EXE-20261012T171217219Z-d54381c9"
+        "EXE-20261012T211524381Z-f7497cda"
       ],
       "latestCheckpoint": {
-        "id": "7073fb71fc7420dbf64c7421",
-        "recordedAt": "2026-10-12T17:57:08.000Z",
-        "executionId": "EXE-20261012T171217219Z-d54381c9",
+        "id": "fb320eb8a7149fa5f522376f",
+        "recordedAt": "2026-10-12T21:27:24.234Z",
+        "executionId": "EXE-20261012T211524381Z-f7497cda",
         "repository": "repository-operating-system",
-        "branch": "fix/resume-archives-from-spool",
-        "commit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
+        "branch": "construct/ordo-1.7.0",
+        "commit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "fix/resume-archives-from-spool",
-        "remoteCommit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
-        "summary": "Resume archives an exited dispatch from the host spool when its submission archive is missing; deterministic test added; CI green (24 checks) on 4024faf; main merged via native history merge.",
-        "nextAction": "Complete WI-0089 and merge PR 246.",
+        "remoteBranch": "construct/ordo-1.7.0",
+        "remoteCommit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
+        "summary": "Ordo 1.7.0 vendored and pinned; ResolveEffectFailure handled in preview and routing; v2 plan test added; construction cli 19/19, foundations verify passes",
+        "nextAction": "Complete WI-0096 and open the PR",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
       },
-      "completedAt": "2026-10-12T17:57:12.000Z"
+      "completedAt": "2026-10-12T21:27:27.649Z"
     },
     {
       "id": "WI-0094",
@@ -9843,47 +9925,6 @@
         }
       },
       "completedAt": "2026-10-12T20:42:44.342Z"
-    },
-    {
-      "id": "WI-0091",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Construction/ConstructionExtension.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
-        }
-      ],
-      "updatedAt": "2026-10-12T19:42:52.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20261012T185257851Z-f0478885"
-      ],
-      "latestCheckpoint": {
-        "id": "fbcc2d2ec6c7080629e716a1",
-        "recordedAt": "2026-10-12T19:42:49.000Z",
-        "executionId": "EXE-20261012T185257851Z-f0478885",
-        "repository": "repository-operating-system",
-        "branch": "construct/gh-243-scoped-extensions",
-        "commit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "construct/gh-243-scoped-extensions",
-        "remoteCommit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
-        "summary": "Implementation merged with origin/main f1a08bf; construction cli 17/17 pass",
-        "nextAction": "Complete WI-0091, build registries, validate, open draft PR",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      },
-      "completedAt": "2026-10-12T19:42:52.000Z"
     },
     {
       "id": "WI-0092",
@@ -9980,50 +10021,50 @@
       "completedAt": "2026-10-12T20:53:45.338Z"
     },
     {
-      "id": "WI-0096",
+      "id": "WI-0098",
       "type": "task",
       "state": "complete",
       "semanticState": "complete",
       "evidence": [
         {
           "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Construction/ConstructionRouting.fs"
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionService.fs"
         },
         {
           "type": "tests",
           "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
         }
       ],
-      "updatedAt": "2026-10-12T21:27:27.649Z",
+      "updatedAt": "2026-10-12T22:37:59.730Z",
       "telemetryExecutionIds": [
-        "EXE-20261012T211524381Z-f7497cda"
+        "EXE-20261012T223752102Z-8a383548"
       ],
       "latestCheckpoint": {
-        "id": "fb320eb8a7149fa5f522376f",
-        "recordedAt": "2026-10-12T21:27:24.234Z",
-        "executionId": "EXE-20261012T211524381Z-f7497cda",
+        "id": "1216c4188b77661816528545",
+        "recordedAt": "2026-10-12T22:37:56.127Z",
+        "executionId": "EXE-20261012T223752102Z-8a383548",
         "repository": "repository-operating-system",
-        "branch": "construct/ordo-1.7.0",
-        "commit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
+        "branch": "construct/report-admitted-plan",
+        "commit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "construct/ordo-1.7.0",
-        "remoteCommit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
-        "summary": "Ordo 1.7.0 vendored and pinned; ResolveEffectFailure handled in preview and routing; v2 plan test added; construction cli 19/19, foundations verify passes",
-        "nextAction": "Complete WI-0096 and open the PR",
+        "remoteBranch": "construct/report-admitted-plan",
+        "remoteCommit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
+        "summary": "Construct preview/apply report canonical plan and canonical binding digests; round-trip test; construction cli 19/19",
+        "nextAction": "Complete WI-0098 and open the PR",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
       },
-      "completedAt": "2026-10-12T21:27:27.649Z"
+      "completedAt": "2026-10-12T22:37:59.730Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T21:27:27.6490000\u002B00:00",
+  "updatedAt": "2026-10-12T22:37:59.7300000\u002B00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
