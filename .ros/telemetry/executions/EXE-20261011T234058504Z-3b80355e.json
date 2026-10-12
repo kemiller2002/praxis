@@ -1571,6 +1571,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.blocked",
+      "occurredAt": "2026-10-12T08:11:50.000Z",
+      "stepId": "STEP-20261012T070851000Z-ed744d56",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1963,12 +1980,12 @@
       "classification": [
         "testing"
       ],
-      "status": "active",
+      "status": "blocked",
       "plannedAt": "2026-10-12T07:08:51.000Z",
       "startedAt": "2026-10-12T07:08:51.000Z",
       "completedAt": null,
       "endedAt": null,
-      "updatedAt": "2026-10-12T07:08:51.000Z",
+      "updatedAt": "2026-10-12T08:11:50.000Z",
       "actor": {
         "kind": "agent",
         "id": "openai/codex",
@@ -2275,8 +2292,22 @@
             "model": "unknown",
             "runtime": "codex"
           }
+        },
+        {
+          "from": "active",
+          "to": "blocked",
+          "occurredAt": "2026-10-12T08:11:50.000Z",
+          "reason": "Actual native preview refuses contradictory published ordering; explicit owner canonical-order decision is required",
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
         }
-      ]
+      ],
+      "blockedReason": "Actual native preview refuses contradictory published ordering; explicit owner canonical-order decision is required"
     }
   ]
 }
