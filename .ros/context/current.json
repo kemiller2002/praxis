@@ -9730,7 +9730,27 @@
       "updatedAt": "2026-10-12T18:43:24.065Z",
       "telemetryExecutionIds": [
         "EXE-20261012T184324940Z-997667e7"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "7079892cd42e6d24ca4a60a5",
+        "recordedAt": "2026-10-12T18:46:16.392Z",
+        "executionId": "EXE-20261012T184324940Z-997667e7",
+        "repository": "repository-operating-system",
+        "branch": "construct/host-stamped-binding",
+        "commit": "8358e73937b74a036bcec32769a8be4c352a7294",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "construct/host-stamped-binding",
+        "remoteCommit": "8358e73937b74a036bcec32769a8be4c352a7294",
+        "summary": "ConstructionAdmission stamps an omitted plan binding from the prepared cohort; docs updated; construction cli 9/9 pass",
+        "nextAction": "Complete WI-0090, open the PR and drive CI green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
