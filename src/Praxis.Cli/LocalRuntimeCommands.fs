@@ -25,6 +25,7 @@ module LocalRuntimeCommands =
         + " | local operator review --host-config FILE --packet FILE --key-id ID --approver NAME --payload FILE"
         + " | local operator delegate --host-config FILE --packet FILE --key-id ID --approver NAME --signature FILE --out FILE"
         + " | local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])"
+        + ConstructionCommands.usage
 
     let private values (name: string) (arguments: string list) =
         arguments |> List.pairwise |> List.choose (fun (flag, value) -> if flag = name then Some value else None)
@@ -216,6 +217,7 @@ module LocalRuntimeCommands =
     let route (root: string) (family: string) (arguments: string list) (withActor: string list -> (Actor -> int) -> int) =
         match arguments with
         | _ when family = "handoff" -> LocalHandoffCommands.run root arguments
+        | _ when family = "construct" -> ConstructionCommands.run root arguments
         | "run" :: rest -> withActor rest (fun actor -> run root actor rest |> finish)
         | "status" :: rest ->
             attempt {

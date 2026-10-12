@@ -833,3 +833,17 @@ write exact signing payloads and verify external ECDSA P-256 signatures; they
 never handle private keys. `worker-bridge` is the worker-side adapter the host
 configuration launches. Exit 0 success, 2 invalid arguments, 3 refused. See
 [the local runtime guide](local-runtime.md).
+
+## `construct`
+
+```text
+praxis construct preview --host-config FILE --group ID --plan FILE --target REF
+praxis construct apply --host-config FILE --group ID --plan FILE --target REF
+```
+
+Host-controlled application of an Ordo construction plan. The plan is the only
+agent input. `preview` is read-only and deterministic. `apply` builds the
+planned generated files as Git objects, journals the construction and moves
+`--target` with an expected-head update. Both re-verify the operator grant and
+the committed ECIR sources, and run the pinned Ordo engine in-process. Exit 0
+success, 2 invalid arguments, 3 refused. See [the construction guide](construction.md).

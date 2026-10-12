@@ -10,6 +10,9 @@
   <ItemGroup>
     <!-- Released, pinned Aegis (SAF-AEGIS-6); the boundary lives here so the CLI, web and hub share it. -->
     <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+    <!-- Ordo's deterministic constructor, consumed as the pinned release asset
+         (vendor/nuget/ordo-construction.lock; Praxis #242, Ordo #69). -->
+    <PackageReference Include="EchelonFoundry.Ordo.Construction" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -115,6 +118,10 @@
     <Compile Include="Planning/LocalOperator.fs" />
     <Compile Include="Planning/LocalRuntimeService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
+    <Compile Include="Construction/ConstructionTree.fs" />
+    <Compile Include="Construction/ConstructionAdmission.fs" />
+    <Compile Include="Construction/ConstructionApplication.fs" />
+    <Compile Include="Construction/ConstructionService.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />
     <Compile Include="Foundations/RouteInventoryReader.fs" />
