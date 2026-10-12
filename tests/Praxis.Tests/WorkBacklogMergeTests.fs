@@ -36,6 +36,10 @@ module WorkBacklogMergeTests =
     /// Real repository, real `praxis` writes on two branches, real conflicted `git merge`.
     let private fixture (setup: string -> unit) (leftWork: string -> unit) (rightWork: string -> unit) test =
         let root = CliHarness.initializedRepository "praxis-backlog-merge" None
+        // Many commits trigger Git's detached auto-gc, which can still be
+        // writing objects/pack when the fixture is removed.
+        CliHarness.git root [ "config"; "gc.auto"; "0" ] |> ignore
+        CliHarness.git root [ "config"; "maintenance.auto"; "false" ] |> ignore
         try
             setup root
             CliHarness.commitAll root "base"
