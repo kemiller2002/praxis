@@ -12,10 +12,16 @@ git add .ros/context/current.json .ros/events/events.jsonl
 ./praxis validate
 ```
 
-Preview changes no history files. Apply reads only Git's regular-file stages
-1, 2 and 3 for these two exact paths in a pending merge, requiring each stage
-to match the actual single merge base, HEAD and incoming commit. A modified
-index cannot substitute an invented history. It preserves both
+Preview changes no history files. History comes only from actual HEAD, incoming
+commit and one to 32 real merge-base commits. Conflicted index stages 2 and 3
+must match their real branch commits; stage 1 must match the real ancestor when
+there is exactly one. A synthetic stage-1 history is never parsed or used as
+native data. Either native path may already have auto-merged: its working bytes
+must equal the staged version (allowing Git's CRLF/LF checkout conversion) or
+the exact generated native write, and its
+data must match the authoritative commit-derived plan. At least one path must
+still have complete regular-file conflict stages. A modified index cannot
+substitute invented history. The planner preserves both
 independent work-item records, unknown fields, execution/checkpoint provenance
 and original event lines. Shared events occur once. Base events cannot be
 removed, rewritten or reordered, but may have independent events inserted
@@ -32,6 +38,12 @@ item deletion, changed repository identity, unsupported context versions,
 oversized blobs, linked paths and incomplete conflict stages refuse without
 writing history. Other source conflicts still need ordinary review. The tool
 does not stage, commit, fetch, push, approve completion or merge the PR.
+
+Opposite previously serialized orders can form a cycle even when every event
+is present and unchanged. This tool still refuses that case. Adopting a new
+canonical order needs an explicit, recorded owner decision and a separately
+reviewed native reconciliation path; choosing a branch or editing event lines
+by hand is not an approved repair.
 
 Apply reobserves HEAD, MERGE_HEAD, exact index stages and target contents, then
 uses the existing two-file native recovery journal. Retrying `--apply` resumes

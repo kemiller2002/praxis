@@ -85,47 +85,72 @@ module FileWorkHistoryMerge =
             | Error error -> Error error.Message
             | Ok lease ->
                 try
-                    let index () = git root (["ls-files"; "--unmerged"; "--"] @ paths)
+                    let index () = git root (["ls-files"; "--stage"; "--"] @ paths)
                     let observedIndex = index ()
                     let entries = observedIndex.Split('\n') |> Array.filter (String.IsNullOrWhiteSpace >> not)
-                    if entries.Length <> 6 || entries |> Array.exists (fun line -> not (line.StartsWith "100644 ")) then
-                        failwith "both native history paths must have regular-file Git stages 1, 2 and 3"
-                    for path in paths do
-                        for stage in [1; 2; 3] do
-                            if entries |> Array.filter (fun line -> line.EndsWith($" {stage}\t{path}", StringComparison.Ordinal)) |> Array.length <> 1 then
-                                failwith "incomplete Git conflict stages"
+                    if entries |> Array.exists (fun line -> not (line.StartsWith "100644 ")) then
+                        failwith "native history index must contain regular files"
+                    let clean = paths |> List.map (fun path ->
+                        let matches = entries |> Array.filter (fun line -> line.EndsWith("\t" + path, StringComparison.Ordinal))
+                        if matches.Length = 1 && matches[0].EndsWith($" 0\t{path}", StringComparison.Ordinal) then true
+                        elif matches.Length = 3 && [1; 2; 3] |> List.forall (fun stage ->
+                            matches |> Array.filter (fun line -> line.EndsWith($" {stage}\t{path}", StringComparison.Ordinal)) |> Array.length = 1) then false
+                        else failwith "incomplete native history index")
+                    if clean |> List.forall id then failwith "native history merge requires a conflict"
                     let mergeHead () = git root ["rev-parse"; "--verify"; "MERGE_HEAD"]
                     let head () = git root ["rev-parse"; "--verify"; "HEAD"]
                     let observedMerge, observedHead = mergeHead(), head()
                     let bases = (git root ["merge-base"; "--all"; observedHead.Trim(); observedMerge.Trim()]).Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                    if bases.Length <> 1 then failwith "history merge requires a single real merge base"
-                    // The mutable index is not authority by itself: bind all stages to real commits.
-                    for stage, commit in [1, bases[0]; 2, observedHead.Trim(); 3, observedMerge.Trim()] do
-                        for path in paths do
+                    if bases.Length = 0 || bases.Length > 32 then failwith "unsupported real merge-base count"
+                    let committedObject commit path =
                             let treeLine = (git root ["ls-tree"; commit; "--"; path]).TrimEnd()
                             let fields = treeLine.Split([|' '; '\t'|], StringSplitOptions.RemoveEmptyEntries)
                             if fields.Length <> 4 || fields[0] <> "100644" || fields[1] <> "blob" || fields[3] <> path then
                                 failwith "committed history is not a regular file"
-                            let expected = $"100644 {fields[2]} {stage}\t{path}"
-                            if not (entries |> Array.contains expected) then failwith "history index stage does not match its commit"
+                            fields[2]
+                    // Derive history only from real HEAD/incoming/merge-base commits.
+                    // Git's virtual stage 1 in a criss-cross merge is never parsed.
+                    for path, isClean in List.zip paths clean do
+                        if not isClean then
+                            let bindings = [2, observedHead.Trim(); 3, observedMerge.Trim()]
+                                           @ (if bases.Length = 1 then [1, bases[0]] else [])
+                            for stage, commit in bindings do
+                                let expected = $"100644 {committedObject commit path} {stage}\t{path}"
+                                if not (entries |> Array.contains expected) then failwith "history index stage does not match its commit"
                     let targets = paths |> List.map (fun path -> safeFile root path |> File.ReadAllText)
-                    let read stage path =
-                        let objectName = $":{stage}:{path}"
+                    let read objectName =
                         let size = Int64.Parse((git root ["cat-file"; "-s"; objectName]).Trim(), CultureInfo.InvariantCulture)
                         if size > int64 limit then failwith "history blob exceeds size bound"
                         git root ["show"; objectName]
-                    let contexts = [1; 2; 3] |> List.map (fun stage -> read stage paths[0])
-                    let snapshots = [1; 2; 3] |> List.map (fun stage -> snapshot contexts[stage - 1] (read stage paths[1]))
-                    match WorkHistoryMerge.plan snapshots[0] snapshots[1] snapshots[2] with
+                    let commits = (bases |> Array.toList) @ [observedHead.Trim(); observedMerge.Trim()]
+                    let contents = commits |> List.map (fun commit -> paths |> List.map (fun path -> read (committedObject commit path)))
+                    let snapshots = contents |> List.map (fun values -> snapshot values[0] values[1])
+                    let left, right = contents[bases.Length], contents[bases.Length + 1]
+                    match WorkHistoryMerge.planMany (snapshots |> List.take bases.Length) snapshots[bases.Length] snapshots[bases.Length + 1] with
                     | Error error -> Error error
                     | Ok merged ->
-                        let writes = render [contexts[1]; contexts[2]] merged
-                        // Preserve byte-for-byte event lines, including original property ordering used for IDs.
-                        let rawEvents = [2; 3] |> List.collect (fun stage -> (read stage paths[1]).Split('\n') |> Array.filter (String.IsNullOrWhiteSpace >> not) |> Array.toList)
+                        let writes = render [left[0]; right[0]] merged
+                        // Preserve original event lines from authoritative branch commits.
+                        let rawEvents = [left[1]; right[1]] |> List.collect (fun text -> text.Split('\n') |> Array.filter (String.IsNullOrWhiteSpace >> not) |> Array.toList)
                         let eventById = rawEvents |> List.map (fun line ->
                             let event = JsonNode.Parse line
                             event["eventId"].GetValue<string>(), line) |> List.rev |> Map.ofList
                         let writes = { writes.Head with Content = merged.Events |> List.map (fst >> fun id -> eventById[id]) |> String.concat "\n" |> fun s -> s + "\n" } :: writes.Tail
+                        // Auto-merged paths are inputs only for a preservation check:
+                        // staged/working edits must exactly match the authoritative plan.
+                        for i in [0; 1] do
+                            if clean[i] then
+                                let rendered = writes |> List.find (fun write -> write.Path = paths[i])
+                                let lineEndings (value: string) = value.Replace("\r\n", "\n")
+                                if lineEndings targets[i] <> lineEndings (read ($":0:{paths[i]}")) && targets[i] <> rendered.Content then
+                                    failwith "auto-merged history has working changes"
+                                if i = 0 then
+                                    let current = snapshot targets[i] ""
+                                    if current.Metadata <> merged.Metadata || current.UpdatedAt <> merged.UpdatedAt
+                                       || current.Items.Length <> merged.Items.Length || Map.ofList current.Items <> Map.ofList merged.Items then
+                                        failwith "auto-merged context differs from authoritative histories"
+                                elif (snapshot left[0] targets[i]).Events <> merged.Events then
+                                    failwith "auto-merged events differ from authoritative histories"
                         if apply then
                             if index() <> observedIndex || mergeHead() <> observedMerge || head() <> observedHead
                                || (paths |> List.map (fun path -> safeFile root path |> File.ReadAllText)) <> targets then
