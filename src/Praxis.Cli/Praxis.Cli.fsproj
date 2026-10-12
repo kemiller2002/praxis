@@ -55,6 +55,7 @@
     <Compile Include="PlanCommands.fs" />
     <Compile Include="LocalHandoffCommands.fs" />
     <Compile Include="LocalContainmentCommands.fs" />
+    <Compile Include="ConstructionCommands.fs" />
     <Compile Include="LocalRuntimeCommands.fs" />
     <Compile Include="WorkGroupCommands.fs" />
     <Compile Include="WorkGroupCheckpointCommands.fs" />

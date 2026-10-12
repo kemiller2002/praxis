@@ -23,6 +23,7 @@ module LocalHostContainment =
               "submissions", configuration.SubmissionRoot
               "integration", configuration.IntegrationRoot
               "evidence", configuration.EvidenceRoot ]
+            @ (configuration.ConstructionRoot |> Option.map (fun root -> "construction", root) |> Option.toList)
           Extra =
             [ yield Path.GetDirectoryName configuration.Path
               match configuration.Containment with

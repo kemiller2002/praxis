@@ -115,6 +115,7 @@ let main argv =
     @ FileLocalGitCandidatesTests.tests
     @ LocalRuntimeCliTests.tests
     @ LocalContainmentTests.tests
+    @ ConstructionCliTests.tests
     @ LocalOperatorTests.tests
     @ WebExecutionTests.tests
     @ InstallationRegistrationTests.tests

@@ -103,6 +103,10 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: local runtime cli
+      - name: Host-controlled Ordo construction through the real CLI
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: construction cli
 
   # Functional portability is separate from OS containment qualification;
   # the containment step qualifies Linux only and asserts refusal elsewhere.
