@@ -105,7 +105,7 @@ module LocalRuntimeCliTests =
         text view.Json["workItems"].[0].["semanticState"]
 
     let private withPilot test =
-        let parent = GitFixture.temporaryDirectory "local-runtime"
+        let parent = CliHarness.temporaryDirectory "local-runtime"
         use key = ECDsa.Create(ECCurve.NamedCurves.nistP256)
         try
             let _, clone = installedRepository parent "repo"

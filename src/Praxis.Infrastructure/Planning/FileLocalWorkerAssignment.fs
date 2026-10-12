@@ -80,11 +80,11 @@ module FileLocalWorkerAssignment =
             let groups = read (FileWorkGroupRepository.path root) |> WorkGroupJson.readGroupStore |> function Ok store -> store.Groups | Error error -> invalidOp error
             let group = match groups |> List.filter (fun g -> g.Declaration.Id = packet.GroupId) with [ g ] -> g | _ -> invalidOp "native assignment group is missing or ambiguous"
             let members = packet.Members |> List.map _.WorkItemId |> Set.ofList
-            // Groups record their home and executions under the repository name
-            // observed from the origin remote; the packet's identity is the
-            // configured repository identity checked above.
+            // Groups record their home under the repository name observed from
+            // the origin remote (absent for a repository without a recognizable
+            // remote); group executions record the configured identity.
             let home = FileWorkGroupFacts.thisRepository root
-            require (home.IsSome && group.HomeRepository = home && not group.Declaration.CrossRepository
+            require (group.HomeRepository = home && not group.Declaration.CrossRepository
                      && group.Declaration.Members.Length = packet.Members.Length
                      && Set.ofList group.Declaration.Members = members)
                 (sprintf "native assignment group membership or home differs (observed home %A, group home %A, cross-repository %b)"
