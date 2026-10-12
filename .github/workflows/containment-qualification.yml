@@ -1,0 +1,125 @@
+# Real host-containment qualification (docs/containment.md, "CI qualification").
+#
+# Runs the denied-operation probe suite on ONE explicitly provisioned,
+# isolated, disposable self-hosted Linux runner. It never runs pull-request
+# code: the only trigger is a manual dispatch, and the job refuses any ref
+# other than main. GitHub-hosted runners are never reconfigured or weakened
+# to make probes pass; hosted CI only proves the fail-closed refusal path
+# (praxis-validation.yml, local-worker-portability).
+#
+# A result qualifies only the runner it ran on. It is uploaded as an
+# artifact and never copied into another host's evidence.
+name: Containment qualification (self-hosted)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: containment-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    # Protected environment: required reviewers, no secrets.
+    environment: containment-qualification
+    runs-on: [self-hosted, linux, x64, praxis-containment-qualification]
+    timeout-minutes: 30
+    steps:
+      - name: Refuse anything but a dedicated, ephemeral qualification runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "${RUNNER_ENVIRONMENT:-}" = "self-hosted" ] || { echo "::error::not a self-hosted runner"; exit 1; }
+          marker=/etc/praxis-containment-runner
+          [ -f "$marker" ] || { echo "::error::runner not provisioned for containment qualification ($marker missing)"; exit 1; }
+          grep -qx 'ephemeral=true' "$marker" || { echo "::error::runner is not declared ephemeral in $marker"; exit 1; }
+          grep -qx 'dedicated=true' "$marker" || { echo "::error::runner is not declared dedicated in $marker"; exit 1; }
+          for tool in unshare setpriv prlimit git sha256sum; do
+            type -P "$tool" > /dev/null || { echo "::error::required tool missing: $tool"; exit 1; }
+          done
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - run: dotnet build src/Praxis.Cli/Praxis.Cli.fsproj --configuration Release
+
+      - name: Qualify with real denied-operation probes
+        id: qualify
+        shell: bash
+        run: |
+          set -uo pipefail
+          root="$RUNNER_TEMP/containment"
+          rm -rf "$root"
+          mkdir -p "$root"/{policy,journal,spool,submissions,integration,evidence,checkouts,host,out}
+          chmod -R go-rwx "$root"
+          git_exe=$(readlink -f "$(type -P git)")
+          true_exe=$(readlink -f "$(type -P true)")
+          git_sum=$(sha256sum "$git_exe" | cut -d' ' -f1)
+          true_sum=$(sha256sum "$true_exe" | cut -d' ' -f1)
+          cmd="{\"executable\":\"$true_exe\",\"sha256\":\"sha256:$true_sum\",\"arguments\":[\"{candidate}\"],\"timeoutMilliseconds\":1000,\"maxOutputBytes\":1000}"
+          trx="{\"executable\":\"$true_exe\",\"sha256\":\"sha256:$true_sum\",\"arguments\":[\"{candidate}\",\"{trx}\"],\"timeoutMilliseconds\":1000,\"maxOutputBytes\":1000}"
+          worker="{\"executable\":\"$true_exe\",\"sha256\":\"sha256:$true_sum\",\"arguments\":[\"{worktree}\"],\"timeoutMilliseconds\":1000,\"maxOutputBytes\":1000}"
+          cat > "$root/host/config.json" <<EOF
+          {"schemaVersion":"praxis.local-host/1","repositoryRoot":"$GITHUB_WORKSPACE","repositoryIdentity":"containment-qualification",
+           "fileAccess":"unix-private",
+           "roots":{"policy":"$root/policy","journal":"$root/journal","spool":"$root/spool","submissions":"$root/submissions","integration":"$root/integration","evidence":"$root/evidence","checkouts":"$root/checkouts"},
+           "git":{"executable":"$git_exe","sha256":"sha256:$git_sum"},
+           "committer":{"name":"Containment qualification","email":"qualification@example.invalid"},
+           "validatorPolicyRevision":"containment-qualification",
+           "systemValidators":{"build":{"id":"b","command":$cmd},"tests":{"id":"t","tests":true,"command":$trx},"architecture":{"id":"a","command":$cmd},"scope":{"id":"s","command":$cmd}},
+           "acceptanceValidators":[],
+           "workers":[{"adapterId":"qualification","workerId":"qualification","roles":["implementation"],"operatingSystems":["linux"],"containment":"required","command":$worker}],
+           "completionEvidence":{"implementation":"member-changes"},
+           "containment":{"evidence":"$root/host/containment.json"}}
+          EOF
+          praxis="dotnet src/Praxis.Cli/bin/Release/net10.0/praxis.dll"
+          $praxis local containment qualify --host-config "$root/host/config.json" --json > "$root/out/qualify.json" 2> "$root/out/qualify.err"
+          code=$?
+          $praxis local containment status --host-config "$root/host/config.json" --json > "$root/out/status.json" 2>> "$root/out/qualify.err"
+          cp "$root/host/containment.json" "$root/out/containment-evidence.json" 2> /dev/null || true
+          case "$code" in 0) status=qualified ;; 3) status=unqualified ;; *) status=error ;; esac
+          {
+            echo "status=$status"
+            echo "exitCode=$code"
+            echo "commit=$GITHUB_SHA"
+            echo "runner=$RUNNER_NAME"
+            echo "os=$(uname -s)"
+            echo "kernel=$(uname -r)"
+            echo "architecture=$(uname -m)"
+            echo "utilLinux=$(unshare --version | head -1)"
+            echo "recordedAt=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > "$root/out/summary.txt"
+          {
+            echo "### Containment qualification: $status"
+            echo
+            echo "Applies to runner \`$RUNNER_NAME\` only (kernel $(uname -r))."
+            echo
+            echo '```'
+            cat "$root/out/summary.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Upload qualification record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: containment-qualification-${{ github.run_id }}
+          path: ${{ runner.temp }}/containment/out/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Dispose of qualification state
+        if: always()
+        shell: bash
+        run: rm -rf "$RUNNER_TEMP/containment"

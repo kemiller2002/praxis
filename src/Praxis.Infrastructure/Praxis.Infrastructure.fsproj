@@ -39,6 +39,8 @@
     <Compile Include="Work/FileLocalIntegrationJournal.fs" />
     <Compile Include="Work/LocalWorkerProcessPlatform.fs" />
     <Compile Include="Work/LocalWorkerProcess.fs" />
+    <Compile Include="Work/LinuxContainmentHost.fs" />
+    <Compile Include="Work/LocalContainmentQualification.fs" />
     <Compile Include="Work/FileLocalValidator.fs" />
     <Compile Include="Work/FileWorkerChecklist.fs" />
     <Compile Include="Work/FileLocalGitCandidates.fs" />
@@ -115,9 +117,11 @@
     <Compile Include="Planning/FileLocalWorkerHost.fs" />
     <Compile Include="Planning/ConstructionExtensionSlot.fs" />
     <Compile Include="Planning/LocalHostConfiguration.fs" />
+    <Compile Include="Planning/LocalHostContainment.fs" />
     <Compile Include="Planning/FileLocalRuntime.fs" />
     <Compile Include="Planning/LocalOperator.fs" />
     <Compile Include="Planning/LocalRuntimeService.fs" />
+    <Compile Include="Planning/LocalContainmentService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Construction/ConstructionTree.fs" />
     <Compile Include="Construction/ConstructionAdmission.fs" />

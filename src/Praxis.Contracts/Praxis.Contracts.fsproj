@@ -41,5 +41,6 @@
     <Compile Include="Work/LocalDispatchJournalJson.fs" />
     <Compile Include="Work/LocalWorkerSubmissionJson.fs" />
     <Compile Include="Work/LocalIntegrationJournalJson.fs" />
+    <Compile Include="Work/LocalContainmentJson.fs" />
   </ItemGroup>
 </Project>
