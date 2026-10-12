@@ -61,7 +61,7 @@ module WorkHistoryMerge =
         sort ready counts []
 
     /// Only merges independent updates. Never chooses a lifecycle state by timestamp.
-    let planMany (baselines: WorkHistorySnapshot list) (left: WorkHistorySnapshot) (right: WorkHistorySnapshot) =
+    let private planWith canonicalIncoming (baselines: WorkHistorySnapshot list) (left: WorkHistorySnapshot) (right: WorkHistorySnapshot) =
         let validate () = (baselines @ [left; right]) |> List.fold (fun acc snapshot ->
             acc |> Result.bind (fun maps ->
                 unique "snapshot items" snapshot.Items |> Result.bind (fun items ->
@@ -91,12 +91,24 @@ module WorkHistoryMerge =
                           mergeMap "event" [Map.empty] le re with
                     | Ok metadata, Ok items, Ok events ->
                         let itemOrder = ((baselines |> List.collect _.Items) @ left.Items @ right.Items) |> List.map fst |> List.distinct
-                        match mergeEventOrder (List.map fst left.Events) (List.map fst right.Events) with
+                        let incomingIds = right.Events |> List.map fst
+                        let ordering =
+                            if canonicalIncoming then
+                                let incoming = Set.ofList incomingIds
+                                Ok(incomingIds @ (left.Events |> List.map fst |> List.filter (incoming.Contains >> not)))
+                            else mergeEventOrder (List.map fst left.Events) incomingIds
+                        match ordering with
                         | Error error -> Error error
                         | Ok eventOrder ->
                             Ok { Metadata = metadata; UpdatedAt = max left.UpdatedAt right.UpdatedAt
                                  Items = itemOrder |> List.map (fun id -> id, items[id])
                                  Events = eventOrder |> List.map (fun id -> id, events[id]) }
                     | Error error, _, _ | _, Error error, _ | _, _, Error error -> Error error)
+
+    let planMany baselines left right = planWith false baselines left right
+
+    /// Explicit planning policy, not write authority. Adapters must bind owner
+    /// approval, exact commits, independent scopes and an auditable transaction.
+    let planCanonicalIncoming baselines left right = planWith true baselines left right
 
     let plan baseline left right = planMany [baseline] left right

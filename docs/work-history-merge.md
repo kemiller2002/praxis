@@ -41,9 +41,29 @@ does not stage, commit, fetch, push, approve completion or merge the PR.
 
 Opposite previously serialized orders can form a cycle even when every event
 is present and unchanged. This tool still refuses that case. Adopting a new
-canonical order needs an explicit, recorded owner decision and a separately
-reviewed native reconciliation path; choosing a branch or editing event lines
-by hand is not an approved repair.
+canonical order needs an explicit, recorded owner decision. The opt-in native
+amendment path implements DF-ROS-2026-A069 v1.2; choosing a branch or editing
+event lines by hand is not an approved repair.
+
+In that exclusive checkout, bind the amendment to the exact observed commits,
+approval decision bytes and a fixed UTC observation time:
+
+```sh
+./praxis work history merge --canonical-incoming-order \
+  --expected-head HEAD_SHA --expected-incoming MAIN_SHA \
+  --approval-path research/decisions/DECISION.md \
+  --approval-digest sha256:DIGEST --reason "Recorded owner approval" \
+  --occurred-at UTC_TIME
+```
+
+Add `--apply` only after reviewing the preview. Use identical bindings and time
+for recovery. Incoming events retain their full order, followed by head-only
+events in their existing relative order. Base/event/context safeguards remain.
+Reordering related work-item/execution events or unscoped events refuses, as
+does any shared raw-byte difference. Approval digests bind recorded evidence,
+not authentication of the owner's identity. The new native reconciliation
+observation records the acting agent, commits, source event blobs, original and
+resulting order digests and approval artifact. Ordinary merge remains strict.
 
 Apply reobserves HEAD, MERGE_HEAD, exact index stages and target contents, then
 uses the existing two-file native recovery journal. Retrying `--apply` resumes
@@ -52,8 +72,9 @@ merge; an unrelated journal refuses. Keep the index stages until apply/recovery
 finishes, then review and stage the result. Rebuild generated registries from
 canonical source records rather than choosing a conflicted registry branch.
 
-This command reconciles already-recorded branch histories; it creates no work
-transition or fabricated historical event. Native protocol commands remain
+This command reconciles already-recorded branch histories; ordinary mode adds
+no event, while amended mode adds one present audit observation. Neither creates
+a work transition or fabricated historical event. Native protocol commands remain
 the authority for subsequent state changes. The command's cooperative lock
 serializes other history-merge invocations, not every native lifecycle writer.
 The exclusive-checkout requirement is necessary while WI-0087 remains open;

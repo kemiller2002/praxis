@@ -2,7 +2,7 @@
 id: DF-ROS-2026-A069
 title: Preserve ordered native histories across prior branch insertions
 status: draft
-version: 1.1.0
+version: 1.2.0
 owners: [repository-governance]
 created: 2026-10-12
 updated: 2026-10-12
@@ -18,7 +18,7 @@ provenance:
     EXE-20261011T234058504Z-3b80355e:
       operations: [created, modified]
       at: 2026-10-12T00:43:35.000Z
-      last: 2026-10-12T08:09:04.000Z
+      last: 2026-10-12T11:34:08.551Z
       actor:
         kind: agent
         id: openai/codex
@@ -95,3 +95,38 @@ the authorized ordering reconciliation through the native transaction. This
 would change the earlier feature branch's serialized order and needs explicit
 approval; the current tool deliberately continues to refuse it. No silent
 reordering or stored-history migration is authorized by this proposal.
+
+# Explicitly approved canonical-order amendment (1.2)
+
+On 2026-10-12 the owner explicitly answered Yes to the request to make main's
+shared-event ordering canonical, preserve every event, and record the
+reconciliation through Praxis. This section records that conversation approval
+as an agent/operator report, not a cryptographic owner signature. The broader
+implementation remains draft pending review and validation.
+
+The opt-in native command requires exact HEAD and incoming commit bindings,
+this decision's SHA-256 digest, a nonempty reason and an explicit nonfuture UTC
+time no earlier than the observed context. Ordinary reconciliation still
+refuses ordering cycles. In amended mode, incoming events retain their complete
+order; head-only events follow in their prior relative order. Every actual base
+event, event identity, original event byte and work-item/context guard remains
+protected. Shared events with differing raw bytes refuse even if normalized
+JSON would compare equal.
+
+Before applying, compare both branch orders with the proposed complete order.
+Any inverted pair sharing a work-item or execution scope refuses. An inverted
+pair with missing scopes also refuses. Scope checks are consistency guards,
+not proof that differently scoped events lack cross-work dependencies. The
+explicit owner approval remains necessary for the serialization change.
+
+Append one new `work.history.order-reconciled` audit observation, recording the
+acting agent, explicit reason/time, both exact commits and Git event blobs,
+original/result order digests, original-event count and pinned approval
+artifact. This is a present reconciliation observation, not a fabricated past
+work transition. The native two-file journal includes it atomically with the
+reconciled context and log. Retrying must use the same complete arguments,
+including time, to recover the same audit identity without duplication.
+
+Reobserve the approval bytes, Git identities/index and working histories before
+apply. No staging, commit, PR merge, completion approval, concurrent lifecycle
+writer safety or live worker runtime is granted by this command.

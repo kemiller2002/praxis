@@ -30,7 +30,7 @@
   "workspace": "checkout:EXE-20261011T234058504Z-3b80355e",
   "workspaceBinding": {
     "id": "checkout:EXE-20261011T234058504Z-3b80355e",
-    "branch": "feat/local-controller-activation",
+    "branch": "feat/approved-order-amendment",
     "path": null,
     "mechanism": "working-directory"
   },
@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-10-11T23:40:59.025Z",
-  "state": "blocked",
-  "stateReason": "Shared checkpoint events have opposite published orders on PR 238 and current main; await explicit owner canonical-order choice and reviewed native amendment",
+  "state": "active",
+  "stateReason": null,
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"

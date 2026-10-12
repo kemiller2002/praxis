@@ -32,3 +32,12 @@ approval and a reviewed native amendment implementation. Do not hand-edit `.ros`
 silently choose a conflicted branch, fake a common ancestor, claim PR #238 merged,
 or relax cycle refusal merely to obtain green CI. DF-ROS-2026-A069 v1.1 records
 the proposed support and the unresolved ordering decision.
+
+## Approved continuation, 2026-10-12
+
+The owner explicitly approved the canonical-main ordering change. The same
+GH-235 execution and qualification step have been resumed through native
+commands on `feat/approved-order-amendment`, explicitly rebinding the workspace.
+The guarded opt-in amendment implementation and adversarial tests are in
+progress. No actual branch reconciliation or PR merge has been applied yet.
+DF-ROS-2026-A069 v1.2 records the approval and native amendment contract.
