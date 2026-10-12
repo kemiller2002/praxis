@@ -2486,9 +2486,12 @@
             "runtime": "codex"
           },
           "at": "2026-10-11T23:51:12.439Z",
+          "last": "2026-10-12T07:07:32.000Z",
           "operations": [
-            "created"
-          ]
+            "created",
+            "modified"
+          ],
+          "reason": "Bind concrete validator reports to exact generated checklist rows and archived evidence; retain custody and activation limits"
         }
       }
     },
@@ -2509,8 +2512,8 @@
       "evidence"
     ],
     "title": "Observe concrete pinned validator processes on exact Git candidates",
-    "updated": "2026-10-11",
-    "version": "1.0.0"
+    "updated": "2026-10-12",
+    "version": "1.1.0"
   },
   {
     "confidence": "medium",

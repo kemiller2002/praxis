@@ -37,23 +37,24 @@ CRLF in Git's LF-only index-info protocol. Changed the fixture to explicit LF
 and added an assertion that the forged stage really was installed. Final
 Windows CI and full regression remain required, not assumed passing.
 
-## Current blocker
+## Checkout lock recovery
 
 Native `provenance record --id DF-ROS-2026-A068 --operation modified` refused
 twice with `timed out waiting for Praxis lock 'work-protocol'`. The lock file
 `.ros/locks/57e6cb7412f4ae8ac889c97935eafdeb577425154fe81507a9ba201537ef403e.lock`
 names pid 2, acquired at 2026-10-12T06:42:04.7902188Z, during the completed
 checkpoint invocation. Read-only inspection found no `/proc/2` entry. The
-lock has not been removed, bypassed or rewritten. Do not silently claim native
-provenance, validation or final completion for this new slice. Its changes to
-DF-ROS-2026-A068 still require the native modified contribution; the previous
-created contribution remains intact. Investigate lock ownership/recovery in
-a qualified runtime before native writes. WI-0087 tracks lifecycle serialization.
+lock has not been removed, bypassed or rewritten. Retrying on a fresh exclusive
+Git worktree of published commit a73c5d20 succeeded: native provenance recorded
+the modified contribution on DF-ROS-2026-A068, registry rebuild succeeded and
+native validation passed. The previous created contribution remains intact.
+The original checkout and its lock remain preserved for diagnosis. This was
+an environment change using normal native commands, not a lock-protocol change
+or a claim that the live lifecycle serialization work in WI-0087 is complete.
 
 ## Next steps
 
-Read actual PR checks and test results, then recover native bookkeeping safely,
-record the modified decision contribution, rebuild registries and validate.
+Read actual PR checks and test results and publish the final native bookkeeping.
 Run full regressions and the new three-OS checklist tests on the final source.
 Only then mark ready and merge. The controller still needs native prerequisite
 evidence custody, serialized envelope/lifecycle writers, effect-boundary

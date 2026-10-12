@@ -16,14 +16,16 @@ derived_from: [DF-ROS-2026-A064, DF-ROS-2026-A066]
 provenance:
   contributions:
     EXE-20261011T234058504Z-3b80355e:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-10-11T23:51:12.439Z
+      last: 2026-10-12T07:07:32.000Z
       actor:
         kind: agent
         id: openai/codex
         provider: openai
         model: unknown
         runtime: codex
+      reason: "Bind concrete validator reports to exact generated checklist rows and archived evidence; retain custody and activation limits"
 ---
 
 # Context and proposed decision
