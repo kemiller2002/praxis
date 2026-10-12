@@ -322,7 +322,8 @@
 | WI-0087 | Serialize execution-envelope lifecycle writers with local host dispatch; FileExecutionPorts/ExecutionStore currently do not share the work/group lease scope, so fresh assignment observations are not a whole-lifecycle lock | captured |  | medium |
 | WI-0088 | Work completion cannot finalize a predecessor execution left with unresolved steps after work continue; finalize it with its open steps recorded as interrupted (observed by successor) instead of requiring the absent owner | complete |  | medium |
 | WI-0089 | Resuming an exited local dispatch whose submission was never archived fails instead of archiving from the host spool (Windows CI intermittent) | complete |  | medium |
-| WI-0091 | WI-0091 | active |  |  |
+| WI-0090 | WI-0090 | complete |  |  |
+| WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | captured |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

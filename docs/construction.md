@@ -20,6 +20,15 @@ express them, and the host decides placement.
    - cohort readiness under the *signed* decisions (never the agent's);
    - the plan's binding to that prepared cohort.
 
+   A plan may omit `binding`. The host then stamps it from the prepared
+   cohort: the manifest digest, Ordo's canonical blueprint digest, the cohort
+   ID, and the cohort's required decisions and rationales. The agent supplies
+   only operations and never copies digests by hand. In the timer pilot, every
+   construction agent first copied the blueprint file's hash, which is not the
+   canonical digest (research-documents#7, finding F1). A supplied binding is
+   still checked exactly as before, and an agent cannot use it to rebind the
+   plan to another cohort.
+
    Only then does Praxis call `Construction.construct`. An admitted
    construction is an opaque value that only admission can produce.
 2. **Preview** (read-only). Praxis reads every file under the generated

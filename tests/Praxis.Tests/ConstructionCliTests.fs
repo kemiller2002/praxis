@@ -437,6 +437,27 @@ module ConstructionCliTests =
                   refused (construct host "apply" (edit (fun plan -> plan["binding"].["decisionIds"] <- JsonArray()))) "construction plan refused"
                   refused (construct host "apply" (edit (fun plan -> (plan["operations"] :?> JsonArray).Add(JsonNode.Parse """{"op":"writeFile","path":"../../.github/workflows/x.yml"}""")))) "construction plan refused"
                   Assert.equal before (tip host)))
+          t "an omitted binding is stamped by the host from the approved cohort and yields the same plan digest" (fun () ->
+              withHost true ignore (fun host ->
+                  let unbound =
+                      let node = JsonNode.Parse(File.ReadAllText host.Plan) :?> JsonObject
+                      node.Remove "binding" |> ignore
+                      let path = Path.Combine(host.Parent, "unbound.json")
+                      File.WriteAllText(path, node.ToJsonString())
+                      path
+                  let bound = construct host "preview" host.Plan |> ok
+                  let stamped = construct host "preview" unbound |> ok
+                  Assert.equal (text bound.Json["binding"].["planDigest"]) (text stamped.Json["binding"].["planDigest"])
+                  Assert.equal (writes bound.Json) (writes stamped.Json)
+                  // Stamping supplies only the binding: an unbound plan with an
+                  // operation outside the vocabulary is still refused by Ordo.
+                  let injected =
+                      let node = JsonNode.Parse(File.ReadAllText unbound)
+                      (node["operations"] :?> JsonArray).Add(JsonNode.Parse """{"op":"addPackage","name":"x"}""")
+                      let path = Path.Combine(host.Parent, "unbound-injected.json")
+                      File.WriteAllText(path, node.ToJsonString())
+                      path
+                  refused (construct host "apply" injected) "construction plan refused"))
           t "a handwritten file inside the generated root refuses the whole construction" (fun () ->
               withHost true (fun clone -> CliHarness.write clone "src/Domain/generated/Timer/Rules.fs" "module Rules // handwritten\n") (fun host ->
                   let before = tip host

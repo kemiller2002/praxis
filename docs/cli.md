@@ -844,7 +844,8 @@ praxis construct extend --host-config FILE --group ID --plan FILE --target REF -
 ```
 
 Host-controlled application of an Ordo construction plan. The plan is the only
-agent input. `preview` is read-only and deterministic. `apply` builds the
+agent input; when it omits `binding`, the host stamps the binding from the
+approved cohort. `preview` is read-only and deterministic. `apply` builds the
 planned generated files as Git objects, journals the construction and moves
 `--target` with an expected-head update. Both re-verify the operator grant and
 the committed ECIR sources, and run the pinned Ordo engine in-process.
