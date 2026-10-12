@@ -29,10 +29,12 @@
     <Compile Include="Work/WorkStateTransaction.fs" />
     <Compile Include="Work/FileLocalHandoffInspection.fs" />
     <Compile Include="Work/LocalHostJournalFiles.fs" />
+    <Compile Include="Work/LocalHostFileAccess.fs" />
     <Compile Include="Work/FileLocalDispatchJournal.fs" />
     <Compile Include="Work/FileLocalWorkerSubmissions.fs" />
     <Compile Include="Work/FileLocalWorkerOutputSpool.fs" />
     <Compile Include="Work/FileLocalIntegrationJournal.fs" />
+    <Compile Include="Work/LocalWorkerProcessPlatform.fs" />
     <Compile Include="Work/LocalWorkerProcess.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
@@ -51,6 +53,7 @@
     <Compile Include="Artifacts/RegistryTransaction.fs" />
     <Compile Include="Artifacts/FileArtifactRepository.fs" />
     <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileWorkHistoryMerge.fs" />
     <Compile Include="Work/FileCompletionReadiness.fs" />
     <Compile Include="Work/FileWorkContextRepository.fs" />
     <Compile Include="Work/FileMetricRegistryRepository.fs" />
@@ -96,6 +99,11 @@
     <Compile Include="Planning/EcirHostAdministration.fs" />
     <Compile Include="Planning/FileGroupExecution.fs" />
     <Compile Include="Planning/EcirNativeStage.fs" />
+    <Compile Include="Planning/LocalEcirPolicyJson.fs" />
+    <Compile Include="Planning/FileLocalEcirAuthority.fs" />
+    <Compile Include="Planning/LocalWorkerDelegation.fs" />
+    <Compile Include="Planning/FileLocalWorkerAssignment.fs" />
+    <Compile Include="Planning/FileLocalWorkerHost.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

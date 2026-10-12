@@ -82,7 +82,14 @@ module CliHarness =
     let read (root: string) (relativePath: string) = File.ReadAllText(Path.Combine(root, relativePath))
 
     let temporaryDirectory (prefix: string) =
-        let path = Path.Combine(Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}")
+        // macOS exposes its temp directory through /var -> /private/var.
+        // Resolve fixture ancestors so production no-link checks stay intact.
+        let rec canonicalDirectory path =
+            let directory = DirectoryInfo(Path.GetFullPath path)
+            if directory.LinkTarget <> null then directory.ResolveLinkTarget(true).FullName
+            elif isNull directory.Parent then directory.FullName
+            else Path.Combine(canonicalDirectory directory.Parent.FullName, directory.Name)
+        let path = Path.Combine(canonicalDirectory (Path.GetTempPath()), $"{prefix}-{Guid.NewGuid():N}")
         Directory.CreateDirectory path |> ignore
         path
 
@@ -120,6 +127,16 @@ module CliHarness =
         continuity["requireDurableCheckpoint"] <- System.Text.Json.Nodes.JsonValue.Create false
         config["workProtocol"].AsObject()["continuity"] <- continuity
         File.WriteAllText(path, config.ToJsonString(System.Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n")
+
+    /// Git objects in disposable repositories are read-only on Windows.
+    /// Keep cleanup strict so fixture failures and leaked handles remain visible.
+    let removeTemporaryGitDirectory (root: string) =
+        if OperatingSystem.IsWindows() then
+            for path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories) do
+                let attributes = File.GetAttributes path
+                if attributes.HasFlag FileAttributes.ReadOnly then
+                    File.SetAttributes(path, attributes &&& (~~~FileAttributes.ReadOnly))
+        Directory.Delete(root, true)
 
     let removeDirectory (root: string) =
         try

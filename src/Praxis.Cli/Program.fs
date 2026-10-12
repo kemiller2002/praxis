@@ -33,6 +33,7 @@ let private usageBase =
 
 let private usage =
     usageBase
+    + " | " + WorkHistoryCommands.usage
     + " | step {plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show} [options] | reconcile --envelope FILE | " + InputInboxCommands.usage
 
 /// Removes one global `--name VALUE` option from the argument list wherever
@@ -2914,6 +2915,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "block" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Block rest (runWorkBlock root rest))
     | "work" :: "abandon" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Abandon rest (runWorkAbandon root rest))
     | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Complete rest (runWorkComplete root rest))
+    | "work" :: "history" :: rest -> WorkHistoryCommands.run root rest
     | "work" :: "reconcile" :: rest -> ProvenanceCommands.withResolvedActor rest (ReconciliationCommands.run root rest)
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Continue rest (CheckpointCommands.runContinue root rest))

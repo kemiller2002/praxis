@@ -71,6 +71,40 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: local handoff
+      - name: Native Git history merge and interrupted journal recovery
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: work history merge
+
+  # Functional portability is separate from OS containment qualification.
+  local-worker-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build tests/Praxis.Tests/Praxis.Tests.fsproj --configuration Release
+      - name: Portable worker and storage adapters
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: portability
+      - name: Bounded subprocess mechanism
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local worker process
+      - name: Signed worker delegation
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local delegation
+      - name: Durable output spool
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: worker output spool
 
   # The lifecycle commands must work on every supported operating system,
   # straight from the F# CLI with its embedded scaffold payload.
