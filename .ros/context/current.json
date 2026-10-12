@@ -9572,20 +9572,21 @@
         "EXE-20261011T234058504Z-3b80355e"
       ],
       "latestCheckpoint": {
-        "id": "bcb2af87c4b7782dd64f3f54",
-        "recordedAt": "2026-10-12T08:11:26.000Z",
+        "id": "ab4c4191451d270ffeca96a8",
+        "recordedAt": "2026-10-12T11:43:22Z",
         "executionId": "EXE-20261011T234058504Z-3b80355e",
+        "stepId": "STEP-20261012T070851000Z-ed744d56",
         "repository": "repository-operating-system",
-        "branch": "feat/history-support-checkpoint",
-        "commit": "8d340c4c74581ed1d2216be53238c910e8e3835a",
+        "branch": "feat/approved-order-amendment",
+        "commit": "97d786636cf8fbbffe07ff080ea46704328079a2",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis.git"
         },
         "remoteBranch": "feat/history-multiple-base-support",
-        "remoteCommit": "8d340c4c74581ed1d2216be53238c910e8e3835a",
-        "summary": "Published draft PR 239 multiple-real-base support with 24 passing history tests; native preview correctly refuses contradictory published checkpoint order",
-        "nextAction": "Obtain explicit owner canonical-order choice, implement reviewed native amendment, reconcile current main, rerun final validation and merge PRs 238/239",
+        "remoteCommit": "97d786636cf8fbbffe07ff080ea46704328079a2",
+        "summary": "Published owner-approved pinned native history amendment at 97d78663; clean Release build and all 31 history tests passed; real integration not yet applied",
+        "nextAction": "Apply approved native amendment against pinned current main, preserve source changes and all event bytes, then full and cross-OS validation before merging",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
