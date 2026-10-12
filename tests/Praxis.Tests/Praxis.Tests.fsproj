@@ -170,6 +170,7 @@
     <Compile Include="ConcreteAcceptanceFlowTests.fs" />
     <Compile Include="FileLocalGitCandidatesTests.fs" />
     <Compile Include="LocalRuntimeCliTests.fs" />
+    <Compile Include="LocalContainmentTests.fs" />
     <Compile Include="ConstructionCliTests.fs" />
     <Compile Include="LocalOperatorTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />

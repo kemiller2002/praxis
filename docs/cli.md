@@ -823,6 +823,7 @@ praxis local packet propose --host-config FILE --group ID --worker ID --role ROL
 praxis local validator pin --host-config FILE --validator ID
 praxis local operator init|grant-draft|grant|revoke|review|delegate ...
 praxis local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])
+praxis local containment qualify|status --host-config FILE [--json]
 ```
 
 The local coordinator/worker runtime. `run` dispatches each operator-signed
@@ -832,8 +833,12 @@ on the staged integration candidate, moves `--target` only with an
 expected-head update, and completes the native members. Operator commands
 write exact signing payloads and verify external ECDSA P-256 signatures; they
 never handle private keys. `worker-bridge` is the worker-side adapter the host
-configuration launches. Exit 0 success, 2 invalid arguments, 3 refused. See
-[the local runtime guide](local-runtime.md).
+configuration launches. `containment qualify` launches real probes through the
+Linux confined adapter and writes `praxis.containment-evidence/1`;
+`containment status` reports whether a worker requiring containment would be
+admitted (exit 3 when unqualified, including on macOS and Windows; see
+[host containment](containment.md)). Exit 0 success, 2 invalid arguments,
+3 refused. See [the local runtime guide](local-runtime.md).
 
 ## `construct`
 

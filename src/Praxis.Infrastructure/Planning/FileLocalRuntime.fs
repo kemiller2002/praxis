@@ -120,7 +120,7 @@ module FileLocalRuntime =
 
     // --------------------------------------------------------------- workers
 
-    let private catalog (configuration: LocalHostConfiguration) cancellation (worktrees: ConcurrentBag<string>) =
+    let private catalog (configuration: LocalHostConfiguration) cancellation (worktrees: ConcurrentBag<string>) (stages: ConcurrentBag<string>) =
         configuration.Workers
         |> List.map (fun worker ->
             { Id = worker.AdapterId; WorkerId = worker.WorkerId
@@ -132,14 +132,22 @@ module FileLocalRuntime =
                       not (Path.IsPathFullyQualified path && File.Exists path && LocalHostJournalFiles.noLinks path) || fileDigest path <> expected)
                   if changed then Error "worker tool closure pin changed"
                   else
-                      FileLocalGitCandidates.provisionCheckout configuration.Git configuration.RepositoryRoot configuration.CheckoutRoot
-                          ("worker-" + label packet.DispatchId) packet.SourceCommit cancellation
-                      |> Result.map (fun worktree ->
-                          worktrees.Add worktree
-                          { expand worker.Command [ "{worktree}", worktree ] worktree with
-                              Input = LocalAgentHandoffJson.renderPacket packet
-                              TimeoutMilliseconds = min worker.Command.TimeoutMilliseconds (packet.TimeoutSeconds * 1000)
-                              MaxOutputBytes = min worker.Command.MaxOutputBytes packet.MaxOutputBytes }) })
+                      // A worker that requires containment refuses before any
+                      // checkout exists unless this host's profile is qualified.
+                      LocalHostContainment.admit configuration worker DateTimeOffset.UtcNow
+                      |> Result.bind (fun confinement ->
+                          FileLocalGitCandidates.provisionCheckout configuration.Git configuration.RepositoryRoot configuration.CheckoutRoot
+                              ("worker-" + label packet.DispatchId) packet.SourceCommit cancellation
+                          |> Result.bind (fun worktree ->
+                              worktrees.Add worktree
+                              let spec =
+                                  { expand worker.Command [ "{worktree}", worktree ] worktree with
+                                      Input = LocalAgentHandoffJson.renderPacket packet
+                                      TimeoutMilliseconds = min worker.Command.TimeoutMilliseconds (packet.TimeoutSeconds * 1000)
+                                      MaxOutputBytes = min worker.Command.MaxOutputBytes packet.MaxOutputBytes }
+                              match confinement with
+                              | None -> Ok spec
+                              | Some(settings, tools) -> LocalHostContainment.confine configuration settings tools stages.Add spec)) })
         |> LocalWorkerAdapters.catalog
 
     // ---------------------------------------------------------------- native
@@ -216,9 +224,9 @@ module FileLocalRuntime =
     // ----------------------------------------------------------- composition
 
     let private bindings (configuration: LocalHostConfiguration) (policy: LocalRuntimeNativePolicy) (actor: Actor)
-                         (request: LocalRunRequest) (registry: CheckoutRegistry) worktrees sessionId cancellation =
+                         (request: LocalRunRequest) (registry: CheckoutRegistry) worktrees stages sessionId cancellation =
         let root, git = configuration.RepositoryRoot, configuration.Git
-        catalog configuration cancellation worktrees |> Result.map (fun workers ->
+        catalog configuration cancellation worktrees stages |> Result.map (fun workers ->
             let worker : LocalWorkerHostBindings =
                 { RepositoryIdentity = configuration.RepositoryIdentity
                   JournalRoot = configuration.JournalRoot; SpoolRoot = configuration.SpoolRoot; SubmissionRoot = configuration.SubmissionRoot
@@ -284,10 +292,12 @@ module FileLocalRuntime =
     let run (configuration: LocalHostConfiguration) (policy: LocalRuntimeNativePolicy) (actor: Actor) (request: LocalRunRequest) (cancellation: CancellationToken) =
         let registry = { Requests = ConcurrentDictionary(); Paths = ConcurrentBag() }
         let worktrees = ConcurrentBag<string>()
+        let stages = ConcurrentBag<string>()
         let sessionId = "praxis-local-" + Guid.NewGuid().ToString("N")
         let packet = request.Packet
         let cleanup () =
             for path in registry.Paths do FileLocalGitCandidates.removeCheckout configuration.Git configuration.RepositoryRoot path cancellation |> ignore
+            for stage in stages do LinuxContainmentHost.removeStage stage
         try
             if packet.RepositoryIdentity <> configuration.RepositoryIdentity then Error "packet repository differs from the host configuration"
             elif not (LocalIntegrationJournal.isTargetRef request.TargetRef) then Error "invalid integration target ref"
@@ -296,7 +306,7 @@ module FileLocalRuntime =
                 readContext configuration.RepositoryRoot
                 |> Result.bind (fun context ->
                     WorkerChecklistCompletionPolicy.requireDelegated configuration.RepositoryRoot context.WorkItems (packet.Members |> List.map _.WorkItemId))
-                |> Result.bind (fun () -> bindings configuration policy actor request registry worktrees sessionId cancellation)
+                |> Result.bind (fun () -> bindings configuration policy actor request registry worktrees stages sessionId cancellation)
                 |> Result.bind (fun (worker, acceptance) ->
                     dispatchPhase configuration packet.DispatchId |> Result.bind (fun phase ->
                         let outcome, stage =
