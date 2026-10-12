@@ -144,6 +144,7 @@ let main argv =
     @ LocalDispatchJournalTests.tests
     @ LocalWorkerProcessTests.tests
     @ LocalValidatorTests.tests
+    @ FileWorkerChecklistTests.tests
     @ LocalWorkerPortabilityTests.tests
     @ LocalWorkerAssignmentTests.tests
     @ LocalWorkerHostTests.tests

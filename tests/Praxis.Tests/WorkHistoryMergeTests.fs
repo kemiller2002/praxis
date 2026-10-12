@@ -144,10 +144,13 @@ module WorkHistoryMergeTests =
               start.ArgumentList.Add "update-index"
               start.ArgumentList.Add "--index-info"
               use child = Process.Start start
-              child.StandardInput.WriteLine($"100644 {replacement} 2\t.ros/context/current.json")
+              // Git's index-info protocol uses LF, not the platform text newline.
+              child.StandardInput.Write($"100644 {replacement} 2\t.ros/context/current.json\n")
               child.StandardInput.Close()
               child.WaitForExit()
               Assert.equal 0 child.ExitCode
+              let stages = CliHarness.git root ["ls-files"; "--stage"; "--"; ".ros/context/current.json"]
+              Assert.isTrue (stages.Contains($"100644 {replacement} 2\t.ros/context/current.json", StringComparison.Ordinal)) "forged stage fixture was not installed"
               FileWorkHistoryMerge.run root true |> refuses
               Assert.equal before (File.ReadAllText context, File.ReadAllText events)))
           t "resumes an exact interrupted transaction without duplicating events" (fun () -> fixture (fun root context events ->

@@ -154,6 +154,7 @@
     <Compile Include="LocalDispatchJournalTests.fs" />
     <Compile Include="LocalWorkerProcessTests.fs" />
     <Compile Include="LocalValidatorTests.fs" />
+    <Compile Include="FileWorkerChecklistTests.fs" />
     <Compile Include="LocalWorkerPortabilityTests.fs" />
     <Compile Include="LocalWorkerAssignmentTests.fs" />
     <Compile Include="LocalWorkerHostTests.fs" />

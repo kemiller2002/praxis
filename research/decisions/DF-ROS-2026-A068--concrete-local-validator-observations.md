@@ -2,10 +2,10 @@
 id: DF-ROS-2026-A068
 title: Observe concrete pinned validator processes on exact Git candidates
 status: draft
-version: 1.0.0
+version: 1.1.0
 owners: [repository-governance]
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-10-12
 research_area: repository-operating-system
 decision_type: architecture
 supports: [RQ-ROS-2026-A028]
@@ -66,6 +66,24 @@ Tests exercise real bounded subprocesses and Git checkouts, replaced pins,
 candidate drift, TRX failures despite exit zero, missing/stale results, zero
 tests, XML DTDs, timeout, cancellation, overflow and evidence digests. Fixture
 workers are deterministic .NET programs, not model workers. Actual model
-bridges, checklist mapping, prerequisite evidence custody, execution-envelope
+bridges, prerequisite evidence custody, execution-envelope
 serialization and native completion remain necessary before claiming usable
 autonomous local execution. Cross-OS results require the new adapter's own CI.
+
+# Concrete checklist binding (1.1)
+
+Bind the existing checklist ports to actual pinned validator requests rather
+than allowing worker claims to populate a pass. Hold an exact packet/result,
+observe fresh policy and requests, compare input pins before commands, require
+TRX for test rows, compare all manifests, and verify the archived snapshot
+against the directly observed report. Reobserve the complete context after
+execution. The host guard must verify live assignment and held custody/lifecycle
+leases before and after each operation; it does not create those leases.
+
+Identical requests may share actual evidence only within a single evaluation,
+with inputs and evidence rechecked for each row. Persistent caching and fresh
+slot provisioning remain explicit controller responsibilities. Preexisting
+TRX artifacts refuse; evidence is never overwritten or silently recycled.
+Input pins include literal paths, so fresh slots require matching pins prepared
+before delegation. Digests and self-reported host callbacks are not authenticated
+custody. No execution CLI or native completion activation is added here.

@@ -131,6 +131,53 @@ module FileLocalValidator =
                   ValidatorInputDigest = inputDigest })
         with error -> return Error("validator input observation refused: " + error.GetType().Name) }
 
+    /// Integrity/custody cross-check for a report obtained directly from execute.
+    /// A digest is not authentication: the host must protect this root and report.
+    let verifyEvidence (request: LocalValidatorRequest) (report: LocalValidatorReport) =
+        try
+            let root = LocalHostJournalFiles.rootOutside request.Process.WorkingDirectory request.EvidenceRoot
+            let path = Path.GetFullPath report.EvidencePath
+            let name = Path.GetFileNameWithoutExtension path
+            let mutable identity = Guid.Empty
+            if not (Path.IsPathFullyQualified report.EvidencePath && LocalHostJournalFiles.noLinks path)
+               || Path.GetDirectoryName path <> root || Path.GetExtension path <> ".json"
+               || not (Guid.TryParseExact(name, "N", &identity)) then invalidOp "invalid evidence custody path"
+            use stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
+            if stream.Length > 8388608L then invalidOp "oversized evidence"
+            let bytes = Array.zeroCreate<byte> (int stream.Length)
+            stream.ReadExactly bytes
+            if stream.ReadByte() <> -1 || digest bytes <> report.EvidenceDigest then invalidOp "changed evidence snapshot"
+            use document = JsonDocument.Parse(bytes)
+            let value = document.RootElement
+            let expected = Set.ofList [ "schemaVersion"; "validatorId"; "candidateCommit"; "candidateManifestDigest"; "validatorInputDigest"
+                                        "startedAt"; "finishedAt"; "outcome"; "observationKind"; "standardOutput"; "standardError"
+                                        "testsExecuted"; "testArtifactDigest"; "passed"; "refusal" ]
+            let fields = value.EnumerateObject() |> Seq.map _.Name |> Seq.toList
+            if Set.ofList fields <> expected || fields.Length <> expected.Count then invalidOp "unexpected evidence fields"
+            let text (name: string) = value.GetProperty(name).GetString()
+            let count = value.GetProperty("testsExecuted")
+            let tests = if count.ValueKind = JsonValueKind.Null then None else Some(count.GetInt32())
+            let refusal = value.GetProperty("refusal")
+            let verdict = if value.GetProperty("passed").GetBoolean() then
+                              if refusal.ValueKind <> JsonValueKind.Null then invalidOp "passing evidence has refusal"
+                              Ok()
+                          else Error(refusal.GetString())
+            if text "schemaVersion" <> "praxis.local-validator-evidence/1"
+               || text "observationKind" <> "transient-controller-tool-handle"
+               || text "validatorId" <> report.ValidatorId || report.ValidatorId <> request.ValidatorId
+               || text "candidateCommit" <> report.CandidateCommit || report.CandidateCommit <> request.CandidateCommit
+               || text "candidateManifestDigest" <> report.CandidateManifestDigest
+               || text "validatorInputDigest" <> report.ValidatorInputDigest
+               || value.GetProperty("startedAt").GetDateTimeOffset() <> report.StartedAt
+               || value.GetProperty("finishedAt").GetDateTimeOffset() <> report.FinishedAt
+               || tests <> report.TestsExecuted || verdict <> report.Verdict then invalidOp "evidence identity differs from observed report"
+            match tests with
+            | Some count when count > 0 && request.TrxPath.IsSome && LocalAgentHandoff.isDigest (text "testArtifactDigest") -> ()
+            | None when value.GetProperty("testArtifactDigest").ValueKind = JsonValueKind.Null -> ()
+            | _ -> invalidOp "inconsistent test artifact identity"
+            Ok()
+        with error -> Error("validator archived evidence refused: " + error.GetType().Name)
+
     let execute (request: LocalValidatorRequest) (cancellation: CancellationToken) = task {
         try
             let evidenceRoot = LocalHostJournalFiles.rootOutside request.Process.WorkingDirectory request.EvidenceRoot
