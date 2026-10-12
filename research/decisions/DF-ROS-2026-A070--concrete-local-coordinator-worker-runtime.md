@@ -13,6 +13,18 @@ related_documents: [DF-ROS-2026-A063, DF-ROS-2026-A065, DF-ROS-2026-A066, DF-ROS
 tags: [agents, validators, runtime, authority, recovery]
 confidence: medium
 derived_from: [DF-ROS-2026-A067, DF-ROS-2026-A068]
+provenance:
+  contributions:
+    EXE-20261012T115318275Z-92ff2d62:
+      operations: [created]
+      at: 2026-10-12T13:46:55.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Record the local coordinator/worker runtime activation decision (GH-234)"
 ---
 
 # Context

@@ -2511,5 +2511,61 @@
     "title": "Observe concrete pinned validator processes on exact Git candidates",
     "updated": "2026-10-11",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A068"
+    ],
+    "id": "DF-ROS-2026-A070",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A070--concrete-local-coordinator-worker-runtime.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T115318275Z-92ff2d62": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T13:46:55.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record the local coordinator/worker runtime activation decision (GH-234)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A063",
+      "DF-ROS-2026-A065",
+      "DF-ROS-2026-A066",
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A068",
+      "docs/local-runtime.md",
+      "docs/worker-checklists.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "validators",
+      "runtime",
+      "authority",
+      "recovery"
+    ],
+    "title": "Activate the local coordinator/worker runtime through a signed, checklist-enforcing entry point",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
   }
 ]

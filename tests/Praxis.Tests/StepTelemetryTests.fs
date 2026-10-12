@@ -444,6 +444,20 @@ module StepTelemetryTests =
                     Assert.isTrue (FileStepRepository.findings updated |> List.forall (fun finding -> not (finding.Contains "identity.agentId"))) "inherited step contradicts execution"
                     Assert.isTrue (stepId.StartsWith "STEP-") "step missing") }
 
+          { Name = "step on a continued execution inherits its recorded parent execution with an audit"
+            Run = fun () ->
+                withRoot (fun root ->
+                    writeExecution root
+                    let record = readExecution root
+                    (record["identity"] :?> JsonObject)["parentExecutionId"] <- JsonValue.Create "EXE-PREDECESSOR"
+                    File.WriteAllText(executionFile root, record.ToJsonString())
+                    beginStep root "2026-01-01T00:01:00Z" None "continued" |> ignore
+                    let updated = readExecution root
+                    let step = (updated["steps"] :?> JsonArray)[0] :?> JsonObject
+                    Assert.equal "EXE-PREDECESSOR" ((step["identity"]["parentExecutionId"]).GetValue<string>())
+                    Assert.equal "parentExecutionId" ((step["parentExecutionInheritance"]["field"]).GetValue<string>())
+                    Assert.isTrue (FileStepRepository.findings updated |> List.forall (fun finding -> not (finding.Contains "identity.parentExecutionId"))) "continued step contradicts its execution") }
+
           { Name = "stored contradictory finalized state is detected by validation"
             Run = fun () ->
                 withRoot (fun root ->
