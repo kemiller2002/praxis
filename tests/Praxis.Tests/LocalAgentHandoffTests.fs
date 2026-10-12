@@ -258,8 +258,12 @@ module LocalAgentHandoffTests =
                   let text = CliHarness.rosOk root args
                   Assert.isTrue (text.Out.Contains("BLOCK local-controller-authority-unobserved")) "authority qualification missing"
                   Assert.isTrue (text.Out.Contains("WI-1 [EXE-WI1]")) "native member lineage missing"
+                  Assert.isTrue (text.Out.Contains("REQUIRED system/WI-1/tests [EXE-WI1]: unobserved")) "checklist missing or falsely verified"
                   let json = CliHarness.rosOk root (args @ [ "--json" ]) |> fun r -> JsonNode.Parse r.Out
                   Assert.equal result.PacketDigest (json.["assignments"].[0].["packetDigest"].GetValue<string>())
+                  let checks = json.["assignments"].[0].["checklistRequirements"].AsArray()
+                  Assert.equal 10 checks.Count
+                  Assert.isTrue (checks |> Seq.forall (fun row -> row.["required"].GetValue<bool>() && row.["status"].GetValue<string>() = "unobserved")) "proposal claimed checklist completion"
                   Assert.equal before (inventory ())
                   Assert.isTrue (not (Directory.Exists(Path.Combine(root, ".git")))) "inspection initialized Git"
               finally Directory.Delete(root, true))

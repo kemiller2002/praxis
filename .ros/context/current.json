@@ -9562,6 +9562,38 @@
       "blockReason": "Serialized authority, native dispatch/recovery and exact signed delegation are implemented, tested and remotely checkpointed. This host refuses bwrap isolation and lacks a checked local worker backend. Authenticated signing, native member-execution observations, protected worker adapter closure and actual launch/intake/integration/completion still need qualification on a suitable host; runtime remains disabled."
     },
     {
+      "id": "GH-234",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-11T21:15:24.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261011T204811145Z-23f864b2"
+      ],
+      "blockReason": "Checklist gate implementation and validation complete locally; branch publication awaits explicit GitHub destination authorization after automatic approval review rejected push",
+      "latestCheckpoint": {
+        "id": "f7d93c45358eab6201403466",
+        "recordedAt": "2026-10-12T06:44:56.000Z",
+        "executionId": "EXE-20261011T204811145Z-23f864b2",
+        "repository": "repository-operating-system",
+        "branch": "feat/checklists-recovery-state",
+        "commit": "7df273a1d6c79e515bd9733328908ecb9c6dcf1a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "feat/enforced-work-checklists",
+        "remoteCommit": "7df273a1d6c79e515bd9733328908ecb9c6dcf1a",
+        "summary": "Published PR 236 at 7df273a1, integrated with concrete validators from PR 237. Native merge preserves both successive histories: 301 work items, all 1014 original events and both branch orders. Fifteen history, 18 checklist, 9 CLI boundary, alias, 10 validator, 23 integration and 14 completion tests pass; build and native validation clean. Full frozen-checkout regressions and latest CI remain running.",
+        "nextAction": "Verify full regressions, browser, three-OS, native-release and site CI at latest head; merge PR 236. GH-234 remains active for concrete checklist-host wiring, protected evidence custody, lifecycle serialization, native work-complete adoption and coordinator/two-worker pilot.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
       "id": "GH-235",
       "type": "task",
       "state": "active",
@@ -9595,7 +9627,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-11T23:40:57.000Z",
+  "updatedAt": "2026-10-11T23:40:57.0000000+00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
