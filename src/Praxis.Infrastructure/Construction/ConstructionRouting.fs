@@ -63,6 +63,9 @@ module ConstructionRouting =
                 match obligation.Kind with
                 | Artifacts.Implement contract -> impl @ [ obligation, contract ], sem, ver
                 | Artifacts.ResolveUnresolved _ -> impl, sem @ [ obligation ], ver
+                // Ordo 1.7: an effect whose failure meaning the plan left open is a
+                // semantic decision, never custom code.
+                | Artifacts.ResolveEffectFailure _ -> impl, sem @ [ obligation ], ver
                 | Artifacts.VerifyIndependently _ -> impl, sem, ver @ [ obligation ]) ([], [], [])
         let custom, exceptions =
             implementations |> List.fold (fun (routed, refused) (obligation, contract) ->
@@ -118,9 +121,14 @@ module ConstructionRouting =
                         "requirementKeys", strings artifact.RequirementKeys; "route", str "deterministic-constructor" ]))
               "semantic",
               array (routing.Semantic |> List.map (fun o ->
-                  let subject, question = match o.Kind with Artifacts.ResolveUnresolved(s, q) -> s, q | _ -> "", ""
-                  obj [ "id", str o.Id; "subject", str subject; "question", str question; "requirementKeys", strings o.RequirementKeys
-                        "route", str "authorized-decision"; "status", str "open" ]))
+                  let effect, subject, question =
+                      match o.Kind with
+                      | Artifacts.ResolveUnresolved(s, q) -> None, s, q
+                      | Artifacts.ResolveEffectFailure(e, s, q) -> Some e, s, q
+                      | _ -> None, "", ""
+                  obj ([ "id", str o.Id; "subject", str subject; "question", str question; "requirementKeys", strings o.RequirementKeys
+                         "route", str "authorized-decision"; "status", str "open" ]
+                       @ (effect |> Option.map (fun e -> [ "effectFailure", str e ]) |> Option.defaultValue []))))
               "custom",
               array (routing.Custom |> List.map (fun r ->
                   obj [ "id", str r.Obligation.Id; "contract", str r.Contract; "slot", str r.SlotPath; "maxBytes", num r.Slot.MaxBytes

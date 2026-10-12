@@ -66,7 +66,7 @@ work first:
 | Class | Source | Route |
 |---|---|---|
 | Deterministic construction | Ordo's generated artifacts | the host's deterministic constructor (`apply`) |
-| Semantic decision | `resolve` obligations | an authorized human decision; never a worker |
+| Semantic decision | `resolve` and `resolve-effect-failure` obligations | an authorized human decision; never a worker |
 | Bounded custom implementation | `implement` obligations | the one host-declared slot whose contracts name it |
 | Independent verification | `verify` obligations | independent verification (Dokimos); never closed here |
 
@@ -212,3 +212,29 @@ arguments, `3` refused (the message names the check).
 - **Evidence.** Ordo's structural checks are derived from the plan and are
   not independent acceptance evidence. Behavioral verification belongs to
   Dokimos.
+
+## Ordo vocabulary 2 (Ordo 1.7.0)
+
+Praxis pins Ordo 1.7.0, which reads both vocabularies.
+
+- **Vocabulary 1 plans** are unchanged. They keep their digests and generated
+  bytes, and use generator `ordo.construction/1`.
+- **Vocabulary 2 plans** (generator `ordo.construction/2`) must give every
+  `transitionEffect` port an `onFailure` disposition:
+  - `remain` keeps the workflow in its source state when the effect fails or
+    its outcome is unknown;
+  - `proceed` lets the target state stand and reports the failure;
+  - `unresolved` leaves the question open.
+- **Who decides.** `remain` and `proceed` are admitted only when the plan
+  cites a decision the approved cohort requires. Without one, the only legal
+  disposition is `unresolved`, so an agent cannot settle what a failed effect
+  means on its own.
+- **How Praxis reports it.** An `unresolved` disposition appears in `preview`
+  and `apply` output as a `resolve-effect-failure` obligation naming the
+  effect. `construct route` classifies it as a semantic decision
+  (`effectFailure` in the routing record), never as custom code.
+
+This came from timer pilot 01 (research-documents#7, finding F2). There,
+handwritten session code silently decided this question, and different runs
+decided it differently.
+
