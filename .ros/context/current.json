@@ -9847,18 +9847,48 @@
     {
       "id": "WI-0096",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T21:15:23.404Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionRouting.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T21:27:27.649Z",
       "telemetryExecutionIds": [
         "EXE-20261012T211524381Z-f7497cda"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "fb320eb8a7149fa5f522376f",
+        "recordedAt": "2026-10-12T21:27:24.234Z",
+        "executionId": "EXE-20261012T211524381Z-f7497cda",
+        "repository": "repository-operating-system",
+        "branch": "construct/ordo-1.7.0",
+        "commit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "construct/ordo-1.7.0",
+        "remoteCommit": "63d3eda9ac750a7fd561c84d5c4ed35516b3cf1b",
+        "summary": "Ordo 1.7.0 vendored and pinned; ResolveEffectFailure handled in preview and routing; v2 plan test added; construction cli 19/19, foundations verify passes",
+        "nextAction": "Complete WI-0096 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T21:27:27.649Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T21:15:23.404Z",
+  "updatedAt": "2026-10-12T21:27:27.649Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
