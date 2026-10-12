@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 88,
+  "nextSeq": 89,
   "items": [
     {
       "id": "WI-0001",
@@ -5944,6 +5944,27 @@
         "provider": "openai",
         "model": "unknown",
         "runtime": "codex"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0088",
+      "title": "Work completion cannot finalize a predecessor execution left with unresolved steps after work continue; finalize it with its open steps recorded as interrupted (observed by successor) instead of requiring the absent owner",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-12T15:58:35.451Z",
+      "updatedAt": "2026-10-12T15:58:51.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

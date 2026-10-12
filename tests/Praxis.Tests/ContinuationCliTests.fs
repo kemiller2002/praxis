@@ -122,6 +122,92 @@ module ContinuationCliTests =
                       run clone (Some agentA) [ "work"; "block"; "--id"; "FEAT-1"; "--reason"; "paused"; "--occurred-at"; now () ] |> ok |> ignore
                       let blocked = continueAs clone agentB
                       Assert.equal "work-item-not-active" (text blocked.Json["refusal"].["code"])) }
+          { Name = "continue: completion finalizes an interrupted predecessor's open step as interrupted, never as resolved (WI-0088)"
+            Run =
+              fun () ->
+                  withCheckpointedWork (fun parent bare clone ->
+                      run clone (Some agentA) [ "step"; "begin"; "--name"; "Part two"; "--occurred-at"; now () ] |> ok |> ignore
+                      pushAll clone "agent A begins part two" |> ignore
+                      let predecessor = executionOf clone
+                      let other = GitFixture.secondClone parent bare "clone-b"
+                      let continued = continueAs other agentB |> ok
+                      let successor = text continued.Json["executionId"]
+                      pushAll other "praxis: continued by B" |> ignore
+                      GitFixture.write other "src/feature.txt" "part one\npart two\n"
+                      pushAll other "part two" |> ignore
+
+                      run other (Some agentB) [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--summary"; "Part two"; "--next-action"; "Complete" ]
+                      |> ok
+                      |> ignore
+
+                      pushAll other "praxis: checkpoint" |> ignore
+                      // B cannot resolve A's step: only its owner may.
+                      let foreign = run other (Some agentB) [ "step"; "abandon"; "--execution"; predecessor; "--occurred-at"; now (); "--reason"; "not mine" ]
+                      Assert.isTrue (foreign.ExitCode <> 0) "a successor resolved the predecessor's step"
+
+                      run other (Some agentB) [ "work"; "complete"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--evidence"; "implementation=src/feature.txt"; "--evidence"; "tests=src/feature.txt" ]
+                      |> ok
+                      |> ignore
+
+                      let record = JsonNode.Parse(File.ReadAllText(Path.Combine(other, ".ros", "telemetry", "executions", $"{predecessor}.json")))
+                      Assert.equal "finalized" (text record["status"])
+                      let step = record["steps"].[0]
+                      Assert.equal "active" (text step["status"])
+
+                      let interruption =
+                          record["events"] :?> JsonArray
+                          |> Seq.find (fun node -> text node["type"] = "execution.finalized")
+                          |> fun node -> node["interruption"]
+
+                      Assert.equal "interrupted" (text interruption["disposition"])
+                      Assert.equal "observed-by-successor" (text interruption["dispositionSource"])
+                      Assert.equal successor (text interruption["successorExecutionId"])
+                      Assert.equal [ text step["stepId"] ] (interruption["unresolvedSteps"] :?> JsonArray |> Seq.map text |> Seq.toList)
+
+                      let continuedEvent =
+                          File.ReadAllLines(Path.Combine(other, ".ros", "events", "events.jsonl"))
+                          |> Array.map (fun line -> JsonNode.Parse line :?> JsonObject)
+                          |> Array.find (fun node -> text node["type"] = "work.continued")
+
+                      Assert.equal (text continuedEvent["eventId"]) (text interruption["continuationEventId"])
+                      run other None [ "validate" ] |> ok |> ignore
+
+                      // A finalization citing a continuation that did not take this execution over is reported.
+                      let file = Path.Combine(other, ".ros", "telemetry", "executions", $"{predecessor}.json")
+                      interruption["continuationEventId"] <- JsonValue.Create "not-a-continuation"
+                      File.WriteAllText(file, record.ToJsonString())
+                      let forged = run other None [ "validate"; "--json" ]
+                      Assert.equal 1 forged.ExitCode
+                      Assert.isTrue (forged.Output.Contains "does not take") forged.Output
+
+                      // Dropping the recorded interruption leaves an unresolved step on a finalized execution.
+                      (record["events"] :?> JsonArray
+                       |> Seq.find (fun node -> text node["type"] = "execution.finalized")
+                       :?> JsonObject).Remove "interruption"
+                      |> ignore
+
+                      File.WriteAllText(file, record.ToJsonString())
+                      let dropped = run other None [ "validate"; "--json" ]
+                      Assert.equal 1 dropped.ExitCode
+                      Assert.isTrue (dropped.Output.Contains "finalized execution has unresolved step") dropped.Output) }
+          { Name = "continue: a successor's own unresolved step still blocks completion"
+            Run =
+              fun () ->
+                  withCheckpointedWork (fun parent bare _ ->
+                      let other = GitFixture.secondClone parent bare "clone-b"
+                      continueAs other agentB |> ok |> ignore
+                      run other (Some agentB) [ "step"; "begin"; "--name"; "Unfinished"; "--occurred-at"; now () ] |> ok |> ignore
+                      pushAll other "praxis: continued by B" |> ignore
+                      GitFixture.write other "src/feature.txt" "part two\n"
+                      pushAll other "part two" |> ignore
+                      run other (Some agentB) [ "work"; "checkpoint"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--summary"; "Part two"; "--next-action"; "Complete" ] |> ok |> ignore
+                      pushAll other "praxis: checkpoint" |> ignore
+
+                      let refused =
+                          run other (Some agentB) [ "work"; "complete"; "--id"; "FEAT-1"; "--occurred-at"; now (); "--evidence"; "implementation=src/feature.txt"; "--evidence"; "tests=src/feature.txt" ]
+
+                      Assert.isTrue (refused.ExitCode <> 0) "completion ignored the successor's own unresolved step"
+                      Assert.isTrue (refused.Error.Contains "unresolved steps") refused.Error) }
           { Name = "continue: validation reports a successor whose recorded parent is not the named predecessor"
             Run =
               fun () ->

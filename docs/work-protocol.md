@@ -502,6 +502,20 @@ completes, finalization closes every active execution; "finalized" means
 closed, not successful, and the `work.continued` event remains the record of
 the interruption.
 
+An interrupted predecessor may have left steps planned, active or blocked.
+Only their owner may resolve a step, and the owner is gone, so completion
+does not wait for it (WI-0088). Its `execution.finalized` event carries an
+`interruption` naming those step IDs, the continuation event and the
+successor, with `disposition: interrupted` and `dispositionSource:
+observed-by-successor`. The steps themselves keep their last recorded state;
+nothing marks them completed or abandoned. This applies only to an execution
+that a `work.continued` event for the same work item took over as
+interrupted. Unresolved steps of any other execution, including the
+successor's own, still refuse completion. `validate` accepts a finalized
+execution with unresolved steps only when its interruption lists exactly
+those steps and cites a continuation that took that execution over as
+interrupted for the named successor.
+
 The output also includes the checkpoint, the completed work, the next
 action, the completion evidence still required, the test measurements every
 execution recorded (with their evidence quality), and the predecessor's
