@@ -14,7 +14,10 @@ module FileLocalIntegrationJournal =
         for name in names do
             if not (LocalHostJournalFiles.noLinks (Path.Combine(target, name))) then invalidOp "integration entry contains a link"
         names
-    let create repositoryRoot storeRoot : Result<LocalIntegrationJournalStore, string> =
+    /// `reserved` names top-level directories another host record owns in the
+    /// same root (construction routing records); they are never read as
+    /// integration entries and must still be real, unlinked directories.
+    let createReserving (reserved: Set<string>) repositoryRoot storeRoot : Result<LocalIntegrationJournalStore, string> =
         try
             let root = LocalHostJournalFiles.rootOutside repositoryRoot storeRoot
             let directory repo dispatch = LocalHostJournalFiles.directory root repo dispatch
@@ -56,7 +59,7 @@ module FileLocalIntegrationJournal =
                 let mutable result = []
                 for path in paths do
                     if not (LocalHostJournalFiles.noLinks path) || not (Directory.Exists path) then invalidOp "unexpected integration root entry"
-                    if Path.GetFileName path <> "locks" then
+                    if Path.GetFileName path <> "locks" && not (reserved.Contains(Path.GetFileName path)) then
                         entries path |> ignore
                         let plan = LocalHostJournalFiles.readBounded (Path.Combine(path, "plan.json")) |> LocalIntegrationJournalJson.readPlan |> function Ok value -> value | Error error -> invalidOp error
                         if path <> directory plan.RepositoryIdentity plan.DispatchId then invalidOp "integration plan stored under another identity"
@@ -67,6 +70,8 @@ module FileLocalIntegrationJournal =
                 Ok result)
             Ok { Pending = pending; Load = load; Prepare = prepare; RecordApplied = applied }
         with e -> Error("cannot configure integration journal: " + e.Message)
+
+    let create repositoryRoot storeRoot = createReserving Set.empty repositoryRoot storeRoot
 
     /// Mechanism lock for cooperating controllers, NOT policy/OS protection.
     /// Git CAS remains mandatory against writers outside this convention.

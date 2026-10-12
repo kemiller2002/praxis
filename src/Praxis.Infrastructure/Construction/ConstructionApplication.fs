@@ -98,14 +98,16 @@ module ConstructionApplication =
     let constructionId (preview: ConstructionPreview) =
         "construct-" + (ConstructionTree.digest (String.concat "\n" [ preview.Binding.PlanDigest; preview.TargetRef; preview.TargetCommit ])).Substring(7, 24)
 
-    let private journal (configuration: LocalHostConfiguration) =
+    /// The construction root also holds routing records under `routes/`
+    /// (Praxis #243); the integration journal leaves that directory alone.
+    let journal (configuration: LocalHostConfiguration) =
         match configuration.ConstructionRoot with
         | None -> Error "construction is disabled: the host configuration names no construction root"
-        | Some store -> FileLocalIntegrationJournal.create configuration.RepositoryRoot store |> Result.map (fun journal -> store, journal)
+        | Some store -> FileLocalIntegrationJournal.createReserving (set [ "routes" ]) configuration.RepositoryRoot store |> Result.map (fun journal -> store, journal)
 
     /// Entries whose target already names their candidate were applied before
     /// an interruption; record that, never re-apply.
-    let private reconcile (configuration: LocalHostConfiguration) (journal: Praxis.Application.Work.LocalIntegrationJournalStore) now =
+    let reconcile (configuration: LocalHostConfiguration) (journal: Praxis.Application.Work.LocalIntegrationJournalStore) now =
         journal.Pending configuration.RepositoryIdentity |> Result.bind (fun pending ->
             pending |> List.fold (fun acc id ->
                 acc |> Result.bind (fun () ->
@@ -116,9 +118,37 @@ module ConstructionApplication =
                             | _ -> Ok()
                         | None -> Ok()))) (Ok()))
 
-    let apply (configuration: LocalHostConfiguration) (admitted: ConstructionAdmission.Admitted) (targetRef: string) (now: DateTimeOffset) : Result<ConstructionReport, string> =
+    /// Whole seconds in UTC, so a replayed candidate is byte-identical.
+    let truncate (now: DateTimeOffset) =
+        DateTimeOffset(now.UtcDateTime.Year, now.UtcDateTime.Month, now.UtcDateTime.Day, now.UtcDateTime.Hour, now.UtcDateTime.Minute, now.UtcDateTime.Second, TimeSpan.Zero)
+
+    /// Stage `treeChanges` on `before` in a private index, verify the
+    /// candidate, journal it, then move `targetRef` by compare-and-swap.
+    /// Shared by `apply` and `extend`; the caller holds the lease.
+    let land (configuration: LocalHostConfiguration) (store: string) (journal: Praxis.Application.Work.LocalIntegrationJournalStore)
+             (id: string) (targetRef: string) (before: string) (treeChanges: ConstructionTreeChange list)
+             (message: string) (packetDigest: string) (submissionDigest: string) (at: DateTimeOffset) =
         let git, root = configuration.Git, configuration.RepositoryRoot
-        let at = DateTimeOffset(now.UtcDateTime.Year, now.UtcDateTime.Month, now.UtcDateTime.Day, now.UtcDateTime.Hour, now.UtcDateTime.Minute, now.UtcDateTime.Second, TimeSpan.Zero)
+        journal.Load configuration.RepositoryIdentity id |> Result.bind (fun prior ->
+            let preparedAt = prior |> Option.map _.Plan.PreparedAt |> Option.defaultValue at
+            ConstructionTree.stage git root store configuration.Committer before treeChanges message preparedAt
+            |> Result.bind (fun candidate ->
+                ConstructionTree.verify git root before candidate treeChanges |> Result.bind (fun () ->
+                    let plan : LocalIntegrationPlan =
+                        { SchemaVersion = "praxis.local-integration-plan/1"; RepositoryIdentity = configuration.RepositoryIdentity
+                          DispatchId = id; AttemptId = "1"; PacketDigest = packetDigest; SubmissionDigest = submissionDigest
+                          TargetRef = targetRef; BeforeCommit = before; CandidateCommit = candidate; PreparedAt = preparedAt }
+                    journal.Prepare plan |> Result.bind (fun _ ->
+                        ConstructionTree.readRef git root targetRef |> Result.bind (fun head ->
+                            if head = candidate then Ok()
+                            elif head <> before then Error "construction target moved after planning; nothing was applied"
+                            else ConstructionTree.compareAndSwap git root targetRef candidate before ("praxis construction " + id))
+                        |> Result.bind (fun () -> journal.RecordApplied plan at)
+                        |> Result.map (fun () -> candidate)))))
+
+    let apply (configuration: LocalHostConfiguration) (admitted: ConstructionAdmission.Admitted) (targetRef: string) (now: DateTimeOffset) : Result<ConstructionReport, string> =
+        let root = configuration.RepositoryRoot
+        let at = truncate now
         journal configuration |> Result.bind (fun (store, journal) ->
             FileLocalIntegrationJournal.acquire root store configuration.RepositoryIdentity |> Result.bind (fun lease ->
                 use _ = lease
@@ -129,21 +159,7 @@ module ConstructionApplication =
                         match changes configuration built preview.Writes with
                         | [] -> Ok { Preview = preview; ConstructionId = id; Outcome = ConstructionOutcome.AlreadyCurrent }
                         | treeChanges ->
-                            journal.Load configuration.RepositoryIdentity id |> Result.bind (fun prior ->
-                                let preparedAt = prior |> Option.map _.Plan.PreparedAt |> Option.defaultValue at
-                                ConstructionTree.stage git root store configuration.Committer preview.TargetCommit treeChanges (message preview) preparedAt
-                                |> Result.bind (fun candidate ->
-                                    ConstructionTree.verify git root preview.TargetCommit candidate treeChanges |> Result.bind (fun () ->
-                                        let manifest = built.Artifacts |> List.tryFind (fun artifact -> artifact.Path.EndsWith "/construction-manifest.json")
-                                        let plan : LocalIntegrationPlan =
-                                            { SchemaVersion = "praxis.local-integration-plan/1"; RepositoryIdentity = configuration.RepositoryIdentity
-                                              DispatchId = id; AttemptId = "1"; PacketDigest = preview.Binding.PlanDigest
-                                              SubmissionDigest = manifest |> Option.map _.Digest |> Option.defaultValue preview.Binding.PlanDigest
-                                              TargetRef = targetRef; BeforeCommit = preview.TargetCommit; CandidateCommit = candidate; PreparedAt = preparedAt }
-                                        journal.Prepare plan |> Result.bind (fun _ ->
-                                            ConstructionTree.readRef git root targetRef |> Result.bind (fun head ->
-                                                if head = candidate then Ok()
-                                                elif head <> preview.TargetCommit then Error "construction target moved after planning; nothing was applied"
-                                                else ConstructionTree.compareAndSwap git root targetRef candidate preview.TargetCommit ("praxis construction " + id))
-                                            |> Result.bind (fun () -> journal.RecordApplied plan at)
-                                            |> Result.map (fun () -> { Preview = preview; ConstructionId = id; Outcome = ConstructionOutcome.Applied candidate })))))))))
+                            let manifest = built.Artifacts |> List.tryFind (fun artifact -> artifact.Path.EndsWith "/construction-manifest.json")
+                            let submission = manifest |> Option.map _.Digest |> Option.defaultValue preview.Binding.PlanDigest
+                            land configuration store journal id targetRef preview.TargetCommit treeChanges (message preview) preview.Binding.PlanDigest submission at
+                            |> Result.map (fun candidate -> { Preview = preview; ConstructionId = id; Outcome = ConstructionOutcome.Applied candidate })))))
