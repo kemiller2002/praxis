@@ -326,7 +326,8 @@
 | WI-0091 | WI-0091 | complete |  |  |
 | WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | captured |  | medium |
 | WI-0094 | Windows CI: the worker supervisor allowed only 500 ms for output pumps to drain after root exit, truncating a complete result on a loaded runner (portability host test on PR #250) | complete |  | medium |
-| WI-0097 | Mandatory construction-package scope verification backed by the host construction journal (GH-234) | ready |  | medium |
+| WI-0096 | WI-0096 | complete |  |  |
+| WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

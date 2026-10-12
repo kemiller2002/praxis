@@ -29,6 +29,19 @@ express them, and the host decides placement.
    still checked exactly as before, and an agent cannot use it to rebind the
    plan to another cohort.
 
+   `preview` and `apply` output report the admitted plan exactly:
+   - `plan`: the plan in Ordo's canonical form. Its SHA-256 is
+     `binding.planDigest`.
+   - `binding.planSourceManifestDigest` and `binding.planBlueprintDigest`:
+     the canonical digests that plan is bound to.
+   - `binding.manifestDigest` and `binding.blueprintDigest`: the byte digests
+     of the committed ECIR files, which is what the operator grant pins.
+
+   An independent verifier such as Dokimos `construction verify` reads the
+   reported plan directly instead of rebuilding a host-stamped binding from the
+   agent's operations. Submitting the reported plan again yields the same plan
+   digest.
+
    Only then does Praxis call `Construction.construct`. An admitted
    construction is an opaque value that only admission can produce.
 2. **Preview** (read-only). Praxis reads every file under the generated
