@@ -9681,47 +9681,6 @@
       "completedAt": "2026-10-12T16:46:08.000Z"
     },
     {
-      "id": "WI-0089",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Planning/FileLocalWorkerHost.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
-        }
-      ],
-      "updatedAt": "2026-10-12T17:57:12.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20261012T171217219Z-d54381c9"
-      ],
-      "latestCheckpoint": {
-        "id": "7073fb71fc7420dbf64c7421",
-        "recordedAt": "2026-10-12T17:57:08.000Z",
-        "executionId": "EXE-20261012T171217219Z-d54381c9",
-        "repository": "repository-operating-system",
-        "branch": "fix/resume-archives-from-spool",
-        "commit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "fix/resume-archives-from-spool",
-        "remoteCommit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
-        "summary": "Resume archives an exited dispatch from the host spool when its submission archive is missing; deterministic test added; CI green (24 checks) on 4024faf; main merged via native history merge.",
-        "nextAction": "Complete WI-0089 and merge PR 246.",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      },
-      "completedAt": "2026-10-12T17:57:12.000Z"
-    },
-    {
       "id": "GH-242",
       "type": "feature",
       "state": "complete",
@@ -9763,47 +9722,6 @@
       "completedAt": "2026-10-12T17:26:38.000Z"
     },
     {
-      "id": "WI-0091",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Construction/ConstructionExtension.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
-        }
-      ],
-      "updatedAt": "2026-10-12T19:42:52.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20261012T185257851Z-f0478885"
-      ],
-      "latestCheckpoint": {
-        "id": "fbcc2d2ec6c7080629e716a1",
-        "recordedAt": "2026-10-12T19:42:49.000Z",
-        "executionId": "EXE-20261012T185257851Z-f0478885",
-        "repository": "repository-operating-system",
-        "branch": "construct/gh-243-scoped-extensions",
-        "commit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "construct/gh-243-scoped-extensions",
-        "remoteCommit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
-        "summary": "Implementation merged with origin/main f1a08bf; construction cli 17/17 pass",
-        "nextAction": "Complete WI-0091, build registries, validate, open draft PR",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      },
-      "completedAt": "2026-10-12T19:42:52.000Z"
-    },
-    {
       "id": "WI-0090",
       "type": "task",
       "state": "complete",
@@ -9843,11 +9761,134 @@
         }
       },
       "completedAt": "2026-10-12T18:46:40.243Z"
+    },
+    {
+      "id": "WI-0089",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/FileLocalWorkerHost.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T17:57:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T171217219Z-d54381c9"
+      ],
+      "latestCheckpoint": {
+        "id": "7073fb71fc7420dbf64c7421",
+        "recordedAt": "2026-10-12T17:57:08.000Z",
+        "executionId": "EXE-20261012T171217219Z-d54381c9",
+        "repository": "repository-operating-system",
+        "branch": "fix/resume-archives-from-spool",
+        "commit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/resume-archives-from-spool",
+        "remoteCommit": "b01c8aa18d108a8ad6908a49d3b82e7e5d117775",
+        "summary": "Resume archives an exited dispatch from the host spool when its submission archive is missing; deterministic test added; CI green (24 checks) on 4024faf; main merged via native history merge.",
+        "nextAction": "Complete WI-0089 and merge PR 246.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T17:57:12.000Z"
+    },
+    {
+      "id": "WI-0094",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/LocalWorkerProcess.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalWorkerPortabilityTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T20:42:44.342Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T203022523Z-0f3c3833"
+      ],
+      "latestCheckpoint": {
+        "id": "2ab15df62231ea4fff698891",
+        "recordedAt": "2026-10-12T20:42:41.116Z",
+        "executionId": "EXE-20261012T203022523Z-0f3c3833",
+        "repository": "repository-operating-system",
+        "branch": "fix/worker-stream-drain-grace",
+        "commit": "e6110b7820f520009b4e09e65f8305aa3070c5f3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/worker-stream-drain-grace",
+        "remoteCommit": "e6110b7820f520009b4e09e65f8305aa3070c5f3",
+        "summary": "Stream drain grace after root exit raised from 500 ms to a named 5 s constant; portability 29/29, local worker process 8/8, local runtime cli 5/5",
+        "nextAction": "Complete WI-0094 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T20:42:44.342Z"
+    },
+    {
+      "id": "WI-0091",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionExtension.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T19:42:52.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T185257851Z-f0478885"
+      ],
+      "latestCheckpoint": {
+        "id": "fbcc2d2ec6c7080629e716a1",
+        "recordedAt": "2026-10-12T19:42:49.000Z",
+        "executionId": "EXE-20261012T185257851Z-f0478885",
+        "repository": "repository-operating-system",
+        "branch": "construct/gh-243-scoped-extensions",
+        "commit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "construct/gh-243-scoped-extensions",
+        "remoteCommit": "4bfcdcc957230a89122c89e5e2547373cd4e0615",
+        "summary": "Implementation merged with origin/main f1a08bf; construction cli 17/17 pass",
+        "nextAction": "Complete WI-0091, build registries, validate, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T19:42:52.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T19:42:52.0000000\u002B00:00",
+  "updatedAt": "2026-10-12T20:42:44.3420000\u002B00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
