@@ -13,7 +13,9 @@ git add .ros/context/current.json .ros/events/events.jsonl
 ```
 
 Preview changes no history files. Apply reads only Git's regular-file stages
-1, 2 and 3 for these two exact paths in a pending merge. It preserves both
+1, 2 and 3 for these two exact paths in a pending merge, requiring each stage
+to match the actual single merge base, HEAD and incoming commit. A modified
+index cannot substitute an invented history. It preserves both
 independent work-item records, unknown fields, execution/checkpoint provenance
 and original event lines. Shared events occur once. The immutable base prefix
 cannot be removed, rewritten or reordered. Context `updatedAt` is the later

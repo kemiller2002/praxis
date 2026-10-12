@@ -97,6 +97,17 @@ module FileWorkHistoryMerge =
                     let mergeHead () = git root ["rev-parse"; "--verify"; "MERGE_HEAD"]
                     let head () = git root ["rev-parse"; "--verify"; "HEAD"]
                     let observedMerge, observedHead = mergeHead(), head()
+                    let bases = (git root ["merge-base"; "--all"; observedHead.Trim(); observedMerge.Trim()]).Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                    if bases.Length <> 1 then failwith "history merge requires a single real merge base"
+                    // The mutable index is not authority by itself: bind all stages to real commits.
+                    for stage, commit in [1, bases[0]; 2, observedHead.Trim(); 3, observedMerge.Trim()] do
+                        for path in paths do
+                            let treeLine = (git root ["ls-tree"; commit; "--"; path]).TrimEnd()
+                            let fields = treeLine.Split([|' '; '\t'|], StringSplitOptions.RemoveEmptyEntries)
+                            if fields.Length <> 4 || fields[0] <> "100644" || fields[1] <> "blob" || fields[3] <> path then
+                                failwith "committed history is not a regular file"
+                            let expected = $"100644 {fields[2]} {stage}\t{path}"
+                            if not (entries |> Array.contains expected) then failwith "history index stage does not match its commit"
                     let targets = paths |> List.map (fun path -> safeFile root path |> File.ReadAllText)
                     let read stage path =
                         let objectName = $":{stage}:{path}"

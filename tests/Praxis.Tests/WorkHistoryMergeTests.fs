@@ -2,6 +2,7 @@ namespace Praxis.Tests
 
 open System
 open System.IO
+open System.Diagnostics
 open Praxis.Domain.Work
 open Praxis.Infrastructure.Work
 
@@ -94,6 +95,19 @@ module WorkHistoryMergeTests =
           t "refuses unrelated pending journal without changing history" (fun () -> fixture (fun root context events ->
               let before = File.ReadAllText context, File.ReadAllText events
               WorkStateTransaction.prepare root [{Path = ".ros/events/events.jsonl"; Content = "unrelated"}; {Path = ".ros/context/current.json"; Content = "unrelated"}] |> ok
+              FileWorkHistoryMerge.run root true |> refuses
+              Assert.equal before (File.ReadAllText context, File.ReadAllText events)))
+          t "refuses a forged index stage even when all three stages exist" (fun () -> fixture (fun root context events ->
+              let before = File.ReadAllText context, File.ReadAllText events
+              let replacement = CliHarness.git root ["rev-parse"; "other:.ros/context/current.json"]
+              let start = ProcessStartInfo("git", WorkingDirectory = root, RedirectStandardInput = true, UseShellExecute = false)
+              start.ArgumentList.Add "update-index"
+              start.ArgumentList.Add "--index-info"
+              use child = Process.Start start
+              child.StandardInput.WriteLine($"100644 {replacement} 2\t.ros/context/current.json")
+              child.StandardInput.Close()
+              child.WaitForExit()
+              Assert.equal 0 child.ExitCode
               FileWorkHistoryMerge.run root true |> refuses
               Assert.equal before (File.ReadAllText context, File.ReadAllText events)))
           t "resumes an exact interrupted transaction without duplicating events" (fun () -> fixture (fun root context events ->
