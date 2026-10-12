@@ -37,6 +37,7 @@
     <Compile Include="Work/LocalWorkerProcessPlatform.fs" />
     <Compile Include="Work/LocalWorkerProcess.fs" />
     <Compile Include="Work/FileLocalValidator.fs" />
+    <Compile Include="Work/FileWorkerChecklist.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
@@ -67,6 +68,7 @@
     <Compile Include="Work/FileStepRepository.fs" />
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileNativeCompletionEffects.fs" />
+    <Compile Include="Work/FileLocalIntegratedCompletion.fs" />
     <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />

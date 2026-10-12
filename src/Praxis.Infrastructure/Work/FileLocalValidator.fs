@@ -131,9 +131,10 @@ module FileLocalValidator =
                   ValidatorInputDigest = inputDigest })
         with error -> return Error("validator input observation refused: " + error.GetType().Name) }
 
-    let execute (request: LocalValidatorRequest) (cancellation: CancellationToken) = task {
+    let executeWithFileAccess (access: LocalHostFileAccess) (request: LocalValidatorRequest) (cancellation: CancellationToken) = task {
         try
             let evidenceRoot = LocalHostJournalFiles.rootOutside request.Process.WorkingDirectory request.EvidenceRoot
+            match access.CheckDirectory evidenceRoot with Ok() -> () | Error error -> invalidOp error
             match request.TrxPath with
             | Some path ->
                 let parent = Path.GetDirectoryName path
@@ -178,10 +179,15 @@ module FileLocalValidator =
                 if bytes.Length > 8388608 then invalidOp "validator evidence exceeds archive bound"
                 if not (LocalHostJournalFiles.noLinks path) then invalidOp "validator evidence path is linked"
                 do
-                    use output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)
+                    let options = FileStreamOptions(Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None)
+                    access.ConfigureCreate options
+                    use output = new FileStream(path, options)
                     output.Write bytes
                     output.Flush(true)
                 let evidenceDigest = digest bytes
+                match access.CheckDirectory evidenceRoot, access.CheckFile path with
+                | Ok(), Ok() -> ()
+                | Error error, _ | _, Error error -> invalidOp error
                 if fileDigest path <> evidenceDigest then invalidOp "validator evidence differs after durable write"
                 return Ok { ValidatorId = request.ValidatorId; CandidateCommit = request.CandidateCommit
                             CandidateManifestDigest = manifest; ValidatorInputDigest = inputDigest
@@ -189,3 +195,6 @@ module FileLocalValidator =
                             TestsExecuted = tests |> Option.bind (function Ok(count, _) -> Some count | Error _ -> None)
                             Verdict = verdict; EvidencePath = path; EvidenceDigest = evidenceDigest }
         with error -> return Error("validator host operation refused: " + error.GetType().Name) }
+
+    /// Compatibility transport; protected controllers select their access policy explicitly.
+    let execute request cancellation = executeWithFileAccess LocalHostFileAccess.portableDevelopment request cancellation

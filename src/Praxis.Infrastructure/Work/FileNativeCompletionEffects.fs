@@ -14,7 +14,11 @@ type NativeCompletionEffectRequest =
       ExplicitConclusion: string option
       /// A protected local host must recheck integration/authority here. The
       /// ordinary CLI has already passed its native planner and guards.
-      BeforeEffects: unit -> Result<unit, string> }
+      BeforeEffects: unit -> Result<unit, string>
+      /// Finalization can take time. Recheck candidate/authority immediately
+      /// before persisting completion, without requiring finalized executions
+      /// to become active again.
+      BeforeApply: unit -> Result<unit, string> }
 
 type NativeCompletionEffectPorts =
     { ReadContext: unit -> Result<WorkContextPlanningView, string>
@@ -76,6 +80,10 @@ module FileNativeCompletionEffects =
     let private effects (ports: NativeCompletionEffectPorts) (request: NativeCompletionEffectRequest) =
         let ids = request.Plan.ItemPlans |> List.map (fun item -> item.Item.Id)
         ids |> List.fold (fun acc id -> acc |> Result.bind (fun () -> ports.FinalizeMember id)) (Ok())
+        |> Result.bind (fun () -> request.BeforeApply())
+        |> Result.bind (fun () -> ports.ReadContext() |> Result.bind (fun current ->
+            if current <> request.ExpectedContext then Error "native context changed during completion finalization"
+            else Ok()))
         |> Result.bind (fun () ->
             let conclusions =
                 request.Plan.ItemPlans |> List.choose (fun item ->

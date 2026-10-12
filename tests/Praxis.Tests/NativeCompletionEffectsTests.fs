@@ -40,7 +40,7 @@ module NativeCompletionEffectsTests =
                 | other -> failwith (sprintf "%A" other)
             let effect : NativeCompletionEffectRequest =
                 { ExpectedContext = context; Plan = plan; EventActor = Actor.unknown
-                  ReadinessRecords = Map.empty; ExplicitConclusion = None; BeforeEffects = fun () -> Ok() }
+                  ReadinessRecords = Map.empty; ExplicitConclusion = None; BeforeEffects = (fun () -> Ok()); BeforeApply = fun () -> Ok() }
             test root ports effect
         finally Directory.Delete(root, true)
 

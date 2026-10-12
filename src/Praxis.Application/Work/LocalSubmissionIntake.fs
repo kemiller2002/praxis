@@ -64,12 +64,12 @@ module LocalSubmissionIntake =
         return dispatched |> Result.map (fun report ->
             { Dispatch = report; Archive = capture capturePorts packet report }) }
 
-    let private validateCurrent (ports: LocalSubmissionIntakePorts) packet (submission: LocalWorkerSubmission) result observed =
+    let private validateCurrent validation (ports: LocalSubmissionIntakePorts) packet (submission: LocalWorkerSubmission) result observed =
         ports.Authority() |> Result.bind (fun authority ->
             ports.Prerequisites() |> Result.bind (fun prerequisites ->
                 let now = ports.Now()
                 if now < submission.CapturedAt then Error "submission capture is in the future"
-                else LocalAgentHandoff.validateResult authority now prerequisites packet observed result
+                else validation authority now prerequisites packet observed result
                      |> Result.mapError (String.concat "; ")))
 
     let private inspectResult (ports: LocalSubmissionIntakePorts) packet submission result =
@@ -79,16 +79,19 @@ module LocalSubmissionIntake =
         ports.Observe packet result |> Result.bind (fun observed ->
             // Reject unassigned or invalid results before invoking validators.
             // Failed/blocked packages remain inspectable but never integrate.
-            validateCurrent ports packet submission result observed |> Result.bind (function
-                | LocalResultDisposition.NoIntegration -> Ok(inspection LocalResultDisposition.NoIntegration)
-                | LocalResultDisposition.AwaitingIntegration ->
+            validateCurrent LocalAgentHandoff.validateResultInputs ports packet submission result observed |> Result.bind (function
+                | LocalResultInputDisposition.NoIntegration -> Ok(inspection LocalResultDisposition.NoIntegration)
+                | LocalResultInputDisposition.ValidatorsRequired ->
                     WorkerChecklistOperations.verify checklists packet result |> Result.bind (fun verified ->
                         // Slow checks cannot preserve stale paths, policy,
                         // authority or prerequisite observations.
                         ports.Observe packet result |> Result.bind (fun current ->
-                            if current <> observed then Error "submission observations changed during checklist verification"
+                            // Acceptance legitimately becomes observed after the
+                            // concrete validators run. Every candidate, identity,
+                            // path and artifact observation must remain identical.
+                            if { current with Acceptance = observed.Acceptance } <> observed then Error "submission observations changed during checklist verification"
                             else WorkerChecklistOperations.recheckCandidate checklists packet result result.OutputCommit verified
-                                 |> Result.bind (fun () -> validateCurrent ports packet submission result current |> Result.map inspection)))))
+                                 |> Result.bind (fun () -> validateCurrent LocalAgentHandoff.validateResult ports packet submission result current |> Result.map inspection)))))
 
     let readChecked (ports: LocalSubmissionIntakePorts) repositoryIdentity dispatchId = protect (fun () ->
         ports.Journal.Load repositoryIdentity dispatchId |> Result.bind (fun journal ->
