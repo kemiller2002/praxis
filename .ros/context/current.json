@@ -9564,10 +9564,10 @@
     {
       "id": "GH-235",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-10-11T23:40:57.000Z",
+      "updatedAt": "2026-10-12T08:15:33.000Z",
       "telemetryExecutionIds": [
         "EXE-20261011T234058504Z-3b80355e"
       ],
@@ -9590,7 +9590,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "blockReason": "Shared checkpoint events have opposite published orders on PR 238 and current main; await explicit owner canonical-order choice and reviewed native amendment"
     },
     {
       "id": "GH-234",
@@ -9627,7 +9628,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-11T23:40:57.0000000+00:00",
+  "updatedAt": "2026-10-12T08:15:33.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

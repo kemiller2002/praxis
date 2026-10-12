@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-10-11T23:40:59.025Z",
-  "state": "active",
-  "stateReason": null,
+  "state": "blocked",
+  "stateReason": "Shared checkpoint events have opposite published orders on PR 238 and current main; await explicit owner canonical-order choice and reviewed native amendment",
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"

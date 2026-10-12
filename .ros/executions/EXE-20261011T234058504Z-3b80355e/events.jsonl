@@ -1,1 +1,2 @@
 {"entry":"transition","transition":"execution.start","state":"active","origin":"work-transition","originReference":"work.begin","actor":"openai/codex","actorKind":"agent","at":"2026-10-11T23:40:59.036Z"}
+{"entry":"transition","transition":"work.block","state":"blocked","reason":"Shared checkpoint events have opposite published orders on PR 238 and current main; await explicit owner canonical-order choice and reviewed native amendment","actor":"openai/codex","actorKind":"agent","at":"2026-10-12T08:15:45.173Z"}
