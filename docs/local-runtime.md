@@ -217,10 +217,47 @@ worker checkouts stay under `checkouts` for inspection.
 - `execution lifecycle lease unavailable`: another native writer or a host
   scope holds `work-protocol`/`work-groups`; retry when it finishes.
 
-## Live pilot
-
-See [Live qualification](#live-qualification-2026-10-12) below.
-
 ## Live qualification (2026-10-12)
 
-Recorded in the section maintained with the pilot results.
+A coordinator/worker pilot ran in an ephemeral Linux cloud container with a
+real local model, using the CLI published from commit `754d387e`. It is a
+functional qualification of the runtime, not a model-quality benchmark, and
+not OS containment (portable process mechanism, one OS account).
+
+| Part | What ran |
+| --- | --- |
+| Coordinator | The Claude Code session doing this work (native identity `anthropic/claude-code`): planned four work items and groups, began members as `delegated-task`, created worker child executions, proposed packets. |
+| Operator | `openssl` P-256 key generated in the container; grants and delegations signed with `openssl dgst -sha256 -sign` (DER); Praxis verified each signature. The executor acted as operator for this pilot; in production a person holds the key. |
+| Workers | `praxis local worker-bridge --openai-model` against a local llama.cpp server (`llama-cpp-python` 0.3.36) serving Qwen2.5-Coder-1.5B-Instruct Q4_K_M (`sha256:cc324af070c2ecbfd324a30884d2f951a7ff756aba85cb811a6ec436933bb046`), CPU only. Four worker identities, `qwen-worker-a` to `-d`. |
+| Validators | Host-owned Python tools outside the repository, pinned by digest: in-memory compile check, unit tests writing TRX, an import allow-list architecture rule, a top-level layout scope rule, and host-owned acceptance tests per requirement. `unix-private` file access profile. |
+| Target | A Praxis-initialized Python project; integration ref `refs/heads/praxis-integration`. |
+
+Results on the final build:
+
+| Dispatch | Worker output | Outcome | Wall time |
+| --- | --- | --- | --- |
+| D-PILOT-A (slugify) | real model commit | all checks passed; fast-forward; WI-A complete | 56 s |
+| D-PILOT-B (word count, prerequisite WI-A) | real model commit from the original source | merge-staged onto A, rechecked; WI-B complete | 52 s |
+| D-PILOT-C (Roman numerals) | real model commit | merge-staged; 2 acceptance tests incl. range errors passed; WI-C complete | 73 s |
+| D-PILOT-D (palindrome) | real model commit (correct code) | operator acceptance test changed after signing: **refused** (stale validator pin); target unchanged; WI-D stayed active | 11 s |
+| D-PILOT-D, rerun after restoring the signed test | archived exit | resumed at acceptance without relaunching the worker; WI-D complete | 45 s |
+
+35 validator evidence files were archived; every run that authorized
+integration executed tests (positive TRX counts). Each member completed
+natively with `implementation` and `tests` evidence from the integrated tree,
+each worker's child execution closed with its integrated candidate, and
+`praxis validate` passed in the pilot repository.
+
+An earlier run of the same pilot, on a build whose bridge sent the whole
+requirements document, produced a genuine model failure: the model copied the
+requirement text into `src/text_tools.py`. Compile, architecture, unit-test and
+acceptance checks all failed independently and the target did not move. That
+led to the bridge sending only the anchored requirement section.
+
+The member envelopes record the controller's checkout HEAD as their candidate,
+as the standalone completion mirror does; the integrated commit is recorded on
+each worker's child execution and in the integration journal.
+
+To reproduce with your own backend, follow steps 1 to 7 above; the pilot's
+validator tools are ordinary scripts and any pinned commands that produce the
+same outcomes (and TRX for tests) can replace them.

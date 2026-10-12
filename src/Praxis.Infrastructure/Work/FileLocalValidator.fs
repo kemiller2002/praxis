@@ -147,7 +147,7 @@ module FileLocalValidator =
                 { LocalValidatorInputs.ValidatorId = request.ValidatorId
                   CandidateCommit = request.CandidateCommit; CandidateManifestDigest = manifest
                   ValidatorInputDigest = inputDigest })
-        with error -> return Error("validator input observation refused: " + error.GetType().Name) }
+        with error -> return Error("validator input observation refused: " + error.Message) }
 
     let executeWithFileAccess (access: LocalHostFileAccess) (request: LocalValidatorRequest) (cancellation: CancellationToken) = task {
         try
@@ -212,7 +212,7 @@ module FileLocalValidator =
                             StartedAt = started; FinishedAt = finished
                             TestsExecuted = tests |> Option.bind (function Ok(count, _) -> Some count | Error _ -> None)
                             Verdict = verdict; EvidencePath = path; EvidenceDigest = evidenceDigest }
-        with error -> return Error("validator host operation refused: " + error.GetType().Name) }
+        with error -> return Error("validator host operation refused: " + error.Message) }
 
     /// Compatibility transport; protected controllers select their access policy explicitly.
     let execute request cancellation = executeWithFileAccess LocalHostFileAccess.portableDevelopment request cancellation
