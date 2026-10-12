@@ -203,73 +203,73 @@ module ExecutionCommands =
         | _ -> Error(ExecutionFailure.Invalid "an execution id is required")
 
     let run (root: string) (actor: Actor) (arguments: string list) =
-        let ports = FileExecutionPorts.create root
-        let requester = { Actor = executionActor actor }
-        let kind = ActorKind.code actor.Kind
-        let on = withExecution ports kind
+        FileExecutionPorts.runLeased root arguments (fun ports -> // WI-0087 lifecycle lease
+            let requester = { Actor = executionActor actor }
+            let kind = ActorKind.code actor.Kind
+            let on = withExecution ports kind
 
-        match arguments with
-        | "start" :: rest -> start ports requester kind rest |> exitWith
-        | "show" :: rest -> on rest (fun s _ -> Ok(render s rest)) |> exitWith
-        | "actions" :: rest -> on rest (fun s _ -> Ok(renderActions s rest)) |> exitWith
-        | "boundary" :: rest -> on rest (fun s _ -> Ok(renderBoundary s rest)) |> exitWith
-        | "containment" :: rest -> on rest (fun s _ -> Ok(renderContainment s rest)) |> exitWith
-        | "list" :: rest ->
-            let envelopes = ExecutionService.list ports (optionValue "--work-item" rest)
+            match arguments with
+            | "start" :: rest -> start ports requester kind rest |> exitWith
+            | "show" :: rest -> on rest (fun s _ -> Ok(render s rest)) |> exitWith
+            | "actions" :: rest -> on rest (fun s _ -> Ok(renderActions s rest)) |> exitWith
+            | "boundary" :: rest -> on rest (fun s _ -> Ok(renderBoundary s rest)) |> exitWith
+            | "containment" :: rest -> on rest (fun s _ -> Ok(renderContainment s rest)) |> exitWith
+            | "list" :: rest ->
+                let envelopes = ExecutionService.list ports (optionValue "--work-item" rest)
 
-            if hasFlag "--json" rest then
-                print (JsonArray(envelopes |> List.map ExecutionJson.envelope |> List.toArray))
-            else
-                envelopes
-                |> List.iter (fun e -> printfn "%s  %-14s %-10s %s" e.ExecutionId (ExecutionRole.toWire e.Authority.Role) (ExecutionState.toWire e.State) e.WorkItem)
+                if hasFlag "--json" rest then
+                    print (JsonArray(envelopes |> List.map ExecutionJson.envelope |> List.toArray))
+                else
+                    envelopes
+                    |> List.iter (fun e -> printfn "%s  %-14s %-10s %s" e.ExecutionId (ExecutionRole.toWire e.Authority.Role) (ExecutionState.toWire e.State) e.WorkItem)
 
-            0
-        | "step" :: verb :: rest -> on rest (fun s more -> step ports requester s verb more) |> exitWith
-        | "evaluate" :: rest ->
-            on rest (fun s more ->
-                ExecutionService.evaluate ports requester s (optionValue "--command" more) (optionValues "--evidence" more)
-                |> Result.map (fun record ->
-                    printfn "evaluation: %s" (EvaluationOutcome.toWire record.Outcome)
-                    match record.Outcome with
-                    | EvaluationOutcome.Passed _ -> 0
-                    | _ -> 3))
-            |> exitWith
-        | "launch" :: rest -> on rest (fun s more -> ExecutionService.launch ports requester kind s.Envelope.ExecutionId (hasFlag "--dry-run" more) |> Result.map printLaunch) |> exitWith
-        | "expand-scope" :: rest ->
-            on rest (fun s more ->
-                ExecutionService.expandScope ports requester s (optionValues "--scope" more) (optionValues "--allow" more) (optionValue "--justification" more |> Option.defaultValue "")
-                |> Result.map (fun expansion ->
-                    printfn "scope expanded (%s)" expansion
-                    0))
-            |> exitWith
-        | "resolve-effect" :: rest ->
-            on rest (fun s more ->
-                match optionValue "--resource" more, optionValue "--resolution" more, optionValue "--detail" more with
-                | Some resource, Some resolution, Some detail when List.contains resolution [ "reverted"; "expanded"; "transferred" ] ->
-                    ExecutionService.resolveEffect ports requester s resource resolution detail |> Result.map (fun () -> 0)
-                | _ -> Error(ExecutionFailure.Invalid "--resource PATH --resolution reverted|expanded|transferred --detail TEXT are required"))
-            |> exitWith
-        | "transition" :: rest ->
-            on rest (fun s more ->
-                ExecutionService.transition ports requester s (optionValue "--action" more |> Option.defaultValue "") (optionValue "--reason" more |> Option.defaultValue "")
-                |> Result.map (fun state ->
-                    printfn "%s -> %s" s.Envelope.ExecutionId (ExecutionState.toWire state)
-                    0))
-            |> exitWith
-        | "rebind" :: rest ->
-            on rest (fun s more ->
-                ExecutionService.rebind ports requester s (optionValue "--reason" more |> Option.defaultValue "")
-                |> Result.map (fun divergence ->
-                    divergence |> List.iter (printfn "rebound despite: %s")
-                    0))
-            |> exitWith
-        | "cleanup" :: rest ->
-            on rest (fun s _ ->
-                ExecutionService.cleanup ports requester s
-                |> Result.map (fun () ->
-                    printfn "workspace removed; execution %s and its branch are preserved" s.Envelope.ExecutionId
-                    0))
-            |> exitWith
-        | _ ->
-            eprintfn "Usage: praxis %s" usage
-            2
+                0
+            | "step" :: verb :: rest -> on rest (fun s more -> step ports requester s verb more) |> exitWith
+            | "evaluate" :: rest ->
+                on rest (fun s more ->
+                    ExecutionService.evaluate ports requester s (optionValue "--command" more) (optionValues "--evidence" more)
+                    |> Result.map (fun record ->
+                        printfn "evaluation: %s" (EvaluationOutcome.toWire record.Outcome)
+                        match record.Outcome with
+                        | EvaluationOutcome.Passed _ -> 0
+                        | _ -> 3))
+                |> exitWith
+            | "launch" :: rest -> on rest (fun s more -> ExecutionService.launch ports requester kind s.Envelope.ExecutionId (hasFlag "--dry-run" more) |> Result.map printLaunch) |> exitWith
+            | "expand-scope" :: rest ->
+                on rest (fun s more ->
+                    ExecutionService.expandScope ports requester s (optionValues "--scope" more) (optionValues "--allow" more) (optionValue "--justification" more |> Option.defaultValue "")
+                    |> Result.map (fun expansion ->
+                        printfn "scope expanded (%s)" expansion
+                        0))
+                |> exitWith
+            | "resolve-effect" :: rest ->
+                on rest (fun s more ->
+                    match optionValue "--resource" more, optionValue "--resolution" more, optionValue "--detail" more with
+                    | Some resource, Some resolution, Some detail when List.contains resolution [ "reverted"; "expanded"; "transferred" ] ->
+                        ExecutionService.resolveEffect ports requester s resource resolution detail |> Result.map (fun () -> 0)
+                    | _ -> Error(ExecutionFailure.Invalid "--resource PATH --resolution reverted|expanded|transferred --detail TEXT are required"))
+                |> exitWith
+            | "transition" :: rest ->
+                on rest (fun s more ->
+                    ExecutionService.transition ports requester s (optionValue "--action" more |> Option.defaultValue "") (optionValue "--reason" more |> Option.defaultValue "")
+                    |> Result.map (fun state ->
+                        printfn "%s -> %s" s.Envelope.ExecutionId (ExecutionState.toWire state)
+                        0))
+                |> exitWith
+            | "rebind" :: rest ->
+                on rest (fun s more ->
+                    ExecutionService.rebind ports requester s (optionValue "--reason" more |> Option.defaultValue "")
+                    |> Result.map (fun divergence ->
+                        divergence |> List.iter (printfn "rebound despite: %s")
+                        0))
+                |> exitWith
+            | "cleanup" :: rest ->
+                on rest (fun s _ ->
+                    ExecutionService.cleanup ports requester s
+                    |> Result.map (fun () ->
+                        printfn "workspace removed; execution %s and its branch are preserved" s.Envelope.ExecutionId
+                        0))
+                |> exitWith
+            | _ ->
+                eprintfn "Usage: praxis %s" usage
+                2) |> Result.defaultWith (fun reason -> eprintfn "REFUSED %s" reason; 3)

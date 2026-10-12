@@ -28,7 +28,10 @@ type LocalWorkerAcceptanceBindings =
       ObserveResult: LocalWorkerPacket -> LocalWorkerResult -> Result<LocalWorkerResultObservation, string>
       Integration: LocalSubmissionIntakePorts -> LocalIntegrationJournalStore -> LocalIntegrationPorts
       Completion: LocalIntegrationPorts -> LocalIntegratedCompletionPorts
-      EventActor: Actor; ReadinessRecords: Map<string, JsonObject>; Conclusion: string option }
+      EventActor: Actor
+      /// Quality readiness records for the exact planned completion.
+      Readiness: WorkContextPlan -> Result<Map<string, JsonObject>, string>
+      Conclusion: string option }
 
 /// Concrete portable composition. Native/policy leases span admission, launch,
 /// observation, spool sealing and immutable archival. No acceptance is inferred.
@@ -108,8 +111,15 @@ module FileLocalWorkerHost =
                                 bindings.Validators.PolicyRevision() |> Result.map (fun revision -> policy.Revision + "/" + revision))
                         let validators = { bindings.Validators with PolicyRevision = policyRevision }
                         return FileWorkerChecklist.withEvidenceSession root bindings.EvidenceRoot bindings.EvidenceAccess validators now cancellation (fun session ->
+                            // An applied integration for this exact dispatch means a
+                            // previous completion may have finalized member telemetry
+                            // before it was interrupted; that state is resumable.
+                            let resumable () =
+                                match journal.Load worker.RepositoryIdentity packet.DispatchId with
+                                | Ok(Some applied) when applied.AppliedAt.IsSome -> packet.Members |> List.map _.ExecutionId |> Set.ofList
+                                | _ -> Set.empty
                             let native () =
-                                recover() |> Result.bind (fun () -> FileLocalWorkerAssignment.validate root worker.RepositoryIdentity packet)
+                                recover() |> Result.bind (fun () -> FileLocalWorkerAssignment.validateResuming root worker.RepositoryIdentity (resumable()) packet)
                                 |> Result.bind (fun () -> worker.ValidateNative packet)
                             let observe packet result =
                                 bindings.ObserveResult packet result |> Result.bind (fun observation ->
@@ -134,7 +144,7 @@ module FileLocalWorkerHost =
                             LocalIntegration.run integration worker.RepositoryIdentity packet.DispatchId targetRef
                             |> Result.bind (fun _ ->
                                 FileLocalIntegratedCompletion.commitLocked root completion worker.RepositoryIdentity packet.DispatchId targetRef
-                                    bindings.EventActor bindings.ReadinessRecords bindings.Conclusion)) })))
+                                    bindings.EventActor bindings.Readiness bindings.Conclusion)) })))
 
     /// Dispatch and acceptance are separate scopes; acceptance always reopens
     /// current policy and native state after the worker has exited and archived.

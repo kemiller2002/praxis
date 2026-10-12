@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "praxis.local-host/1",
+  "repositoryRoot": "/home/operator/src/myrepo",
+  "repositoryIdentity": "myrepo",
+  "fileAccess": "unix-private",
+  "roots": {
+    "policy": "/home/operator/.praxis-host/myrepo/policy",
+    "journal": "/home/operator/.praxis-host/myrepo/journal",
+    "spool": "/home/operator/.praxis-host/myrepo/spool",
+    "submissions": "/home/operator/.praxis-host/myrepo/submissions",
+    "integration": "/home/operator/.praxis-host/myrepo/integration",
+    "evidence": "/home/operator/.praxis-host/myrepo/evidence",
+    "checkouts": "/home/operator/.praxis-host/myrepo/checkouts"
+  },
+  "git": {
+    "executable": "/usr/bin/git",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "committer": {
+    "name": "Praxis controller",
+    "email": "controller@example.invalid"
+  },
+  "validatorPolicyRevision": "validators-1",
+  "lockTimeoutMilliseconds": 5000,
+  "systemValidators": {
+    "build": {
+      "id": "python-compile",
+      "command": {
+        "executable": "/usr/bin/python3",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "-B",
+          "/home/operator/.praxis-host/myrepo/tools/build.py",
+          "{candidate}"
+        ],
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "timeoutMilliseconds": 120000,
+        "maxOutputBytes": 262144,
+        "dependencies": {
+          "/home/operator/.praxis-host/myrepo/tools/build.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    "tests": {
+      "id": "unit-tests",
+      "tests": true,
+      "command": {
+        "executable": "/usr/bin/python3",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "-B",
+          "/home/operator/.praxis-host/myrepo/tools/run_tests.py",
+          "{candidate}",
+          "{trx}"
+        ],
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "timeoutMilliseconds": 120000,
+        "maxOutputBytes": 262144,
+        "dependencies": {
+          "/home/operator/.praxis-host/myrepo/tools/run_tests.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    "architecture": {
+      "id": "stdlib-import-rule",
+      "command": {
+        "executable": "/usr/bin/python3",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "-B",
+          "/home/operator/.praxis-host/myrepo/tools/architecture.py",
+          "{candidate}"
+        ],
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "timeoutMilliseconds": 120000,
+        "maxOutputBytes": 262144,
+        "dependencies": {
+          "/home/operator/.praxis-host/myrepo/tools/architecture.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    "scope": {
+      "id": "top-level-layout",
+      "command": {
+        "executable": "/usr/bin/python3",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "-B",
+          "/home/operator/.praxis-host/myrepo/tools/scope.py",
+          "{candidate}",
+          "src,tests,docs,ros.json,.ros,AGENTS.md"
+        ],
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "timeoutMilliseconds": 120000,
+        "maxOutputBytes": 262144,
+        "dependencies": {
+          "/home/operator/.praxis-host/myrepo/tools/scope.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  },
+  "acceptanceValidators": [
+    {
+      "id": "accept-slugify",
+      "tests": true,
+      "command": {
+        "executable": "/usr/bin/python3",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "-B",
+          "/home/operator/.praxis-host/myrepo/tools/run_tests.py",
+          "{candidate}",
+          "{trx}",
+          "/home/operator/.praxis-host/myrepo/acceptance/test_text_tools.py"
+        ],
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "timeoutMilliseconds": 120000,
+        "maxOutputBytes": 262144,
+        "dependencies": {
+          "/home/operator/.praxis-host/myrepo/tools/run_tests.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "/home/operator/.praxis-host/myrepo/acceptance/test_text_tools.py": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  ],
+  "workers": [
+    {
+      "adapterId": "bridge-qwen-a",
+      "workerId": "qwen-worker-a",
+      "roles": [
+        "implementation"
+      ],
+      "operatingSystems": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "command": {
+        "executable": "/usr/share/dotnet/dotnet",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "arguments": [
+          "/opt/praxis/praxis.dll",
+          "local",
+          "worker-bridge",
+          "--git",
+          "/usr/bin/git",
+          "--openai-model",
+          "qwen2.5-coder-1.5b",
+          "--openai-endpoint",
+          "http://127.0.0.1:8080"
+        ],
+        "timeoutMilliseconds": 600000,
+        "maxOutputBytes": 65536,
+        "dependencies": {
+          "/opt/praxis/praxis.dll": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  ],
+  "completionEvidence": {
+    "implementation": "member-changes",
+    "tests": "acceptance-artifacts"
+  }
+}

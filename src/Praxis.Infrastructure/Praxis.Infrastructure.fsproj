@@ -38,6 +38,8 @@
     <Compile Include="Work/LocalWorkerProcess.fs" />
     <Compile Include="Work/FileLocalValidator.fs" />
     <Compile Include="Work/FileWorkerChecklist.fs" />
+    <Compile Include="Work/FileLocalGitCandidates.fs" />
+    <Compile Include="Work/LocalWorkerBridge.fs" />
     <Compile Include="Work/BacklogStateTransaction.fs" />
     <Compile Include="Work/FileEvidenceRepository.fs" />
     <Compile Include="Work/FileTelemetryStateRepository.fs" />
@@ -81,6 +83,7 @@
     <Compile Include="Remote/FileStateCompatibility.fs" />
     <Compile Include="Remote/FileRemoteRepository.fs" />
     <Compile Include="Execution/ExecutionStore.fs" />
+    <Compile Include="Execution/ExecutionLifecycleLease.fs" />
     <Compile Include="Tutela/TutelaStore.fs" />
     <Compile Include="Execution/ExecutionContracts.fs" />
     <Compile Include="Execution/FileExecutionPorts.fs" />
@@ -107,6 +110,10 @@
     <Compile Include="Planning/LocalWorkerDelegation.fs" />
     <Compile Include="Planning/FileLocalWorkerAssignment.fs" />
     <Compile Include="Planning/FileLocalWorkerHost.fs" />
+    <Compile Include="Planning/LocalHostConfiguration.fs" />
+    <Compile Include="Planning/FileLocalRuntime.fs" />
+    <Compile Include="Planning/LocalOperator.fs" />
+    <Compile Include="Planning/LocalRuntimeService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

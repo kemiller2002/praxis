@@ -47,9 +47,15 @@ worker decoder for a checklist pass and no self-approval option.
 The first slice supplies pure rules, controller ports, mandatory local
 intake/integration/completion gates, inspection and adversarial tests.
 The controller integration adds concrete runner/evidence mapping and connects
-the protected host API to the existing native effect transaction. The ordinary
-standalone `work complete` CLI still uses its existing completion-readiness
-policy; this change does not silently replace that migration contract.
+the protected host API to the existing native effect transaction.
+[`praxis local run`](local-runtime.md) is the production entry point.
+
+Migration: work types listed in `workProtocol.workerChecklists.delegatedTypes`
+complete only through `praxis local run`. Standalone `work complete` and
+runtime-free envelope reconciliation refuse them, and the runtime refuses
+members of unlisted types, so a dispatched member cannot bypass its checklist.
+Repositories without the setting keep the previous completion-readiness policy
+and cannot run the local runtime.
 
 `FileWorkerChecklist.withEvidenceSession` holds an exclusive evidence-store
 handle and exposes checklist/acceptance observations only for that scope.
@@ -64,10 +70,12 @@ authorize integration.
 System validators are candidate-wide: identical host-selected validator pins
 can share one actual process observation across the generated member rows.
 Member acceptance obligations remain independently pinned and mandatory.
-The signed requests, including TRX output paths, must stay stable during a
-session. A new candidate/policy requiring another test run needs a fresh
-host-provisioned output artifact; preexisting TRX is never overwritten or
-silently accepted. Candidate checkout custody remains a host responsibility.
+Validator pins bind the checkout and TRX locations by role
+([input identity v2](local-validator-runners.md#relocatable-input-identity)),
+so one signed pin covers the worker's candidate and the staged integration
+candidate. Within a session the runtime keeps one fresh checkout and TRX path
+per (candidate, validator); a retry or reopened session provisions new ones.
+Preexisting TRX is never overwritten or accepted.
 
 `FileLocalWorkerHost.runAndComplete` dispatches, archives and reopens fresh
 native/group/policy leases for acceptance. It binds concrete checklists and
@@ -76,17 +84,15 @@ checklist or acceptance pass. Integration uses its durable journal; completion
 uses `FileLocalIntegratedCompletion` and the existing native transaction.
 It repeats the whole plan before finalization, then rechecks candidate,
 evidence, target, authority and prerequisites after finalization before
-persisting completion. A mid-effect failure is an error requiring operator
-reconciliation, not successful completion or permission to repeat blindly.
+persisting completion. A refusal after member telemetry was finalized leaves an
+identifiable interrupted completion (member active, single linked execution
+finalized, integration for that dispatch applied); rerunning the same
+delegation resumes it with every check repeated while the delegation is valid.
 
-This is a host-embedding API, not a newly enabled execution CLI. The operator
-must provision the signed delegation/policy, stable pinned validators, candidate
-and Git observation/staging adapters, native readiness/checkpoint adapters and
-the appropriate file-access profile. A portable development profile is not OS
-containment or protection from a worker running with the same identity.
-Execution-envelope lifecycle serialization, standalone CLI policy adoption
-and the live coordinator/two-worker pilot remain required for production
-activation. This executor has no installed Codex, Claude or Ollama worker CLI.
+`FileLocalRuntime` composes these with pinned Git staging, the shipped worker
+bridge and the same quality-readiness and durable-checkpoint gates as
+`work complete`. A portable development profile is not OS containment or
+protection from a worker running with the same identity.
 
 Host implementations must establish the following independently:
 

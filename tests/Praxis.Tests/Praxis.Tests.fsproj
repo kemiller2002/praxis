@@ -120,6 +120,7 @@
     <Compile Include="ExecutionGovernanceTests.fs" />
     <Compile Include="ExecutionRuntimeTests.fs" />
     <Compile Include="ExecutionBindingTests.fs" />
+    <Compile Include="ExecutionLifecycleLeaseTests.fs" />
     <Compile Include="WebExecutionTests.fs" />
     <Compile Include="InstallationRegistrationTests.fs" />
     <Compile Include="CommitOwnershipTests.fs" />
@@ -166,6 +167,9 @@
     <Compile Include="NativeCompletionEffectsTests.fs" />
     <Compile Include="LocalCompletionCommitTests.fs" />
     <Compile Include="ConcreteAcceptanceFlowTests.fs" />
+    <Compile Include="FileLocalGitCandidatesTests.fs" />
+    <Compile Include="LocalRuntimeCliTests.fs" />
+    <Compile Include="LocalOperatorTests.fs" />
     <Compile Include="ExecuteGroupTests.fs" />
     <Compile Include="GroupMeasurementTests.fs" />
     <Compile Include="InternalNamingGuardTests.fs" />

@@ -812,3 +812,24 @@ workers nor schedules, integrates or changes native work state. No Git or
 external service is required. `--json` emits
 `praxis.local-handoff-explanation/1`; exit 0 means inspection succeeded even
 when proposals are blocked, while malformed input/arguments exit 2.
+
+## `local`
+
+```text
+praxis local run --host-config FILE --dispatch PACKET=DELEGATION [--dispatch ...]* --target REF [--json] [IDENTITY]
+praxis local status --host-config FILE --dispatch ID
+praxis local packet propose --host-config FILE --group ID --worker ID --role ROLE --dispatch ID --attempt ID --parent EXE-ID --child EXE-ID --member WI=EXE-ID ... --decision ID ... --allow PATH ... --acceptance OBLIGATION=WI:VALIDATOR ... [--prerequisite WI]* [--valid-minutes N] [--timeout-seconds N] [--max-output-bytes N] --out FILE
+praxis local validator pin --host-config FILE --validator ID
+praxis local operator init|grant-draft|grant|revoke|review|delegate ...
+praxis local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])
+```
+
+The local coordinator/worker runtime. `run` dispatches each operator-signed
+packet to its configured worker, independently runs the configured build,
+test, architecture, scope and acceptance validators on the worker's commit and
+on the staged integration candidate, moves `--target` only with an
+expected-head update, and completes the native members. Operator commands
+write exact signing payloads and verify external ECDSA P-256 signatures; they
+never handle private keys. `worker-bridge` is the worker-side adapter the host
+configuration launches. Exit 0 success, 2 invalid arguments, 3 refused. See
+[the local runtime guide](local-runtime.md).

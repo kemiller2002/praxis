@@ -9569,24 +9569,25 @@
       "evidence": [],
       "updatedAt": "2026-10-11T21:15:24.000Z",
       "telemetryExecutionIds": [
-        "EXE-20261011T204811145Z-23f864b2"
+        "EXE-20261011T204811145Z-23f864b2",
+        "EXE-20261012T115318275Z-92ff2d62"
       ],
       "blockReason": "Checklist gate implementation and validation complete locally; branch publication awaits explicit GitHub destination authorization after automatic approval review rejected push",
       "latestCheckpoint": {
-        "id": "b1fe6945fe080957ab8cd23a",
-        "recordedAt": "2026-10-12T07:30:05.000Z",
-        "executionId": "EXE-20261011T204811145Z-23f864b2",
+        "id": "ca8e06038c1b5146958befbc",
+        "recordedAt": "2026-10-12T15:24:00.000Z",
+        "executionId": "EXE-20261012T115318275Z-92ff2d62",
         "repository": "repository-operating-system",
-        "branch": "feat/checklist-validator-adapter",
-        "commit": "4a6c8d1f786bcb687f9513ad48e9484ccffd1537",
+        "branch": "feat/checklist-controller-runtime",
+        "commit": "ad62289900ea6381bcd3ea50e127e0ea1b8af2bb",
         "remote": {
           "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis.git"
+          "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "main",
-        "remoteCommit": "4a6c8d1f786bcb687f9513ad48e9484ccffd1537",
-        "summary": "PR 236 merged at 4a6c8d1f after all exact-head CI passed: 2073 regression tests, 4 browser tests, checklist/history, portability and lifecycle on Linux Windows macOS, site, native packages/installers and legacy binaries. Mandatory library checklist gates and native history reconciliation are merged. GH-234 remains active; live production acceptance is not yet connected.",
-        "nextAction": "Connect concrete validator observations to protected checklist evidence, serialize lifecycle writers, recheck evidence inside native completion effects, migrate standalone completion policy and qualify coordinator/two-worker runtime use. Preserve portable worker/OS interfaces; equivalent OS isolation remains deferred.",
+        "remoteBranch": "feat/checklist-controller-runtime",
+        "remoteCommit": "ad62289900ea6381bcd3ea50e127e0ea1b8af2bb",
+        "summary": "praxis local runtime (signed delegation, worker dispatch, concrete validators, Git staging/CAS, native completion), WI-0087 lifecycle lease, delegated-type completion policy and recovery delivered on PR 241. Exact-head CI green on ad62289 (24 checks incl. three-OS worker-checklists, lifecycle and portability). Live pilot: locally served Qwen2.5-Coder-1.5B through the shipped bridge completed WI-A (fast-forward), WI-B (merge-staged with prerequisite), WI-C; WI-D refused on a tampered acceptance pin then resumed without relaunch.",
+        "nextAction": "Merge PR 241; GH-235 time-entry demonstration remains with its own execution; OS isolation remains deferred.",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"

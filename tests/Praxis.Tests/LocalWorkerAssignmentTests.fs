@@ -18,6 +18,13 @@ module LocalWorkerAssignmentTests =
     let private t name run = { Name = "portability assignment: " + name; Run = run }
     let private refused r = Assert.isTrue (Result.isError r) "changed native assignment accepted"
     let internal provision root (packet: LocalWorkerPacket) =
+        // Group homes and envelope work items are qualified from the origin
+        // remote, as the real group and execution commands record them.
+        let home = "example/" + packet.RepositoryIdentity
+        let remote = "https://example.invalid/" + home + ".git"
+        let remotes = (CliHarness.git root [ "remote" ]).Split('\n')
+        let verb = if Array.contains "origin" remotes then "set-url" else "add"
+        CliHarness.git root [ "remote"; verb; "origin"; remote ] |> ignore
         let configuration = CliHarness.read root "ros.json" |> JsonNode.Parse
         configuration["repository"] <- JsonSerializer.SerializeToNode {| id = packet.RepositoryIdentity |}
         CliHarness.write root "ros.json" (configuration.ToJsonString())
@@ -33,12 +40,12 @@ module LocalWorkerAssignmentTests =
               Fallback = None; EndedAt = Some(packet.IssuedAt.ToString("O")); Successors = []; Telemetry = []; Prediction = None; Outcome = None }
         let group : StoredWorkGroup =
             { Declaration = { Id = packet.GroupId; Members = packet.Members |> List.map _.WorkItemId; Kind = None; Origin = GroupOrigin.HumanDeclared
-                              SharedContext = []; ExecutionRepository = Some packet.RepositoryIdentity; CrossRepository = false; ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] }
-              HomeRepository = Some packet.RepositoryIdentity; Dependencies = []; Verifications = []; CreatedAt = packet.IssuedAt.ToString("O"); CreatedBy = actor
+                              SharedContext = []; ExecutionRepository = Some home; CrossRepository = false; ArchitectureNotes = []; IndependentReason = None; IndependentMembers = [] }
+              HomeRepository = Some home; Dependencies = []; Verifications = []; CreatedAt = packet.IssuedAt.ToString("O"); CreatedBy = actor
               History = []; Checkpoints = []; Executions = [ execution ] }
         FileWorkGroupRepository.writeStore root { Groups = [ group ]; References = [] } |> ok
         let envelope id work actorId =
-            ExecutionEnvelope.create id (packet.RepositoryIdentity + ":" + work)
+            ExecutionEnvelope.create id (home + ":" + work)
                 { Id = actorId; Kind = "agent"; Provider = None; Model = None; Runtime = None }
                 (RoleAuthority.defaultFor packet.Role) packet.SourceCommit MutationBoundary.empty None packet.IssuedAt |> ok
         for m in packet.Members do

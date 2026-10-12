@@ -28,6 +28,22 @@ program's complete dependencies. Ignored build/package inputs must be absent
 in a fresh checkout or covered by the protected input closure. Validators
 must not fetch mutable dependencies and call that reproducible validation.
 
+## Relocatable input identity
+
+Input identity uses schema `praxis.local-validator-inputs/2`. The candidate
+checkout and TRX output are host-provisioned per run, so they are bound by role
+rather than literal path: exact occurrences of the working directory and TRX
+path in argv, environment values and stdin are replaced by `{candidate}` and
+`{trx}` before hashing, and only whether a TRX artifact is required is hashed.
+One signed acceptance pin therefore covers the worker's output candidate, the
+staged integration candidate, a retry and a reopened controller session. Each
+run still requires a fresh clean checkout of the exact candidate commit and a
+fresh, non-existent TRX path outside it; stale TRX is never overwritten or
+accepted. Executable, Git, argv shape, environment, budgets and every
+dependency pin remain bound. Host inputs containing `{` or `}` are refused so
+a literal value cannot impersonate a role token. Changing any bound input
+requires a new pin and therefore a newly signed packet.
+
 ## Test evidence
 
 For a test command, the host supplies a fresh absolute TRX output path outside

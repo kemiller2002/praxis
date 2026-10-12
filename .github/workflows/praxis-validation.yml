@@ -87,6 +87,22 @@ jobs:
         run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
         env:
           PRAXIS_TEST_FILTER: concrete acceptance flow
+      - name: Git candidate staging and expected-head updates
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local git candidates
+      - name: Execution-envelope lifecycle lease
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: execution lifecycle lease
+      - name: Host configuration and private-key-free operator tooling
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local operator
+      - name: praxis local runtime through the real CLI (fixture agent command)
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local runtime cli
 
   # Functional portability is separate from OS containment qualification.
   local-worker-portability:

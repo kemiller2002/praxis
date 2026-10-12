@@ -108,6 +108,26 @@ module LocalValidatorTests =
           t "evidence and test artifacts cannot be placed in the candidate checkout" (fun () -> fixture (fun _ repo _ request ->
               execute { request with EvidenceRoot = repo } |> refused
               execute { request with TrxPath = Some(Path.Combine(repo, "results.trx")) } |> refused))
+          t "one signed pin covers fresh checkouts and TRX paths but not a changed command" (fun () -> fixture (fun root repo evidence request ->
+              let observe value = FileLocalValidator.observe value CancellationToken.None |> fun task -> task.GetAwaiter().GetResult() |> ok
+              let staged = Path.Combine(root, "staged")
+              CliHarness.git repo [ "worktree"; "add"; "--detach"; staged; request.CandidateCommit ] |> ignore
+              let withLocations checkout trx =
+                  let spec = { LocalWorkerProcessTests.spec "validator-trx" [ trx; "pass"; checkout ] with WorkingDirectory = checkout }
+                  { request with Process = spec; TrxPath = Some trx }
+              let first = withLocations repo (Path.Combine(evidence, "first.trx"))
+              let second = withLocations staged (Path.Combine(evidence, "second.trx"))
+              Assert.equal (observe first).ValidatorInputDigest (observe second).ValidatorInputDigest
+              (execute first |> ok).Verdict |> ok
+              let retried = execute second |> ok
+              retried.Verdict |> ok
+              Assert.equal (observe first).ValidatorInputDigest retried.ValidatorInputDigest
+              let changed = { first with Process = { first.Process with Arguments = first.Process.Arguments @ [ "--extra" ] } }
+              Assert.isTrue ((observe first).ValidatorInputDigest <> (observe changed).ValidatorInputDigest) "changed command reused a signed pin"
+              let untested = { first with TrxPath = None }
+              Assert.isTrue ((observe first).ValidatorInputDigest <> (observe untested).ValidatorInputDigest) "test evidence requirement was not pinned"
+              let ambiguous = { first with Process = { first.Process with Arguments = [ "{trx}" ] } }
+              FileLocalValidator.observe ambiguous CancellationToken.None |> fun task -> task.GetAwaiter().GetResult() |> refused))
           t "TRX refuses zero tests, DTDs and summary-only forged counts" (fun () -> fixture (fun _ _ evidence _ ->
               let path = Path.Combine(evidence, "invalid.trx")
               for xml in [ "<!DOCTYPE TestRun [<!ENTITY x 'payload'>]><TestRun>&x;</TestRun>"

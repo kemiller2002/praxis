@@ -48,7 +48,7 @@ module LocalCompletionCommitTests =
         finally Directory.Delete(root, true))
     let private commit effects completion =
         let packet = LocalAgentHandoffTests.packet
-        FileLocalIntegratedCompletion.commitLockedWith effects completion packet.RepositoryIdentity packet.DispatchId "refs/heads/integration" Actor.unknown Map.empty None
+        FileLocalIntegratedCompletion.commitLockedWith effects completion packet.RepositoryIdentity packet.DispatchId "refs/heads/integration" Actor.unknown (fun _ -> Ok Map.empty) None
     let private events root =
         let path = Path.Combine(root, ".ros/events/events.jsonl")
         if File.Exists path then File.ReadAllLines path else [||]

@@ -9,7 +9,7 @@ open Praxis.Domain.Work
 [<RequireQualifiedAccess>]
 module FileLocalIntegratedCompletion =
     let commitLockedWith nativePorts (ports: LocalIntegratedCompletionPorts) repositoryIdentity dispatchId targetRef
-                         (actor: Actor) readinessRecords conclusion =
+                         (actor: Actor) (readiness: WorkContextPlan -> Result<Map<string, System.Text.Json.Nodes.JsonObject>, string>) conclusion =
         LocalIntegratedCompletion.planLocked ports repositoryIdentity dispatchId targetRef |> Result.bind (fun planned ->
             ports.ObserveNative() |> Result.bind (fun observed ->
                 let expected = observed.Request.Context
@@ -37,11 +37,14 @@ module FileLocalIntegratedCompletion =
                                              |> Result.mapError (String.concat "; ") |> Result.bind (function
                                                  | LocalResultDisposition.AwaitingIntegration -> Ok()
                                                  | _ -> Error "completion result no longer authorizes integration")))))))
+                // Readiness records are derived from the exact planned member
+                // evidence, so the quality judgment is recorded with completion.
+                readiness planned.Native |> Result.bind (fun records ->
                 FileNativeCompletionEffects.commitLockedWith nativePorts
                     { ExpectedContext = expected; Plan = planned.Native; EventActor = actor
-                      ReadinessRecords = readinessRecords; ExplicitConclusion = conclusion
-                      BeforeEffects = boundary; BeforeApply = beforeApply }))))
+                      ReadinessRecords = records; ExplicitConclusion = conclusion
+                      BeforeEffects = boundary; BeforeApply = beforeApply })))))
 
     /// Caller holds the real ordered host/native leases for this whole effect.
-    let commitLocked root ports repositoryIdentity dispatchId targetRef actor readinessRecords conclusion =
-        commitLockedWith (FileNativeCompletionEffects.create root) ports repositoryIdentity dispatchId targetRef actor readinessRecords conclusion
+    let commitLocked root ports repositoryIdentity dispatchId targetRef actor readiness conclusion =
+        commitLockedWith (FileNativeCompletionEffects.create root) ports repositoryIdentity dispatchId targetRef actor readiness conclusion

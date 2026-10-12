@@ -92,17 +92,19 @@ module FileExecutionPorts =
         |> List.tryLast
         |> Option.map _.ExecutionId
 
-    let create (root: string) : ExecutionPorts =
+    /// `write` wraps every envelope/ledger mutation. Unserialized ports are for
+    /// callers that already hold the lifecycle lease scope.
+    let private build (root: string) (write: (unit -> unit) -> unit) : ExecutionPorts =
         let absolute (relative: string) = Path.GetFullPath(Path.Combine(root, relative))
 
         { Store =
             { Load = ExecutionStore.loadEnvelope root
-              Save = ExecutionStore.saveEnvelope root
+              Save = fun envelope -> write (fun () -> ExecutionStore.saveEnvelope root envelope)
               Exists = ExecutionStore.exists root
               ReadEntries = ExecutionStore.readEntries root
-              AppendEntry = ExecutionStore.appendEntry root
-              AppendRecord = fun id kind fields -> ExecutionStore.appendRecord root id kind fields DateTimeOffset.UtcNow
-              AppendVerification = ExecutionStore.appendVerification root
+              AppendEntry = fun id entry attribution -> write (fun () -> ExecutionStore.appendEntry root id entry attribution)
+              AppendRecord = fun id kind fields -> write (fun () -> ExecutionStore.appendRecord root id kind fields DateTimeOffset.UtcNow)
+              AppendVerification = fun id record -> write (fun () -> ExecutionStore.appendVerification root id record)
               ReadVerification = ExecutionStore.readVerification root
               Attributions = ExecutionStore.attributions root
               ResolvedResources = ExecutionStore.resolvedResources root
@@ -131,3 +133,36 @@ module FileExecutionPorts =
               Policy = fun () -> readPolicy root
               ContainmentEvidence = readContainmentEvidence
               RemoteExecutor = remoteExecutor } }
+
+    /// Caller holds `ExecutionLifecycleLease.within root` for the whole operation.
+    let createLocked (root: string) = build root (fun write -> write ())
+
+    /// Each write separately acquires the lifecycle lease and throws
+    /// `ExecutionLifecycleLeaseUnavailable` when it cannot. For operations
+    /// that run external commands between writes, so a long-running step,
+    /// evaluator or launched worker never holds native locks.
+    let createSerialized (root: string) = build root (ExecutionLifecycleLease.required root)
+
+    let create (root: string) = createSerialized root
+
+    /// Lease routing for `execution` CLI verbs (WI-0087). Verbs that run an
+    /// external step, evaluator or launcher write under a per-write lease, so
+    /// the process never holds native locks; reads need no lease; every other
+    /// mutation holds one lifecycle scope.
+    let runLeased (root: string) (arguments: string list) (dispatch: ExecutionPorts -> int) : Result<int, string> =
+        let perWrite =
+            match arguments with
+            | "start" :: rest -> List.contains "--launch" rest
+            | "step" :: "run" :: _
+            | "evaluate" :: _
+            | "launch" :: _
+            | "show" :: _
+            | "actions" :: _
+            | "boundary" :: _
+            | "containment" :: _
+            | "list" :: _ -> true
+            | _ -> false
+        try
+            if perWrite then Ok(dispatch (createSerialized root))
+            else ExecutionLifecycleLease.within root (fun () -> dispatch (createLocked root))
+        with ExecutionLifecycleLeaseUnavailable reason -> Error reason

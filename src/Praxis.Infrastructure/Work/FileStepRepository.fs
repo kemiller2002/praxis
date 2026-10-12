@@ -351,6 +351,25 @@ module FileStepRepository =
                         step["identityInheritance"] <- audit
                     | _ -> ()
                 | _ -> ()
+            // A continued execution records its predecessor as parent; steps
+            // created from the caller's resolved identity omitted it. Inherit
+            // the execution's recorded parent with an audit, never overwrite.
+            for step in stepNodes record do
+                match objectField step "identity", objectField step "actor" with
+                | Some stepIdentity, Some stepActor when
+                    stringField stepActor "id" = Some executionActor.Id
+                    && (stringField stepIdentity "parentExecutionId" |> Option.isNone) ->
+                    match stringField executionIdentity "parentExecutionId" with
+                    | Some inherited ->
+                        stepIdentity["parentExecutionId"] <- JsonValue.Create inherited
+                        let audit = JsonObject()
+                        audit["field"] <- JsonValue.Create "parentExecutionId"
+                        audit["previousValue"] <- null
+                        audit["sourceExecutionId"] <- record["executionId"].DeepClone()
+                        audit["recordedAt"] <- JsonValue.Create(DateTimeOffset.UtcNow.ToString("O"))
+                        step["parentExecutionInheritance"] <- audit
+                    | None -> ()
+                | _ -> ()
         | _ -> ()
         File.WriteAllText(file, record.ToJsonString serializerOptions + "\n")
 
