@@ -9724,18 +9724,60 @@
     {
       "id": "WI-0092",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T18:52:34.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/LocalContainedLaunch.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/LocalContainmentQualification.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalContainmentTests.fs"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A073--probe-qualified-linux-worker-containment.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/containment.md"
+        }
+      ],
+      "updatedAt": "2026-10-12T18:53:42.000Z",
       "telemetryExecutionIds": [
         "EXE-20261012T185235269Z-42495e91"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "3ec168a2e8dc9353a465ba6a",
+        "recordedAt": "2026-10-12T18:53:34.000Z",
+        "executionId": "EXE-20261012T185235269Z-42495e91",
+        "repository": "repository-operating-system",
+        "branch": "feat/gh-231-linux-containment",
+        "commit": "198716b734499db0c5bfdcbce11cdc93bae28d6b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/gh-231-linux-containment",
+        "remoteCommit": "198716b734499db0c5bfdcbce11cdc93bae28d6b",
+        "summary": "Linux confined-launch adapter (unshare user/net/mount/pid/ipc/uts + pivot_root minimal root + prlimit + setpriv), 35-probe qualification emitting praxis.containment-evidence/1, local containment qualify/status CLI, host-config gating of containment-required workers, macOS/Windows refusal, tests (9/9 local containment, real probes 35/35 on this host), CI step, docs/containment.md and DF-ROS-2026-A073. Re-identified from WI-0089 after an ID collision with PR #246.",
+        "nextAction": "Review draft PR #248 and three-OS CI. Decide whether CI may relax Ubuntu AppArmor userns restriction to run real probes. #243 needs an output protocol for contained workers.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T18:53:42.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T18:52:34.000Z",
+  "updatedAt": "2026-10-12T18:53:42.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

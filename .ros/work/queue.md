@@ -27,9 +27,9 @@
 | GH-228 | GH-228 | complete |  |  |
 | GH-230 | GH-230 | active |  |  |
 | GH-231 | GH-231 | active |  |  |
-| GH-234 | GH-234 | active |  |  |
+| GH-234 | GH-234 | complete |  |  |
 | GH-235 | GH-235 | active |  |  |
-| GH-242 | GH-242 | active |  |  |
+| GH-242 | GH-242 | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
@@ -321,6 +321,7 @@
 | WI-0086 | Investigate work-protocol lock acquisition stack overflow with stale PID metadata in constrained process namespaces | captured | defect,local-host | high |
 | WI-0087 | Serialize execution-envelope lifecycle writers with local host dispatch; FileExecutionPorts/ExecutionStore currently do not share the work/group lease scope, so fresh assignment observations are not a whole-lifecycle lock | captured |  | medium |
 | WI-0088 | Work completion cannot finalize a predecessor execution left with unresolved steps after work continue; finalize it with its open steps recorded as interrupted (observed by successor) instead of requiring the absent owner | complete |  | medium |
+| WI-0092 | WI-0092 | active |  |  |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
