@@ -58,7 +58,8 @@ module ConstructionService =
         [ "policyRevision", b.PolicyRevision; "groupId", b.GroupId; "cohortId", b.CohortId; "sourceCommit", b.SourceCommit
           "manifestPath", b.ManifestPath; "manifestDigest", b.ManifestDigest; "blueprintPath", b.BlueprintPath
           "blueprintDigest", b.BlueprintDigest; "approver", b.Approver; "approvalExpiresAt", b.ApprovalExpiresAt
-          "planDigest", b.PlanDigest; "generatorVersion", b.GeneratorVersion
+          "planDigest", b.PlanDigest; "planSourceManifestDigest", b.PlanSourceManifestDigest
+          "planBlueprintDigest", b.PlanBlueprintDigest; "generatorVersion", b.GeneratorVersion
           "ordoCoreVersion", b.OrdoCoreVersion; "ordoConstructionVersion", b.OrdoConstructionVersion ]
         |> List.iter (fun (name, value) -> binding[name] <- JsonValue.Create value)
         binding["requirementKeys"] <- strings b.RequirementKeys
@@ -66,6 +67,9 @@ module ConstructionService =
         let node = JsonObject()
         node["schemaVersion"] <- JsonValue.Create "praxis.construction-preview/1"
         node["binding"] <- binding
+        // The exact admitted plan (canonical form), so a verifier never has to
+        // rebuild a host-stamped binding from the agent's operations.
+        node["plan"] <- JsonNode.Parse b.PlanCanonicalJson
         node["targetRef"] <- JsonValue.Create preview.TargetRef
         node["targetCommit"] <- JsonValue.Create preview.TargetCommit
         node["ownershipRoot"] <- JsonValue.Create preview.OwnershipRoot
