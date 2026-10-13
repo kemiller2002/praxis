@@ -151,6 +151,7 @@
     <Compile Include="LocalAgentHandoffTests.fs" />
     <Compile Include="WorkerChecklistTests.fs" />
     <Compile Include="WorkHistoryMergeTests.fs" />
+    <Compile Include="WorkBacklogMergeTests.fs" />
     <Compile Include="LocalWorkerDelegationTests.fs" />
     <Compile Include="LocalDispatchJournalTests.fs" />
     <Compile Include="LocalWorkerProcessTests.fs" />

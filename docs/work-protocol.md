@@ -709,6 +709,13 @@ Canonical storage is `.ros/work/queue.json`; `.ros/work/queue.md` is a
 generated human-readable projection, and `.ros/work/items/<ID>.md` is an
 optional free-form detail file `work show` will include when present.
 
+When two branches each capture backlog rows, `queue.json` and `queue.md`
+conflict in Git. Do not take one side's queue, which drops the other
+branch's rows, and do not hand-edit them: run `./praxis work history merge`
+(preview) and `--apply`, which merges the queue by row ID together with the
+conflicted native history and regenerates `queue.md`. See
+[native history reconciliation](work-history-merge.md#backlog-queue).
+
 The backlog is **not** a second work-item authority. `work start` requires
 `ready`, then delegates directly to the existing `begin` transition above --
 from that point the in-flight record in `.ros/context/current.json` is

@@ -9927,6 +9927,88 @@
       "completedAt": "2026-10-12T20:42:44.342Z"
     },
     {
+      "id": "WI-0098",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Construction/ConstructionService.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T22:37:59.730Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T223752102Z-8a383548"
+      ],
+      "latestCheckpoint": {
+        "id": "1216c4188b77661816528545",
+        "recordedAt": "2026-10-12T22:37:56.127Z",
+        "executionId": "EXE-20261012T223752102Z-8a383548",
+        "repository": "repository-operating-system",
+        "branch": "construct/report-admitted-plan",
+        "commit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "construct/report-admitted-plan",
+        "remoteCommit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
+        "summary": "Construct preview/apply report canonical plan and canonical binding digests; round-trip test; construction cli 19/19",
+        "nextAction": "Complete WI-0098 and open the PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T22:37:59.730Z"
+    },
+    {
+      "id": "WI-0093",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkHistoryMerge.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkBacklogMergeTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T23:21:47.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T223135083Z-f84233da"
+      ],
+      "latestCheckpoint": {
+        "id": "5480c09c667d7c505df7bf5b",
+        "recordedAt": "2026-10-12T23:21:42.000Z",
+        "executionId": "EXE-20261012T223135083Z-f84233da",
+        "repository": "repository-operating-system",
+        "branch": "fix/history-merge-backlog",
+        "commit": "38a2363c57fc823fb8d6398eef400aa23ad03efb",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "fix/history-merge-backlog",
+        "remoteCommit": "38a2363c57fc823fb8d6398eef400aa23ad03efb",
+        "summary": "Backlog queue merge implemented, tested, documented; main merged using it (live queue.md conflict)",
+        "nextAction": "Complete WI-0093, build registries, validate, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T23:21:47.000Z"
+    },
+    {
       "id": "WI-0092",
       "type": "task",
       "state": "complete",
@@ -10019,52 +10101,11 @@
         }
       },
       "completedAt": "2026-10-12T20:53:45.338Z"
-    },
-    {
-      "id": "WI-0098",
-      "type": "task",
-      "state": "complete",
-      "semanticState": "complete",
-      "evidence": [
-        {
-          "type": "implementation",
-          "path": "src/Praxis.Infrastructure/Construction/ConstructionService.fs"
-        },
-        {
-          "type": "tests",
-          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
-        }
-      ],
-      "updatedAt": "2026-10-12T22:37:59.730Z",
-      "telemetryExecutionIds": [
-        "EXE-20261012T223752102Z-8a383548"
-      ],
-      "latestCheckpoint": {
-        "id": "1216c4188b77661816528545",
-        "recordedAt": "2026-10-12T22:37:56.127Z",
-        "executionId": "EXE-20261012T223752102Z-8a383548",
-        "repository": "repository-operating-system",
-        "branch": "construct/report-admitted-plan",
-        "commit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "construct/report-admitted-plan",
-        "remoteCommit": "7c755d1f7b2c14e14c8942cb6c1b200c6bd8df52",
-        "summary": "Construct preview/apply report canonical plan and canonical binding digests; round-trip test; construction cli 19/19",
-        "nextAction": "Complete WI-0098 and open the PR",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      },
-      "completedAt": "2026-10-12T22:37:59.730Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-12T22:37:59.7300000\u002B00:00",
+  "updatedAt": "2026-10-12T23:21:47.0000000\u002B00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
