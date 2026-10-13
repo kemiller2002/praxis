@@ -886,8 +886,17 @@ cohort under that grant, refuses decision records whose digest differs from the
 signed one, calls Ordo's default-plan generator (vocabulary 1 unless
 `--vocabulary` says otherwise), admits the generated plan through the ordinary
 plan admission and writes `praxis.construction-prepared/1` to `--out`, plus the
-agent handoff `praxis.construction-handoff/2` as `<out>.handoff.json` and its
-Markdown twin `<out>.handoff.md`. The host keeps the approved decision records
+agent handoff `praxis.construction-handoff/3` as `<out>.handoff.json` and its
+Markdown twin `<out>.handoff.md`. The handoff (CONSTRUCT-010) carries one typed
+record per default-plan obligation (requirements, relevant decisions, the
+question to escalate or the behavior to implement, extension interfaces and
+paths, allowed dispositions, verification), every approved decision once
+(operator-approved records, blueprint decision nodes, and accepted decision
+documents the cohort cites), the excerpts of every requirement key the cohort's
+required scope cites, and, for each acceptance slot, the public types of the
+contract files its stub opens. The Markdown twin is the worker-facing form; it
+states each verification expectation once and shortens Ordo's question
+boilerplate only where the exact known form matches. The host keeps the approved decision records
 and the validated artifact under its construction root, keyed by a cache key
 over every binding input; an identical key reuses the artifact byte for byte,
 any change invalidates it. `apply --prepared` re-derives the binding from

@@ -161,7 +161,7 @@ module ConstructionPreparedTests =
     // ---------------------------------------------------- (b) prepare/handoff
 
     let private prepareTests =
-        [ t "prepare writes the prepared artifact and a minimal handoff with only cited excerpts, decisions, signatures and questions" (fun () ->
+        [ t "prepare writes the prepared artifact and a compact typed handoff: one record per obligation, every decision and excerpt once" (fun () ->
               withDecisionsHost (fun host ->
                   let before = ConstructionCliTests.tip host
                   let node, out = prepareWith (fake (ref 0) "fake@1") host (Some(decisionsPath host)) None |> okValue
@@ -180,11 +180,11 @@ module ConstructionPreparedTests =
                   Assert.equal (ConstructionDecisions.digest decisions) (str prepared["hostBinding"].["decisionsDigest"])
                   for field in [ "acceptanceValidators"; "validatorPolicyRevision"; "praxisVersion"; "handoffSchema" ] do
                       Assert.isTrue (not (isNull prepared["hostBinding"].[field])) ("cache key omits " + field)
-                  Assert.equal "praxis.construction-handoff/2" (str prepared["hostBinding"].["handoffSchema"])
+                  Assert.equal "praxis.construction-handoff/3" (str prepared["hostBinding"].["handoffSchema"])
                   Assert.equal 2 (prepared["defaultPlan"].["obligations"] :?> JsonArray).Count
                   let handoff = JsonNode.Parse(File.ReadAllText(str node["handoff"]))
                   let markdown = File.ReadAllText(str node["handoffMarkdown"])
-                  Assert.equal "praxis.construction-handoff/2" (str handoff["schemaVersion"])
+                  Assert.equal "praxis.construction-handoff/3" (str handoff["schemaVersion"])
                   // Only the keys obligations cite, with the pinned source text.
                   let requirements = handoff["requirements"] :?> JsonArray |> Seq.toList
                   // Every key cited anywhere (obligations and acceptance), each once.
@@ -195,9 +195,25 @@ module ConstructionPreparedTests =
                   let excerptOf key = requirements |> List.find (fun r -> str r["key"] = key) |> fun r -> str r["excerpt"]
                   Assert.equal (fixture "requirements/timer-stop-completion.txt") (excerptOf k131)
                   Assert.equal (fixture "requirements/timer-paused-time-excluded.txt") (excerptOf k105)
-                  // Decisions summarised, not the blueprint.
+                  // Every approved record, summarised, whether or not an obligation cites it.
                   let decided = handoff["decisions"] :?> JsonArray |> Seq.toList
-                  Assert.isTrue (decided |> List.exists (fun d -> str d["nodeId"] = "IFC-TIMER-PORTS" && (str d["summary"]).Contains "NOT DECIDED")) (handoff.ToJsonString())
+                  Assert.isTrue (decided |> List.exists (fun d -> str d["id"] = "IFC-TIMER-PORTS" && str d["source"] = "constructionRecord" && (str d["summary"]).Contains "NOT DECIDED")) (handoff.ToJsonString())
+                  Assert.isTrue (decided |> List.exists (fun d -> str d["id"] = "DEC-TIMER-STATES" && (str d["summary"]).Contains "Start: NoTimer -> Running")) (handoff.ToJsonString())
+                  // One typed record per obligation: question xor behavior, interfaces, paths, dispositions.
+                  let items = handoff["obligations"] :?> JsonArray |> Seq.toList
+                  Assert.equal 2 items.Length
+                  let item id = items |> List.find (fun o -> str o["id"] = id)
+                  let strings (node: JsonNode) = node :?> JsonArray |> Seq.map str |> Seq.toList
+                  let effect = item "OBL-COH-TIMER-undecidedEffectFailure-4d5e6f"
+                  Assert.isTrue (isNull effect["requiredBehavior"] && (str effect["question"]).Contains "discarded or kept active") (effect.ToJsonString())
+                  Assert.equal [ "escalated" ] (strings effect["dispositions"])
+                  Assert.isTrue (strings effect["decisions"] |> List.contains "IFC-TIMER-PORTS") (effect.ToJsonString())
+                  let behavior = item "OBL-COH-TIMER-extensionBehavior-1a2b3c"
+                  Assert.isTrue (isNull behavior["question"] && (str behavior["requiredBehavior"]).Contains "excluding paused time") (behavior.ToJsonString())
+                  Assert.equal [ "implemented"; "escalated" ] (strings behavior["dispositions"])
+                  Assert.equal [ "ITimerPorts.Perform/Stop" ] (strings behavior["interfaces"])
+                  Assert.equal [ "src/Domain/Extensions.fs" ] (strings behavior["paths"])
+                  Assert.isTrue (strings behavior["requirements"] |> List.forall (fun r -> r.StartsWith "R")) (behavior.ToJsonString())
                   // Signatures extracted from the generated source.
                   let interfaces = handoff["extensionInterfaces"] :?> JsonArray |> Seq.toList
                   let members = interfaces |> List.collect (fun i -> i["members"] :?> JsonArray |> Seq.map str |> Seq.toList)
@@ -219,9 +235,6 @@ module ConstructionPreparedTests =
                   Assert.isTrue (api.Contains "module TimerOrchestration =") api
                   for body in [ "match state, command with"; "TimerState.NoTimer, TimerCommand"; "ports.CurrentTime()" ] do
                       Assert.isTrue (not (api.Contains body) && not ((File.ReadAllText(str node["handoffMarkdown"])).Contains body)) ("generated body leaked: " + body)
-                  let questions = handoff["unresolvedQuestions"] :?> JsonArray |> Seq.choose (fun q -> match q["obligationId"] with null -> None | id -> Some(str id)) |> Seq.toList
-                  Assert.isTrue (List.contains "OBL-COH-TIMER-undecidedEffectFailure-4d5e6f" questions) (String.concat ", " questions)
-                  Assert.isTrue ((handoff["acceptance"] :?> JsonArray).Count > 0) "no acceptance expectations"
                   // Minimal: no digests, no vocabulary manual, no full source.
                   for rendered in [ handoff.ToJsonString(); markdown ] do
                       Assert.isTrue (not (rendered.Contains "sha256:")) "handoff carries a digest"
@@ -231,15 +244,17 @@ module ConstructionPreparedTests =
                   // One obligation-id scheme; no restated keys or questions.
                   for rendered in [ handoff.ToJsonString(); markdown ] do
                       Assert.isTrue (not (rendered.Contains "IMPLEMENT:") && not (rendered.Contains "VERIFY:")) "a second obligation-id scheme leaked"
-                  Assert.isTrue (markdown.Contains "cannot be implemented without an approved decision") markdown
+                  Assert.isTrue (markdown.Contains "needs an approved decision the agent cannot make") markdown
                   let fullKeyMentions = RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape k131).Count
                   Assert.equal 1 fullKeyMentions
                   let question = "When the Stop completion effect fails, is the timer discarded or kept active?"
                   Assert.equal 1 (RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape question).Count)
-                  let allowed = handoff["allowedOperations"] :?> JsonArray |> Seq.map str |> String.concat " "
+                  let allowed = handoff["operations"] :?> JsonArray |> Seq.map str |> String.concat " "
                   Assert.isTrue (allowed.Contains "Extensions.fs" && allowed.Contains "dispositions.json" && allowed.Contains "at most 3") allowed
-                  Assert.isTrue (markdown.Contains "## Allowed operations") markdown
-                  Assert.isTrue (markdown.Contains "## Unresolved questions" && markdown.Contains "abstract CurrentTime:") markdown))
+                  Assert.isTrue (allowed.Contains "\"obligationId\"") "the dispositions format is not stated"
+                  Assert.isTrue (markdown.Contains "## Obligations" && markdown.Contains "Escalate: " && markdown.Contains "Implement: ") markdown
+                  Assert.isTrue (markdown.Contains "## Approved decisions" && markdown.Contains "abstract CurrentTime:") markdown
+                  Assert.isTrue (not (markdown.Contains "Unresolved questions")) "questions are listed twice"))
           t "prepare and apply through the CLI run Ordo's default-plan generator end to end; tampered decisions fail closed" (fun () ->
               ConstructionCliTests.withHostGranting
                   (fun parent _ ->
@@ -408,8 +423,9 @@ module ConstructionPreparedTests =
     let private adapterSlot path = sprintf """[{"path":"%s","acceptanceContract":"TimerPilot.TimerOracleAdapter","maxBytes":4096}]""" path
 
     let private acceptanceTests =
-        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and applied at its existing path" (fun () ->
-              withAdapterHost [] (fun host ->
+        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and contract types and applied at its existing path" (fun () ->
+              withAdapterHost [ "src/Domain/OracleTypes.fs", "namespace TimerPilot\n\ntype OracleStep = { Command: string; At: int }\n\nmodule OracleText =\n    let render (s: OracleStep) : string = s.Command\n"
+                                "src/Domain/Unrelated.fs", "namespace Elsewhere\n\ntype Hidden = { Secret: string }\n" ] (fun host ->
                   declareAcceptance host (adapterSlot "src/Domain/TimerOracleAdapter.fs")
                   let generator = fake (ref 0) "fake@1"
                   let node, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
@@ -425,6 +441,10 @@ module ConstructionPreparedTests =
                   let signatures = adapter["signatures"] :?> JsonArray |> Seq.map str |> Seq.toList
                   Assert.isTrue (List.contains "let decide (state: string) (command: string) : Result<string * string list, string>" signatures) (String.concat " | " signatures)
                   Assert.isTrue (signatures |> List.forall (fun line -> not (line.Contains "not implemented"))) "adapter body leaked"
+                  let types = adapter["contractTypes"] :?> JsonArray |> Seq.collect (fun g -> g["declarations"] :?> JsonArray |> Seq.map str) |> String.concat "\n"
+                  Assert.isTrue (types.Contains "type OracleStep =") types
+                  Assert.isTrue (types.Contains "let render (s: OracleStep) : string" && not (types.Contains "s.Command")) types
+                  Assert.isTrue (not (types.Contains "Hidden")) "a file the stub does not open leaked into the contract types"
                   let before = ConstructionCliTests.tip host
                   let files = ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten; "TimerOracleAdapter.fs", filledAdapter ]
                   let applied = applyWith generator host out (Some files) |> okValue
