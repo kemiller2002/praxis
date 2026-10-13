@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 90,
+  "nextSeq": 100,
   "items": [
     {
       "id": "WI-0001",
@@ -6042,6 +6042,27 @@
       "attachments": [],
       "createdAt": "2026-10-12T22:37:50.828Z",
       "updatedAt": "2026-10-12T22:37:59.730Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0099",
+      "title": "Requirement: reclassify a work item's type (auditable event with reason, from active and blocked) and accept non-file evidence references (PR/check-run URLs, validated by form, recorded as external) at work complete",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-13T16:23:07.006Z",
+      "updatedAt": "2026-10-13T16:28:34Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

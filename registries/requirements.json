@@ -1808,5 +1808,48 @@
     "title": "Worker checklists require independently verified current evidence before accepted handoff",
     "updated": "2026-10-11",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-13",
+    "id": "RQ-ROS-2026-A030",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A030--work-reclassification-and-external-evidence.md",
+    "priority": "medium",
+    "provenance": {
+      "contributions": {
+        "EXE-20261013T162326019Z-fed260ae": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-13T16:23:59Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Program-lead-directed requirements capture: work-type reclassification and external evidence references (echelon-registry WI-0039/WI-0040 blocked)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "docs/work-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "work-protocol",
+      "evidence",
+      "completion",
+      "work-type",
+      "audit"
+    ],
+    "title": "Reclassify a work item's type and accept external evidence references at completion",
+    "updated": "2026-10-13",
+    "version": "1.0.0"
   }
 ]

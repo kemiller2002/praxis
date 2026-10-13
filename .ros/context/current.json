@@ -10142,11 +10142,49 @@
         }
       },
       "completedAt": "2026-10-12T23:21:47.000Z"
+    },
+    {
+      "id": "WI-0099",
+      "type": "research",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "research-record",
+          "path": "research/requirements/RQ-ROS-2026-A030--work-reclassification-and-external-evidence.md"
+        }
+      ],
+      "updatedAt": "2026-10-13T16:28:34Z",
+      "telemetryExecutionIds": [
+        "EXE-20261013T162326019Z-fed260ae"
+      ],
+      "latestCheckpoint": {
+        "id": "8d0e5cf97c80c105167397c5",
+        "recordedAt": "2026-10-13T16:28:16Z",
+        "executionId": "EXE-20261013T162326019Z-fed260ae",
+        "repository": "repository-operating-system",
+        "branch": "requirements/work-reclassify-external-evidence",
+        "commit": "82724cbb437990c1b6233d7ac237566d97843426",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "requirements/work-reclassify-external-evidence",
+        "remoteCommit": "82724cbb437990c1b6233d7ac237566d97843426",
+        "summary": "RQ-ROS-2026-A030 (PRX-WTY-001..006, PRX-XEV-001..006) written, attributed and pushed; validate passes with a HEAD build",
+        "nextAction": "complete with the research record, open PR, merge through the gate",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-13T16:28:34Z",
+      "conclusion": "Requirements captured; implementation pending a program-lead routing decision"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T00:33:42.000Z",
+  "updatedAt": "2026-10-13T16:28:34Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
