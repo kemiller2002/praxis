@@ -6,7 +6,7 @@
     <!-- Ordo's execution semantics, consumed as the pinned release artifact
          (vendor/nuget/ordo-core.lock; ORDO-CORE-PACKAGE, PRX-ARCH-001). Pure:
          no I/O, no provider SDK. -->
-    <PackageReference Include="EchelonFoundry.Ordo.Core" Version="1.8.1" />
+    <PackageReference Include="EchelonFoundry.Ordo.Core" Version="1.8.2" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

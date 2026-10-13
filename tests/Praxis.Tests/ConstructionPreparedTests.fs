@@ -254,7 +254,7 @@ module ConstructionPreparedTests =
                       let artifact = JsonNode.Parse(File.ReadAllText out)
                       let provenance = artifact["defaultPlan"].["provenance"]
                       Assert.equal "ordo.default-plan" (str provenance["generatorId"])
-                      Assert.equal "ordo.default-plan/2" (str provenance["generatorVersion"])
+                      Assert.equal "ordo.default-plan/3" (str provenance["generatorVersion"])
                       Assert.equal "ordo.construction-vocabulary/1" (str provenance["vocabularyVersion"])
                       Assert.equal (ConstructionDecisions.digest (fixture "construction-decisions.json")) (str provenance["inputDigests"].["decisionRecords"])
                       let kinds = artifact["defaultPlan"].["obligations"] :?> JsonArray |> Seq.map (fun o -> str o["kind"]) |> Set.ofSeq

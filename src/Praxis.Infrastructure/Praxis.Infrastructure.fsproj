@@ -12,7 +12,7 @@
     <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
     <!-- Ordo's deterministic constructor, consumed as the pinned release asset
          (vendor/nuget/ordo-construction.lock; Praxis #242, Ordo #69). -->
-    <PackageReference Include="EchelonFoundry.Ordo.Construction" Version="1.8.1" />
+    <PackageReference Include="EchelonFoundry.Ordo.Construction" Version="1.8.2" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

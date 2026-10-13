@@ -295,8 +295,8 @@ decided it differently.
 ## Known merge gate (CONSTRUCT-008)
 
 Mechanical-first construction (`construct prepare`, `construct apply
---prepared`) runs on Ordo 1.8.1. Ordo has not published that release yet:
+--prepared`) runs on Ordo 1.8.2. Ordo has not published that release yet:
 `vendor/nuget/ordo-core.lock` and `ordo-construction.lock` pin local packs of
 Ordo branch `construct/default-plan` (aa991a7), and their URLs name the release
-assets this pin expects. Do not merge until v1.8.1 is published and its assets'
+assets this pin expects. Do not merge until v1.8.2 is published and its assets'
 sha256 values match the locks.

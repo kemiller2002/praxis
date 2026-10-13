@@ -15,4 +15,4 @@ frozen pilot skeleton in `kemiller2002/research-documents`
 `construction-decisions.json` is a verbatim copy of the CONSTRUCT-008 operator-approved
 `ordo.construction-decisions/1` record set
 (`kemiller2002/research-documents`, `research/construction-by-design/CONSTRUCT-008/harness/decisions/`).
-It binds this blueprint (canonical digest `sha256:28dd3964…`) and drives Ordo 1.8.1's default-plan generator.
+It binds this blueprint (canonical digest `sha256:28dd3964…`) and drives Ordo 1.8.2's default-plan generator.
