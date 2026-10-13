@@ -242,19 +242,22 @@ module ConstructionService =
 
     /// `construct apply --prepared`, with the generator injected.
     /// `dokimos.host-observations/1`: every handwritten operation the host
-    /// denied, for independent verification of rejected operations.
+    /// denied, for independent verification of rejected operations. The
+    /// field names are Dokimos's established contract (`schema`, `detail`).
     let private observationsText (denied: (string * string) list) =
         let node = JsonObject()
-        node["schemaVersion"] <- JsonValue.Create "dokimos.host-observations/1"
+        node["schema"] <- JsonValue.Create "dokimos.host-observations/1"
         node["observations"] <-
             JsonArray(
                 denied
-                |> List.map (fun (path, reason) ->
+                |> List.mapi (fun index (path, reason) ->
                     let item = JsonObject()
+                    item["id"] <- JsonValue.Create(sprintf "denied-%d" (index + 1))
+                    item["kind"] <- JsonValue.Create "write"
                     item["recordedBy"] <- JsonValue.Create "host"
                     item["outcome"] <- JsonValue.Create "denied"
                     item["path"] <- JsonValue.Create path
-                    item["reason"] <- JsonValue.Create reason
+                    item["detail"] <- JsonValue.Create reason
                     item :> JsonNode)
                 |> List.toArray)
         node.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n"

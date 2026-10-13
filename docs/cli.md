@@ -899,7 +899,9 @@ artifact's `permittedExtensionFiles`, like `extend`. Every handwritten-file chec
 on the target tree) runs before any effect, so any refused entry refuses the
 whole apply with the target unchanged. Refusals are recorded under the host
 construction root and, with `--observations`, written as
-`dokimos.host-observations/1`. Generated and handwritten files still land as
+`dokimos.host-observations/1` (Dokimos's contract: `schema`, then one
+`observations` entry per denial with `id`, `kind`, `recordedBy: host`,
+`outcome: denied`, `path` and `detail`). Generated and handwritten files still land as
 two commits (construction, then extension); a failure between them is possible
 only if the target moves concurrently, and is reported.
 

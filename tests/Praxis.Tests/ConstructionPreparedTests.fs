@@ -316,7 +316,7 @@ module ConstructionPreparedTests =
                       (Some(ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten; "packages.lock.json", "{}\n" ])) (Some observed) None
                   |> refusedWith "denied operations recorded"
                   let observations = JsonNode.Parse(File.ReadAllText observed)
-                  Assert.equal "dokimos.host-observations/1" (str observations["schemaVersion"])
+                  Assert.equal "dokimos.host-observations/1" (str observations["schema"])
                   let entries = observations["observations"] :?> JsonArray |> Seq.toList
                   Assert.equal [ "src/Domain/packages.lock.json" ] (entries |> List.map (fun o -> str o["path"]))
                   Assert.equal "denied" (str entries.Head["outcome"])
