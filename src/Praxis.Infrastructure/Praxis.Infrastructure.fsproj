@@ -129,6 +129,7 @@
     <Compile Include="Construction/ConstructionHandoff.fs" />
     <Compile Include="Construction/ConstructionExtension.fs" />
     <Compile Include="Construction/ConstructionPrepared.fs" />
+    <Compile Include="Construction/ConstructionWorkspace.fs" />
     <Compile Include="Construction/ConstructionTelemetry.fs" />
     <Compile Include="Construction/ConstructionScope.fs" />
     <Compile Include="Planning/FileLocalRuntime.fs" />

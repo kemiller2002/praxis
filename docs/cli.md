@@ -906,7 +906,28 @@ difference from the host's validated copy, then applies the generated files
 like `apply` and the handwritten files from `--extensions` only at the
 artifact's `permittedExtensionFiles`, like `extend`. Every handwritten-file check (name, content, slot kind, links, and placement
 on the target tree) runs before any effect, so any refused entry refuses the
-whole apply with the target unchanged. Refusals are recorded under the host
+whole apply with the target unchanged. With `prepare --workspace DIR` (CONSTRUCT-010), the host also creates the
+worker workspace: `DIR/HANDOFF.md` (the Markdown handoff) and an empty
+`DIR/outbox/`, and records the binding host-side in `<out>.workspace.json`
+(`praxis.construction-workspace/1`: workspace, cache key, handoff SHA-256).
+Before anything is written, the layout is checked: the workspace must be fresh
+(absent or empty, not a link) and must neither contain nor lie inside any host
+location (the configuration directory, the governed repository, the policy,
+journal, spool, submission, integration, evidence, checkout and construction
+roots, the prepared artifact and its twins); a violation refuses the whole
+prepare. `apply --prepared P --workspace DIR` (instead of `--extensions`) is
+bound to the workspace and cache key recorded for `P`. It refuses any outbox
+entry that is not a regular file as a denied write (recorded with
+`--observations`). It stages the remaining files host-side beside `P` and
+removes that copy afterwards, so the bytes judged are the bytes applied. It
+applies them under the same slot rules as `--extensions` (anything that is not a
+permitted slot, `REPORT.md` included, refuses the apply). It keeps
+`outbox/dispositions.json` host-side as `<P>.dispositions.json` and never
+applies it. Host isolation of the worker *process* is not provided by this
+layout: it needs qualified containment (docs/containment.md) or a separate
+machine. Without either, a worker that knows an absolute host path can still
+read it.
+Refusals are recorded under the host
 construction root and, with `--observations`, written as
 `dokimos.host-observations/1` (Dokimos's contract: `schema`, then one
 `observations` entry per denial with `id`, `kind`, `recordedBy: host`,

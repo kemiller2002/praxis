@@ -207,25 +207,45 @@ module ConstructionService =
 
     let private notice = "Generated structure only. Not evidence of behavioral verification; obligations remain open."
 
+    /// The host artifacts `prepare` writes for `out`: never inside a workspace.
+    let private hostArtifacts (out: string) = [ Path.GetFullPath out; twin out ".handoff.json"; twin out ".handoff.md" ]
+
     /// `construct prepare`, with the default-plan generator injected (the
-    /// CLI passes `OrdoDefaultPlan.generator ()`).
-    let prepareWith (generator: DefaultPlanGenerator) root hostConfig groupId (cohort: string option) (vocabulary: string option) (decisions: string option) (out: string) (telemetryTarget: string option) =
+    /// CLI passes `OrdoDefaultPlan.generator ()`). With `workspace`, the
+    /// worker workspace (HANDOFF.md and an empty outbox) is created after the
+    /// prepared artifact; its layout is checked before anything is written.
+    let prepareInWith (generator: DefaultPlanGenerator) root hostConfig groupId (cohort: string option) (vocabulary: string option) (decisions: string option) (out: string) (workspace: string option) (telemetryTarget: string option) =
         let configuration = configurationOnly root hostConfig
+        let layout =
+            match workspace, configuration with
+            | None, _ -> Ok()
+            | Some _, None -> Error "the host configuration is unreadable, so the workspace layout cannot be checked"
+            | Some w, Some c ->
+                match ConstructionWorkspace.layoutProblems w (ConstructionWorkspace.hostLocations c (ConstructionWorkspace.recordPath out :: hostArtifacts out)) with
+                | [] -> Ok()
+                | problems -> Error("workspace refused: " + String.concat "; " problems)
         let written (report: PreparedReport) =
             writeOutput out report.Text |> Result.bind (fun preparedPath ->
                 writeOutput (twin out ".handoff.json") (report.HandoffJson.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n") |> Result.bind (fun handoffPath ->
-                    writeOutput (twin out ".handoff.md") report.HandoffMarkdown |> Result.map (fun markdownPath -> report, preparedPath, handoffPath, markdownPath)))
-        // "prepared" is reported only once --out and its twins are written.
+                    writeOutput (twin out ".handoff.md") report.HandoffMarkdown |> Result.bind (fun markdownPath ->
+                        match workspace, configuration with
+                        | None, _ -> Ok(report, preparedPath, handoffPath, markdownPath, None)
+                        | Some w, Some c ->
+                            ConstructionWorkspace.create c out (hostArtifacts out) w report.CacheKey report.HandoffMarkdown
+                            |> Result.map (fun created -> report, preparedPath, handoffPath, markdownPath, Some created)
+                        | Some _, None -> Error "the host configuration is unreadable")))
+        // "prepared" is reported only once --out, its twins and any workspace are written.
         let result, telemetry =
             ConstructionTelemetry.measure root telemetryTarget configuration "prepare" groupId (fun () ->
-                match hostState root hostConfig
+                match layout
+                      |> Result.bind (fun () -> hostState root hostConfig)
                       |> Result.bind (fun (configuration, policy) -> ConstructionPrepared.prepare generator configuration policy DateTimeOffset.UtcNow groupId cohort vocabulary decisions)
                       |> Result.bind written with
-                | Ok((report, _, _, _) as outputs) -> Ok outputs, Some report.CacheKey, (if report.Reused then ConstructionTelemetryOutcome.Reused else ConstructionTelemetryOutcome.Prepared)
+                | Ok((report, _, _, _, _) as outputs) -> Ok outputs, Some report.CacheKey, (if report.Reused then ConstructionTelemetryOutcome.Reused else ConstructionTelemetryOutcome.Prepared)
                 | Error reason ->
                     configuration |> Option.iter (fun c -> ConstructionPrepared.recordRefusal c "prepare" groupId None [ reason ] |> ignore)
                     Error reason, None, ConstructionTelemetryOutcome.Refused)
-        result |> Result.map (fun (report, preparedPath, handoffPath, markdownPath) ->
+        result |> Result.map (fun (report, preparedPath, handoffPath, markdownPath, created) ->
             let node = JsonObject()
             node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepare/1"
             node["cacheKey"] <- JsonValue.Create report.CacheKey
@@ -233,12 +253,21 @@ module ConstructionService =
             node["prepared"] <- JsonValue.Create preparedPath
             node["handoff"] <- JsonValue.Create handoffPath
             node["handoffMarkdown"] <- JsonValue.Create markdownPath
+            match created with
+            | Some(record, recordPath) ->
+                node["workspace"] <- JsonValue.Create record.Workspace
+                node["workspaceRecord"] <- JsonValue.Create recordPath
+                node["workerFiles"] <- strings [ ConstructionWorkspace.HandoffName; ConstructionWorkspace.OutboxName + "/" ]
+            | None -> ()
             node["obligations"] <- JsonValue.Create report.Obligations
             node["permittedFiles"] <- strings report.PermittedFiles
             node["telemetry"] <- telemetry
             node["notice"] <- JsonValue.Create notice
             node)
         |> Result.mapError (fun reason -> reason + " [telemetry: " + telemetry.ToJsonString() + "]")
+
+    let prepareWith (generator: DefaultPlanGenerator) root hostConfig groupId (cohort: string option) (vocabulary: string option) (decisions: string option) (out: string) (telemetryTarget: string option) =
+        prepareInWith generator root hostConfig groupId cohort vocabulary decisions out None telemetryTarget
 
     /// `construct apply --prepared`, with the generator injected.
     /// `dokimos.host-observations/1`: every handwritten operation the host
@@ -262,33 +291,84 @@ module ConstructionService =
                 |> List.toArray)
         node.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n"
 
-    let applyPreparedWith (generator: DefaultPlanGenerator) root hostConfig groupId preparedPath targetRef (extensions: string option) (observations: string option) (telemetryTarget: string option) =
+    /// The cache key a prepared artifact states, if it states one.
+    let private preparedCacheKey (preparedPath: string) =
+        try
+            match JsonNode.Parse(File.ReadAllText preparedPath) with
+            | :? JsonObject as node -> (match node["cacheKey"] with :? JsonValue as v -> (try Some(v.GetValue<string>()) with _ -> None) | _ -> None)
+            | _ -> None
+        with _ -> None
+
+    /// The handwritten files to apply: `--extensions` as given, or the
+    /// workspace outbox staged host-side (dispositions kept, never applied).
+    let private submitted (configuration: LocalHostConfiguration) preparedPath (extensions: string option) (workspace: string option) =
+        match extensions, workspace with
+        | Some _, Some _ -> Error([ "give --extensions or --workspace, not both" ], [])
+        | _, None -> Ok(extensions, None)
+        | None, Some w ->
+            match ConstructionWorkspace.readRecord preparedPath with
+            | Error reason -> Error([ reason ], [])
+            | Ok record when Some record.CacheKey <> preparedCacheKey preparedPath -> Error([ "the workspace was prepared for a different prepared artifact" ], [])
+            | Ok record ->
+                // Host scratch beside the prepared artifact: outside the workspace
+                // (the layout rule) and outside every journaled host root.
+                let staging = twin preparedPath (".staged-" + Guid.NewGuid().ToString("N"))
+                let discard () = try Directory.Delete(staging, true) with _ -> ()
+                match ConstructionWorkspace.submission record w staging with
+                | Error reason -> discard (); Error([ reason ], [ w, reason ])
+                | Ok submission when not submission.Denied.IsEmpty ->
+                    discard ()
+                    Error([ "extension refused: " + String.concat "; " (submission.Denied |> List.map snd) ], submission.Denied)
+                | Ok submission -> Ok(Some submission.Staged, submission.Dispositions)
+
+    let applyPreparedInWith (generator: DefaultPlanGenerator) root hostConfig groupId preparedPath targetRef (extensions: string option) (workspace: string option) (observations: string option) (telemetryTarget: string option) =
         let configuration = configurationOnly root hostConfig
         let mutable denied = []
+        let mutable dispositions = None
         let result, telemetry =
             ConstructionTelemetry.measure root telemetryTarget configuration "apply" groupId (fun () ->
                 match hostState root hostConfig with
                 | Error reason -> Error reason, None, ConstructionTelemetryOutcome.Refused
                 | Ok(configuration, policy) ->
-                    match ConstructionPrepared.applyPrepared generator configuration policy DateTimeOffset.UtcNow groupId preparedPath targetRef extensions with
-                    | Ok applied ->
-                        let outcome =
-                            match applied.Construction.Outcome, applied.Extension |> Option.map _.Outcome with
-                            | _, Some(ExtensionOutcome.Applied _) | ConstructionOutcome.Applied _, _ -> ConstructionTelemetryOutcome.Applied
-                            | _ -> ConstructionTelemetryOutcome.AlreadyCurrent
-                        Ok applied, Some applied.CacheKey, outcome
-                    | Error refusal ->
-                        denied <- refusal.Denied
-                        let recorded = match refusal.RecordPath with Some path -> " (refusal recorded at " + path + ")" | None -> ""
-                        Error(String.concat "; " refusal.Reasons + recorded), None, ConstructionTelemetryOutcome.Refused)
+                    match submitted configuration preparedPath extensions workspace with
+                    | Error(reasons, refusedWrites) ->
+                        denied <- refusedWrites
+                        let recorded =
+                            match ConstructionPrepared.recordRefusal configuration "apply" groupId None reasons with
+                            | Some path -> " (refusal recorded at " + path + ")"
+                            | None -> ""
+                        Error(String.concat "; " reasons + recorded), None, ConstructionTelemetryOutcome.Refused
+                    | Ok(files, returned) ->
+                        dispositions <- returned
+                        let applied = ConstructionPrepared.applyPrepared generator configuration policy DateTimeOffset.UtcNow groupId preparedPath targetRef files
+                        // The staged copy of a workspace outbox is host scratch; the
+                        // extension report keeps every applied file's digest.
+                        if workspace.IsSome then files |> Option.iter (fun staged -> try Directory.Delete(Path.GetDirectoryName staged, true) with _ -> ())
+                        match applied with
+                        | Ok applied ->
+                            let outcome =
+                                match applied.Construction.Outcome, applied.Extension |> Option.map _.Outcome with
+                                | _, Some(ExtensionOutcome.Applied _) | ConstructionOutcome.Applied _, _ -> ConstructionTelemetryOutcome.Applied
+                                | _ -> ConstructionTelemetryOutcome.AlreadyCurrent
+                            Ok applied, Some applied.CacheKey, outcome
+                        | Error refusal ->
+                            denied <- refusal.Denied
+                            let recorded = match refusal.RecordPath with Some path -> " (refusal recorded at " + path + ")" | None -> ""
+                            Error(String.concat "; " refusal.Reasons + recorded), None, ConstructionTelemetryOutcome.Refused)
         result
-        |> Result.map (fun applied ->
+        |> Result.bind (fun applied ->
             let node = applicationNode applied.Construction
             node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepared-application/1"
             node["cacheKey"] <- JsonValue.Create applied.CacheKey
             node["extension"] <- (match applied.Extension with Some report -> extensionNode report :> JsonNode | None -> null)
             node["telemetry"] <- telemetry
-            node)
+            // Dispositions are the worker's record, kept host-side, never applied.
+            match dispositions with
+            | None -> Ok node
+            | Some text ->
+                writeOutput (twin preparedPath ".dispositions.json") text |> Result.map (fun path ->
+                    node["dispositions"] <- JsonValue.Create path
+                    node))
         |> fun outcome ->
             match observations with
             | None -> outcome
@@ -302,8 +382,12 @@ module ConstructionService =
                 | Error _, Error reason -> Error reason
         |> Result.mapError (fun reason -> reason + " [telemetry: " + telemetry.ToJsonString() + "]")
 
-    let prepare root hostConfig groupId cohort vocabulary decisions out telemetryTarget =
-        prepareWith (OrdoDefaultPlan.generator ()) root hostConfig groupId cohort vocabulary decisions out telemetryTarget
+    let applyPreparedWith (generator: DefaultPlanGenerator) root hostConfig groupId preparedPath targetRef (extensions: string option) (observations: string option) (telemetryTarget: string option) =
+        applyPreparedInWith generator root hostConfig groupId preparedPath targetRef extensions None observations telemetryTarget
 
-    let applyPrepared root hostConfig groupId preparedPath targetRef extensions observations telemetryTarget =
-        applyPreparedWith (OrdoDefaultPlan.generator ()) root hostConfig groupId preparedPath targetRef extensions observations telemetryTarget
+    let prepare root hostConfig groupId cohort vocabulary decisions out workspace telemetryTarget =
+        prepareInWith (OrdoDefaultPlan.generator ()) root hostConfig groupId cohort vocabulary decisions out workspace telemetryTarget
+
+    let applyPrepared root hostConfig groupId preparedPath targetRef extensions workspace observations telemetryTarget =
+        applyPreparedInWith (OrdoDefaultPlan.generator ()) root hostConfig groupId preparedPath targetRef extensions workspace observations telemetryTarget
+

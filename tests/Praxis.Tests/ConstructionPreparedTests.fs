@@ -575,4 +575,112 @@ module ConstructionPreparedTests =
                       Assert.isTrue (isNull node["telemetry"].[name]) (name + " should be unavailable (null)")
                   Assert.isTrue (File.Exists(Path.Combine(host.Journal, "telemetry", "ledger.jsonl"))) "ledger missing")) ]
 
-    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ cacheTests @ telemetryTests
+    // ------------------------------------------- (c3) worker workspace (CONSTRUCT-010)
+
+    let private prepareIn generator (host: ConstructionCliTests.Host) (workspace: string) =
+        let out = Path.Combine(host.Parent, "prepared.json")
+        ConstructionService.prepareInWith generator host.Clone host.Config group None None (Some(decisionsPath host)) out (Some workspace) None
+        |> Result.map (fun node -> node, out)
+
+    let private applyIn generator (host: ConstructionCliTests.Host) (prepared: string) (workspace: string) (observations: string option) =
+        ConstructionService.applyPreparedInWith generator host.Clone host.Config group prepared target None (Some workspace) observations None
+
+    let private entries (directory: string) =
+        Directory.GetFileSystemEntries(directory, "*", SearchOption.AllDirectories)
+        |> Array.map (fun path -> Path.GetRelativePath(directory, path).Replace('\\', '/')) |> Array.sort |> Array.toList
+
+    let private workspaceTests =
+        [ t "prepare --workspace gives the worker only HANDOFF.md and an empty outbox; every host artifact stays outside" (fun () ->
+              withDecisionsHost (fun host ->
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let node, out = prepareIn (fake (ref 0) "fake@1") host workspace |> okValue
+                  Assert.equal [ "HANDOFF.md"; "outbox" ] (entries workspace)
+                  Assert.equal (File.ReadAllText(str node["handoffMarkdown"])) (File.ReadAllText(Path.Combine(workspace, "HANDOFF.md")))
+                  Assert.equal (Path.GetFullPath workspace) (str node["workspace"])
+                  let record = JsonNode.Parse(File.ReadAllText(str node["workspaceRecord"]))
+                  Assert.equal "praxis.construction-workspace/1" (str record["schema"])
+                  Assert.equal (str node["cacheKey"]) (str record["cacheKey"])
+                  for hostFile in [ out; str node["handoff"]; str node["handoffMarkdown"]; str node["workspaceRecord"]; host.Config ] do
+                      Assert.isTrue (not (ConstructionWorkspace.within workspace hostFile)) ("host artifact inside the workspace: " + hostFile)
+                  // The worker-facing text names no host location.
+                  let handoff = File.ReadAllText(Path.Combine(workspace, "HANDOFF.md"))
+                  for location in [ host.Parent; host.Clone; out ] do
+                      Assert.isTrue (not (handoff.Contains location)) ("HANDOFF.md names a host location: " + location)))
+          t "a workspace that would expose a host artifact or lie inside a host location is refused before anything is written" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let out = Path.Combine(host.Parent, "prepared.json")
+                  let refusedLayout (workspace: string) (fragment: string) =
+                      prepareIn generator host workspace |> refusedWith fragment
+                      Assert.isTrue (not (File.Exists out)) "the prepared artifact was written for a refused workspace"
+                  refusedLayout host.Parent "would be inside the workspace"
+                  refusedLayout (Path.Combine(host.Clone, "ws")) "inside the host repository"
+                  refusedLayout (Path.Combine(Path.GetDirectoryName host.Config, "ws")) "inside the host configuration directory"
+                  refusedLayout (Path.Combine(host.Journal, "ws")) "inside the host"
+                  let busy = Path.Combine(host.Parent, "busy")
+                  Directory.CreateDirectory busy |> ignore
+                  File.WriteAllText(Path.Combine(busy, "left-over.txt"), "x")
+                  prepareIn generator host busy |> refusedWith "workspace is not empty"))
+          t "apply --workspace applies outbox slot files, keeps dispositions host-side and never applies them" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  let outbox = Path.Combine(workspace, "outbox")
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  let dispositions = "{\"dispositions\":[{\"obligationId\":\"OBL-COH-TIMER-undecidedEffectFailure-4d5e6f\",\"disposition\":\"escalated\"}]}\n"
+                  File.WriteAllText(Path.Combine(outbox, "dispositions.json"), dispositions)
+                  let before = ConstructionCliTests.tip host
+                  let applied = applyIn generator host out workspace None |> okValue
+                  Assert.equal "applied" (str applied["extension"].["outcome"])
+                  let landed = changed host before (ConstructionCliTests.tip host)
+                  Assert.isTrue (landed.Contains "src/Domain/Extensions.fs") (sprintf "%A" landed)
+                  Assert.isTrue (landed |> Set.forall (fun path -> not (path.EndsWith "dispositions.json"))) "dispositions were applied"
+                  Assert.equal dispositions (File.ReadAllText(str applied["dispositions"]))
+                  Assert.isTrue (not (ConstructionWorkspace.within workspace (str applied["dispositions"]))) "dispositions copy is inside the workspace"
+                  Assert.equal [] (Directory.GetDirectories(host.Parent, "*.staged-*") |> Array.toList)))
+          t "apply --workspace refuses links, directories and undeclared files in the outbox before any effect, recording denied writes" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  let outbox = Path.Combine(workspace, "outbox")
+                  let before = ConstructionCliTests.tip host
+                  let observed = Path.Combine(host.Parent, "observations.json")
+                  let reset () = for entry in Directory.GetFileSystemEntries outbox do (if Directory.Exists entry && isNull (DirectoryInfo entry).LinkTarget then Directory.Delete(entry, true) else File.Delete entry)
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  File.CreateSymbolicLink(Path.Combine(outbox, "Peek.fs"), out) |> ignore
+                  applyIn generator host out workspace (Some observed) |> refusedWith "Peek.fs: not a regular file"
+                  let denied = JsonNode.Parse(File.ReadAllText observed).["observations"] :?> JsonArray |> Seq.toList
+                  Assert.equal [ "denied" ] (denied |> List.map (fun o -> str o["outcome"]))
+                  Assert.isTrue ((str denied.Head["path"]).EndsWith "Peek.fs") (denied.Head.ToJsonString())
+                  reset ()
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  Directory.CreateDirectory(Path.Combine(outbox, "nested")) |> ignore
+                  applyIn generator host out workspace None |> refusedWith "nested: not a regular file"
+                  reset ()
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  File.WriteAllText(Path.Combine(outbox, "REPORT.md"), "notes\n")
+                  applyIn generator host out workspace None |> refusedWith "REPORT.md: not a host-declared extension slot"
+                  Assert.equal before (ConstructionCliTests.tip host)))
+          t "apply --workspace is bound to the workspace and prepared artifact it was made for" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  File.WriteAllText(Path.Combine(workspace, "outbox", "Extensions.fs"), ConstructionCliTests.handwritten)
+                  let other = Path.Combine(host.Parent, "other-workspace")
+                  Directory.CreateDirectory(Path.Combine(other, "outbox")) |> ignore
+                  File.WriteAllText(Path.Combine(other, "outbox", "Extensions.fs"), ConstructionCliTests.handwritten)
+                  applyIn generator host out other None |> refusedWith "differs from the one prepared"
+                  ConstructionService.applyPreparedInWith generator host.Clone host.Config group out target (Some(Path.Combine(workspace, "outbox"))) (Some workspace) None None
+                  |> refusedWith "not both"
+                  let plain = Path.Combine(host.Parent, "plain.json")
+                  prepareWith generator host (Some(decisionsPath host)) None |> okValue |> ignore
+                  File.Copy(out, plain)
+                  applyIn generator host plain workspace None |> refusedWith "no workspace was prepared"
+                  let record = ConstructionWorkspace.recordPath out
+                  File.WriteAllText(record, File.ReadAllText(record).Replace("\"cacheKey\": \"sha256:", "\"cacheKey\": \"sha256:0"))
+                  applyIn generator host out workspace None |> refusedWith "prepared for a different prepared artifact")) ]
+
+    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ cacheTests @ telemetryTests
