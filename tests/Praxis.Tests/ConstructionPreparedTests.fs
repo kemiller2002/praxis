@@ -2,6 +2,7 @@ namespace Praxis.Tests
 
 open System
 open System.IO
+open System.Text
 open System.Text.Json.Nodes
 open Ordo.Core
 open Praxis.Infrastructure.Construction
@@ -177,13 +178,20 @@ module ConstructionPreparedTests =
                   Assert.equal canonicalBlueprint (str digests["blueprint"])
                   Assert.equal "ordo.default-plan" (str prepared["defaultPlan"].["provenance"].["generatorId"])
                   Assert.equal (ConstructionDecisions.digest decisions) (str prepared["hostBinding"].["decisionsDigest"])
+                  for field in [ "acceptanceValidators"; "validatorPolicyRevision"; "praxisVersion"; "handoffSchema" ] do
+                      Assert.isTrue (not (isNull prepared["hostBinding"].[field])) ("cache key omits " + field)
+                  Assert.equal "praxis.construction-handoff/2" (str prepared["hostBinding"].["handoffSchema"])
                   Assert.equal 2 (prepared["defaultPlan"].["obligations"] :?> JsonArray).Count
                   let handoff = JsonNode.Parse(File.ReadAllText(str node["handoff"]))
                   let markdown = File.ReadAllText(str node["handoffMarkdown"])
-                  Assert.equal "praxis.construction-handoff/1" (str handoff["schemaVersion"])
+                  Assert.equal "praxis.construction-handoff/2" (str handoff["schemaVersion"])
                   // Only the keys obligations cite, with the pinned source text.
                   let requirements = handoff["requirements"] :?> JsonArray |> Seq.toList
-                  Assert.equal (set [ k131; k105 ]) (requirements |> List.map (fun r -> str r["key"]) |> Set.ofList)
+                  // Every key cited anywhere (obligations and acceptance), each once.
+                  let keys = requirements |> List.map (fun r -> str r["key"])
+                  Assert.isTrue (Set.isSubset (set [ k131; k105; k116 ]) (Set.ofList keys)) (String.concat ", " keys)
+                  Assert.equal keys.Length (Set.ofList keys).Count
+                  Assert.equal [ "R1"; "R2" ] (requirements |> List.take 2 |> List.map (fun r -> str r["alias"]))
                   let excerptOf key = requirements |> List.find (fun r -> str r["key"] = key) |> fun r -> str r["excerpt"]
                   Assert.equal (fixture "requirements/timer-stop-completion.txt") (excerptOf k131)
                   Assert.equal (fixture "requirements/timer-paused-time-excluded.txt") (excerptOf k105)
@@ -196,7 +204,22 @@ module ConstructionPreparedTests =
                   Assert.isTrue (members |> List.exists (fun m -> m.StartsWith "abstract CurrentTime:")) (String.concat " | " members)
                   Assert.isTrue (members |> List.exists (fun m -> m.StartsWith "abstract Perform:")) (String.concat " | " members)
                   Assert.equal [ "src/Domain/Extensions.fs" ] (handoff["permittedFiles"] :?> JsonArray |> Seq.map (fun f -> str f["path"]) |> Seq.toList)
-                  let questions = handoff["unresolvedQuestions"] :?> JsonArray |> Seq.map (fun q -> str q["subject"]) |> Seq.toList
+                  // Every type an extension interface signature names is declared
+                  // in the generated API section, without any function body.
+                  let api = handoff["generatedApi"] :?> JsonArray |> Seq.collect (fun g -> g["declarations"] :?> JsonArray |> Seq.map str) |> String.concat "\n"
+                  let named =
+                      members |> List.collect (fun m ->
+                          let signature = m.Substring(m.IndexOf ':' + 1).Replace("global.System.DateTimeOffset", "")
+                          RegularExpressions.Regex.Matches(signature, "\\b[A-Z][A-Za-z0-9_]*\\b") |> Seq.map _.Value |> Seq.toList)
+                      |> List.distinct
+                  Assert.isTrue (not named.IsEmpty) "no types named by the interfaces"
+                  for name in named do
+                      Assert.isTrue (api.Contains("type " + name + " =")) ("generated API does not declare " + name)
+                  Assert.isTrue (api.Contains "let decide (state: TimerState) (command: TimerCommand) : Result<TimerDecision, TimerRefusal>") api
+                  Assert.isTrue (api.Contains "module TimerOrchestration =") api
+                  for body in [ "match state, command with"; "TimerState.NoTimer, TimerCommand"; "ports.CurrentTime()" ] do
+                      Assert.isTrue (not (api.Contains body) && not ((File.ReadAllText(str node["handoffMarkdown"])).Contains body)) ("generated body leaked: " + body)
+                  let questions = handoff["unresolvedQuestions"] :?> JsonArray |> Seq.choose (fun q -> match q["obligationId"] with null -> None | id -> Some(str id)) |> Seq.toList
                   Assert.isTrue (List.contains "OBL-COH-TIMER-undecidedEffectFailure-4d5e6f" questions) (String.concat ", " questions)
                   Assert.isTrue ((handoff["acceptance"] :?> JsonArray).Count > 0) "no acceptance expectations"
                   // Minimal: no digests, no vocabulary manual, no full source.
@@ -205,6 +228,17 @@ module ConstructionPreparedTests =
                       Assert.isTrue (not (rendered.Contains "ordo.construction-vocabulary")) "handoff carries a vocabulary manual"
                       Assert.isTrue (not (rendered.Contains "auto-generated by ordo.construction")) "handoff carries generated source"
                   Assert.isTrue (markdown.StartsWith "# Construction handoff: COH-TIMER") markdown
+                  // One obligation-id scheme; no restated keys or questions.
+                  for rendered in [ handoff.ToJsonString(); markdown ] do
+                      Assert.isTrue (not (rendered.Contains "IMPLEMENT:") && not (rendered.Contains "VERIFY:")) "a second obligation-id scheme leaked"
+                  Assert.isTrue (markdown.Contains "cannot be implemented without an approved decision") markdown
+                  let fullKeyMentions = RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape k131).Count
+                  Assert.equal 1 fullKeyMentions
+                  let question = "When the Stop completion effect fails, is the timer discarded or kept active?"
+                  Assert.equal 1 (RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape question).Count)
+                  let allowed = handoff["allowedOperations"] :?> JsonArray |> Seq.map str |> String.concat " "
+                  Assert.isTrue (allowed.Contains "Extensions.fs" && allowed.Contains "dispositions.json" && allowed.Contains "at most 3") allowed
+                  Assert.isTrue (markdown.Contains "## Allowed operations") markdown
                   Assert.isTrue (markdown.Contains "## Unresolved questions" && markdown.Contains "abstract CurrentTime:") markdown))
           t "prepare and apply through the CLI run Ordo's default-plan generator end to end; tampered decisions fail closed" (fun () ->
               ConstructionCliTests.withHostGranting
@@ -298,6 +332,28 @@ module ConstructionPreparedTests =
                   Assert.isTrue ((refusals host).Length >= 6) (sprintf "%d refusal records" (refusals host).Length)
                   let record = JsonNode.Parse(File.ReadAllText((refusals host).Head))
                   Assert.equal "praxis.construction-refusal/1" (str record["schemaVersion"])))
+          t "a symlink at a slot path on the target refuses before any effect and is recorded as a host observation" (fun () ->
+              ConstructionCliTests.withHostGranting
+                  (fun parent _ ->
+                      let path = Path.Combine(parent, "decisions.json")
+                      File.WriteAllText(path, decisions)
+                      [ "--decisions"; path ])
+                  true
+                  (fun clone ->
+                      excerpts clone
+                      File.CreateSymbolicLink(Path.Combine(clone, "src/Domain/Extensions.fs"), "README.md") |> ignore)
+                  (fun host ->
+                      let generator = fake (ref 0) "fake@1"
+                      let _, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                      let before = ConstructionCliTests.tip host
+                      let observed = Path.Combine(host.Parent, "observations.json")
+                      let files = ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten ]
+                      ConstructionService.applyPreparedWith generator host.Clone host.Config group out target (Some files) (Some observed) None
+                      |> refusedWith "non-regular entry"
+                      Assert.equal before (ConstructionCliTests.tip host)
+                      let entries = JsonNode.Parse(File.ReadAllText observed).["observations"] :?> JsonArray |> Seq.toList
+                      Assert.equal [ "src/Domain/Extensions.fs" ] (entries |> List.map (fun o -> str o["path"]))
+                      Assert.equal "denied" (str entries.Head["outcome"])))
           t "apply fails closed on drift: generator version, host placement policy, tampering and a changed grant" (fun () ->
               withDecisionsHost (fun host ->
                   let generator = fake (ref 0) "fake@1"
@@ -321,6 +377,90 @@ module ConstructionPreparedTests =
                   PraxisCli.run host.Clone (Some ConstructionCliTests.coordinator) [ "local"; "operator"; "revoke"; "--host-config"; host.Config; "--key-id"; "op-1"; "--revision"; "rev-3" ] |> ok |> ignore
                   applyWith generator host out None |> refusedWith "current host state refuses"
                   Assert.equal before (ConstructionCliTests.tip host))) ]
+
+    // ------------------------------------------- (c2) acceptance adapter slots
+
+    let private adapterStub =
+        "namespace TimerPilot\n\n/// Frozen test-facing adapter contract. Replace the bodies; keep the names and signatures.\nmodule TimerOracleAdapter =\n    /// Ok (nextState, effects); Error reason when refused.\n    let decide (state: string) (command: string) : Result<string * string list, string> =\n        Error \"not implemented\"\n"
+
+    let private filledAdapter =
+        "namespace TimerPilot\n\nmodule TimerOracleAdapter =\n    let decide (state: string) (command: string) : Result<string * string list, string> =\n        Ok(state, [])\n"
+
+    /// A host whose source carries the adapter stub (and, optionally, more files).
+    let private withAdapterHost (extra: (string * string) list) test =
+        ConstructionCliTests.withHostGranting
+            (fun parent _ ->
+                let path = Path.Combine(parent, "decisions.json")
+                File.WriteAllText(path, decisions)
+                [ "--decisions"; path ])
+            true
+            (fun clone ->
+                excerpts clone
+                CliHarness.write clone "src/Domain/TimerOracleAdapter.fs" adapterStub
+                for path, content in extra do CliHarness.write clone path content)
+            test
+
+    let private declareAcceptance (host: ConstructionCliTests.Host) (slots: string) =
+        let config = JsonNode.Parse(File.ReadAllText host.Config)
+        config["acceptanceSlots"] <- JsonNode.Parse slots
+        File.WriteAllText(host.Config, config.ToJsonString())
+
+    let private adapterSlot path = sprintf """[{"path":"%s","acceptanceContract":"TimerPilot.TimerOracleAdapter","maxBytes":4096}]""" path
+
+    let private acceptanceTests =
+        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and applied at its existing path" (fun () ->
+              withAdapterHost [] (fun host ->
+                  declareAcceptance host (adapterSlot "src/Domain/TimerOracleAdapter.fs")
+                  let generator = fake (ref 0) "fake@1"
+                  let node, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let prepared = JsonNode.Parse(File.ReadAllText out)
+                  Assert.equal [ "src/Domain/Extensions.fs"; "src/Domain/TimerOracleAdapter.fs" ] (prepared["permittedExtensionFiles"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  let kinds = prepared["permittedExtensionSlots"] :?> JsonArray |> Seq.map (fun s -> str s["path"], str s["kind"]) |> Seq.toList
+                  Assert.isTrue (List.contains ("src/Domain/TimerOracleAdapter.fs", "acceptanceAdapter") kinds) (sprintf "%A" kinds)
+                  Assert.isTrue (List.contains ("src/Domain/Extensions.fs", "constructionContract") kinds) (sprintf "%A" kinds)
+                  Assert.equal "src/Domain/TimerOracleAdapter.fs" (str prepared["hostBinding"].["acceptanceSlots"].[0].["path"])
+                  let handoff = JsonNode.Parse(File.ReadAllText(str node["handoff"]))
+                  let adapter = handoff["acceptanceAdapters"].[0]
+                  Assert.equal "TimerPilot.TimerOracleAdapter" (str adapter["acceptanceContract"])
+                  let signatures = adapter["signatures"] :?> JsonArray |> Seq.map str |> Seq.toList
+                  Assert.isTrue (List.contains "let decide (state: string) (command: string) : Result<string * string list, string>" signatures) (String.concat " | " signatures)
+                  Assert.isTrue (signatures |> List.forall (fun line -> not (line.Contains "not implemented"))) "adapter body leaked"
+                  let before = ConstructionCliTests.tip host
+                  let files = ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten; "TimerOracleAdapter.fs", filledAdapter ]
+                  let applied = applyWith generator host out (Some files) |> okValue
+                  Assert.equal "applied" (str applied["extension"].["outcome"])
+                  let after = ConstructionCliTests.tip host
+                  Assert.isTrue ((changed host before after).Contains "src/Domain/TimerOracleAdapter.fs") "adapter not applied"
+                  Assert.equal filledAdapter (GitFixture.git host.Clone [ "show"; after + ":src/Domain/TimerOracleAdapter.fs" ] + "\n" |> fun t -> t.TrimEnd('\n') + "\n")
+                  // Everything else is still refused exactly as before.
+                  applyWith generator host out (Some(ConstructionCliTests.outbox host [ "TimerOracleAdapter.fs", filledAdapter; "Other.fs", "module O\n" ]))
+                  |> refusedWith "Other.fs: not a host-declared extension slot"))
+          t "acceptance slots at missing, generated, project or non-mount paths are refused" (fun () ->
+              withAdapterHost [ "src/Domain/Adapter.fs", Ordo.Construction.Artifacts.GeneratedMarker + " fake>\nmodule A\n" ] (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  declareAcceptance host (adapterSlot "src/Domain/Missing.fs")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "absent from the admitted source commit"
+                  declareAcceptance host (adapterSlot "src/Domain/Adapter.fs")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "generated file"
+                  declareAcceptance host (adapterSlot "src/Domain/Timer.Model.g.fs")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "generated-file name"
+                  declareAcceptance host (adapterSlot "src/Domain/Timer.fsproj")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "project or build file"
+                  declareAcceptance host (adapterSlot "src/Domain/packages.lock.json")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "package or dependency file"
+                  declareAcceptance host (adapterSlot "src/Other/TimerOracleAdapter.fs")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "directly under the construction mount"
+                  declareAcceptance host (adapterSlot "src/Domain/Extensions.fs")
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "must be unique"))
+          t "declaring an acceptance slot changes the cache key and invalidates reuse" (fun () ->
+              withAdapterHost [] (fun host ->
+                  let calls = ref 0
+                  let first, _ = prepareWith (fake calls "fake@1") host (Some(decisionsPath host)) None |> okValue
+                  declareAcceptance host (adapterSlot "src/Domain/TimerOracleAdapter.fs")
+                  let second, _ = prepareWith (fake calls "fake@1") host None None |> okValue
+                  Assert.equal false (second["reused"].GetValue<bool>())
+                  Assert.isTrue (str first["cacheKey"] <> str second["cacheKey"]) "acceptance slots did not change the key"
+                  Assert.equal 2 calls.Value)) ]
 
     // ------------------------------------------------------------- (d) cache
 
@@ -375,17 +515,24 @@ module ConstructionPreparedTests =
                   let first, out = prepareWith generator host (Some(decisionsPath host)) (Some "WI-TEL") |> okValue
                   let telemetry = first["telemetry"]
                   Assert.equal "recorded" (str telemetry["executionStep"])
-                  Assert.equal 1 (telemetry["previews"].GetValue<int>())
+                  Assert.equal 1 (telemetry["prepares"].GetValue<int>())
                   Assert.equal 0 (telemetry["retries"].GetValue<int>())
+                  Assert.equal "host" (str telemetry["source"])
                   Assert.isTrue ((str telemetry["modelUsage"]).Contains "not observed by the host") "model usage mixed in"
                   let second, _ = prepareWith generator host None (Some "WI-TEL") |> okValue
-                  Assert.equal 2 (second["telemetry"].["previews"].GetValue<int>())
-                  Assert.equal 1 (second["telemetry"].["retries"].GetValue<int>())
+                  // A repeat after a success is not a retry.
+                  Assert.equal 2 (second["telemetry"].["prepares"].GetValue<int>())
+                  Assert.equal 0 (second["telemetry"].["retries"].GetValue<int>())
+                  Assert.equal false (second["telemetry"].["retry"].GetValue<bool>())
                   Assert.equal "reused" (str second["telemetry"].["outcome"])
-                  applyWith (fake (ref 0) "fake@2") host out None |> refusedWith "\"refusals\":1"
+                  // A refused call is a failure; the next call of the same operation in the same execution is a retry.
+                  ConstructionService.applyPreparedWith (fake (ref 0) "fake@2") host.Clone host.Config group out target None None (Some "WI-TEL")
+                  |> refusedWith "\"failures\":1"
                   let applied = ConstructionService.applyPreparedWith generator host.Clone host.Config group out target None None (Some "WI-TEL") |> okValue
                   Assert.equal "recorded" (str applied["telemetry"].["executionStep"])
+                  Assert.equal true (applied["telemetry"].["retry"].GetValue<bool>())
                   Assert.equal 1 (applied["telemetry"].["retries"].GetValue<int>())
+                  Assert.equal 1 (applied["telemetry"].["failures"].GetValue<int>())
                   let executionId = str applied["telemetry"].["executionId"]
                   let record = JsonNode.Parse(File.ReadAllText(Path.Combine(host.Clone, ".ros", "telemetry", "executions", executionId + ".json")))
                   let steps =
@@ -395,12 +542,17 @@ module ConstructionPreparedTests =
                   let metrics = record["metrics"] :?> JsonArray |> Seq.map (fun m -> str m["id"]) |> Set.ofSeq
                   for id in [ "time.tool_ms"; "tool.calls"; "tool.retries"; "tool.failures" ] do
                       Assert.isTrue (metrics.Contains id) ("missing metric " + id)
-                  Assert.isTrue (not (metrics |> Set.exists (fun id -> id.StartsWith "tokens."))) "host recorded model tokens"))
+                  Assert.isTrue (not (metrics |> Set.exists (fun id -> id.StartsWith "tokens."))) "host recorded model tokens"
+                  let hostSourced = record["metrics"] :?> JsonArray |> Seq.filter (fun m -> str m["id"] = "tool.calls") |> Seq.forall (fun m -> str m["source"].["type"] = "host")
+                  Assert.isTrue hostSourced "host metrics are not marked source=host"))
           t "without an active execution, telemetry says the step is unavailable and the ledger still counts" (fun () ->
               withDecisionsHost (fun host ->
                   let node, _ = prepareWith (fake (ref 0) "fake@1") host (Some(decisionsPath host)) (Some "WI-NONE") |> okValue
                   Assert.isTrue ((str node["telemetry"].["executionStep"]).StartsWith "unavailable") (node.ToJsonString())
                   Assert.equal "recorded" (str node["telemetry"].["ledger"])
+                  // Unknown is never written as zero.
+                  for name in [ "retry"; "retries"; "failures" ] do
+                      Assert.isTrue (isNull node["telemetry"].[name]) (name + " should be unavailable (null)")
                   Assert.isTrue (File.Exists(Path.Combine(host.Journal, "telemetry", "ledger.jsonl"))) "ledger missing")) ]
 
-    let tests = grantTests @ prepareTests @ applyTests @ cacheTests @ telemetryTests
+    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ cacheTests @ telemetryTests

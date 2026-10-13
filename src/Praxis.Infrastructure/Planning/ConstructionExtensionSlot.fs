@@ -8,6 +8,14 @@ open System
 /// host configuration. A worker or plan cannot declare, widen or rename one.
 type ConstructionExtensionSlot = { File: string; Contracts: string list; MaxBytes: int }
 
+/// A host-declared ACCEPTANCE ADAPTER slot (CONSTRUCT-008): an existing
+/// handwritten file directly under the construction mount that implements a
+/// frozen acceptance (oracle adapter) contract rather than a generated
+/// extension contract. Operator policy, like an extension slot; it never
+/// widens what an extension slot may be, and only replaces a file the
+/// admitted source already carries.
+type ConstructionAcceptanceSlot = { AcceptanceFile: string; AcceptancePath: string; AcceptanceContract: string; AcceptanceMaxBytes: int }
+
 /// Names that can never be a handwritten extension, whatever the host
 /// declares. The same rule refuses a host declaration at configuration load
 /// and a submitted file at `construct extend`, so neither layer relies on the

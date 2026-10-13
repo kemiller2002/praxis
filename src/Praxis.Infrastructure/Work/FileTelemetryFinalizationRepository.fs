@@ -769,6 +769,10 @@ module FileTelemetryFinalizationRepository =
     let private resolveFinalizeTarget (root: string) (target: string option) : Result<string, string> =
         resolveExecutionTarget root target false
 
+    /// The active execution a target (or the current process) names.
+    let resolveActiveExecution (root: string) (target: string option) : Result<string, string> =
+        resolveExecutionTarget root target true
+
     /// Mirrors production `finalizeExecution(root, target, options)` with no
     /// `--input` (adapter-ingestion is a separately-scoped later slice, the
     /// one place it is reachable at all): resolves the target the same way

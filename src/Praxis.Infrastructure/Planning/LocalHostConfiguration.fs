@@ -61,7 +61,9 @@ type LocalHostConfiguration =
       Containment: LocalContainmentConfiguration option
       /// Handwritten extension slots directly under the construction mount
       /// (Praxis #243). Empty unless the operator declares them.
-      ExtensionSlots: ConstructionExtensionSlot list }
+      ExtensionSlots: ConstructionExtensionSlot list
+      /// Acceptance adapter slots (CONSTRUCT-008). Empty unless declared.
+      AcceptanceSlots: ConstructionAcceptanceSlot list }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -261,6 +263,37 @@ module LocalHostConfiguration =
             slots
         | _ -> fail ("extensionSlots must be an array of at most " + string ConstructionExtensionSlot.MaxSlots + " slots")
 
+    /// `{"path":"MOUNT/FILE","acceptanceContract":NAME,"maxBytes":N}`: the
+    /// path must be one file directly under the construction mount, under the
+    /// same name rules as an extension slot, and no name may be claimed twice.
+    let private acceptanceSlots (root: JsonElement) (mount: string) (extension: ConstructionExtensionSlot list) =
+        match property root "acceptanceSlots" with
+        | None -> []
+        | Some value when value.ValueKind = JsonValueKind.Array && value.GetArrayLength() <= ConstructionExtensionSlot.MaxSlots ->
+            let slots =
+                value.EnumerateArray() |> Seq.map (fun element ->
+                    exactly element [ "path"; "acceptanceContract"; "maxBytes" ] []
+                    let path = text element "path"
+                    let prefix = if mount = "." then "" else mount + "/"
+                    if not (LocalAgentHandoff.isResourcePath path) || not (path.StartsWith(prefix, StringComparison.Ordinal)) || path.Substring(prefix.Length).Contains '/' then
+                        fail ("acceptance slot " + path + " must be one file directly under the construction mount " + mount)
+                    let file = path.Substring prefix.Length
+                    match ConstructionExtensionSlot.denied file with
+                    | Some reason -> fail ("acceptance slot " + path + " refused: " + reason)
+                    | None -> ()
+                    let contract = text element "acceptanceContract"
+                    if not (clean contract) then fail ("acceptance slot " + path + " must name its acceptance contract")
+                    { AcceptanceFile = file; AcceptancePath = path; AcceptanceContract = contract; AcceptanceMaxBytes = number element "maxBytes" 1 ConstructionExtensionSlot.MaxSlotBytes })
+                |> Seq.toList
+            if not slots.IsEmpty && mount.Split('/') |> Array.exists (fun segment -> segment.StartsWith '.' && segment <> ".") then
+                fail "acceptance slots may not be placed under CI, agent or repository configuration"
+            let names = (slots |> List.map _.AcceptanceFile) @ (extension |> List.map _.File) |> List.map (fun name -> name.ToLowerInvariant())
+            if (Set.ofList names).Count <> names.Length then fail "acceptance and extension slot file names must be unique (case-insensitively)"
+            let contracts = (slots |> List.map _.AcceptanceContract) @ (extension |> List.collect _.Contracts)
+            if (Set.ofList contracts).Count <> contracts.Length then fail "an acceptance contract may be assigned to only one slot and may not name an extension contract"
+            slots
+        | _ -> fail ("acceptanceSlots must be an array of at most " + string ConstructionExtensionSlot.MaxSlots + " slots")
+
     let private evidenceSource = function
         | "member-changes" -> LocalEvidenceSource.MemberChanges
         | "acceptance-artifacts" -> LocalEvidenceSource.AcceptanceArtifacts
@@ -279,7 +312,7 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots" ]
+                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots"; "acceptanceSlots" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
@@ -291,6 +324,7 @@ module LocalHostConfiguration =
             let mount = textOr root "constructionMount" "."
             if mount <> "." && not (LocalAgentHandoff.isResourcePath mount) then fail "constructionMount must be a portable repository-relative directory"
             let slots = extensionSlots root mount
+            let acceptanceSlotList = acceptanceSlots root mount slots
             let git = root.GetProperty "git"
             exactly git [ "executable"; "sha256" ] [ "timeoutMilliseconds" ]
             let committer = root.GetProperty "committer"
@@ -336,7 +370,8 @@ module LocalHostConfiguration =
                  ConstructionRoot = located |> Map.tryFind "construction"
                  ConstructionMount = mount
                  Containment = containmentSettings
-                 ExtensionSlots = slots }
+                 ExtensionSlots = slots
+                 AcceptanceSlots = acceptanceSlotList }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->

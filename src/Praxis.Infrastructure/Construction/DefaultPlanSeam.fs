@@ -55,6 +55,18 @@ module OrdoDefaultPlan =
 
     let SupportedVocabularies = ConstructionPlan.SupportedVocabularyVersions
 
+    /// A refusal as `CaseName (field, field)`, recursively, for people to read.
+    let rec describe (value: obj) : string =
+        match value with
+        | null -> "none"
+        | :? string as text -> text
+        | :? System.Collections.IEnumerable as items ->
+            "[" + (items |> Seq.cast<obj> |> Seq.map describe |> String.concat "; ") + "]"
+        | _ when Microsoft.FSharp.Reflection.FSharpType.IsUnion(value.GetType(), System.Reflection.BindingFlags.Public ||| System.Reflection.BindingFlags.NonPublic) ->
+            let case, fields = Microsoft.FSharp.Reflection.FSharpValue.GetUnionFields(value, value.GetType(), System.Reflection.BindingFlags.Public ||| System.Reflection.BindingFlags.NonPublic)
+            if fields.Length = 0 then case.Name else case.Name + " (" + (fields |> Array.map describe |> String.concat ", ") + ")"
+        | _ -> string value
+
     /// THE SEAM: Ordo's `generateDefaultPlan`, mapped to Praxis's record.
     /// Refusals are reported verbatim; nothing is invented or patched here.
     let generate (prepared: ConstructionIr.PreparedCohort) (decisionRecords: string) (vocabularyVersion: string) : Result<DefaultPlanOutput, string list> =
@@ -62,10 +74,10 @@ module OrdoDefaultPlan =
         |> Result.mapError (fun reason -> [ "decision records refused: " + reason ])
         |> Result.bind (fun records ->
             ConstructionDefaultPlan.ConstructionVocabulary.ofVersion vocabularyVersion
-            |> Result.mapError (fun refusal -> [ sprintf "%A" refusal ])
+            |> Result.mapError (fun refusal -> [ describe (box refusal) ])
             |> Result.bind (fun vocabulary ->
                 ConstructionDefaultPlan.generateDefaultPlan prepared records vocabulary
-                |> Result.mapError (List.map (sprintf "%A"))))
+                |> Result.mapError (List.map (box >> describe))))
         |> Result.map (fun plan ->
             let p = plan.Provenance
             { PlanText = ConstructionPlan.canonicalJson plan.ValidatedPlan

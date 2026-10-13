@@ -211,29 +211,33 @@ module ConstructionService =
     /// CLI passes `OrdoDefaultPlan.generator ()`).
     let prepareWith (generator: DefaultPlanGenerator) root hostConfig groupId (cohort: string option) (vocabulary: string option) (decisions: string option) (out: string) (telemetryTarget: string option) =
         let configuration = configurationOnly root hostConfig
+        let written (report: PreparedReport) =
+            writeOutput out report.Text |> Result.bind (fun preparedPath ->
+                writeOutput (twin out ".handoff.json") (report.HandoffJson.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n") |> Result.bind (fun handoffPath ->
+                    writeOutput (twin out ".handoff.md") report.HandoffMarkdown |> Result.map (fun markdownPath -> report, preparedPath, handoffPath, markdownPath)))
+        // "prepared" is reported only once --out and its twins are written.
         let result, telemetry =
             ConstructionTelemetry.measure root telemetryTarget configuration "prepare" groupId (fun () ->
-                match hostState root hostConfig |> Result.bind (fun (configuration, policy) -> ConstructionPrepared.prepare generator configuration policy DateTimeOffset.UtcNow groupId cohort vocabulary decisions) with
-                | Ok report -> Ok report, Some report.CacheKey, (if report.Reused then ConstructionTelemetryOutcome.Reused else ConstructionTelemetryOutcome.Prepared)
+                match hostState root hostConfig
+                      |> Result.bind (fun (configuration, policy) -> ConstructionPrepared.prepare generator configuration policy DateTimeOffset.UtcNow groupId cohort vocabulary decisions)
+                      |> Result.bind written with
+                | Ok((report, _, _, _) as outputs) -> Ok outputs, Some report.CacheKey, (if report.Reused then ConstructionTelemetryOutcome.Reused else ConstructionTelemetryOutcome.Prepared)
                 | Error reason ->
                     configuration |> Option.iter (fun c -> ConstructionPrepared.recordRefusal c "prepare" groupId None [ reason ] |> ignore)
                     Error reason, None, ConstructionTelemetryOutcome.Refused)
-        result |> Result.bind (fun report ->
-            writeOutput out report.Text |> Result.bind (fun preparedPath ->
-                writeOutput (twin out ".handoff.json") (report.HandoffJson.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n") |> Result.bind (fun handoffPath ->
-                    writeOutput (twin out ".handoff.md") report.HandoffMarkdown |> Result.map (fun markdownPath ->
-                        let node = JsonObject()
-                        node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepare/1"
-                        node["cacheKey"] <- JsonValue.Create report.CacheKey
-                        node["reused"] <- JsonValue.Create report.Reused
-                        node["prepared"] <- JsonValue.Create preparedPath
-                        node["handoff"] <- JsonValue.Create handoffPath
-                        node["handoffMarkdown"] <- JsonValue.Create markdownPath
-                        node["obligations"] <- JsonValue.Create report.Obligations
-                        node["permittedFiles"] <- strings report.PermittedFiles
-                        node["telemetry"] <- telemetry
-                        node["notice"] <- JsonValue.Create notice
-                        node))))
+        result |> Result.map (fun (report, preparedPath, handoffPath, markdownPath) ->
+            let node = JsonObject()
+            node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepare/1"
+            node["cacheKey"] <- JsonValue.Create report.CacheKey
+            node["reused"] <- JsonValue.Create report.Reused
+            node["prepared"] <- JsonValue.Create preparedPath
+            node["handoff"] <- JsonValue.Create handoffPath
+            node["handoffMarkdown"] <- JsonValue.Create markdownPath
+            node["obligations"] <- JsonValue.Create report.Obligations
+            node["permittedFiles"] <- strings report.PermittedFiles
+            node["telemetry"] <- telemetry
+            node["notice"] <- JsonValue.Create notice
+            node)
         |> Result.mapError (fun reason -> reason + " [telemetry: " + telemetry.ToJsonString() + "]")
 
     /// `construct apply --prepared`, with the generator injected.

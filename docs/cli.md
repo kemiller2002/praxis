@@ -886,7 +886,7 @@ cohort under that grant, refuses decision records whose digest differs from the
 signed one, calls Ordo's default-plan generator (vocabulary 1 unless
 `--vocabulary` says otherwise), admits the generated plan through the ordinary
 plan admission and writes `praxis.construction-prepared/1` to `--out`, plus the
-agent handoff `praxis.construction-handoff/1` as `<out>.handoff.json` and its
+agent handoff `praxis.construction-handoff/2` as `<out>.handoff.json` and its
 Markdown twin `<out>.handoff.md`. The host keeps the approved decision records
 and the validated artifact under its construction root, keyed by a cache key
 over every binding input; an identical key reuses the artifact byte for byte,
@@ -895,15 +895,25 @@ current host state and refuses any drift (grant, policy revision, source,
 blueprint, decisions, generator, vocabulary, host placement policy) or any
 difference from the host's validated copy, then applies the generated files
 like `apply` and the handwritten files from `--extensions` only at the
-artifact's `permittedExtensionFiles`, like `extend`. Every refused handwritten
-entry refuses the whole apply before any effect; refusals are recorded under the
-host construction root and, with `--observations`, written as
-`dokimos.host-observations/1`. Each invocation is an execution-telemetry step
-(`construct prepare` / `construct apply`) of the active execution or
-`--telemetry-target`, carrying host compute time as `time.tool_ms` and
-`tool.calls`, `tool.retries`, `tool.failures`; the host ledger
-(`telemetry/ledger.jsonl` under the construction root) counts previews,
-retries, refusals and cache reuse. Model usage is never recorded by the host.
+artifact's `permittedExtensionFiles`, like `extend`. Every handwritten-file check (name, content, slot kind, links, and placement
+on the target tree) runs before any effect, so any refused entry refuses the
+whole apply with the target unchanged. Refusals are recorded under the host
+construction root and, with `--observations`, written as
+`dokimos.host-observations/1`. Generated and handwritten files still land as
+two commits (construction, then extension); a failure between them is possible
+only if the target moves concurrently, and is reported.
+
+Each invocation is an execution-telemetry step (`construct prepare` /
+`construct apply`) of the active execution or `--telemetry-target`. It records
+host compute time as `time.tool_ms`, plus `tool.calls`, `tool.failures` and,
+when known, `tool.retries`, all with source type `host`. Consumers must not
+add `host`-sourced values to the agent runtime's own tool calls. A refused call
+is a failure. A retry is a repeat call of the same operation in the same
+execution after an earlier refused call of that operation. The host ledger
+(`telemetry/ledger.jsonl` under the construction root, appended under an
+exclusive lock) gives `prepares`, `retry`, `retries` and `failures`. A count
+the host cannot establish (no execution, no ledger) is null, never zero. Model
+usage is never recorded by the host.
 
 Exit 0 success, 2 invalid arguments, 3 refused. See
 [the construction guide](construction.md).

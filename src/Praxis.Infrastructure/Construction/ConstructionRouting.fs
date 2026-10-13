@@ -40,6 +40,10 @@ type ConstructionRouting =
       Verification: Artifacts.ConstructionObligation list
       Exceptions: RoutingException list
       Slots: ConstructionExtensionSlot list
+      /// Host-declared acceptance adapter slots (CONSTRUCT-008), as slot
+      /// views whose one contract is the acceptance contract. Usable whatever
+      /// the construction's obligations; empty unless the host declares them.
+      Acceptance: ConstructionExtensionSlot list
       Mount: string }
 
 [<RequireQualifiedAccess>]
@@ -53,6 +57,9 @@ module ConstructionRouting =
     [<Literal>]
     let WorkerExecutionDisabled =
         "autonomous custom-code worker execution is disabled: host OS containment is not qualified (Praxis #231, #235); submit handwritten slot files with `construct extend` instead"
+
+    let acceptanceView (slot: ConstructionAcceptanceSlot) : ConstructionExtensionSlot =
+        { File = slot.AcceptanceFile; Contracts = [ slot.AcceptanceContract ]; MaxBytes = slot.AcceptanceMaxBytes }
 
     let classify (configuration: LocalHostConfiguration) (admitted: ConstructionAdmission.Admitted) : ConstructionRouting =
         let built = ConstructionAdmission.construction admitted
@@ -78,12 +85,22 @@ module ConstructionRouting =
         { Binding = ConstructionAdmission.binding admitted
           OwnershipRoot = ConstructionTree.placed mount built.OwnershipRoot
           Deterministic = built.Artifacts; Semantic = semantic; Custom = custom; Verification = verification
-          Exceptions = exceptions; Slots = configuration.ExtensionSlots; Mount = mount }
+          Exceptions = exceptions; Slots = configuration.ExtensionSlots
+          Acceptance = configuration.AcceptanceSlots |> List.map acceptanceView; Mount = mount }
 
     /// Slots this construction can use: those implementing at least one of
     /// its `implement` obligations.
     let usableSlots (routing: ConstructionRouting) =
-        routing.Custom |> List.map _.Slot |> List.distinctBy _.File
+        (routing.Custom |> List.map _.Slot |> List.distinctBy _.File) @ routing.Acceptance
+
+    /// Whether a slot is an acceptance adapter slot.
+    let isAcceptance (routing: ConstructionRouting) (slot: ConstructionExtensionSlot) =
+        routing.Acceptance |> List.exists (fun a -> a.File = slot.File)
+
+    /// The contracts a slot file implements in this construction.
+    let slotContracts (routing: ConstructionRouting) (slot: ConstructionExtensionSlot) =
+        if isAcceptance routing slot then slot.Contracts
+        else routing.Custom |> List.filter (fun r -> r.Slot.File = slot.File) |> List.map _.Contract
 
     let private strings (values: string list) = JsonArray(values |> List.map (fun value -> JsonValue.Create value :> JsonNode) |> List.toArray)
     let private array (nodes: JsonNode list) = JsonArray(nodes |> List.toArray)
@@ -152,6 +169,15 @@ module ConstructionRouting =
                     "reasoningTokens", str "unavailable"
                     "note", str "Counts are derived from the admitted construction. Time and tokens are not observed here; execution telemetry owns them." ]
               "workerExecution", obj [ "status", str "disabled"; "reason", str WorkerExecutionDisabled ] ]
+        |> fun node ->
+            // Declared only when present, so a host without acceptance slots
+            // keeps exactly its previous routing record and route ID.
+            if not routing.Acceptance.IsEmpty then
+                (node :?> JsonObject)["acceptanceSlots"] <-
+                    array (routing.Acceptance |> List.map (fun slot ->
+                        obj [ "path", str (ConstructionTree.placed routing.Mount slot.File); "acceptanceContract", str (List.head slot.Contracts)
+                              "maxBytes", num slot.MaxBytes; "route", str "acceptance-adapter" ]))
+            node
 
     /// Content-addressed: the ID is the digest of the record body.
     let routeId (routing: ConstructionRouting) =

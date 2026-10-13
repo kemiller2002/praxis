@@ -42,7 +42,7 @@ module ConstructionExtension =
     /// Every entry is judged on its own, so one refusal names every problem.
     let private judge (routing: ConstructionRouting) (directory: string) (entry: string) : Result<ExtensionFile, string> =
         let name = Path.GetFileName entry
-        let declared = routing.Slots |> List.tryFind (fun slot -> slot.File = name)
+        let declared = routing.Slots @ routing.Acceptance |> List.tryFind (fun slot -> slot.File = name)
         let usable = ConstructionRouting.usableSlots routing |> List.tryFind (fun slot -> slot.File = name)
         let refuse reason = Error(name + ": " + reason)
         let info = FileInfo entry
@@ -56,7 +56,7 @@ module ConstructionExtension =
                 else
                     match declared, usable with
                     | None, _ ->
-                        match routing.Slots |> List.tryFind (fun slot -> String.Equals(slot.File, name, StringComparison.OrdinalIgnoreCase)) with
+                        match routing.Slots @ routing.Acceptance |> List.tryFind (fun slot -> String.Equals(slot.File, name, StringComparison.OrdinalIgnoreCase)) with
                         | Some slot -> refuse ("differs in case from declared slot " + slot.File)
                         | None -> refuse "not a host-declared extension slot"
                     | Some slot, None -> refuse ("slot " + slot.File + " implements no extension contract of this construction")
@@ -73,7 +73,7 @@ module ConstructionExtension =
                                 | Error() -> refuse "not UTF-8 text"
                                 | Ok content when content.StartsWith Artifacts.GeneratedMarker -> refuse "carries the generated-file marker; generated files are written only by construction"
                                 | Ok content ->
-                                    let contracts = routing.Custom |> List.filter (fun r -> r.Slot.File = slot.File) |> List.map _.Contract
+                                    let contracts = ConstructionRouting.slotContracts routing slot
                                     Ok { Slot = slot; Path = ConstructionTree.placed routing.Mount slot.File; Content = content
                                          Digest = ConstructionTree.digest content; Contracts = contracts }
 
@@ -108,7 +108,7 @@ module ConstructionExtension =
     /// Placement checks against the admitted binding and the target tree: no
     /// slot may land inside the generated root, on an ECIR or requirement
     /// source, or on anything but an absent or regular handwritten file.
-    let private placement git root (routing: ConstructionRouting) (target: string) (file: ExtensionFile) =
+    let placement git root (routing: ConstructionRouting) (target: string) (file: ExtensionFile) =
         let b = routing.Binding
         let ecir = [ b.ManifestPath; b.BlueprintPath ]
         let refuse reason = Error(file.Path + ": " + reason)
@@ -119,6 +119,7 @@ module ConstructionExtension =
             refuse "requirement source document"
         else
             ConstructionTree.entryAt git root target file.Path |> Result.bind (function
+                | None when ConstructionRouting.isAcceptance routing file.Slot -> refuse "an acceptance adapter replaces an existing file; the target has none there"
                 | None -> Ok(file, ExtensionWriteKind.Create)
                 | Some("100644", Some existing) when existing.StartsWith Artifacts.GeneratedMarker -> refuse "the target holds a generated file there"
                 | Some("100644", Some existing) when existing = file.Content -> Ok(file, ExtensionWriteKind.Unchanged)

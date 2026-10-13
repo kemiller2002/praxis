@@ -5,6 +5,7 @@ open System.Text
 open System.Text.Json
 open System.Text.Json.Nodes
 open Ordo.Construction
+open Praxis.Infrastructure.Planning
 
 type HandoffObligation =
     { Id: string; Kind: string; Statement: string; RequirementKeys: string list; NodeIds: string list; ExtensionSurface: string list }
@@ -20,13 +21,23 @@ type HandoffDecision = { NodeId: string; Summary: string }
 type HandoffInterface =
     { Interface: string; DeclaredIn: string; Members: string list; Contracts: string list; ObligationIds: string list; ImplementIn: string list }
 
-type HandoffPermittedFile = { Path: string; Contracts: string list; MaxBytes: int }
+type HandoffPermittedFile = { Path: string; Kind: string; Contracts: string list; MaxBytes: int }
 
-type HandoffQuestion = { Subject: string; Question: string }
+/// A frozen acceptance (oracle adapter) contract the agent fills: the
+/// public signatures of the existing stub at the admitted source commit.
+type HandoffAcceptanceAdapter = { Contract: string; Path: string; Signatures: string list }
 
-type HandoffAcceptance = { Id: string; Expectation: string; RequirementKeys: string list }
+/// Public declarations of one generated file: type definitions in full and
+/// module function signatures without bodies.
+type HandoffGeneratedApi = { File: string; Namespace: string; Declarations: string list }
 
-/// `praxis.construction-handoff/1` (CONSTRUCT-008): the minimal brief a
+/// An open question to escalate. `FromObligation` marks one whose text is the
+/// obligation's own (listed once, under the obligation id).
+type HandoffQuestion = { Subject: string; Question: string; FromObligation: bool }
+
+type HandoffAcceptance = { Label: string; Expectation: string; RequirementKeys: string list }
+
+/// `praxis.construction-handoff/2` (CONSTRUCT-008): the minimal brief a
 /// construction agent needs after mechanical generation. Deliberately no
 /// vocabulary manual, digests, serialization instructions or full source.
 type ConstructionHandoff =
@@ -35,14 +46,17 @@ type ConstructionHandoff =
       Requirements: HandoffRequirement list
       Decisions: HandoffDecision list
       Interfaces: HandoffInterface list
+      AcceptanceAdapters: HandoffAcceptanceAdapter list
+      GeneratedApi: HandoffGeneratedApi list
       PermittedFiles: HandoffPermittedFile list
       UnresolvedQuestions: HandoffQuestion list
-      Acceptance: HandoffAcceptance list }
+      Acceptance: HandoffAcceptance list
+      AllowedOperations: string list }
 
 [<RequireQualifiedAccess>]
 module ConstructionHandoff =
     [<Literal>]
-    let Schema = "praxis.construction-handoff/1"
+    let Schema = "praxis.construction-handoff/2"
 
     // ------------------------------------------------------------ excerpts
 
@@ -249,46 +263,163 @@ module ConstructionHandoff =
               ObligationIds = group |> List.map (fun (_, _, r) -> r.Obligation.Id) |> List.distinct
               ImplementIn = group |> List.map (fun (_, _, r) -> r.SlotPath) |> List.distinct })
 
+    // ------------------------------------------------------ generated API
+
+    let private indentOf (line: string) = line.Length - line.TrimStart().Length
+
+    /// A `let` line without its body: `let f (x: T) : R` (private lets are None).
+    let private letSignature (trimmed: string) =
+        if not (trimmed.StartsWith "let ") || trimmed.StartsWith "let private " || trimmed.StartsWith "let internal " then None
+        elif trimmed.EndsWith " =" then Some(trimmed.Substring(0, trimmed.Length - 2))
+        else
+            match trimmed.IndexOf " = " with
+            | -1 -> Some trimmed
+            | at -> Some(trimmed.Substring(0, at))
+
+    let private identifiers (text: string) =
+        RegularExpressions.Regex.Matches(text, "[A-Za-z_][A-Za-z0-9_]*") |> Seq.map _.Value |> Set.ofSeq
+
+    /// Top-level declarations of one generated F# file, in order: (declared
+    /// type name or None, rendered text). Types are kept whole (a member body,
+    /// if any, is cut); modules keep doc comments and public `let` signatures.
+    let private declarations (source: string) : string option * (string option * string) list =
+        let lines = source.Replace("\r\n", "\n").Split('\n')
+        let ns = lines |> Array.tryFind (fun l -> l.StartsWith "namespace ") |> Option.map (fun l -> l.Substring(10).Trim())
+        let starts =
+            lines |> Array.indexed |> Array.choose (fun (i, l) ->
+                if indentOf l = 0 && (l.StartsWith "type " || l.StartsWith "and " || l.StartsWith "module ") then Some i else None)
+        let blocks =
+            starts |> Array.toList |> List.mapi (fun n start ->
+                let finish = if n + 1 < starts.Length then starts[n + 1] else lines.Length
+                // Leading doc comments and attributes belong to the declaration.
+                let mutable lead = start
+                while lead > 0 && (lines[lead - 1].StartsWith "///" || lines[lead - 1].StartsWith "[<") do lead <- lead - 1
+                let header = lines[lead .. start - 1] |> Array.toList
+                let body = lines[start + 1 .. finish - 1] |> Array.toList
+                // Trailing doc/attribute lines belong to the next declaration.
+                let body = body |> List.rev |> List.skipWhile (fun l -> String.IsNullOrWhiteSpace l || l.StartsWith "///" || l.StartsWith "[<") |> List.rev
+                let head = lines[start]
+                if head.StartsWith "module " then
+                    let memberIndent = body |> List.tryFind (String.IsNullOrWhiteSpace >> not) |> Option.map indentOf |> Option.defaultValue 4
+                    let kept =
+                        body |> List.fold (fun (acc, docs) line ->
+                            let trimmed = line.Trim()
+                            if indentOf line <> memberIndent || String.IsNullOrWhiteSpace line then acc, (if String.IsNullOrWhiteSpace line then [] else docs)
+                            elif trimmed.StartsWith "///" then acc, docs @ [ line ]
+                            else
+                                match letSignature trimmed with
+                                | Some signature -> acc @ docs @ [ String(' ', memberIndent) + signature ], []
+                                | None -> acc, []) ([], [])
+                        |> fst
+                    None, String.concat "\n" (header @ [ head.TrimEnd() ] @ kept)
+                else
+                    let name = head.Split([| ' '; '<'; '=' |], StringSplitOptions.RemoveEmptyEntries) |> Array.tryItem 1
+                    let memberIndent = body |> List.tryFind (String.IsNullOrWhiteSpace >> not) |> Option.map indentOf |> Option.defaultValue 4
+                    let kept =
+                        body |> List.filter (fun l -> not (String.IsNullOrWhiteSpace l))
+                        |> List.fold (fun (acc, skipping) line ->
+                            let trimmed = line.Trim()
+                            if skipping && indentOf line > memberIndent then acc, true
+                            elif indentOf line = memberIndent && (trimmed.StartsWith "member " || trimmed.StartsWith "static member " || trimmed.StartsWith "override ") && trimmed.Contains " =" then
+                                acc @ [ line.Substring(0, line.IndexOf " =") ], true
+                            else acc @ [ line ], false) ([], false)
+                        |> fst
+                    name, String.concat "\n" (header @ [ head.TrimEnd() ] @ kept))
+        ns, blocks
+
+    /// Generated API (signatures only): the types the extension interfaces and
+    /// public module signatures name, closed over the types they mention.
+    let generatedApi (generated: (string * string) list) (interfaces: HandoffInterface list) : HandoffGeneratedApi list =
+        let files = generated |> List.filter (fun (path, _) -> path.EndsWith ".fs") |> List.map (fun (path, content) -> path, declarations content)
+        let types = files |> List.collect (fun (_, (_, blocks)) -> blocks |> List.choose (fun (name, text) -> name |> Option.map (fun n -> n, text))) |> Map.ofList
+        let modules = files |> List.collect (fun (_, (_, blocks)) -> blocks |> List.filter (fst >> Option.isNone) |> List.map snd)
+        let seeds =
+            (interfaces |> List.collect _.Members) @ modules
+            |> List.map identifiers |> Set.unionMany |> Set.filter types.ContainsKey
+        let rec close (known: Set<string>) =
+            let next = known |> Seq.map (fun name -> identifiers types[name] |> Set.filter types.ContainsKey) |> Set.unionMany |> Set.union known
+            if next = known then known else close next
+        let wanted = close seeds
+        files |> List.choose (fun (path, (ns, blocks)) ->
+            let kept = blocks |> List.filter (fun (name, _) -> match name with Some n -> wanted.Contains n | None -> true) |> List.map snd
+            if kept.IsEmpty then None else Some { File = path; Namespace = defaultArg ns ""; Declarations = kept })
+
+    /// Public surface of an acceptance adapter stub: doc comments and public
+    /// `let` signatures, no bodies.
+    let adapterSignatures (content: string) : string list =
+        content.Replace("\r\n", "\n").Split('\n') |> Array.toList
+        |> List.choose (fun line ->
+            let trimmed = line.Trim()
+            if trimmed.StartsWith "///" then Some trimmed
+            else letSignature trimmed)
+
     // -------------------------------------------------------------- build
 
-    let private questionKinds = set [ "undecidedEffectFailure"; "conflict"; "uncoveredRequirement"; "unsupportedVocabulary" ]
+    /// Obligation kinds that ask a question an agent may not settle in code.
+    let QuestionKinds = set [ "undecidedEffectFailure"; "conflict"; "uncoveredRequirement"; "unsupportedVocabulary" ]
+
+    /// Every requirement key the handoff cites: obligations and acceptance.
+    let handoffKeys (obligations: DefaultPlanObligation list) (routing: ConstructionRouting) =
+        (obligations |> List.collect _.RequirementKeys) @ (routing.Verification |> List.collect _.RequirementKeys) |> List.distinct
+
+    let DispositionRule =
+        "Disposition every obligation in dispositions.json as implemented or escalated. A conflict, undecidedEffectFailure or "
+        + "uncoveredRequirement obligation cannot be implemented without an approved decision: escalate it, and describe any "
+        + "provisional code behavior in its note."
 
     let build (cohortId: string) (obligations: DefaultPlanObligation list) (requirements: HandoffRequirement list) (decisionRecords: string)
-              (generated: (string * string) list) (routing: ConstructionRouting) (acceptanceValidators: string list) : ConstructionHandoff =
+              (generated: (string * string) list) (routing: ConstructionRouting) (adapters: (ConstructionAcceptanceSlot * string) list)
+              (acceptanceValidators: string list) : ConstructionHandoff =
         let handoffObligations =
             obligations |> List.map (fun o ->
                 { Id = o.Id; Kind = o.Kind; Statement = o.Statement; RequirementKeys = o.RequirementKeys; NodeIds = o.NodeIds; ExtensionSurface = o.ExtensionSurface })
+        let asked = obligations |> List.filter (fun t -> QuestionKinds.Contains t.Kind)
+        let askedKeys = asked |> List.collect _.RequirementKeys |> Set.ofList
         let questions =
-            (obligations |> List.filter (fun o -> questionKinds.Contains o.Kind) |> List.map (fun o -> { Subject = o.Id; Question = o.Statement }))
+            (asked |> List.map (fun o -> { Subject = o.Id; Question = o.Statement; FromObligation = true }))
             // A plan-carried resolve whose requirements a typed question already
             // asks about is the same question; ask it once.
             @ (routing.Semantic
-               |> List.filter (fun o ->
-                   let asked = obligations |> List.filter (fun t -> questionKinds.Contains t.Kind) |> List.collect _.RequirementKeys |> Set.ofList
-                   o.RequirementKeys.IsEmpty || not (Set.isSubset (Set.ofList o.RequirementKeys) asked))
+               |> List.filter (fun o -> o.RequirementKeys.IsEmpty || not (Set.isSubset (Set.ofList o.RequirementKeys) askedKeys))
                |> List.choose (fun o ->
-                match o.Kind with
-                | Artifacts.ResolveUnresolved(_, q) | Artifacts.ResolveEffectFailure(_, _, q) -> Some { Subject = o.Id; Question = q }
-                | _ -> None))
+                   match o.Kind with
+                   | Artifacts.ResolveUnresolved(subject, q) | Artifacts.ResolveEffectFailure(_, subject, q) -> Some { Subject = subject; Question = q; FromObligation = false }
+                   | _ -> None))
             @ (requirements |> List.filter (fun r -> r.Excerpt.IsNone) |> List.map (fun r ->
-                { Subject = r.Key; Question = "The admitted source holds no text with this requirement's pinned content; ask the operator for it rather than guessing." }))
+                { Subject = r.Key; Question = "The admitted source holds no text with this requirement's pinned content; ask the operator for it rather than guessing."; FromObligation = false }))
             |> List.distinctBy _.Question
         let usable = ConstructionRouting.usableSlots routing
+        let interfaces = interfaces generated routing.Custom
+        let permitted =
+            usable |> List.map (fun slot ->
+                { Path = ConstructionTree.placed routing.Mount slot.File
+                  Kind = (if ConstructionRouting.isAcceptance routing slot then "acceptanceAdapter" else "constructionContract")
+                  Contracts = slot.Contracts; MaxBytes = slot.MaxBytes })
+        let flat = permitted |> List.map (fun f -> f.Path.Substring(f.Path.LastIndexOf '/' + 1))
         { CohortId = cohortId
           Obligations = handoffObligations
           Requirements = requirements
           Decisions = decisions decisionRecords handoffObligations
-          Interfaces = interfaces generated routing.Custom
-          PermittedFiles = usable |> List.map (fun slot -> { Path = ConstructionTree.placed routing.Mount slot.File; Contracts = slot.Contracts; MaxBytes = slot.MaxBytes })
+          Interfaces = interfaces
+          AcceptanceAdapters =
+            adapters |> List.map (fun (slot, content) ->
+                { Contract = slot.AcceptanceContract; Path = slot.AcceptancePath; Signatures = adapterSignatures content })
+          GeneratedApi = generatedApi generated interfaces
+          PermittedFiles = permitted
           UnresolvedQuestions = questions
           Acceptance =
             (routing.Verification |> List.map (fun o ->
                 let statement = match o.Kind with Artifacts.VerifyIndependently what -> what | _ -> "Independent verification."
-                { Id = o.Id; Expectation = statement; RequirementKeys = o.RequirementKeys }))
+                { Label = "independent verification"; Expectation = statement; RequirementKeys = o.RequirementKeys }))
             @ (acceptanceValidators |> List.map (fun id ->
-                { Id = id; Expectation = "The host acceptance validator " + id + " judges the result; it is not run by the agent."; RequirementKeys = [] }))
-            @ [ { Id = "boundary"; Expectation = "Only the permitted files change. Generated files, project and dependency files stay untouched; anything else is refused."; RequirementKeys = [] }
-                { Id = "build"; Expectation = "Every listed interface member is implemented in a permitted file so the generated code compiles; there is no default implementation."; RequirementKeys = [] } ] }
+                { Label = "host validator " + id; Expectation = "The host runs this acceptance validator; the agent does not."; RequirementKeys = [] }))
+            @ [ { Label = "boundary"; Expectation = "Only the permitted files change. Generated, project and dependency files stay untouched; anything else is refused."; RequirementKeys = [] }
+                { Label = "build"; Expectation = "Every required interface member is implemented in a permitted file so the generated code compiles; there is no default implementation."; RequirementKeys = [] } ]
+          AllowedOperations =
+            [ "Write only these files, as flat file names in the outbox: " + String.concat ", " flat + "; plus dispositions.json."
+              "`try` builds the candidate."
+              "`submit` commits it (at most 3 submits)."
+              "Nothing else: no other file, path, project, dependency or command." ] }
 
     // ------------------------------------------------------------- render
 
@@ -300,42 +431,59 @@ module ConstructionHandoff =
         node
     let private arr (nodes: JsonNode list) = JsonArray(nodes |> List.toArray) :> JsonNode
 
+    /// Short aliases R1..Rn for every cited requirement key, in legend order.
+    let private aliases (handoff: ConstructionHandoff) =
+        handoff.Requirements |> List.mapi (fun index r -> r.Key, sprintf "R%d" (index + 1))
+
+    let private aliased (handoff: ConstructionHandoff) =
+        let table = aliases handoff
+        let map = Map.ofList table
+        let alias (key: string) = map |> Map.tryFind key |> Option.defaultValue key
+        // Longest keys first so a key that prefixes another never splits it.
+        let text (value: string) = table |> List.sortByDescending (fun (k, _) -> k.Length) |> List.fold (fun (acc: string) (k, a) -> acc.Replace(k, a)) value
+        alias, text
+
     let toJson (handoff: ConstructionHandoff) : JsonObject =
+        let alias, text = aliased handoff
+        let aliasesOf (keys: string list) = strs (keys |> List.map alias)
         obj [ "schemaVersion", str Schema
               "cohortId", str handoff.CohortId
-              "obligations", arr (handoff.Obligations |> List.map (fun o ->
-                  obj [ "id", str o.Id; "kind", str o.Kind; "question", str o.Statement; "requirementKeys", strs o.RequirementKeys
-                        "nodeIds", strs o.NodeIds; "extensionSurface", strs o.ExtensionSurface ] :> JsonNode))
               "requirements", arr (handoff.Requirements |> List.map (fun r ->
-                  obj [ "key", str r.Key; "excerpt", (match r.Excerpt with Some e -> str e | None -> null) ] :> JsonNode))
+                  obj [ "alias", str (alias r.Key); "key", str r.Key; "excerpt", (match r.Excerpt with Some e -> str e | None -> null) ] :> JsonNode))
+              "obligations", arr (handoff.Obligations |> List.map (fun o ->
+                  obj [ "id", str o.Id; "kind", str o.Kind; "requirements", aliasesOf o.RequirementKeys; "nodeIds", strs o.NodeIds
+                        "extensionSurface", strs o.ExtensionSurface; "question", str (text o.Statement) ] :> JsonNode))
+              "dispositionRule", str DispositionRule
+              "unresolvedQuestions", arr (handoff.UnresolvedQuestions |> List.map (fun q ->
+                  (if q.FromObligation then obj [ "obligationId", str q.Subject ] else obj [ "subject", str q.Subject; "question", str (text q.Question) ]) :> JsonNode))
               "decisions", arr (handoff.Decisions |> List.map (fun d -> obj [ "nodeId", str d.NodeId; "summary", str d.Summary ] :> JsonNode))
               "extensionInterfaces", arr (handoff.Interfaces |> List.map (fun i ->
-                  obj [ "interface", str i.Interface; "declaredIn", str i.DeclaredIn; "members", strs i.Members; "contracts", strs i.Contracts
-                        "obligationIds", strs i.ObligationIds; "implementIn", strs i.ImplementIn ] :> JsonNode))
+                  obj [ "interface", str i.Interface; "declaredIn", str i.DeclaredIn; "members", strs i.Members
+                        "requiredMembers", strs i.Contracts; "implementIn", strs i.ImplementIn ] :> JsonNode))
+              "acceptanceAdapters", arr (handoff.AcceptanceAdapters |> List.map (fun a ->
+                  obj [ "acceptanceContract", str a.Contract; "path", str a.Path; "signatures", strs a.Signatures ] :> JsonNode))
+              "generatedApi", arr (handoff.GeneratedApi |> List.map (fun g ->
+                  obj [ "file", str g.File; "namespace", str g.Namespace; "declarations", strs g.Declarations ] :> JsonNode))
               "permittedFiles", arr (handoff.PermittedFiles |> List.map (fun f ->
-                  obj [ "path", str f.Path; "contracts", strs f.Contracts; "maxBytes", JsonValue.Create f.MaxBytes ] :> JsonNode))
-              "unresolvedQuestions", arr (handoff.UnresolvedQuestions |> List.map (fun q -> obj [ "subject", str q.Subject; "question", str q.Question ] :> JsonNode))
+                  obj [ "path", str f.Path; "kind", str f.Kind; "contracts", strs f.Contracts; "maxBytes", JsonValue.Create f.MaxBytes ] :> JsonNode))
+              "allowedOperations", strs handoff.AllowedOperations
               "acceptance", arr (handoff.Acceptance |> List.map (fun a ->
-                  obj [ "id", str a.Id; "expectation", str a.Expectation; "requirementKeys", strs a.RequirementKeys ] :> JsonNode)) ]
+                  obj [ "label", str a.Label; "expectation", str a.Expectation; "requirements", aliasesOf a.RequirementKeys ] :> JsonNode)) ]
 
     /// The human-readable twin. Same content, no additions.
     let toMarkdown (handoff: ConstructionHandoff) : string =
+        let alias, text = aliased handoff
         let out = StringBuilder()
-        let line (text: string) = out.Append(text).Append('\n') |> ignore
-        let keys (values: string list) = if values.IsEmpty then "" else " Requirements: " + String.concat ", " (values |> List.map (sprintf "`%s`")) + "."
+        let line (value: string) = out.Append(value).Append('\n') |> ignore
+        let refs (keys: string list) = if keys.IsEmpty then "" else " [" + String.concat ", " (keys |> List.map alias) + "]"
+        let questionNumber =
+            handoff.UnresolvedQuestions |> List.mapi (fun index q -> q.Subject, index + 1) |> Map.ofList
         line (sprintf "# Construction handoff: %s" handoff.CohortId)
         line ""
-        line "## Obligations"
-        line ""
-        if handoff.Obligations.IsEmpty then line "None."
-        for o in handoff.Obligations do
-            let surface = if o.ExtensionSurface.IsEmpty then "" else " Surface: " + String.concat ", " (o.ExtensionSurface |> List.map (sprintf "`%s`")) + "."
-            line (sprintf "- **%s** (%s): %s%s%s" o.Id o.Kind o.Statement (keys o.RequirementKeys) surface)
-        line ""
-        line "## Requirement excerpts"
+        line "## Requirements"
         for r in handoff.Requirements do
             line ""
-            line (sprintf "### `%s`" r.Key)
+            line (sprintf "**%s** `%s`" (alias r.Key) r.Key)
             line ""
             match r.Excerpt with
             | Some excerpt ->
@@ -343,6 +491,22 @@ module ConstructionHandoff =
                 line (excerpt.TrimEnd('\n'))
                 line "```"
             | None -> line "_Not available in the admitted source; see unresolved questions._"
+        line ""
+        line "## Obligations"
+        line ""
+        if handoff.Obligations.IsEmpty then line "None."
+        for o in handoff.Obligations do
+            let surface = if o.ExtensionSurface.IsEmpty then "" else " Surface: " + String.concat ", " (o.ExtensionSurface |> List.map (sprintf "`%s`")) + "."
+            match questionNumber |> Map.tryFind o.Id with
+            | Some n -> line (sprintf "- **%s** (%s)%s: unresolved question %d; escalate.%s" o.Id o.Kind (refs o.RequirementKeys) n surface)
+            | None -> line (sprintf "- **%s** (%s)%s: %s%s" o.Id o.Kind (refs o.RequirementKeys) (text o.Statement) surface)
+        line ""
+        line "## Unresolved questions"
+        line ""
+        if handoff.UnresolvedQuestions.IsEmpty then line "None."
+        handoff.UnresolvedQuestions |> List.iteri (fun index q -> line (sprintf "%d. **%s**: %s" (index + 1) (alias q.Subject) (text q.Question)))
+        line ""
+        line DispositionRule
         line ""
         line "## Approved decisions"
         line ""
@@ -358,18 +522,38 @@ module ConstructionHandoff =
             for m in i.Members do line m
             line "```"
             line ""
-            line (sprintf "Obligations: %s." (String.concat ", " i.ObligationIds))
+            line (sprintf "Required members: %s." (String.concat ", " i.Contracts))
+        if not handoff.AcceptanceAdapters.IsEmpty then
+            line ""
+            line "## Acceptance adapter to implement"
+            for a in handoff.AcceptanceAdapters do
+                line ""
+                line (sprintf "### `%s` (replace the stub in `%s`; keep the names and signatures)" a.Contract a.Path)
+                line ""
+                line "```fsharp"
+                for signature in a.Signatures do line signature
+                line "```"
+        line ""
+        line "## Generated API (signatures only)"
+        for g in handoff.GeneratedApi do
+            line ""
+            line (sprintf "### `%s` (namespace `%s`)" g.File g.Namespace)
+            line ""
+            line "```fsharp"
+            line (String.concat "\n\n" g.Declarations)
+            line "```"
         line ""
         line "## Permitted files"
         line ""
-        for f in handoff.PermittedFiles do line (sprintf "- `%s` (at most %d bytes): %s" f.Path f.MaxBytes (String.concat ", " f.Contracts))
+        for f in handoff.PermittedFiles do
+            let what = if f.Kind = "acceptanceAdapter" then "acceptance adapter " else ""
+            line (sprintf "- `%s` (at most %d bytes): %s%s" f.Path f.MaxBytes what (String.concat ", " f.Contracts))
         line ""
-        line "## Unresolved questions"
+        line "## Allowed operations"
         line ""
-        if handoff.UnresolvedQuestions.IsEmpty then line "None."
-        handoff.UnresolvedQuestions |> List.iteri (fun index q -> line (sprintf "%d. **%s**: %s" (index + 1) q.Subject q.Question))
+        for operation in handoff.AllowedOperations do line ("- " + operation)
         line ""
         line "## Acceptance expectations"
         line ""
-        for a in handoff.Acceptance do line (sprintf "- **%s**: %s%s" a.Id a.Expectation (keys a.RequirementKeys))
+        for a in handoff.Acceptance do line (sprintf "- **%s**%s: %s" a.Label (refs a.RequirementKeys) a.Expectation)
         out.ToString()

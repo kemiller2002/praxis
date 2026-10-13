@@ -58,13 +58,25 @@ module ConstructionPrepared =
 
     let private options = JsonSerializerOptions(WriteIndented = true)
 
+    /// The Praxis build that renders the artifact and handoff.
+    let praxisVersion =
+        match typeof<PreparedReport>.Assembly.GetCustomAttributes(typeof<System.Reflection.AssemblyInformationalVersionAttribute>, false) with
+        | [| :? System.Reflection.AssemblyInformationalVersionAttribute as attribute |] -> attribute.InformationalVersion
+        | _ -> string (typeof<PreparedReport>.Assembly.GetName().Version)
+
+    let private acceptanceNodes (configuration: LocalHostConfiguration) =
+        configuration.AcceptanceSlots |> List.map (fun slot ->
+            obj [ "path", str slot.AcceptancePath; "acceptanceContract", str slot.AcceptanceContract; "maxBytes", JsonValue.Create slot.AcceptanceMaxBytes ] :> JsonNode)
+
     /// Digest of the host's construction placement policy: the mount and every
     /// declared slot. A slot change is a policy change and invalidates reuse.
     let hostConstructionPolicyDigest (configuration: LocalHostConfiguration) =
         let slots =
             configuration.ExtensionSlots |> List.map (fun slot ->
                 obj [ "file", str slot.File; "contracts", strs slot.Contracts; "maxBytes", JsonValue.Create slot.MaxBytes ] :> JsonNode)
-        ConstructionTree.digest ((obj [ "mount", str configuration.ConstructionMount; "slots", arr slots ]).ToJsonString())
+        let acceptance = acceptanceNodes configuration
+        let fields = [ "mount", str configuration.ConstructionMount; "slots", arr slots ] @ (if acceptance.IsEmpty then [] else [ "acceptanceSlots", arr acceptance ])
+        ConstructionTree.digest ((obj fields).ToJsonString())
 
     /// Every host-derived input the artifact depends on, in a fixed order.
     /// Nothing here comes from an agent; all of it is known before generation.
@@ -91,6 +103,26 @@ module ConstructionPrepared =
           "ordoConstructionVersion", str (ConstructionAdmission.ordoConstructionVersion ())
           "constructionMount", str configuration.ConstructionMount
           "hostConstructionPolicyDigest", str (hostConstructionPolicyDigest configuration) ]
+        // Acceptance adapter slots (CONSTRUCT-008) are bound explicitly when declared.
+        @ (if configuration.AcceptanceSlots.IsEmpty then [] else [ "acceptanceSlots", arr (acceptanceNodes configuration) ])
+        @ [ "acceptanceValidators", strs (configuration.AcceptanceValidators |> Map.keys |> Seq.sort |> Seq.toList)
+            "validatorPolicyRevision", str configuration.ValidatorPolicyRevision
+            "praxisVersion", str praxisVersion
+            "handoffSchema", str ConstructionHandoff.Schema ]
+
+    /// Every acceptance slot must name an existing regular handwritten file of
+    /// the admitted source commit; its content is the frozen adapter stub.
+    let acceptanceAdapters (configuration: LocalHostConfiguration) (cohort: ConstructionAdmission.AdmittedCohort) : Result<(ConstructionAcceptanceSlot * string) list, string> =
+        let source = (ConstructionAdmission.cohortGrant cohort).Source.Commit
+        configuration.AcceptanceSlots |> List.fold (fun acc slot ->
+            acc |> Result.bind (fun found ->
+                let refuse reason = Error("acceptance slot " + slot.AcceptancePath + " refused: " + reason)
+                match ConstructionTree.entryAt configuration.Git configuration.RepositoryRoot source slot.AcceptancePath with
+                | Error reason -> refuse reason
+                | Ok None -> refuse "absent from the admitted source commit"
+                | Ok(Some("100644", Some content)) when content.StartsWith Artifacts.GeneratedMarker -> refuse "the admitted source holds a generated file there"
+                | Ok(Some("100644", Some content)) -> Ok(found @ [ slot, content ])
+                | Ok(Some(mode, _)) -> refuse (sprintf "not a regular file in the admitted source (mode %s)" mode))) (Ok [])
 
     /// Reuse key: digest over the artifact schema and every binding input
     /// (blueprint, manifest, cohort, decision records, vocabulary, generator,
@@ -140,7 +172,8 @@ module ConstructionPrepared =
     /// pass admission (and so `ConstructionPlan.validate`), and digest, layout
     /// and generator identity must agree with what Praxis observes.
     let private generate (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) now groupId (generator: DefaultPlanGenerator)
-                         (vocabulary: string) (cohort: ConstructionAdmission.AdmittedCohort) (decisions: string) (binding: (string * JsonNode) list) (key: string) =
+                         (vocabulary: string) (cohort: ConstructionAdmission.AdmittedCohort) (adapters: (ConstructionAcceptanceSlot * string) list)
+                         (decisions: string) (binding: (string * JsonNode) list) (key: string) =
         generator.Generate (ConstructionAdmission.cohortPrepared cohort) decisions vocabulary
         |> Result.mapError (fun reasons -> "default plan refused: " + String.concat "; " reasons)
         |> Result.bind (fun output ->
@@ -163,12 +196,12 @@ module ConstructionPrepared =
                         let source = b.SourceCommit
                         ConstructionTree.regularFiles git root source |> Result.map (fun files ->
                             let read path = ConstructionTree.readCommitted git root source path |> Result.map fst
-                            let cited = output.Obligations |> List.collect _.RequirementKeys |> List.distinct
+                            let cited = ConstructionHandoff.handoffKeys output.Obligations routing
                             let requirements =
                                 ConstructionHandoff.excerpts read files (ConstructionHandoff.manifestRequirements (ConstructionAdmission.cohortManifest cohort)) cited
                             let generated = built.Artifacts |> List.map (fun a -> ConstructionTree.placed configuration.ConstructionMount a.Path, a.Content)
                             let handoff =
-                                ConstructionHandoff.build b.CohortId output.Obligations requirements decisions generated routing
+                                ConstructionHandoff.build b.CohortId output.Obligations requirements decisions generated routing adapters
                                     (configuration.AcceptanceValidators |> Map.keys |> Seq.toList)
                             let permitted = ConstructionRouting.usableSlots routing
                             // Dokimos requires blueprint, sourceManifest and decisionRecords;
@@ -207,7 +240,8 @@ module ConstructionPrepared =
                                       "permittedExtensionFiles", strs (permitted |> List.map (fun slot -> ConstructionTree.placed configuration.ConstructionMount slot.File))
                                       "permittedExtensionSlots", arr (permitted |> List.map (fun slot ->
                                           obj [ "path", str (ConstructionTree.placed configuration.ConstructionMount slot.File); "contracts", strs slot.Contracts
-                                                "maxBytes", JsonValue.Create slot.MaxBytes ] :> JsonNode))
+                                                "maxBytes", JsonValue.Create slot.MaxBytes
+                                                "kind", str (if ConstructionRouting.isAcceptance routing slot then "acceptanceAdapter" else "constructionContract") ] :> JsonNode))
                                       "handoff", ConstructionHandoff.toJson handoff
                                       "handoffMarkdown", str (ConstructionHandoff.toMarkdown handoff) ]
                             artifact.ToJsonString options + "\n")))
@@ -277,7 +311,8 @@ module ConstructionPrepared =
                         |> Result.mapError ((+) "cached prepared artifact refused: ")
                         |> Result.bind (fun _ -> report key true text)
                     | None ->
-                        generate configuration policy now groupId generator vocabulary cohort decisions binding key |> Result.bind (fun text ->
+                        acceptanceAdapters configuration cohort |> Result.bind (fun adapters ->
+                            generate configuration policy now groupId generator vocabulary cohort adapters decisions binding key) |> Result.bind (fun text ->
                             ConstructionHostStore.writeOnce configuration "prepared" key text
                             |> Result.mapError ((+) "prepared artifact not recorded: ")
                             |> Result.bind (fun _ -> report key false text)))))
@@ -363,7 +398,21 @@ module ConstructionPrepared =
                                                 | Ok _ -> None)
                                         if denied.IsEmpty then Ok(entries |> List.choose (function _, Ok file -> Some file | _ -> None))
                                         else Error([ "extension refused: " + String.concat "; " (denied |> List.map snd) ], denied)
-                            match judged with
+                            // Placement on the target tree is part of the same pre-check:
+                            // a link, submodule, generated file or missing adapter at a
+                            // slot path refuses everything before any effect (B1).
+                            let placed =
+                                judged |> Result.bind (fun accepted ->
+                                    if accepted.IsEmpty then Ok accepted
+                                    else
+                                        match ConstructionTree.readRef configuration.Git configuration.RepositoryRoot targetRef with
+                                        | Error reason -> Error([ reason ], [])
+                                        | Ok head ->
+                                            let verdicts = accepted |> List.map (fun file -> file, ConstructionExtension.placement configuration.Git configuration.RepositoryRoot routing head file)
+                                            match verdicts |> List.choose (function file, Error reason -> Some(file.Path, reason) | _ -> None) with
+                                            | [] -> Ok accepted
+                                            | denied -> Error([ "extension refused: " + String.concat "; " (denied |> List.map snd) ], denied))
+                            match placed with
                             | Error(reasons, denied) -> refuseDenied (Some key) reasons denied
                             | Ok accepted ->
                                 match ConstructionApplication.apply configuration admittedPlan targetRef now with
