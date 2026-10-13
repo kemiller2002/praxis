@@ -6,6 +6,8 @@ Proposal: [DF-ROS-2026-A064](../research/decisions/DF-ROS-2026-A064--portable-lo
 The current milestone is functional portability across worker tools and Linux,
 macOS and Windows. Equivalent worker isolation is deliberately deferred by user
 instruction. Portability tests do not constitute isolation qualification.
+Linux host containment is now qualified separately by real probes, and macOS
+and Windows refuse contained launches; see [host containment](containment.md).
 
 ## Shared worker contract
 

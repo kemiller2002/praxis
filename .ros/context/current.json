@@ -9927,37 +9927,6 @@
       "completedAt": "2026-10-12T20:42:44.342Z"
     },
     {
-      "id": "WI-0097",
-      "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-12T22:31:07.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20261012T223108671Z-34b4307a"
-      ],
-      "latestCheckpoint": {
-        "id": "c10d8dfce8b0c73b394e8f33",
-        "recordedAt": "2026-10-12T22:54:52.000Z",
-        "executionId": "EXE-20261012T223108671Z-34b4307a",
-        "repository": "repository-operating-system",
-        "branch": "checklist/gh-234-construction-scope",
-        "commit": "5a2ef2280f986e27bcf4afbec8efe6fc24850c32",
-        "remote": {
-          "name": "origin",
-          "url": "https://github.com/kemiller2002/praxis"
-        },
-        "remoteBranch": "checklist/gh-234-construction-scope",
-        "remoteCommit": "5a2ef2280f986e27bcf4afbec8efe6fc24850c32",
-        "summary": "Construction-scope row, host validator, plan records and adversarial tests implemented",
-        "nextAction": "Docs, decision record, CI step, full validation",
-        "verification": {
-          "status": "verified",
-          "mechanism": "git-remote-observation"
-        }
-      }
-    },
-    {
       "id": "WI-0098",
       "type": "task",
       "state": "complete",
@@ -9997,6 +9966,131 @@
         }
       },
       "completedAt": "2026-10-12T22:37:59.730Z"
+    },
+    {
+      "id": "WI-0097",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-12T22:31:07.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T223108671Z-34b4307a"
+      ],
+      "latestCheckpoint": {
+        "id": "c10d8dfce8b0c73b394e8f33",
+        "recordedAt": "2026-10-12T22:54:52.000Z",
+        "executionId": "EXE-20261012T223108671Z-34b4307a",
+        "repository": "repository-operating-system",
+        "branch": "checklist/gh-234-construction-scope",
+        "commit": "5a2ef2280f986e27bcf4afbec8efe6fc24850c32",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "checklist/gh-234-construction-scope",
+        "remoteCommit": "5a2ef2280f986e27bcf4afbec8efe6fc24850c32",
+        "summary": "Construction-scope row, host validator, plan records and adversarial tests implemented",
+        "nextAction": "Docs, decision record, CI step, full validation",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
+    },
+    {
+      "id": "WI-0092",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/LocalContainedLaunch.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/LocalContainmentQualification.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalContainmentTests.fs"
+        },
+        {
+          "type": "decision",
+          "path": "research/decisions/DF-ROS-2026-A073--probe-qualified-linux-worker-containment.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/containment.md"
+        }
+      ],
+      "updatedAt": "2026-10-12T18:53:42.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T185235269Z-42495e91"
+      ],
+      "latestCheckpoint": {
+        "id": "3ec168a2e8dc9353a465ba6a",
+        "recordedAt": "2026-10-12T18:53:34.000Z",
+        "executionId": "EXE-20261012T185235269Z-42495e91",
+        "repository": "repository-operating-system",
+        "branch": "feat/gh-231-linux-containment",
+        "commit": "198716b734499db0c5bfdcbce11cdc93bae28d6b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/gh-231-linux-containment",
+        "remoteCommit": "198716b734499db0c5bfdcbce11cdc93bae28d6b",
+        "summary": "Linux confined-launch adapter (unshare user/net/mount/pid/ipc/uts \u002B pivot_root minimal root \u002B prlimit \u002B setpriv), 35-probe qualification emitting praxis.containment-evidence/1, local containment qualify/status CLI, host-config gating of containment-required workers, macOS/Windows refusal, tests (9/9 local containment, real probes 35/35 on this host), CI step, docs/containment.md and DF-ROS-2026-A073. Re-identified from WI-0089 after an ID collision with PR #246.",
+        "nextAction": "Review draft PR #248 and three-OS CI. Decide whether CI may relax Ubuntu AppArmor userns restriction to run real probes. #243 needs an output protocol for contained workers.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T18:53:42.000Z"
+    },
+    {
+      "id": "WI-0095",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/containment-qualification.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalContainmentTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-12T20:53:45.338Z",
+      "telemetryExecutionIds": [
+        "EXE-20261012T205218071Z-8cccd597"
+      ],
+      "latestCheckpoint": {
+        "id": "870ee7159c3cf95cb79c3c58",
+        "recordedAt": "2026-10-12T20:53:41.676Z",
+        "executionId": "EXE-20261012T205218071Z-8cccd597",
+        "repository": "repository-operating-system",
+        "branch": "feat/gh-231-linux-containment",
+        "commit": "ba1aa5e6707db7a74e3f49f5376945473c261a92",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/gh-231-linux-containment",
+        "remoteCommit": "ba1aa5e6707db7a74e3f49f5376945473c261a92",
+        "summary": "Added containment-qualification.yml (self-hosted, dispatch-only, no secrets, marker-checked, per-runner record, cleanup); renamed hosted step to fail-closed gate; docs and A073 updated; local evidence preserved; step dry-run locally qualified 35/35",
+        "nextAction": "Complete WI-0095 and drive PR #248 green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-12T20:53:45.338Z"
     }
   ],
   "protocolVersion": "1.0.0",
