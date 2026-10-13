@@ -182,15 +182,16 @@ module ConstructionPrepared =
         |> List.map (fun n -> { Id = n.Id; Kind = nodeKind n.Kind; RequirementKeys = n.RequirementKeys; DependsOn = n.DependsOn; Justification = n.Justification })
 
     let private maxContractSourceBytes = 65536L
-    let private maxContractSources = 64
+    let private maxContractSources = 256
 
-    /// Candidate contract sources for an acceptance stub: committed F# files
-    /// under the stub's own directory, bounded in size and number.
+    /// Candidate contract sources for an acceptance stub: committed F# files,
+    /// the stub's own directory first (a contract project the stub references
+    /// may live elsewhere), bounded in size and number.
     let private contractSources (read: string -> Result<string, string>) (files: (string * int64) list) (stubPath: string) =
         let directory = match stubPath.LastIndexOf '/' with -1 -> "" | at -> stubPath.Substring(0, at + 1)
         files
-        |> List.filter (fun (path, size) -> path.StartsWith directory && path.EndsWith ".fs" && path <> stubPath && size > 0L && size <= maxContractSourceBytes)
-        |> List.sortBy fst
+        |> List.filter (fun (path, size) -> path.EndsWith ".fs" && path <> stubPath && size > 0L && size <= maxContractSourceBytes && not (path.StartsWith "."))
+        |> List.sortBy (fun (path, _) -> (if path.StartsWith directory then 0 else 1), path)
         |> List.truncate maxContractSources
         |> List.choose (fun (path, _) -> read path |> Result.toOption |> Option.map (fun content -> path, content))
 

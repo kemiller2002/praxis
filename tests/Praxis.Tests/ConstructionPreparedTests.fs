@@ -423,8 +423,8 @@ module ConstructionPreparedTests =
     let private adapterSlot path = sprintf """[{"path":"%s","acceptanceContract":"TimerPilot.TimerOracleAdapter","maxBytes":4096}]""" path
 
     let private acceptanceTests =
-        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and contract types and applied at its existing path" (fun () ->
-              withAdapterHost [ "src/Domain/OracleTypes.fs", "namespace TimerPilot\n\ntype OracleStep = { Command: string; At: int }\n\nmodule OracleText =\n    let render (s: OracleStep) : string = s.Command\n"
+        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and the contract types it opens from anywhere in the source, and applied at its existing path" (fun () ->
+              withAdapterHost [ "contract/OracleTypes.fs", "namespace TimerPilot\n\ntype OracleStep = { Command: string; At: int }\n\nmodule OracleText =\n    let render (s: OracleStep) : string = s.Command\n"
                                 "src/Domain/Unrelated.fs", "namespace Elsewhere\n\ntype Hidden = { Secret: string }\n" ] (fun host ->
                   declareAcceptance host (adapterSlot "src/Domain/TimerOracleAdapter.fs")
                   let generator = fake (ref 0) "fake@1"
