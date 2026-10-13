@@ -10180,11 +10180,22 @@
       },
       "completedAt": "2026-10-13T16:28:34Z",
       "conclusion": "Requirements captured; implementation pending a program-lead routing decision"
+    },
+    {
+      "id": "RELEASE-3-12-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-13T18:29:17.760Z",
+      "telemetryExecutionIds": [
+        "EXE-20261013T182918849Z-63202f5c"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T16:28:34Z",
+  "updatedAt": "2026-10-13T18:29:17.760Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
