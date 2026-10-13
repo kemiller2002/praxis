@@ -4,7 +4,13 @@
 # native-checksums.txt. NuGet restores EchelonFoundry.Ordo.Core only from this
 # folder (NuGet.config package source mapping). Upgrade by replacing the
 # package and this lock together with the PackageReference version.
-ordo 1.7.0
+# PRE-RELEASE (CONSTRUCT-008): 1.8.1 is not yet a published Ordo release. The
+# .nupkg beside this file was packed from kemiller2002/ordo branch
+# construct/default-plan at aa991a7 (ConstructionDecisions,
+# ConstructionDefaultPlan, ConstructionLayout); the sha256 is of that local
+# pack. When v1.8.1 is published, replace the package with the release asset
+# at the url below and re-verify its sha256 against native-checksums.txt.
+ordo 1.8.1
 package EchelonFoundry.Ordo.Core
-url https://github.com/kemiller2002/ordo/releases/download/v1.7.0/ordo-core.nupkg
-sha256 db97421934d22fd4e10f9744170c259a552c8772cfe804142a48c6c775422e07
+url https://github.com/kemiller2002/ordo/releases/download/v1.8.1/ordo-core.nupkg
+sha256 d61a6eb0ebb84133b4a4e787c43b6148235ac9e08182f05efec7e07440060357

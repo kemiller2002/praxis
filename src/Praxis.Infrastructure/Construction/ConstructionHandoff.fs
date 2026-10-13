@@ -251,7 +251,7 @@ module ConstructionHandoff =
 
     // -------------------------------------------------------------- build
 
-    let private questionKinds = set [ "undecidedEffectFailure"; "conflict"; "unsupportedVocabulary" ]
+    let private questionKinds = set [ "undecidedEffectFailure"; "conflict"; "uncoveredRequirement"; "unsupportedVocabulary" ]
 
     let build (cohortId: string) (obligations: DefaultPlanObligation list) (requirements: HandoffRequirement list) (decisionRecords: string)
               (generated: (string * string) list) (routing: ConstructionRouting) (acceptanceValidators: string list) : ConstructionHandoff =
@@ -260,7 +260,13 @@ module ConstructionHandoff =
                 { Id = o.Id; Kind = o.Kind; Statement = o.Statement; RequirementKeys = o.RequirementKeys; NodeIds = o.NodeIds; ExtensionSurface = o.ExtensionSurface })
         let questions =
             (obligations |> List.filter (fun o -> questionKinds.Contains o.Kind) |> List.map (fun o -> { Subject = o.Id; Question = o.Statement }))
-            @ (routing.Semantic |> List.choose (fun o ->
+            // A plan-carried resolve whose requirements a typed question already
+            // asks about is the same question; ask it once.
+            @ (routing.Semantic
+               |> List.filter (fun o ->
+                   let asked = obligations |> List.filter (fun t -> questionKinds.Contains t.Kind) |> List.collect _.RequirementKeys |> Set.ofList
+                   o.RequirementKeys.IsEmpty || not (Set.isSubset (Set.ofList o.RequirementKeys) asked))
+               |> List.choose (fun o ->
                 match o.Kind with
                 | Artifacts.ResolveUnresolved(_, q) | Artifacts.ResolveEffectFailure(_, _, q) -> Some { Subject = o.Id; Question = q }
                 | _ -> None))

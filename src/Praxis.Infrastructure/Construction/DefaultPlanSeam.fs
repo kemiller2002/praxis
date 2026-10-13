@@ -55,14 +55,30 @@ module OrdoDefaultPlan =
 
     let SupportedVocabularies = ConstructionPlan.SupportedVocabularyVersions
 
-    /// THE SEAM. Integration with Ordo's `generateDefaultPlan` replaces this
-    /// body only. The pinned Ordo release has no default-plan generator, so
-    /// generation fails closed: nothing is invented here.
+    /// THE SEAM: Ordo's `generateDefaultPlan`, mapped to Praxis's record.
+    /// Refusals are reported verbatim; nothing is invented or patched here.
     let generate (prepared: ConstructionIr.PreparedCohort) (decisionRecords: string) (vocabularyVersion: string) : Result<DefaultPlanOutput, string list> =
-        ignore prepared
-        ignore decisionRecords
-        ignore vocabularyVersion
-        Error [ sprintf "the pinned Ordo %s has no default-plan generator (ConstructionDefaultPlan); mechanical-first prepare is unavailable until it is vendored" (ConstructionAdmission.ordoCoreVersion ()) ]
+        Ordo.Core.ConstructionDecisions.readDecisionRecords decisionRecords
+        |> Result.mapError (fun reason -> [ "decision records refused: " + reason ])
+        |> Result.bind (fun records ->
+            ConstructionDefaultPlan.ConstructionVocabulary.ofVersion vocabularyVersion
+            |> Result.mapError (fun refusal -> [ sprintf "%A" refusal ])
+            |> Result.bind (fun vocabulary ->
+                ConstructionDefaultPlan.generateDefaultPlan prepared records vocabulary
+                |> Result.mapError (List.map (sprintf "%A"))))
+        |> Result.map (fun plan ->
+            let p = plan.Provenance
+            { PlanText = ConstructionPlan.canonicalJson plan.ValidatedPlan
+              PlanDigest = plan.PlanDigest
+              Obligations =
+                plan.Obligations |> List.map (fun o ->
+                    { Id = o.Id; Kind = ConstructionDefaultPlan.obligationKindName o.Kind; RequirementKeys = o.RequirementKeys
+                      NodeIds = o.NodeIds; Statement = o.Question; ExtensionSurface = o.ExtensionSurface })
+              GeneratedLayout = plan.GeneratedLayout
+              Provenance =
+                { GeneratorId = p.GeneratorId; GeneratorVersion = p.GeneratorVersion; VocabularyVersion = p.VocabularyVersion
+                  InputDigests = [ "blueprint", p.BlueprintDigest; "sourceManifest", p.SourceManifestDigest; "decisionRecords", p.DecisionRecordsDigest ]
+                  DefaultPlanDigest = p.DefaultPlanDigest } })
 
     let generator () : DefaultPlanGenerator =
-        { Id = GeneratorId; Version = GeneratorId + "@" + ConstructionAdmission.ordoCoreVersion (); Generate = generate }
+        { Id = ConstructionDefaultPlan.GeneratorId; Version = ConstructionDefaultPlan.GeneratorVersion; Generate = generate }

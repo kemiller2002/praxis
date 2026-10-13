@@ -11,3 +11,8 @@ requirement excerpts of `kemiller2002/time-entry-state-machine@73a63f1` (L131-L1
 frozen pilot skeleton in `kemiller2002/research-documents`
 (`research/construction-by-design/time-entry-timer-01/harness/skeleton/requirements/`). Their SHA-256 equals the
 `contentDigest` pinned in `source-manifest.json`; CONSTRUCT-008 handoff tests read them from the admitted source.
+
+`construction-decisions.json` is a verbatim copy of the CONSTRUCT-008 operator-approved
+`ordo.construction-decisions/1` record set
+(`kemiller2002/research-documents`, `research/construction-by-design/CONSTRUCT-008/harness/decisions/`).
+It binds this blueprint (canonical digest `sha256:28dd3964…`) and drives Ordo 1.8.0's default-plan generator.
