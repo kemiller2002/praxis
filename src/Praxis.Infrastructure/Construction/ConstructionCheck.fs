@@ -178,7 +178,7 @@ module ConstructionCheck =
             pinned
             |> Result.bind (fun () -> preparedFacts preparedPath)
             |> Result.bind (fun (cacheKey, generated) ->
-                FileLocalGitCandidates.resolveCommit git repository candidateRef cancel |> Result.bind (fun candidate ->
+                FileLocalGitCandidates.resolveCommit git repository candidateRef cancel |> Result.mapError (fun reason -> "candidate does not resolve to a commit (" + candidateRef + "): " + reason) |> Result.bind (fun candidate ->
                     let mismatched =
                         generated |> List.filter (fun (path, digest) ->
                             FileLocalGitCandidates.blobDigest git repository candidate path cancel <> Ok digest)

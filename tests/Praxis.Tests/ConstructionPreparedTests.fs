@@ -790,7 +790,7 @@ module ConstructionPreparedTests =
                   checkIn host out candidate "missing" |> refusedWith "unknown construction check 'missing'"
                   checkIn host out candidate "pinned-wrong" |> refusedWith "differs from its pinned digest"
                   checkIn host out before "pass" |> refusedWith "does not carry the prepared artifact's generated files"
-                  checkIn host out "refs/heads/no-such-ref" "pass" |> refusedWith "Git"
+                  checkIn host out "refs/heads/no-such-ref" "pass" |> refusedWith "candidate does not resolve to a commit"
                   Assert.isTrue (not (Directory.Exists(Path.Combine(host.Parent, "prepared.checks", "pinned-wrong")))) "a refused check left evidence"))
           t "check: the host configuration refuses malformed check adapters" (fun () ->
               withDecisionsHost (fun host ->
