@@ -6059,10 +6059,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-13T16:23:07.006Z",
-      "updatedAt": "2026-10-13T16:23:16Z",
+      "updatedAt": "2026-10-13T16:28:34Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

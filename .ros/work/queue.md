@@ -331,7 +331,7 @@
 | WI-0096 | WI-0096 | complete |  |  |
 | WI-0097 | WI-0097 | complete |  |  |
 | WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |
-| WI-0099 | Requirement: reclassify a work item's type (auditable event with reason, from active and blocked) and accept non-file evidence references (PR/check-run URLs, validated by form, recorded as external) at work complete | ready |  | medium |
+| WI-0099 | Requirement: reclassify a work item's type (auditable event with reason, from active and blocked) and accept non-file evidence references (PR/check-run URLs, validated by form, recorded as external) at work complete | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
