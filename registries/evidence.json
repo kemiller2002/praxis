@@ -2302,7 +2302,7 @@
     "path": "research/evidence/EV-ROS-2026-A076--cumulative-transcript-usage-matches-harness.md",
     "provenance": {
       "contributions": {
-        "EXE-20261013T202917205Z-b2b7596c": {
+        "EXE-20261013T224241801Z-4b33865b": {
           "actor": {
             "id": "anthropic/claude-code",
             "kind": "agent",
@@ -2310,11 +2310,11 @@
             "provider": "anthropic",
             "runtime": "claude-code"
           },
-          "at": "2026-10-13T22:00:41.000Z",
+          "at": "2026-10-13T22:42:51.000Z",
           "operations": [
             "created"
           ],
-          "reason": "Recorded the WI-0101 validation of cumulative transcript usage against the CONSTRUCT-008 harness"
+          "reason": "Recorded the WI-0102 validation of cumulative transcript usage against the CONSTRUCT-008 harness"
         }
       }
     },

@@ -18,6 +18,18 @@ related_documents:
   - tests/Praxis.Tests/Fixtures/construct-008-A1-usage-only.jsonl
 tags: [telemetry, tokens, cost, attribution, claude, construct-010]
 confidence: high
+provenance:
+  contributions:
+    EXE-20261013T224241801Z-4b33865b:
+      operations: [created]
+      at: 2026-10-13T22:42:51.000Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Recorded the WI-0102 validation of cumulative transcript usage against the CONSTRUCT-008 harness"
 ---
 
 # Evidence
