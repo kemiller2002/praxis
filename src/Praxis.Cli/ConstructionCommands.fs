@@ -7,7 +7,8 @@ open Praxis.Infrastructure.Construction
 /// `praxis construct ...`: host-controlled application of an Ordo
 /// construction plan (Praxis #242). The plan is the only agent input; the
 /// host policy, signed approval, committed sources and pinned engine decide
-/// everything else. Exit codes: 0 success, 2 invalid arguments, 3 refused.
+/// everything else. Exit codes: 0 success, 2 invalid arguments, 3 refused;
+/// `construct check` exits 1 when its check ran and did not pass.
 [<RequireQualifiedAccess>]
 module ConstructionCommands =
     let usage =
@@ -15,6 +16,7 @@ module ConstructionCommands =
         + " | construct apply --host-config FILE --group ID --plan FILE --target REF"
         + " | construct prepare --host-config FILE --group ID [--cohort ID] [--vocabulary VERSION] [--decisions FILE] --out FILE [--workspace DIR] [--telemetry-target WI|EXE]"
         + " | construct apply --host-config FILE --group ID --prepared FILE --target REF [--extensions DIR | --workspace DIR] [--observations FILE] [--telemetry-target WI|EXE]"
+        + " | construct check --host-config FILE --prepared FILE --candidate REF --check ID"
         + " | construct route --host-config FILE --group ID --plan FILE"
         + " | construct extend --host-config FILE --group ID --plan FILE --target REF --files DIR [--role implementation]"
 
@@ -57,6 +59,17 @@ module ConstructionCommands =
             | Some config, Some group, Some out when only allowed rest ->
                 // The cohort is fixed by the signed grant; an explicit one must agree.
                 emit (ConstructionService.prepare root config group (value "--cohort" rest) (value "--vocabulary" rest) (value "--decisions" rest) out (value "--workspace" rest) (value "--telemetry-target" rest))
+            | _ -> usageError ()
+        | "check" :: rest ->
+            let allowed = [ "--host-config"; "--prepared"; "--candidate"; "--check" ]
+            match value "--host-config" rest, value "--prepared" rest, value "--candidate" rest, value "--check" rest with
+            | Some config, Some prepared, Some candidate, Some check when only allowed rest ->
+                // The check's own outcome is the exit status: 0 only when it passed.
+                match ConstructionService.check root config prepared candidate check with
+                | Ok node ->
+                    Console.Out.WriteLine(node.ToJsonString options)
+                    if node["status"].GetValue<string>() = "passed" then 0 else 1
+                | Error reason -> emit (Error reason)
             | _ -> usageError ()
         | "apply" :: rest when List.contains "--prepared" rest ->
             let allowed = [ "--host-config"; "--group"; "--prepared"; "--target"; "--extensions"; "--workspace"; "--observations"; "--telemetry-target" ]

@@ -927,6 +927,43 @@ applies it. Host isolation of the worker *process* is not provided by this
 layout: it needs qualified containment (docs/containment.md) or a separate
 machine. Without either, a worker that knows an absolute host path can still
 read it.
+`construct check --host-config FILE --prepared FILE --candidate REF --check ID`
+(CONSTRUCT-010) gives a construction worker feedback without giving it a
+general command line. The host configuration declares the approved checks
+under the optional `constructionChecks` array. Each check is an
+`{ "id", "command" }` validator template: a pinned executable, arguments,
+environment, timeout and output limit, with `{candidate}` as the only
+placeholder and no TRX.
+
+`check` refuses before running when:
+- the check is unknown;
+- the executable or a dependency differs from its pin;
+- the candidate does not carry exactly the prepared artifact's generated files.
+
+Otherwise it runs the check on a fresh detached checkout of the candidate,
+inside the host's qualified containment profile (`docs/containment.md`). It
+refuses on a host without one, because a check runs submitted code. The
+checkout is observed before and after the run without following links. Any
+change outside `bin/`, `obj/` and `TestResults/` (a new, changed or removed
+file, or a planted link) makes the result `unauthorizedWrite`. Otherwise the
+status is one of:
+- `passed`;
+- `failed` (exit code);
+- `crashed` (death by signal);
+- `timedOut`;
+- `outputLimitExceeded`;
+- `cancelled`;
+- `error`.
+
+Each run is a new attempt. Its stdout, stderr and `result.json`
+(`praxis.construction-check/1`) are kept host-side under
+`<prepared>.checks/<id>/<attempt>/`, and the printed result carries the
+digests and the last 2,000 characters of each stream. The checkout is removed
+afterwards; the candidate commit never changes. Exit status: 0 passed,
+1 ran but did not pass, 2 usage, 3 refused. A check result is agent feedback
+only. It is not acceptance evidence and does not replace independent
+verification.
+
 Refusals are recorded under the host
 construction root and, with `--observations`, written as
 `dokimos.host-observations/1` (Dokimos's contract: `schema`, then one

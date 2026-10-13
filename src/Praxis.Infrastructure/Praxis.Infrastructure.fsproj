@@ -137,6 +137,7 @@
     <Compile Include="Planning/LocalRuntimeService.fs" />
     <Compile Include="Planning/LocalContainmentService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
+    <Compile Include="Construction/ConstructionCheck.fs" />
     <Compile Include="Construction/ConstructionService.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

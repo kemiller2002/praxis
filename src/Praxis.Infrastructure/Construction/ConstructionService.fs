@@ -385,6 +385,15 @@ module ConstructionService =
     let applyPreparedWith (generator: DefaultPlanGenerator) root hostConfig groupId preparedPath targetRef (extensions: string option) (observations: string option) (telemetryTarget: string option) =
         applyPreparedInWith generator root hostConfig groupId preparedPath targetRef extensions None observations telemetryTarget
 
+    /// `construct check`, with the runner injected (the CLI passes the
+    /// qualified-containment runner, which refuses on an unqualified host).
+    let checkWith (runner: LocalHostConfiguration -> Result<ConstructionCheckRunner, string>) root hostConfig preparedPath candidateRef checkId =
+        hostState root hostConfig |> Result.bind (fun (configuration, _) ->
+            runner configuration |> Result.bind (fun chosen -> ConstructionCheck.run chosen configuration preparedPath candidateRef checkId))
+
+    let check root hostConfig preparedPath candidateRef checkId =
+        checkWith (fun configuration -> ConstructionCheck.containedRunner configuration DateTimeOffset.UtcNow) root hostConfig preparedPath candidateRef checkId
+
     let prepare root hostConfig groupId cohort vocabulary decisions out workspace telemetryTarget =
         prepareInWith (OrdoDefaultPlan.generator ()) root hostConfig groupId cohort vocabulary decisions out workspace telemetryTarget
 

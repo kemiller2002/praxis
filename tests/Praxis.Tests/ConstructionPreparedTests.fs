@@ -683,4 +683,128 @@ module ConstructionPreparedTests =
                   File.WriteAllText(record, File.ReadAllText(record).Replace("\"cacheKey\": \"sha256:", "\"cacheKey\": \"sha256:0"))
                   applyIn generator host out workspace None |> refusedWith "prepared for a different prepared artifact")) ]
 
-    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ cacheTests @ telemetryTests
+    // ------------------------------------------- (c4) construct check (CONSTRUCT-010)
+
+    /// A direct runner for tests only; the CLI always uses the qualified-containment runner.
+    let private directRunner : ConstructionCheckRunner =
+        { Containment = "none (test runner)"
+          Run = fun spec -> Ok((Praxis.Infrastructure.Work.LocalWorkerProcess.runControllerTool spec Threading.CancellationToken.None).GetAwaiter().GetResult()) }
+
+    let private shell = "/bin/sh"
+    let private fileDigest (path: string) =
+        use input = File.OpenRead path
+        "sha256:" + (Security.Cryptography.SHA256.HashData input |> Convert.ToHexString).ToLowerInvariant()
+
+    let private checkNode (id: string) (script: string) (timeout: int) (maxOutput: int) (digest: string) =
+        let node = JsonObject()
+        node["id"] <- JsonValue.Create id
+        node["command"] <-
+            JsonNode.Parse(sprintf """{"executable":"%s","sha256":"%s","arguments":["-c",%s,"check","{candidate}"],"environment":{"PATH":"/usr/bin:/bin"},"timeoutMilliseconds":%d,"maxOutputBytes":%d}"""
+                               shell digest (JsonValue.Create(script).ToJsonString()) timeout maxOutput)
+        node :> JsonNode
+
+    let private declareChecks (host: ConstructionCliTests.Host) (checks: JsonNode list) =
+        let config = JsonNode.Parse(File.ReadAllText host.Config)
+        config["constructionChecks"] <- JsonArray(checks |> List.toArray)
+        File.WriteAllText(host.Config, config.ToJsonString())
+
+    let private standardChecks () =
+        let digest = fileDigest shell
+        [ checkNode "pass" "echo hello; exit 0" 10000 65536 digest
+          checkNode "fail" "echo broken >&2; exit 3" 10000 65536 digest
+          checkNode "slow" "/bin/sleep 5" 300 65536 digest
+          checkNode "crash" "kill -SEGV $$" 10000 65536 digest
+          checkNode "loud" "i=0; while [ $i -lt 4000 ]; do echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; i=$((i+1)); done" 10000 1024 digest
+          checkNode "inject" "printf 'module X\\n' > \"$1/src/Domain/Injected.fs\"; mkdir -p \"$1/bin\"; printf x > \"$1/bin/out\"" 10000 65536 digest
+          checkNode "build-output" "mkdir -p \"$1/obj/Release\" \"$1/src/Domain/bin\"; printf x > \"$1/obj/Release/a.dll\"; printf y > \"$1/src/Domain/bin/b\"" 10000 65536 digest
+          checkNode "tamper" "printf changed >> \"$1/src/Domain/Extensions.fs\"; ln -s /etc/passwd \"$1/planted\"" 10000 65536 digest
+          checkNode "pinned-wrong" "exit 0" 10000 65536 ("sha256:" + String('0', 64)) ]
+
+    /// A host with the standard checks declared, prepared and applied: (host, prepared, candidate, base).
+    let private withCandidate test =
+        withDecisionsHost (fun host ->
+            declareChecks host (standardChecks ())
+            let generator = fake (ref 0) "fake@1"
+            let _, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+            let before = ConstructionCliTests.tip host
+            applyWith generator host out (Some(ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten ])) |> okValue |> ignore
+            test host out (ConstructionCliTests.tip host) before)
+
+    let private checkIn (host: ConstructionCliTests.Host) prepared candidate id =
+        ConstructionService.checkWith (fun _ -> Ok directRunner) host.Clone host.Config prepared candidate id
+
+    let private worktrees (host: ConstructionCliTests.Host) =
+        (GitFixture.git host.Clone [ "worktree"; "list"; "--porcelain" ]).Split('\n') |> Array.filter (fun l -> l.StartsWith "worktree ") |> Array.length
+
+    let private checkTests =
+        if OperatingSystem.IsWindows() then [] else
+        [ t "check: a passing check reports passed with its stdout kept as host evidence, on a fresh checkout removed afterwards" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let trees = worktrees host
+                  let result = checkIn host out candidate "pass" |> okValue
+                  Assert.equal "praxis.construction-check/1" (str result["schemaVersion"])
+                  Assert.equal "passed" (str result["status"])
+                  Assert.equal 0 (result["exitCode"].GetValue<int>())
+                  Assert.equal candidate (str result["candidate"])
+                  Assert.equal 1 (result["attempt"].GetValue<int>())
+                  Assert.equal "hello\n" (File.ReadAllText(str result["stdout"].["path"]))
+                  Assert.equal (fileDigest (str result["stdout"].["path"])) (str result["stdout"].["sha256"])
+                  Assert.isTrue (File.Exists(Path.Combine(Path.GetDirectoryName(str result["stdout"].["path"]), "result.json"))) "result not kept"
+                  Assert.isTrue ((str result["notice"]).Contains "Not acceptance evidence") (str result["notice"])
+                  Assert.equal trees (worktrees host)))
+          t "check: failure, timeout, crash and output overflow are distinct, recorded outcomes" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let failed = checkIn host out candidate "fail" |> okValue
+                  Assert.equal "failed" (str failed["status"])
+                  Assert.equal 3 (failed["exitCode"].GetValue<int>())
+                  Assert.isTrue ((str failed["stderr"].["tail"]).Contains "broken") (failed.ToJsonString())
+                  let slow = checkIn host out candidate "slow" |> okValue
+                  Assert.equal "timedOut" (str slow["status"])
+                  Assert.isTrue (slow["wallMilliseconds"].GetValue<int64>() < 5000L) (slow.ToJsonString())
+                  let crashed = checkIn host out candidate "crash" |> okValue
+                  Assert.equal "crashed" (str crashed["status"])
+                  Assert.equal 11 (crashed["signal"].GetValue<int>())
+                  let loud = checkIn host out candidate "loud" |> okValue
+                  Assert.equal "outputLimitExceeded" (str loud["status"])))
+          t "check: a write to the candidate outside build output is refused as unauthorized, links included; build output is allowed" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let injected = checkIn host out candidate "inject" |> okValue
+                  Assert.equal "unauthorizedWrite" (str injected["status"])
+                  Assert.equal [ "src/Domain/Injected.fs" ] (injected["unauthorizedWrites"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  let tampered = checkIn host out candidate "tamper" |> okValue
+                  Assert.equal "unauthorizedWrite" (str tampered["status"])
+                  Assert.equal [ "planted"; "src/Domain/Extensions.fs" ] (tampered["unauthorizedWrites"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  let built = checkIn host out candidate "build-output" |> okValue
+                  Assert.equal "passed" (str built["status"])
+                  // The candidate commit itself is never changed by a check.
+                  Assert.equal candidate (ConstructionCliTests.tip host)))
+          t "check: repeats are separate attempts, each run and recorded" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let first = checkIn host out candidate "pass" |> okValue
+                  let second = checkIn host out candidate "pass" |> okValue
+                  Assert.equal [ 1; 2 ] [ first["attempt"].GetValue<int>(); second["attempt"].GetValue<int>() ]
+                  Assert.isTrue (str first["stdout"].["path"] <> str second["stdout"].["path"]) "a repeat reused the first attempt's evidence"
+                  Assert.isTrue (File.Exists(str first["stdout"].["path"]) && File.Exists(str second["stdout"].["path"])) "an attempt's evidence was lost"))
+          t "check: unknown checks, changed adapter pins and candidates not built from the prepared artifact are refused before running" (fun () ->
+              withCandidate (fun host out candidate before ->
+                  checkIn host out candidate "missing" |> refusedWith "unknown construction check 'missing'"
+                  checkIn host out candidate "pinned-wrong" |> refusedWith "differs from its pinned digest"
+                  checkIn host out before "pass" |> refusedWith "does not carry the prepared artifact's generated files"
+                  checkIn host out "refs/heads/no-such-ref" "pass" |> refusedWith "Git"
+                  Assert.isTrue (not (Directory.Exists(Path.Combine(host.Parent, "prepared.checks", "pinned-wrong")))) "a refused check left evidence"))
+          t "check: the host configuration refuses malformed check adapters" (fun () ->
+              withDecisionsHost (fun host ->
+                  let digest = fileDigest shell
+                  let refusedConfig (checks: JsonNode list) (fragment: string) =
+                      declareChecks host checks
+                      prepareWith (fake (ref 0) "fake@1") host (Some(decisionsPath host)) None |> refusedWith fragment
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest |> fun n -> (n["command"].["arguments"] :?> JsonArray).Add(JsonValue.Create "{worktree}"); n ] "placeholders"
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest |> fun n -> n["tests"] <- JsonValue.Create true; n ] "a tests validator must pass {trx}"
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest; checkNode "x" "exit 1" 1000 1024 digest ] "validator ids must be unique"))
+          t "check: the CLI runs checks only under qualified containment and refuses on a host without it" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  ConstructionService.check host.Clone host.Config out candidate "pass" |> refusedWith "requires a qualified containment profile"
+                  let cli = PraxisCli.run host.Clone (Some ConstructionCliTests.coordinator) [ "construct"; "check"; "--host-config"; host.Config; "--prepared"; out; "--candidate"; candidate; "--check"; "pass" ]
+                  Assert.equal 3 cli.ExitCode)) ]
+
+    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ checkTests @ cacheTests @ telemetryTests

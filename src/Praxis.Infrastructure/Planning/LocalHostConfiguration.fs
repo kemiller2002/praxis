@@ -63,7 +63,10 @@ type LocalHostConfiguration =
       /// (Praxis #243). Empty unless the operator declares them.
       ExtensionSlots: ConstructionExtensionSlot list
       /// Acceptance adapter slots (CONSTRUCT-008). Empty unless declared.
-      AcceptanceSlots: ConstructionAcceptanceSlot list }
+      AcceptanceSlots: ConstructionAcceptanceSlot list
+      /// Approved construction checks (CONSTRUCT-010 `construct check`): pinned
+      /// commands run on a fresh checkout of a candidate for agent feedback only.
+      ConstructionChecks: Map<string, LocalValidatorTemplate> }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -312,7 +315,7 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots"; "acceptanceSlots" ]
+                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots"; "acceptanceSlots"; "constructionChecks" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
@@ -337,7 +340,16 @@ module LocalHostConfiguration =
             let acceptance = root.GetProperty "acceptanceValidators"
             if acceptance.ValueKind <> JsonValueKind.Array || acceptance.GetArrayLength() > 256 then fail "acceptanceValidators must be an array"
             let acceptanceValidators = acceptance.EnumerateArray() |> Seq.map validator |> Seq.toList
-            let ids = (systemValidators |> Map.values |> Seq.map _.Id |> Seq.toList) @ (acceptanceValidators |> List.map _.Id)
+            let constructionChecks =
+                match property root "constructionChecks" with
+                | None -> []
+                | Some checks when checks.ValueKind = JsonValueKind.Array && checks.GetArrayLength() <= 64 ->
+                    checks.EnumerateArray() |> Seq.map (fun element ->
+                        let check = validator element
+                        if check.Tests then fail "a construction check produces no TRX (\"tests\" must be false)"
+                        check) |> Seq.toList
+                | Some _ -> fail "constructionChecks must be an array of at most 64 checks"
+            let ids = (systemValidators |> Map.values |> Seq.map _.Id |> Seq.toList) @ (acceptanceValidators |> List.map _.Id) @ (constructionChecks |> List.map _.Id)
             if ids.Length <> (Set.ofList ids).Count then fail "validator ids must be unique"
             let workers = root.GetProperty "workers"
             if workers.ValueKind <> JsonValueKind.Array || workers.GetArrayLength() = 0 || workers.GetArrayLength() > 256 then fail "workers must be a non-empty array"
@@ -371,7 +383,8 @@ module LocalHostConfiguration =
                  ConstructionMount = mount
                  Containment = containmentSettings
                  ExtensionSlots = slots
-                 AcceptanceSlots = acceptanceSlotList }
+                 AcceptanceSlots = acceptanceSlotList
+                 ConstructionChecks = constructionChecks |> List.map (fun item -> item.Id, item) |> Map.ofList }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->
