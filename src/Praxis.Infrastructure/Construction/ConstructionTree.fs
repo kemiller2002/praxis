@@ -198,3 +198,28 @@ module ConstructionTree =
             match line.Trim().Split(' ') |> Array.toList with
             | _ :: parent :: _ -> Some parent
             | _ -> None)
+
+    /// A commit object's parents and message, read from the object itself.
+    let commitObject git repository (commit: string) : Result<string list * string, string> =
+        if not (isObject commit) then Error "not a full commit identifier"
+        else
+            succeed git repository Map.empty "" [ "cat-file"; "commit"; commit ] |> Result.bind (fun raw ->
+                match raw.IndexOf "\n\n" with
+                | -1 -> Error "unexpected Git commit object"
+                | at ->
+                    let parents =
+                        raw.Substring(0, at).Split('\n') |> Array.toList
+                        |> List.choose (fun line -> if line.StartsWith "parent " then Some(line.Substring 7) else None)
+                    Ok(parents, raw.Substring(at + 2)))
+
+    /// Repository-relative paths that differ between two commits' trees.
+    let changedPaths git repository (before: string) (after: string) =
+        succeed git repository Map.empty "" [ "diff"; "--name-only"; "-z"; "--no-renames"; "--no-ext-diff"; "--no-textconv"; before; after; "--" ]
+        |> Result.map (fun names -> names.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
+
+    /// Commits reachable from `after` but not from `before`, newest first, bounded.
+    let commitsBetween git repository (before: string) (after: string) =
+        succeed git repository Map.empty "" [ "rev-list"; "--max-count=4097"; after; "^" + before; "--" ]
+        |> Result.bind (fun listing ->
+            let commits = listing.Split('\n', StringSplitOptions.RemoveEmptyEntries) |> Array.map _.Trim() |> Array.toList
+            if commits.Length > 4096 then Error "candidate history exceeds the construction-scope bound" else Ok commits)

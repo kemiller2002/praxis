@@ -98,12 +98,55 @@ module ConstructionApplication =
     let constructionId (preview: ConstructionPreview) =
         "construct-" + (ConstructionTree.digest (String.concat "\n" [ preview.Binding.PlanDigest; preview.TargetRef; preview.TargetCommit ])).Substring(7, 24)
 
-    /// The construction root also holds routing records under `routes/`
-    /// (Praxis #243); the integration journal leaves that directory alone.
+    /// Host record directories in the construction root that are not journal
+    /// entries: routing records (Praxis #243) and admitted plans (GH-234).
+    let reserved = set [ "routes"; "plans" ]
+
+    /// The construction root also holds routing records under `routes/` and
+    /// admitted plans under `plans/`; the integration journal leaves them alone.
     let journal (configuration: LocalHostConfiguration) =
         match configuration.ConstructionRoot with
         | None -> Error "construction is disabled: the host configuration names no construction root"
-        | Some store -> FileLocalIntegrationJournal.createReserving (set [ "routes" ]) configuration.RepositoryRoot store |> Result.map (fun journal -> store, journal)
+        | Some store -> FileLocalIntegrationJournal.createReserving reserved configuration.RepositoryRoot store |> Result.map (fun journal -> store, journal)
+
+    let private maxPlanRecordBytes = 1048576
+
+    /// `plans/HEX.json` for an Ordo plan digest `sha256:HEX`, or None.
+    let planRecordPath (store: string) (planDigest: string) =
+        let hex = if planDigest.StartsWith "sha256:" then planDigest.Substring 7 else ""
+        if hex.Length = 64 && hex |> Seq.forall (fun c -> Char.IsAsciiDigit c || (c >= 'a' && c <= 'f')) then
+            Some(IO.Path.Combine(store, "plans", hex + ".json"))
+        else None
+
+    /// Record the admitted plan document, write-once under its Ordo plan
+    /// digest (GH-234). It is host evidence a later scope check re-admits
+    /// under the then-current policy; it never authorizes anything itself.
+    let recordPlan (configuration: LocalHostConfiguration) (admitted: ConstructionAdmission.Admitted) : Result<string, string> =
+        match configuration.ConstructionRoot with
+        | None -> Error "construction is disabled: the host configuration names no construction root"
+        | Some store ->
+            try
+                let root = LocalHostJournalFiles.rootOutside configuration.RepositoryRoot store
+                let plans = IO.Path.Combine(root, "plans")
+                let content = ConstructionAdmission.planText admitted
+                let bytes = Text.UTF8Encoding(false).GetBytes content
+                match planRecordPath root (ConstructionAdmission.binding admitted).PlanDigest with
+                | None -> Error "admitted plan digest is not a SHA-256 digest"
+                | Some _ when bytes.Length > maxPlanRecordBytes -> Error "admitted plan exceeds 1 MiB"
+                | Some _ when not (LocalHostJournalFiles.noLinks plans) -> Error "plan record directory contains a link"
+                | Some path ->
+                    IO.Directory.CreateDirectory plans |> ignore
+                    if not (LocalHostJournalFiles.noLinks path) then Error "plan record path contains a link"
+                    elif IO.File.Exists path then
+                        if IO.File.ReadAllBytes path = bytes then Ok path
+                        else Error "a different plan record already exists under this plan digest"
+                    else
+                        do
+                            use output = new IO.FileStream(path, IO.FileMode.CreateNew, IO.FileAccess.Write, IO.FileShare.None)
+                            output.Write(bytes, 0, bytes.Length)
+                            output.Flush true
+                        Ok path
+            with error -> Error("plan record refused: " + error.Message)
 
     /// Entries whose target already names their candidate were applied before
     /// an interruption; record that, never re-apply.
@@ -153,7 +196,7 @@ module ConstructionApplication =
             FileLocalIntegrationJournal.acquire root store configuration.RepositoryIdentity |> Result.bind (fun lease ->
                 use _ = lease
                 reconcile configuration journal at |> Result.bind (fun () ->
-                    preview configuration admitted targetRef |> Result.bind (fun preview ->
+                    preview configuration admitted targetRef |> Result.bind (fun preview -> recordPlan configuration admitted |> Result.map (fun _ -> preview)) |> Result.bind (fun preview ->
                         let id = constructionId preview
                         let built = ConstructionAdmission.construction admitted
                         match changes configuration built preview.Writes with

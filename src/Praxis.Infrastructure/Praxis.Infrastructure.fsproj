@@ -118,16 +118,19 @@
     <Compile Include="Planning/ConstructionExtensionSlot.fs" />
     <Compile Include="Planning/LocalHostConfiguration.fs" />
     <Compile Include="Planning/LocalHostContainment.fs" />
-    <Compile Include="Planning/FileLocalRuntime.fs" />
-    <Compile Include="Planning/LocalOperator.fs" />
-    <Compile Include="Planning/LocalRuntimeService.fs" />
-    <Compile Include="Planning/LocalContainmentService.fs" />
-    <Compile Include="Planning/FileGroupTelemetry.fs" />
+    <!-- Construction precedes the local runtime, which composes the host
+         construction-scope check into worker checklists (GH-234). -->
     <Compile Include="Construction/ConstructionTree.fs" />
     <Compile Include="Construction/ConstructionAdmission.fs" />
     <Compile Include="Construction/ConstructionApplication.fs" />
     <Compile Include="Construction/ConstructionRouting.fs" />
     <Compile Include="Construction/ConstructionExtension.fs" />
+    <Compile Include="Construction/ConstructionScope.fs" />
+    <Compile Include="Planning/FileLocalRuntime.fs" />
+    <Compile Include="Planning/LocalOperator.fs" />
+    <Compile Include="Planning/LocalRuntimeService.fs" />
+    <Compile Include="Planning/LocalContainmentService.fs" />
+    <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Construction/ConstructionService.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

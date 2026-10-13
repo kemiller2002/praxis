@@ -49,10 +49,14 @@ module ConstructionAdmission =
     type Admitted =
         private
             { Binding: ConstructionBinding
-              Construction: OrdoConstruction }
+              Construction: OrdoConstruction
+              PlanText: string }
 
     let binding (admitted: Admitted) = admitted.Binding
     let construction (admitted: Admitted) = admitted.Construction
+    /// The exact plan document Ordo admitted (with any host-stamped binding).
+    /// The host records it so a later scope check can re-admit it (GH-234).
+    let planText (admitted: Admitted) = admitted.PlanText
 
     let private version (assembly: Assembly) =
         match assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>() with
@@ -121,11 +125,12 @@ module ConstructionAdmission =
                 ConstructionIr.prepareCohort manifest blueprint cohortId (Set.ofList decisions)
                 |> Result.mapError (fun violations -> "cohort is not ready for construction: " + describe violations)))
         |> Result.bind (fun prepared ->
-            ConstructionPlanWire.readPlan (stampBinding prepared planText) |> Result.mapError ((+) "construction plan refused: ")
+            let stamped = stampBinding prepared planText
+            ConstructionPlanWire.readPlan stamped |> Result.mapError ((+) "construction plan refused: ")
             |> Result.bind (fun draft -> ConstructionPlan.validate prepared draft |> Result.mapError (fun violations -> "construction plan refused: " + describe violations))
             |> Result.bind (fun validated ->
                 if not (ConstructionPlan.isBoundTo prepared validated) then Error "construction plan is not bound to the approved cohort"
-                else Ok validated))
+                else Ok(validated, stamped)))
 
     let admit (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) (now: DateTimeOffset) (groupId: string) (planText: string) : Result<Admitted, string> =
         let git, root = configuration.Git, configuration.RepositoryRoot
@@ -136,11 +141,12 @@ module ConstructionAdmission =
                     if manifestDigest <> source.SourceManifestDigest || blueprintDigest <> grant.BlueprintDigest then
                         Error "committed ECIR documents differ from the approved digests"
                     else
-                        prepare manifest blueprint grant.CohortId approval.DecisionIds planText |> Result.bind (fun validated ->
+                        prepare manifest blueprint grant.CohortId approval.DecisionIds planText |> Result.bind (fun (validated, stamped) ->
                             Ordo.Construction.Construction.construct validated
                             |> Result.mapError (fun refusals -> "construction refused: " + describe refusals)
                             |> Result.map (fun built ->
                                 { Construction = built
+                                  PlanText = stamped
                                   Binding =
                                     { PolicyRevision = policy.Revision; GroupId = grant.GroupId; CohortId = grant.CohortId
                                       SourceCommit = source.Commit; ManifestPath = source.ManifestPath; ManifestDigest = manifestDigest

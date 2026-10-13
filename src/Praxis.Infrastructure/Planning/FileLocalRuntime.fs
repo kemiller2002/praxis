@@ -116,7 +116,11 @@ module FileLocalRuntime =
                     |> Result.map (fun checkout ->
                         registry.Paths.Add checkout
                         let trx = Path.Combine(configuration.EvidenceRoot, "trx-" + Guid.NewGuid().ToString("N") + ".trx")
-                        registry.Requests.GetOrAdd(key, validatorRequest configuration selected candidate checkout trx))) }
+                        registry.Requests.GetOrAdd(key, validatorRequest configuration selected candidate checkout trx)))
+          // Host-implemented, mandatory exactly for construction packages (GH-234).
+          Construction =
+            Praxis.Infrastructure.Construction.ConstructionScope.host configuration
+                (fun () -> (hostStore configuration).Load()) (fun () -> DateTimeOffset.UtcNow) }
 
     // --------------------------------------------------------------- workers
 

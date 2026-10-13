@@ -7,11 +7,35 @@ open System.Threading
 open Praxis.Application.Work
 open Praxis.Domain.Work
 
+/// One host-observed construction-scope verification (GH-234): every refusal
+/// reason, and the evidence document the controller archives. Never decoded
+/// from worker output.
+type LocalConstructionScopeObservation =
+    { StartedAt: DateTimeOffset; FinishedAt: DateTimeOffset; Reasons: string list; Evidence: string }
+
+/// Host-implemented construction-package scope verification, not a worker
+/// command. `Identify` decides from protected host facts alone whether the
+/// package is a construction package and pins those facts in the validator's
+/// input digest; `Verify` re-reads and re-verifies them at check time.
+type LocalConstructionScopeHost =
+    { Identify: LocalWorkerPacket -> string -> Result<WorkerCheckValidator option, string>
+      Verify: LocalWorkerPacket -> string -> WorkerCheckValidator -> LocalConstructionScopeObservation }
+
+[<RequireQualifiedAccess>]
+module LocalConstructionScopeHost =
+    /// A host with no construction capability: no package is a construction package.
+    let none : LocalConstructionScopeHost =
+        { Identify = fun _ _ -> Ok None
+          Verify = fun _ _ _ ->
+              let now = DateTimeOffset.UtcNow
+              { StartedAt = now; FinishedAt = now; Reasons = [ "construction-scope-host-unavailable" ]; Evidence = "{}" } }
+
 /// Host configuration only. Select must keep pinned requests stable across
 /// repeated observations, including fresh output paths provisioned before use.
 type LocalChecklistValidators =
     { PolicyRevision: unit -> Result<string, string>
-      Select: LocalWorkerPacket -> WorkerChecklistRequirement -> string -> Result<LocalValidatorRequest, string> }
+      Select: LocalWorkerPacket -> WorkerChecklistRequirement -> string -> Result<LocalValidatorRequest, string>
+      Construction: LocalConstructionScopeHost }
 
 type LocalChecklistEvidenceSession =
     { Checks: WorkerChecklistPorts
@@ -41,7 +65,7 @@ module FileWorkerChecklist =
             access.CheckFile lockPath |> require
             let mutable active = true
             let gate = obj()
-            let mutable prepared : (WorkerChecklist * Map<string, LocalValidatorRequest>) option = None
+            let mutable prepared : (WorkerChecklist * Map<string, LocalValidatorRequest> * LocalWorkerPacket) option = None
             let mutable cached : Map<string * WorkerCheckValidator, LocalValidatorReport> = Map.empty
             let protectedCall action =
                 let guarded () =
@@ -79,12 +103,13 @@ module FileWorkerChecklist =
                                      |> List.map (fun (_, _, _, validator) -> validator) |> Set.ofList
                         if values.Count <> 1 then invalidOp "system validator pins differ between assigned members"
                         kind, Set.minElement values) |> Map.ofList
+                let construction = validators.Construction.Identify packet candidate |> require
                 let context =
                     { PacketDigest = LocalAgentHandoff.packetDigest packet; CandidateCommit = candidate
                       CandidateManifestDigest = Set.minElement manifests
-                      Policy = { Revision = revision; Validators = systems } }
+                      Policy = { Revision = revision; Validators = systems }; ConstructionScope = construction }
                 let checklist = WorkerChecklist.generate packet context |> Result.mapError (String.concat "; ") |> require
-                prepared <- Some(checklist, selected |> List.map (fun (row, request, _, _) -> row.CheckId, request) |> Map.ofList)
+                prepared <- Some(checklist, selected |> List.map (fun (row, request, _, _) -> row.CheckId, request) |> Map.ofList, packet)
                 Ok context)
             let intact (report: LocalValidatorReport) =
                 if Path.GetDirectoryName(normalize report.EvidencePath) <> root || not (LocalHostJournalFiles.noLinks report.EvidencePath) then
@@ -94,14 +119,57 @@ module FileWorkerChecklist =
                 if input.Length > 8388608L then invalidOp "oversized checklist evidence"
                 let hash = "sha256:" + (SHA256.HashData input |> Convert.ToHexString).ToLowerInvariant()
                 if hash <> report.EvidenceDigest then invalidOp "checklist evidence changed after observation"
+            /// The host observation becomes evidence in the existing custody
+            /// store, exactly like a concrete validator report.
+            let archive (checklist: WorkerChecklist) (row: WorkerChecklistRow) (observed: LocalConstructionScopeObservation) =
+                let bytes = Text.UTF8Encoding(false).GetBytes observed.Evidence
+                if bytes.LongLength > 8388608L then invalidOp "oversized construction-scope evidence"
+                let path = Path.Combine(root, "construction-scope-" + Guid.NewGuid().ToString("N") + ".json")
+                LocalHostFileAccess.file path |> require
+                let options = FileStreamOptions(Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None)
+                access.ConfigureCreate options
+                do
+                    use output = new FileStream(path, options)
+                    output.Write(bytes, 0, bytes.Length)
+                    output.Flush true
+                access.CheckFile path |> require
+                { ValidatorId = row.Validator.ValidatorId; CandidateCommit = checklist.Context.CandidateCommit
+                  CandidateManifestDigest = checklist.Context.CandidateManifestDigest; ValidatorInputDigest = row.Validator.InputDigest
+                  StartedAt = observed.StartedAt; FinishedAt = observed.FinishedAt; TestsExecuted = None
+                  Verdict = (match observed.Reasons with [] -> Ok() | reasons -> Error(String.concat "; " reasons))
+                  EvidencePath = path; EvidenceDigest = "sha256:" + (SHA256.HashData bytes |> Convert.ToHexString).ToLowerInvariant() }
             let evaluate checklist = protectedCall (fun () ->
                 match prepared with
-                | Some(observed, requests) when observed = checklist ->
+                | Some(observed, requests, packet) when observed = checklist ->
                     if (validators.PolicyRevision() |> require) <> checklist.Context.Policy.Revision then
                         invalidOp "checklist policy changed before evaluation"
                     let identity = WorkerChecklist.digest checklist
+                    // Construction scope is re-verified on every evaluation, never
+                    // reused across calls: authority and approval expiry are
+                    // re-checked at check time. One observation covers all members.
+                    let mutable construction : LocalValidatorReport option = None
+                    let constructionRun (row: WorkerChecklistRow) =
+                        match construction with
+                        | Some report when report.ValidatorInputDigest = row.Validator.InputDigest -> report
+                        | _ ->
+                            // Re-identify immediately before evaluation: the pinned host
+                            // facts must still be exactly those the checklist bound.
+                            if (validators.Construction.Identify packet checklist.Context.CandidateCommit |> require) <> Some row.Validator then
+                                invalidOp "checklist inputs changed before evaluation"
+                            let observed = validators.Construction.Verify packet checklist.Context.CandidateCommit row.Validator
+                            let report = archive checklist row observed
+                            construction <- Some report
+                            report
                     let runs =
                         checklist.Rows |> List.map (fun row ->
+                          if row.Kind = WorkerCheckKind.ConstructionScope then
+                            let report = constructionRun row
+                            intact report
+                            { ChecklistDigest = identity; CheckId = row.CheckId; Validator = row.Validator
+                              StartedAt = report.StartedAt; FinishedAt = report.FinishedAt
+                              Verdict = match report.Verdict with Ok() -> WorkerCheckVerdict.Passed | Error error -> WorkerCheckVerdict.Failed error
+                              TestsExecuted = None; EvidenceDigest = report.EvidenceDigest }
+                          else
                             let request = requests[row.CheckId]
                             let current = FileLocalValidator.observe request cancellation |> awaitResult |> require
                             if current.CandidateCommit <> checklist.Context.CandidateCommit
