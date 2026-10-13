@@ -329,8 +329,9 @@
 | WI-0094 | Windows CI: the worker supervisor allowed only 500 ms for output pumps to drain after root exit, truncating a complete result on a loaded runner (portability host test on PR #250) | complete |  | medium |
 | WI-0095 | WI-0095 | complete |  |  |
 | WI-0096 | WI-0096 | complete |  |  |
-| WI-0097 | WI-0097 | active |  |  |
+| WI-0097 | WI-0097 | complete |  |  |
 | WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |
+| WI-0099 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | ready |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
