@@ -6143,10 +6143,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-13T19:54:55Z",
-      "updatedAt": "2026-10-13T19:54:58Z",
+      "updatedAt": "2026-10-13T20:38:36Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -10279,18 +10279,49 @@
     {
       "id": "WI-0101",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-13T19:55:04Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".github/workflows/praxis-validation.yml"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/PinnedReleaseTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-13T20:38:36Z",
       "telemetryExecutionIds": [
         "EXE-20261013T195506096Z-55fd2c58"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "6a9c565ea6123781653b9003",
+        "recordedAt": "2026-10-13T20:38:23Z",
+        "executionId": "EXE-20261013T195506096Z-55fd2c58",
+        "repository": "repository-operating-system",
+        "branch": "wi-0101-pinned-release-validate",
+        "commit": "e44659b341fc0612bb48d4e21e5066b32c3aacc6",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "wi-0101-pinned-release-validate",
+        "remoteCommit": "e44659b341fc0612bb48d4e21e5066b32c3aacc6",
+        "summary": "Pinned Praxis 3.12.0; added pinned-release-validate CI job via praxis-setup (checksum + attestation) and --suite pinned-release tests; full suite 2184/2184 and pinned suite 4/4 pass locally; pushed e44659b3",
+        "nextAction": "Open PR, gate-merge on green exact head SHA including pinned-release-validate, then complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-13T20:38:36Z",
+      "conclusion": "Praxis 3.12.0 pinned; the pinned release is installed with checksum and attestation verification and validates this repository in CI alongside the source build"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T19:55:04Z",
+  "updatedAt": "2026-10-13T20:38:36Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
