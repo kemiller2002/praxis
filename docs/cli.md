@@ -411,8 +411,9 @@ praxis status [--json] [--verbose] [--offline]
 ```
 
 **`work history merge`** previews reconciliation of independent Git-conflicted
-native contexts and event logs; `--apply` writes through the native recovery
-journal. Divergent changes to the same identity refuse. Use an exclusive idle
+native contexts and event logs, and of the backlog queue (`queue.json` merged
+by row ID, `queue.md` regenerated) when it is conflicted too; `--apply` writes
+through the native recovery journals. Divergent changes to the same identity refuse. Use an exclusive idle
 checkout, then review and stage the result. See [native history reconciliation](work-history-merge.md).
 
 **`work checkpoint`** records a verified durable checkpoint. The remote itself

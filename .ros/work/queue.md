@@ -324,7 +324,7 @@
 | WI-0089 | Resuming an exited local dispatch whose submission was never archived fails instead of archiving from the host spool (Windows CI intermittent) | complete |  | medium |
 | WI-0090 | WI-0090 | complete |  |  |
 | WI-0091 | WI-0091 | complete |  |  |
-| WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | captured |  | medium |
+| WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | complete |  | medium |
 | WI-0094 | Windows CI: the worker supervisor allowed only 500 ms for output pumps to drain after root exit, truncating a complete result on a loaded runner (portability host test on PR #250) | complete |  | medium |
 | WI-0096 | WI-0096 | complete |  |  |
 | WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |

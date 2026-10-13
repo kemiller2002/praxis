@@ -15,7 +15,7 @@ module FileBacklogQueueRepository =
     let private queueRelativePath = ".ros/work/queue.json"
     let private markdownRelativePath = ".ros/work/queue.md"
 
-    let private serializerOptions =
+    let internal serializerOptions =
         JsonSerializerOptions(WriteIndented = true, IndentSize = 2, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
 
     let private parseItem (element: JsonElement) =
@@ -120,7 +120,7 @@ module FileBacklogQueueRepository =
             |> Seq.toList
         | _ -> []
 
-    let private rowOf (item: JsonObject) : BacklogQueueRow option =
+    let internal rowOf (item: JsonObject) : BacklogQueueRow option =
         match stringField item "id", stringField item "status" with
         | Some id, Some status ->
             Some

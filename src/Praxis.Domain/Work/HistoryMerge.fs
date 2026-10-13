@@ -9,16 +9,25 @@ type WorkHistorySnapshot =
       Items: (string * string) list
       Events: (string * string) list }
 
+/// Opaque, normalized `queue.json` values. `Reidentified` names the ids this
+/// side's own rows declare as `reidentifiedFrom`: the only native backlog
+/// operation that removes an id (`work reidentify`).
+type WorkBacklogSnapshot =
+    { Metadata: Map<string, string>
+      NextSeq: int
+      Items: (string * string) list
+      Reidentified: Set<string> }
+
 [<RequireQualifiedAccess>]
 module WorkHistoryMerge =
-    let private unique label values =
+    let internal unique label values =
         if values |> List.exists (fun (key, _) -> String.IsNullOrWhiteSpace key) then
             Error $"{label}: missing identity"
         elif values |> List.map fst |> List.distinct |> List.length <> values.Length then
             Error $"{label}: duplicate identity"
         else Ok(Map.ofList values)
 
-    let private mergeMap label (baseline: Map<string, string>) (left: Map<string, string>) (right: Map<string, string>) =
+    let internal mergeMap label (baseline: Map<string, string>) (left: Map<string, string>) (right: Map<string, string>) =
         let keys = [ baseline; left; right ] |> List.collect (Map.toList >> List.map fst) |> Set.ofList
         let rec loop remaining result =
             match remaining with
@@ -89,3 +98,34 @@ module WorkHistoryMerge =
             | Error error, _, _, _, _, _ | _, Error error, _, _, _, _ | _, _, Error error, _, _, _
             | _, _, _, Error error, _, _ | _, _, _, _, Error error, _ | _, _, _, _, _, Error error -> Error error
         merge ()
+
+[<RequireQualifiedAccess>]
+module WorkBacklogMerge =
+    /// Unions independent backlog rows. A row both sides changed differently is
+    /// refused by id; a base row may disappear only through that side's own
+    /// new native reidentification while the other side left it unchanged.
+    /// `nextSeq` is never lowered; rows keep base order, then left additions,
+    /// then right additions, matching the append-only writer.
+    let plan (baseline: WorkBacklogSnapshot) (left: WorkBacklogSnapshot) (right: WorkBacklogSnapshot) =
+        match WorkHistoryMerge.unique "base backlog rows" baseline.Items,
+              WorkHistoryMerge.unique "left backlog rows" left.Items,
+              WorkHistoryMerge.unique "right backlog rows" right.Items with
+        | Ok bi, Ok li, Ok ri ->
+            let removedWithoutNativeEvidence (side: WorkBacklogSnapshot) (items: Map<string, string>) =
+                baseline.Items |> List.tryPick (fun (id, _) ->
+                    if items.ContainsKey id || (side.Reidentified.Contains id && not (baseline.Reidentified.Contains id)) then None else Some id)
+            if left.Metadata <> baseline.Metadata || right.Metadata <> baseline.Metadata then
+                Error "backlog metadata (schemaVersion, repository) changed"
+            else
+                match removedWithoutNativeEvidence left li, removedWithoutNativeEvidence right ri with
+                | Some id, _ | _, Some id -> Error $"backlog row deletion is not supported: {id}"
+                | None, None ->
+                    match WorkHistoryMerge.mergeMap "backlog row" bi li ri with
+                    | Error error -> Error error
+                    | Ok items ->
+                        let order = (baseline.Items @ left.Items @ right.Items) |> List.map fst |> List.distinct |> List.filter items.ContainsKey
+                        Ok { Metadata = baseline.Metadata
+                             NextSeq = List.max [ baseline.NextSeq; left.NextSeq; right.NextSeq ]
+                             Items = order |> List.map (fun id -> id, items[id])
+                             Reidentified = Set.union left.Reidentified right.Reidentified }
+        | Error error, _, _ | _, Error error, _ | _, _, Error error -> Error error

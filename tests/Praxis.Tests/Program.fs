@@ -147,6 +147,7 @@ let main argv =
     @ LocalAgentHandoffTests.tests
     @ WorkerChecklistTests.tests
     @ WorkHistoryMergeTests.tests
+    @ WorkBacklogMergeTests.tests
     @ LocalWorkerDelegationTests.tests
     @ LocalDispatchJournalTests.tests
     @ LocalWorkerProcessTests.tests
