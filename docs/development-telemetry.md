@@ -371,7 +371,8 @@ type that only Praxis can observe.
 **Usage report.**
 
 ```
-praxis telemetry usage [WORKITEM] --by work-item|execution|step|provider|model|day
+praxis telemetry usage [WORKITEM] --by work-item|execution|execution-tree|step|provider|model|day
+                       [--price-table FILE] [--format json|text]
 ```
 
 The report sums the registry's additive (`sum`) metrics for each group and
@@ -380,13 +381,118 @@ says what backs each total:
 - the number of measurements;
 - how many have each evidence quality;
 - which executions reported the metric;
-- which executions in the group reported nothing (`unavailableExecutions`).
+- which executions in the group reported nothing (`unavailableExecutions`),
+  and the capability status and reason each one's record gives
+  (`unavailableReasons`).
 
-A group whose executions reported nothing has a `total` of `null`, not `0`.
-A total with any unavailable executions is marked `complete: false`, which
-means it is a lower bound.
+A group whose executions reported nothing has a `total` of `null` and a
+`status` of `unknown`, not `0`. A total with any unavailable executions is
+marked `complete: false`, which means it is a lower bound. The usage metrics
+below are always listed for every group, measured or not, so an unknown
+value is printed as unknown instead of disappearing. `--format text` prints
+the same groups as a table (`unknown`, or `(lower bound)`); the default JSON
+(`schema: praxis.telemetry-usage`, `schemaVersion: 2`) is the CI format.
 
 The existing `telemetry summary` is unchanged.
+
+## Cumulative usage and cost attribution (CONSTRUCT-010 Phase 6)
+
+A provider's per-message `usage` block reports one request: its uncached
+input, its output, and the prompt-cache tokens it read and wrote. The
+cumulative consumption of a run is the sum over its requests, which is
+typically ten to twenty times the final request's context. The
+`anthropic-claude-session` adapter computes it from a Claude Code transcript
+(the deduplication of the CONSTRUCT-008 harness script `usage.py`, now in
+Praxis) and the usage report attributes it across executions.
+
+**Per execution (and per step with `telemetry ingest ... --step STEP-ID`).**
+
+| Metric | Source |
+| --- | --- |
+| `model.requests` | distinct provider requests (message ID) |
+| `tokens.input` | summed per request |
+| `tokens.output` | summed per request; a **lower bound** (`dimensions.bound: lower`, report `bound: lower`): Claude Code transcripts and `list_events` record output at streaming start, not the provider's final count |
+| `tokens.cache_read`, `tokens.cache_write` | their own buckets, never added into input |
+| `tokens.cache_write_5m`, `tokens.cache_write_1h` | the TTL split of cache write, when the provider reports it; a partition of `tokens.cache_write`, never added to it |
+| `tokens.reasoning` | `output_tokens_details.thinking_tokens` when exposed; a subset of output, and a lower bound like it |
+| `tool.calls` | distinct `tool_use` block IDs |
+| `model.request_failures`, `agent.retries` | `api_error` system entries; unknown when none are recorded, since absence is not proof of zero |
+| `time.agent_wall_ms` | first to last transcript entry: agent time, separate from `time.wall_ms` (the Praxis execution) |
+| `host.compile_ms`, `host.verify_ms`, `host.prepare_apply_ms` | host compute, recorded by the host with `telemetry record`; a transcript never carries it (declared `unsupported`) |
+| `acceptance.first_pass`, `acceptance.repaired`, `acceptance.repair_cycles` | recorded by verification; the report derives one outcome per execution |
+| `cost.session_cumulative` | the runtime's own estimate, priced with the runtime's built-in table (named, date unknown) |
+
+Model, provider, and parent and child execution identity come from the
+execution record; the raw snapshot adds the subagent ID and whether the
+transcript is a subagent (sidechain) transcript. A subagent transcript's
+snapshot ID is `claude-session-SESSION-agent-AGENT`, so it never collides
+with its parent session's.
+
+**Accounting rules.**
+
+1. *Each provider request counts once.* A transcript repeats an assistant
+   message once per content block while streaming; usage is deduplicated by
+   message ID (else request ID), and a tool call by its `tool_use` ID.
+2. *Cached tokens are never counted twice.* Cache read and cache write are
+   separate buckets from input. The TTL split partitions cache write.
+3. *Parent and child aggregates are never summed as independent
+   consumption.* The adapter keeps a content-free **request ledger** in its
+   raw snapshot: one row per request (message ID, model, subagent ID and the
+   usage buckets). The usage report attributes every request to exactly one
+   execution: a request a parent and its descendant both hold is the
+   descendant's; `--by execution-tree` rolls each execution up with its
+   descendants and still counts each request once. A transcript's other
+   metrics follow the same rule by snapshot (`dimensions.snapshot`). A
+   request two unrelated executions hold (a double ingest) is counted once
+   and listed under `requestAttribution.conflicts`. An execution whose
+   ledger was dropped for the raw budget is listed as `unverifiedExecutions`.
+4. *Unavailable is unknown, never zero.* A bucket counts as a total only
+   when every request reported it; otherwise it is `supported-unavailable`
+   with the reason (e.g. "reported on 3 of 40 requests").
+5. *Provider-reported cost and estimated cost are different types.* Each
+   monetary group carries a `costBasis`: `provider-reported` (quality
+   `observed`), `estimated:SOURCE@VERSION/EFFECTIVE-DATE`, or
+   `estimated:price-table-unknown` for older undated records. They are never
+   one total. `telemetry record` refuses an estimated or calculated cost
+   without `--pricing-source`, `--pricing-version` and
+   `--pricing-effective-at`. `telemetry usage --price-table FILE` prices the
+   request ledger with an operator-supplied table (Praxis ships no prices):
+
+   ```json
+   { "source": "provider-list-prices", "version": "2026-10", "effectiveDate": "2026-10-01",
+     "currency": "USD", "unit": "per-million-tokens",
+     "models": { "MODEL": { "input": 0, "output": 0, "cacheRead": 0,
+                            "cacheWrite": 0, "cacheWrite5m": 0, "cacheWrite1h": 0 } } }
+   ```
+
+   A request whose model, bucket or TTL split the table cannot price makes
+   that execution's estimate unknown, with the reason; it is never a
+   partial sum.
+6. *Agent time and host time are separate.* A measurement whose source type
+   is `host` (for example the construct prepare/apply stopwatch) is its own
+   group (`origin: host`) and is never added to the agent's.
+7. *First-pass and repaired acceptance are distinct, and repairs are
+   counted.* The report's `acceptance` list gives each execution's outcome
+   (`first-pass`, `repaired` with its repair cycles, `not-accepted`,
+   `unknown`), or `contradictory` with the finding.
+
+Malformed transcript lines (a truncated final write, a corrupted line) are
+skipped and counted in the raw snapshot's `malformedLines`; they never fail
+the ingest. Usage fields the adapter does not normalize (for example
+`server_tool_use.*`, `iterations[]`, `service_tier`) are kept under the raw
+snapshot's `usage.extensions` and `usage.labels`, discovered as `unknown`
+capabilities, never promoted silently.
+
+The adapter also reads the CONSTRUCT-010 form: `list_events` pages of a
+remote session normalized by research-documents
+`CONSTRUCT-010/harness/events-to-transcript.py` (no session ID; the snapshot
+is identified by its content). An estimate priced from transcript output is
+a lower bound too.
+
+Two golden tests check the adapter against `usage.py`: a content-free
+reduction of CONSTRUCT-008 run A1 (13 requests; input 26, cache write
+41,786, cache read 792,100, output 213; cumulative 834,125), and a
+normalized `list_events` page (2 requests; cumulative 680,370).
 
 ## Effective-current step telemetry (PRAXIS-CONT-11)
 

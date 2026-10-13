@@ -71,6 +71,7 @@
     <Compile Include="SyncCommands.fs" />
     <Compile Include="WorkHistoryCommands.fs" />
     <Compile Include="TutelaCommands.fs" />
+    <Compile Include="TelemetryUsageCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
