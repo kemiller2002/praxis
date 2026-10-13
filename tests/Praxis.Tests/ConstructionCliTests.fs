@@ -83,7 +83,9 @@ module ConstructionCliTests =
     let private configurationAt = configurationWith timerSlots
     let private configuration = configurationAt "src/Domain"
 
-    let internal withHost (construction: bool) (prepare: string -> unit) test =
+    /// `grantExtra parent clone` adds grant-draft arguments (CONSTRUCT-008:
+    /// `--decisions FILE`); it may write files under `parent` first.
+    let internal withHostGranting (grantExtra: string -> string -> string list) (construction: bool) (prepare: string -> unit) test =
         let parent = CliHarness.temporaryDirectory "construction"
         use key = ECDsa.Create(ECCurve.NamedCurves.nistP256)
         try
@@ -107,10 +109,10 @@ module ConstructionCliTests =
             run [ "local"; "operator"; "init"; "--host-config"; config; "--public-key"; publicKey; "--key-id"; "op-1"
                   "--approver"; "operator"; "--revision"; "rev-1"; "--declare-qualified-release" ] |> ok |> ignore
             let draft, payload, signature = Path.Combine(parent, "grant.json"), Path.Combine(parent, "grant.bin"), Path.Combine(parent, "grant.sig")
-            run [ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
-                  "--group"; group; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "ecir/timer/source-manifest.json"
-                  "--blueprint"; "ecir/timer/blueprint.json"; "--member"; "WI-TIMER=" + requirement
-                  "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
+            run ([ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
+                   "--group"; group; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "ecir/timer/source-manifest.json"
+                   "--blueprint"; "ecir/timer/blueprint.json"; "--member"; "WI-TIMER=" + requirement
+                   "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] @ grantExtra parent clone) |> ok |> ignore
             File.WriteAllBytes(signature, key.SignData(File.ReadAllBytes payload, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence))
             run [ "local"; "operator"; "grant"; "--host-config"; config; "--draft"; draft; "--signature"; signature; "--revision"; "rev-2" ] |> ok |> ignore
             let plan = Path.Combine(parent, "plan.json")
@@ -118,6 +120,8 @@ module ConstructionCliTests =
             test { Parent = parent; Clone = clone; Config = config; Plan = plan; Journal = Path.Combine(host, "construction") }
         finally
             GitFixture.cleanup parent
+
+    let internal withHost (construction: bool) (prepare: string -> unit) test = withHostGranting (fun _ _ -> []) construction prepare test
 
     let internal construct (host: Host) verb plan =
         PraxisCli.run host.Clone (Some coordinator) [ "construct"; verb; "--host-config"; host.Config; "--group"; group; "--plan"; plan; "--target"; target ]

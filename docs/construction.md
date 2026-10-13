@@ -206,6 +206,28 @@ repository):
   between 1 and 262144. The deny rule above refuses an unsafe slot name when
   the configuration loads. Slots are refused when the mount lies under a dot
   directory.
+- `acceptanceSlots` (CONSTRUCT-008): acceptance adapter slots, distinct from
+  extension slots, for a frozen oracle-adapter file the constructing agent
+  fills, for example:
+
+  ```json
+  "acceptanceSlots": [
+    { "path": "pilot/Timer/TimerOracleAdapter.fs",
+      "acceptanceContract": "TimerPilot.TimerOracleAdapter",
+      "maxBytes": 65536 }
+  ]
+  ```
+
+  `path` is one file directly under the mount, under the same name deny rule
+  as a slot (no generated, project, dependency or policy file); names and
+  contracts may not repeat an extension slot's. `construct prepare` refuses a
+  slot whose path is absent from the admitted source commit, not a regular
+  file there, or a generated file. The slot is bound in the prepared
+  artifact's `hostBinding` (so it enters the cache key), listed in
+  `permittedExtensionFiles` and in `permittedExtensionSlots` with
+  `kind: "acceptanceAdapter"`, and its stub's doc comments and `let`
+  signatures appear in the handoff. Applying it only replaces the existing
+  file. A configuration without `acceptanceSlots` behaves exactly as before.
 
 Authority comes from the same operator grant as `praxis local` (see
 [local-runtime.md](local-runtime.md)). The operator signs a scope covering
@@ -269,3 +291,12 @@ This came from timer pilot 01 (research-documents#7, finding F2). There,
 handwritten session code silently decided this question, and different runs
 decided it differently.
 
+
+## Known merge gate (CONSTRUCT-008)
+
+Mechanical-first construction (`construct prepare`, `construct apply
+--prepared`) runs on Ordo 1.8.2. Ordo has not published that release yet:
+`vendor/nuget/ordo-core.lock` and `ordo-construction.lock` pin local packs of
+Ordo branch `construct/default-plan` (aa991a7), and their URLs name the release
+assets this pin expects. Do not merge until v1.8.2 is published and its assets'
+sha256 values match the locks.

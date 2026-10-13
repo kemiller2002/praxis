@@ -100,7 +100,7 @@ module LocalWorkerDelegation =
                     let scope : EcirApprovalScope =
                         { GroupId = packet.GroupId; CohortId = packet.CohortId; SourceCommit = packet.SourceCommit
                           ManifestDigest = packet.SourceManifestDigest; BlueprintDigest = packet.BlueprintDigest
-                          RequirementKeys = keys; DecisionIds = packet.DecisionIds }
+                          RequirementKeys = keys; DecisionIds = packet.DecisionIds; ConstructionDecisionsDigest = None }
                     EcirApprovals.read grant.ReceiptJson |> Result.bind (fun receipt ->
                         EcirApprovals.verify policy.TrustedSigners scope now receipt |> Result.bind (fun _ ->
                             let issued = DateTimeOffset.Parse receipt.IssuedAt

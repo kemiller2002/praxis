@@ -362,7 +362,7 @@ module ConstructionScope =
         let routing = ConstructionRouting.classify configuration pinned.Admitted
         let routeId = ConstructionRouting.routeId routing
         let usable = ConstructionRouting.usableSlots routing
-        let contracts (slot: ConstructionExtensionSlot) = routing.Custom |> List.filter (fun r -> r.Slot.File = slot.File) |> List.map _.Contract
+        let contracts (slot: ConstructionExtensionSlot) = ConstructionRouting.slotContracts routing slot
         let parseSlot (value: string) =
             match value.Split(' ') |> Array.toList with
             | path :: digest :: named -> Some(path, digest, named)
@@ -447,7 +447,7 @@ module ConstructionScope =
                       match slotWrites |> Map.tryFind path with
                       | None -> yield "construction-scope-unexpected-file: " + path + " (outside the generated ownership root and the host-declared extension slots)"
                       | Some digest ->
-                          let limit = routing.Slots |> List.tryFind (fun slot -> ConstructionTree.placed mount slot.File = path) |> Option.map _.MaxBytes
+                          let limit = routing.Slots @ routing.Acceptance |> List.tryFind (fun slot -> ConstructionTree.placed mount slot.File = path) |> Option.map _.MaxBytes
                           match ConstructionTree.entryAt git repository candidate path, limit with
                           | Ok(Some("100644", Some content)), Some limit
                               when ConstructionTree.digest content = digest && UTF8Encoding(false).GetByteCount content <= limit -> ()

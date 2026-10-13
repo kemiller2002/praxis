@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 100,
+  "nextSeq": 101,
   "items": [
     {
       "id": "WI-0001",
@@ -6042,6 +6042,27 @@
       "attachments": [],
       "createdAt": "2026-10-12T22:37:50.828Z",
       "updatedAt": "2026-10-12T22:37:59.730Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0100",
+      "title": "CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-13T07:26:45.295Z",
+      "updatedAt": "2026-10-13T07:26:51.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

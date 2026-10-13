@@ -23,7 +23,7 @@ module LocalWorkerDelegationTests =
         let scope : EcirApprovalScope =
             { GroupId = original.GroupId; CohortId = original.CohortId; SourceCommit = original.SourceCommit
               ManifestDigest = original.SourceManifestDigest; BlueprintDigest = original.BlueprintDigest
-              RequirementKeys = original.Members |> List.collect _.RequirementKeys; DecisionIds = original.DecisionIds }
+              RequirementKeys = original.Members |> List.collect _.RequirementKeys; DecisionIds = original.DecisionIds; ConstructionDecisionsDigest = None }
         let unsigned : EcirSignedApproval =
             { SchemaVersion = EcirApprovals.SchemaVersion; KeyId = "key-1"; Approver = "operator-1"
               IssuedAt = "2026-10-10T11:00:00Z"; ExpiresAt = "2026-10-10T13:00:00Z"

@@ -19,7 +19,7 @@ module LocalRuntimeCommands =
         + " | local packet propose --host-config FILE --group ID --worker ID --role ROLE --dispatch ID --attempt ID --parent EXE-ID --child EXE-ID --member WI=EXE-ID [--member WI=EXE-ID]* --decision ID [--decision ID]* --allow PATH [--allow PATH]* --acceptance OBLIGATION=WI:VALIDATOR [--acceptance ...]* [--prerequisite WI]* [--valid-minutes N] [--timeout-seconds N] [--max-output-bytes N] --out FILE"
         + " | local validator pin --host-config FILE --validator ID"
         + " | local operator init --host-config FILE --public-key PEM --key-id ID --approver NAME --revision REV [--declare-qualified-release]"
-        + " | local operator grant-draft --host-config FILE --key-id ID --approver NAME --group ID --cohort ID --source REV --manifest PATH --blueprint PATH --member WI=REQUIREMENT [--member ...]* --decision ID [--decision ID]* [--valid-minutes N] --draft FILE --payload FILE"
+        + " | local operator grant-draft --host-config FILE --key-id ID --approver NAME --group ID --cohort ID --source REV --manifest PATH --blueprint PATH --member WI=REQUIREMENT [--member ...]* --decision ID [--decision ID]* [--decisions FILE] [--valid-minutes N] --draft FILE --payload FILE"
         + " | local operator grant --host-config FILE --draft FILE --signature FILE --revision REV"
         + " | local operator revoke --host-config FILE --key-id ID --revision REV"
         + " | local operator review --host-config FILE --packet FILE --key-id ID --approver NAME --payload FILE"
@@ -157,6 +157,7 @@ module LocalRuntimeCommands =
                     LocalRuntimeService.grantDraft root config
                         { KeyId = keyId; Approver = approver; GroupId = group; CohortId = cohort; Source = source; Manifest = manifest
                           Blueprint = blueprint; Members = Map.ofList members; Decisions = values "--decision" rest
+                          DecisionRecordsPath = value "--decisions" rest
                           ValidMinutes = minutes; DraftPath = draft; PayloadPath = payload }
                     |> lines
             }
