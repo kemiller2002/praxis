@@ -215,6 +215,7 @@
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | RELEASE-3-10-0 | Release Praxis 3.10.0 | complete |  | medium |
 | RELEASE-3-11-0 | Release Praxis 3.11.0 | complete |  | medium |
+| RELEASE-3-12-0 | Release Praxis 3.12.0 | complete |  | medium |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |
 | RELEASE-3-7-0 | Release Praxis 3.7.0 | complete | release | high |
