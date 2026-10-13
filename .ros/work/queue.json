@@ -6122,10 +6122,10 @@
       "description": "Bump release.json from 3.12.0 to 3.13.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-13T19:50:27.095Z",
-      "updatedAt": "2026-10-13T19:50:27.214Z",
+      "updatedAt": "2026-10-13T19:50:32.702Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",
