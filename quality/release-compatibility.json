@@ -114,6 +114,25 @@
         ]
       },
       "recordedFrom": "release.json at tag v3.11.0"
+    },
+    "3.12.0": {
+      "remoteProtocol": "1.4",
+      "reads": {
+        "work-queue": [
+          "1.0.0"
+        ],
+        "work-context": [
+          "1.0.0"
+        ],
+        "work-groups": [
+          "1",
+          "2"
+        ],
+        "work-events": [
+          "1.0.0"
+        ]
+      },
+      "recordedFrom": "release.json at tag v3.12.0"
     }
   },
   "exceptions": []
