@@ -223,3 +223,21 @@ module ConstructionTree =
         |> Result.bind (fun listing ->
             let commits = listing.Split('\n', StringSplitOptions.RemoveEmptyEntries) |> Array.map _.Trim() |> Array.toList
             if commits.Length > 4096 then Error "candidate history exceeds the construction-scope bound" else Ok commits)
+
+    /// Regular files of a commit's tree with their sizes, never following a
+    /// link or submodule (those entries are simply not listed).
+    let regularFiles git repository (commit: string) : Result<(string * int64) list, string> =
+        if not (isObject commit) then Error "not a full commit identifier"
+        else
+            succeed git repository Map.empty "" [ "ls-tree"; "-r"; "-l"; "-z"; "--full-tree"; commit ] |> Result.map (fun listing ->
+                listing.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+                |> List.choose (fun entry ->
+                    match entry.Split('\t', 2) with
+                    | [| header; path |] ->
+                        match header.Split(' ', StringSplitOptions.RemoveEmptyEntries) with
+                        | [| "100644"; "blob"; _; size |] ->
+                            match Int64.TryParse size with
+                            | true, bytes -> Some(path, bytes)
+                            | _ -> None
+                        | _ -> None
+                    | _ -> None))

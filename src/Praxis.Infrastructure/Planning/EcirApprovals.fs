@@ -16,7 +16,12 @@ type EcirApprovalScope =
       ManifestDigest: string
       BlueprintDigest: string
       RequirementKeys: string list
-      DecisionIds: string list }
+      DecisionIds: string list
+      /// CONSTRUCT-008: SHA-256 of the exact bytes of an operator-approved
+      /// `ordo.construction-decisions/1` file, when the grant binds one. It is
+      /// covered by the signature; grants without it sign exactly the bytes
+      /// they always did.
+      ConstructionDecisionsDigest: string option }
 
 /// Untrusted transport. This record has NO authority until the signature,
 /// signer policy, time interval, and exact expected scope are all verified.
@@ -45,6 +50,7 @@ type EcirApprovalEvidence =
       BlueprintDigest: string
       RequirementKeys: string list
       DecisionIds: string list
+      ConstructionDecisionsDigest: string option
       ExpiresAt: string }
 
 [<RequireQualifiedAccess>]
@@ -95,6 +101,11 @@ module EcirApprovals =
             let normalized = values |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
             frame (string normalized.Length)
             normalized |> List.iter frame)
+        // Appended only when bound, so an approval without construction
+        // decisions keeps its original signing payload (B-arm grants).
+        s.ConstructionDecisionsDigest |> Option.iter (fun digest ->
+            frame "constructionDecisionsDigest"
+            frame digest)
         textBytes (buffer.ToString())
 
     let private readString (name: string) (value: JsonElement) =
@@ -117,13 +128,17 @@ module EcirApprovals =
             result)
         |> Seq.toList
 
-    let private checkShape (names: string list) (value: JsonElement) =
+    let private checkShapeWith (names: string list) (optional: string list) (value: JsonElement) =
         if value.ValueKind <> JsonValueKind.Object then invalidArg "json" "expected object"
-        let supplied = value.EnumerateObject() |> Seq.map (fun pair -> pair.Name) |> Seq.toList
+        let all = value.EnumerateObject() |> Seq.map (fun pair -> pair.Name) |> Seq.toList
+        if all.Length <> (all |> Set.ofList).Count then invalidArg "json" "duplicate ECIR approval fields"
+        let supplied = all |> List.filter (fun name -> not (List.contains name optional))
         if supplied.Length <> names.Length
            || supplied.Length <> (supplied |> Set.ofList).Count
            || Set.ofList supplied <> Set.ofList names then
             invalidArg "json" "missing, unexpected or duplicate ECIR approval fields"
+
+    let private checkShape (names: string list) (value: JsonElement) = checkShapeWith names [] value
 
     /// Decode with an exact allow-list and reject duplicate JSON member names.
     /// Parsing an approval never supplies authority.
@@ -133,7 +148,11 @@ module EcirApprovals =
             let root = document.RootElement
             checkShape [ "schemaVersion"; "keyId"; "approver"; "issuedAt"; "expiresAt"; "scope"; "signature" ] root
             let s = root.GetProperty "scope"
-            checkShape [ "groupId"; "cohortId"; "sourceCommit"; "manifestDigest"; "blueprintDigest"; "requirementKeys"; "decisionIds" ] s
+            checkShapeWith [ "groupId"; "cohortId"; "sourceCommit"; "manifestDigest"; "blueprintDigest"; "requirementKeys"; "decisionIds" ] [ "constructionDecisionsDigest" ] s
+            let decisionsDigest =
+                match s.TryGetProperty "constructionDecisionsDigest" with
+                | true, _ -> Some(readString "constructionDecisionsDigest" s)
+                | _ -> None
 
             Ok
                 { SchemaVersion = readString "schemaVersion" root
@@ -148,7 +167,8 @@ module EcirApprovals =
                       ManifestDigest = readString "manifestDigest" s
                       BlueprintDigest = readString "blueprintDigest" s
                       RequirementKeys = readStrings "requirementKeys" s
-                      DecisionIds = readStrings "decisionIds" s }
+                      DecisionIds = readStrings "decisionIds" s
+                      ConstructionDecisionsDigest = decisionsDigest }
                   Signature = readString "signature" root }
         with
         | :? JsonException as ex -> Error("malformed signed ECIR approval: " + ex.Message)
@@ -164,7 +184,11 @@ module EcirApprovals =
             Some parsed
         else None
 
-    /// Strict scope and signer validation. The caller supplies trusted
+    /// Strict scope and signer validation. A bound construction-decisions
+    /// digest is authenticated by the signature and returned in the evidence;
+    /// it is not part of the expected scope, because only construction
+    /// admission (CONSTRUCT-008) consumes it and compares it to the exact
+    /// decision-record bytes presented. The caller supplies trusted
     /// available keys, expected cohort/requirements/decisions and UTC time.
     /// A signed receipt from an unknown key or an already expired/revoked
     /// authority is NOT valid. Key revocation is enforced by removing the
@@ -186,6 +210,8 @@ module EcirApprovals =
              || not (sha256 s.ManifestDigest && sha256 s.BlueprintDigest
                      && sha256 expected.ManifestDigest && sha256 expected.BlueprintDigest) then
             Error "ECIR source commit or digest is malformed"
+        elif s.ConstructionDecisionsDigest |> Option.exists (sha256 >> not) then
+            Error "ECIR construction decisions digest is malformed"
         elif isBlank s.GroupId || isBlank s.CohortId
              || s.GroupId <> expected.GroupId
              || s.CohortId <> expected.CohortId
@@ -236,6 +262,7 @@ module EcirApprovals =
                               BlueprintDigest = s.BlueprintDigest
                               RequirementKeys = s.RequirementKeys |> List.sort
                               DecisionIds = s.DecisionIds |> List.sort
+                              ConstructionDecisionsDigest = s.ConstructionDecisionsDigest
                               ExpiresAt = receipt.ExpiresAt }
                 with
                 | :? FormatException -> Error "ECIR approval signature is not valid base64"

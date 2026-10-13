@@ -121,10 +121,15 @@
     <!-- Construction precedes the local runtime, which composes the host
          construction-scope check into worker checklists (GH-234). -->
     <Compile Include="Construction/ConstructionTree.fs" />
+    <Compile Include="Construction/ConstructionDecisions.fs" />
     <Compile Include="Construction/ConstructionAdmission.fs" />
+    <Compile Include="Construction/DefaultPlanSeam.fs" />
     <Compile Include="Construction/ConstructionApplication.fs" />
     <Compile Include="Construction/ConstructionRouting.fs" />
+    <Compile Include="Construction/ConstructionHandoff.fs" />
     <Compile Include="Construction/ConstructionExtension.fs" />
+    <Compile Include="Construction/ConstructionPrepared.fs" />
+    <Compile Include="Construction/ConstructionTelemetry.fs" />
     <Compile Include="Construction/ConstructionScope.fs" />
     <Compile Include="Planning/FileLocalRuntime.fs" />
     <Compile Include="Planning/LocalOperator.fs" />

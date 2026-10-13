@@ -847,6 +847,8 @@ praxis construct preview --host-config FILE --group ID --plan FILE --target REF
 praxis construct apply --host-config FILE --group ID --plan FILE --target REF
 praxis construct route --host-config FILE --group ID --plan FILE
 praxis construct extend --host-config FILE --group ID --plan FILE --target REF --files DIR [--role implementation]
+praxis construct prepare --host-config FILE --group ID [--cohort ID] [--vocabulary VERSION] [--decisions FILE] --out FILE [--telemetry-target WI|EXE]
+praxis construct apply --host-config FILE --group ID --prepared FILE --target REF [--extensions DIR] [--observations FILE] [--telemetry-target WI|EXE]
 ```
 
 Host-controlled application of an Ordo construction plan. The plan is the only
@@ -875,6 +877,33 @@ update. It never runs a worker or submitted code. Worker-execution flags
 (`--worker`, `--command`, `--run`, and others) are refused until host
 containment is qualified. Only the `implementation` role (the default) may
 extend.
+
+Mechanical-first construction (CONSTRUCT-008). The operator binds an
+`ordo.construction-decisions/1` file into the signed grant with
+`local operator grant-draft ... --decisions FILE` (SHA-256 of its exact bytes;
+grants without it keep their original signing payload). `prepare` admits the
+cohort under that grant, refuses decision records whose digest differs from the
+signed one, calls Ordo's default-plan generator (vocabulary 1 unless
+`--vocabulary` says otherwise), admits the generated plan through the ordinary
+plan admission and writes `praxis.construction-prepared/1` to `--out`, plus the
+agent handoff `praxis.construction-handoff/1` as `<out>.handoff.json` and its
+Markdown twin `<out>.handoff.md`. The host keeps the approved decision records
+and the validated artifact under its construction root, keyed by a cache key
+over every binding input; an identical key reuses the artifact byte for byte,
+any change invalidates it. `apply --prepared` re-derives the binding from
+current host state and refuses any drift (grant, policy revision, source,
+blueprint, decisions, generator, vocabulary, host placement policy) or any
+difference from the host's validated copy, then applies the generated files
+like `apply` and the handwritten files from `--extensions` only at the
+artifact's `permittedExtensionFiles`, like `extend`. Every refused handwritten
+entry refuses the whole apply before any effect; refusals are recorded under the
+host construction root and, with `--observations`, written as
+`dokimos.host-observations/1`. Each invocation is an execution-telemetry step
+(`construct prepare` / `construct apply`) of the active execution or
+`--telemetry-target`, carrying host compute time as `time.tool_ms` and
+`tool.calls`, `tool.retries`, `tool.failures`; the host ledger
+(`telemetry/ledger.jsonl` under the construction root) counts previews,
+retries, refusals and cache reuse. Model usage is never recorded by the host.
 
 Exit 0 success, 2 invalid arguments, 3 refused. See
 [the construction guide](construction.md).

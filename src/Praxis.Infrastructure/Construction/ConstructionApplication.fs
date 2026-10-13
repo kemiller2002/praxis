@@ -99,8 +99,10 @@ module ConstructionApplication =
         "construct-" + (ConstructionTree.digest (String.concat "\n" [ preview.Binding.PlanDigest; preview.TargetRef; preview.TargetCommit ])).Substring(7, 24)
 
     /// Host record directories in the construction root that are not journal
-    /// entries: routing records (Praxis #243) and admitted plans (GH-234).
-    let reserved = set [ "routes"; "plans" ]
+    /// entries: routing records (Praxis #243), admitted plans (GH-234), and
+    /// mechanical-first decision records, prepared artifacts, refusals and
+    /// the telemetry ledger (CONSTRUCT-008).
+    let reserved = set [ "routes"; "plans"; "decisions"; "prepared"; "refusals"; "telemetry" ]
 
     /// The construction root also holds routing records under `routes/` and
     /// admitted plans under `plans/`; the integration journal leaves them alone.

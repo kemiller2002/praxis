@@ -77,8 +77,10 @@ module ConstructionExtension =
                                     Ok { Slot = slot; Path = ConstructionTree.placed routing.Mount slot.File; Content = content
                                          Digest = ConstructionTree.digest content; Contracts = contracts }
 
-    /// Read the submission directory without following any link.
-    let read (routing: ConstructionRouting) (directory: string) : Result<ExtensionFile list, string> =
+    /// Judge every entry of the submission directory without following any
+    /// link: (entry name, accepted file or refusal reason). The whole
+    /// directory is refused when it cannot be judged entry by entry.
+    let inspect (routing: ConstructionRouting) (directory: string) : Result<(string * Result<ExtensionFile, string>) list, string> =
         try
             let full = Path.TrimEndingDirectorySeparator(Path.GetFullPath directory)
             if not (Directory.Exists full) then Error "extension files directory does not exist"
@@ -87,12 +89,15 @@ module ConstructionExtension =
                 let entries = Directory.GetFileSystemEntries full |> Array.sortWith (fun a b -> String.CompareOrdinal(a, b)) |> Array.toList
                 if entries.IsEmpty then Error "no extension files submitted"
                 elif entries.Length > maxEntries then Error(sprintf "extension files directory has %d entries; at most %d are accepted" entries.Length maxEntries)
-                else
-                    let judged = entries |> List.map (judge routing full)
-                    match judged |> List.choose (function Error reason -> Some reason | Ok _ -> None) with
-                    | [] -> Ok(judged |> List.choose (function Ok file -> Some file | Error _ -> None))
-                    | reasons -> Error("extension refused: " + String.concat "; " reasons)
+                else Ok(entries |> List.map (fun entry -> Path.GetFileName entry, judge routing full entry))
         with error -> Error("extension files unreadable: " + error.Message)
+
+    /// Read the submission directory without following any link.
+    let read (routing: ConstructionRouting) (directory: string) : Result<ExtensionFile list, string> =
+        inspect routing directory |> Result.bind (fun judged ->
+            match judged |> List.choose (function _, Error reason -> Some reason | _, Ok _ -> None) with
+            | [] -> Ok(judged |> List.choose (function _, Ok file -> Some file | _, Error _ -> None))
+            | reasons -> Error("extension refused: " + String.concat "; " reasons))
 
     let private requirementPath (key: string) =
         let path = key.Split('#').[0].Split('/')

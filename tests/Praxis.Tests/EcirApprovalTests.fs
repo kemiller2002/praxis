@@ -20,7 +20,8 @@ module EcirApprovalTests =
           ManifestDigest = source
           BlueprintDigest = blueprint
           RequirementKeys = [ "docs/req.md#R-1"; "docs/req.md#R-2" ]
-          DecisionIds = [ "DEC-2"; "DEC-1" ] }
+          DecisionIds = [ "DEC-2"; "DEC-1" ]
+          ConstructionDecisionsDigest = None }
 
     let private template =
         { SchemaVersion = EcirApprovals.SchemaVersion

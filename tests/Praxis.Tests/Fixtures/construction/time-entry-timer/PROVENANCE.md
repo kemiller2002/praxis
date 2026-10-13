@@ -5,3 +5,9 @@ construction (Praxis #242); Ordo remains their owner. Do not edit them by hand; 
 `plan.v2-unresolved.json` is a verbatim copy of the same-named Ordo fixture at `kemiller2002/ordo@e6cbeff`
 (PR #71, Ordo 1.7.0, vocabulary 2). It binds the same manifest and blueprint and leaves the Stop effect's
 failure disposition `unresolved`.
+
+`requirements/timer-stop-completion.txt` and `requirements/timer-paused-time-excluded.txt` are verbatim
+requirement excerpts of `kemiller2002/time-entry-state-machine@73a63f1` (L131-L144 and L105-L107), copied from the
+frozen pilot skeleton in `kemiller2002/research-documents`
+(`research/construction-by-design/time-entry-timer-01/harness/skeleton/requirements/`). Their SHA-256 equals the
+`contentDigest` pinned in `source-manifest.json`; CONSTRUCT-008 handoff tests read them from the admitted source.

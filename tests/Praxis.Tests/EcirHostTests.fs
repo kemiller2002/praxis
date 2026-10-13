@@ -38,7 +38,7 @@ module EcirHostTests =
         let scope =
             { GroupId = grant.GroupId; CohortId = grant.CohortId; SourceCommit = source.Commit
               ManifestDigest = source.SourceManifestDigest; BlueprintDigest = grant.BlueprintDigest
-              RequirementKeys = [ "R-1" ]; DecisionIds = [ "DEC-1" ] }
+              RequirementKeys = [ "R-1" ]; DecisionIds = [ "DEC-1" ]; ConstructionDecisionsDigest = None }
         let receipt =
             { SchemaVersion = EcirApprovals.SchemaVersion; KeyId = "owner-1"; Approver = "owner"
               IssuedAt = "2026-10-10T08:00:00Z"; ExpiresAt = "2026-10-10T10:00:00Z"

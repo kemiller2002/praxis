@@ -18,6 +18,9 @@ type LocalCommandFailure = Invalid of string | Refused of string
 type LocalGrantDraftRequest =
     { KeyId: string; Approver: string; GroupId: string; CohortId: string; Source: string
       Manifest: string; Blueprint: string; Members: Map<string, string>; Decisions: string list
+      /// CONSTRUCT-008: an `ordo.construction-decisions/1` file whose digest
+      /// the grant binds. Omitted for grants without construction decisions.
+      DecisionRecordsPath: string option
       ValidMinutes: int; DraftPath: string; PayloadPath: string }
 
 /// File, clock and process effects behind `praxis local`. The CLI parses
@@ -135,20 +138,32 @@ module LocalRuntimeService =
     let grantDraft root hostConfig (request: LocalGrantDraftRequest) =
         configuration root hostConfig |> Result.bind (fun loaded ->
             let issued = DateTimeOffset.UtcNow.AddSeconds(-1.)
-            LocalOperator.grantDraft loaded request.KeyId request.Approver request.GroupId request.CohortId request.Source request.Manifest request.Blueprint
-                request.Members request.Decisions issued (issued.AddMinutes(float (min request.ValidMinutes 1440))) CancellationToken.None
-            |> refused |> Result.bind (fun draft ->
-                writeNew request.DraftPath (utf8 (LocalOperator.renderDraft draft))
-                |> Result.bind (fun () -> writeNew request.PayloadPath (LocalOperator.grantPayload draft))
-                |> Result.map (fun () ->
-                    [ sprintf "grant draft %s and signing payload %s written; sign the payload bytes with the operator key (ECDSA P-256, SHA-256)" request.DraftPath request.PayloadPath ])))
+            let decisionRecords =
+                match request.DecisionRecordsPath with
+                | None -> Ok None
+                | Some path ->
+                    Praxis.Infrastructure.Construction.ConstructionDecisions.readFile path
+                    |> Result.bind (fun (text, digest) ->
+                        Praxis.Infrastructure.Construction.ConstructionDecisions.envelope text |> Result.bind (fun envelope ->
+                            if envelope.CohortId <> request.CohortId then Error("construction decisions are for cohort " + envelope.CohortId + ", not " + request.CohortId)
+                            else Ok(Some digest)))
+                    |> invalid
+            decisionRecords |> Result.bind (fun decisionsDigest ->
+                LocalOperator.grantDraft loaded request.KeyId request.Approver request.GroupId request.CohortId request.Source request.Manifest request.Blueprint
+                    request.Members request.Decisions decisionsDigest issued (issued.AddMinutes(float (min request.ValidMinutes 1440))) CancellationToken.None
+                |> refused |> Result.bind (fun draft ->
+                    writeNew request.DraftPath (utf8 (LocalOperator.renderDraft draft))
+                    |> Result.bind (fun () -> writeNew request.PayloadPath (LocalOperator.grantPayload draft))
+                    |> Result.map (fun () ->
+                        [ sprintf "grant draft %s and signing payload %s written; sign the payload bytes with the operator key (ECDSA P-256, SHA-256)" request.DraftPath request.PayloadPath ]))))
 
     let grant root hostConfig draftPath signaturePath revision =
         configuration root hostConfig |> Result.bind (fun loaded ->
             readText draftPath |> Result.bind (LocalOperator.readDraft >> invalid) |> Result.bind (fun draft ->
                 readBytes signaturePath |> Result.bind (fun signature ->
                     LocalOperator.applyGrant loaded draft signature revision DateTimeOffset.UtcNow |> refused |> Result.map (fun () ->
-                        [ sprintf "group %s granted; host policy is now %s" draft.Approval.Scope.GroupId revision ]))))
+                        [ sprintf "group %s granted; host policy is now %s" draft.Approval.Scope.GroupId revision ]
+                        @ (draft.Approval.Scope.ConstructionDecisionsDigest |> Option.map (sprintf "construction decisions %s are bound by the signed grant") |> Option.toList)))))
 
     let revoke root hostConfig keyId revision =
         configuration root hostConfig |> Result.bind (fun loaded ->

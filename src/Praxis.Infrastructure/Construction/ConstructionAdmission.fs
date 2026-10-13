@@ -83,7 +83,8 @@ module ConstructionAdmission =
                 let expected : EcirApprovalScope =
                     { GroupId = grant.GroupId; CohortId = grant.CohortId; SourceCommit = grant.Source.Commit
                       ManifestDigest = grant.Source.SourceManifestDigest; BlueprintDigest = grant.BlueprintDigest
-                      RequirementKeys = keys; DecisionIds = receipt.Scope.DecisionIds }
+                      RequirementKeys = keys; DecisionIds = receipt.Scope.DecisionIds
+                      ConstructionDecisionsDigest = receipt.Scope.ConstructionDecisionsDigest }
                 EcirApprovals.verify policy.TrustedSigners expected now receipt |> Result.map (fun evidence -> grant, evidence)))
 
     /// The binding a plan must carry, derived from the prepared cohort and never
@@ -113,10 +114,10 @@ module ConstructionAdmission =
             plan.ToJsonString()
         | _ -> planText
 
-    /// Ordo's own semantics over the exact committed documents: manifest and
-    /// blueprint identity, cohort readiness under the signed decisions, then
-    /// the plan bound to that prepared cohort.
-    let private prepare (manifestText: string) (blueprintText: string) cohortId (decisions: string list) (planText: string) =
+    /// Ordo's own cohort semantics over the exact committed documents:
+    /// manifest and blueprint identity, then cohort readiness under the
+    /// signed decisions.
+    let private prepareCohort (manifestText: string) (blueprintText: string) cohortId (decisions: string list) =
         ConstructionIrWire.readManifest manifestText |> Result.mapError ((+) "source manifest refused: ")
         |> Result.bind (fun manifest ->
             ConstructionIrWire.verifyManifestDigest manifest |> Result.mapError ((+) "source manifest refused: ")
@@ -124,15 +125,43 @@ module ConstructionAdmission =
             |> Result.bind (fun blueprint ->
                 ConstructionIr.prepareCohort manifest blueprint cohortId (Set.ofList decisions)
                 |> Result.mapError (fun violations -> "cohort is not ready for construction: " + describe violations)))
-        |> Result.bind (fun prepared ->
-            let stamped = stampBinding prepared planText
-            ConstructionPlanWire.readPlan stamped |> Result.mapError ((+) "construction plan refused: ")
-            |> Result.bind (fun draft -> ConstructionPlan.validate prepared draft |> Result.mapError (fun violations -> "construction plan refused: " + describe violations))
-            |> Result.bind (fun validated ->
-                if not (ConstructionPlan.isBoundTo prepared validated) then Error "construction plan is not bound to the approved cohort"
-                else Ok(validated, stamped)))
 
-    let admit (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) (now: DateTimeOffset) (groupId: string) (planText: string) : Result<Admitted, string> =
+    /// The plan bound to that prepared cohort.
+    let private preparePlan prepared (planText: string) =
+        let stamped = stampBinding prepared planText
+        ConstructionPlanWire.readPlan stamped |> Result.mapError ((+) "construction plan refused: ")
+        |> Result.bind (fun draft -> ConstructionPlan.validate prepared draft |> Result.mapError (fun violations -> "construction plan refused: " + describe violations))
+        |> Result.bind (fun validated ->
+            if not (ConstructionPlan.isBoundTo prepared validated) then Error "construction plan is not bound to the approved cohort"
+            else Ok(validated, stamped))
+
+    /// A cohort admitted under the current signed grant, before any plan:
+    /// the input mechanical-first construction (CONSTRUCT-008) generates from.
+    /// Only `admitCohort` produces one.
+    type AdmittedCohort =
+        private
+            { CohortGrant: EcirHostGrant
+              CohortApproval: EcirApprovalEvidence
+              CohortPolicyRevision: string
+              CohortManifestDigest: string
+              CohortBlueprintDigest: string
+              CohortManifest: string
+              CohortPrepared: ConstructionIr.PreparedCohort }
+
+    let cohortGrant (cohort: AdmittedCohort) = cohort.CohortGrant
+    let cohortApproval (cohort: AdmittedCohort) = cohort.CohortApproval
+    let cohortPolicyRevision (cohort: AdmittedCohort) = cohort.CohortPolicyRevision
+    let cohortManifestDigest (cohort: AdmittedCohort) = cohort.CohortManifestDigest
+    let cohortBlueprintDigest (cohort: AdmittedCohort) = cohort.CohortBlueprintDigest
+    /// The exact committed source manifest text (requirement locations and
+    /// their excerpt digests).
+    let cohortManifest (cohort: AdmittedCohort) = cohort.CohortManifest
+    let cohortPrepared (cohort: AdmittedCohort) = cohort.CohortPrepared
+    /// Ordo's canonical blueprint digest (what decision records bind to).
+    let cohortCanonicalBlueprintDigest (cohort: AdmittedCohort) =
+        ConstructionIrWire.blueprintDigest (ConstructionIr.preparedCohortView cohort.CohortPrepared).Blueprint
+
+    let admitCohort (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) (now: DateTimeOffset) (groupId: string) : Result<AdmittedCohort, string> =
         let git, root = configuration.Git, configuration.RepositoryRoot
         approve root policy now groupId |> Result.bind (fun (grant, approval) ->
             let source = grant.Source
@@ -141,21 +170,29 @@ module ConstructionAdmission =
                     if manifestDigest <> source.SourceManifestDigest || blueprintDigest <> grant.BlueprintDigest then
                         Error "committed ECIR documents differ from the approved digests"
                     else
-                        prepare manifest blueprint grant.CohortId approval.DecisionIds planText |> Result.bind (fun (validated, stamped) ->
-                            Ordo.Construction.Construction.construct validated
-                            |> Result.mapError (fun refusals -> "construction refused: " + describe refusals)
-                            |> Result.map (fun built ->
-                                { Construction = built
-                                  PlanText = stamped
-                                  Binding =
-                                    { PolicyRevision = policy.Revision; GroupId = grant.GroupId; CohortId = grant.CohortId
-                                      SourceCommit = source.Commit; ManifestPath = source.ManifestPath; ManifestDigest = manifestDigest
-                                      BlueprintPath = source.BlueprintPath; BlueprintDigest = blueprintDigest
-                                      RequirementKeys = approval.RequirementKeys; DecisionIds = approval.DecisionIds
-                                      Approver = approval.Approver; ApprovalExpiresAt = approval.ExpiresAt
-                                      PlanDigest = ConstructionPlan.digest validated
-                                      PlanSourceManifestDigest = (ConstructionPlan.view validated).Binding.SourceManifestDigest
-                                      PlanBlueprintDigest = (ConstructionPlan.view validated).Binding.BlueprintDigest
-                                      PlanCanonicalJson = ConstructionPlan.canonicalJson validated
-                                      GeneratorVersion = built.GeneratorVersion
-                                      OrdoCoreVersion = ordoCoreVersion (); OrdoConstructionVersion = ordoConstructionVersion () } })))))
+                        prepareCohort manifest blueprint grant.CohortId approval.DecisionIds |> Result.map (fun prepared ->
+                            { CohortGrant = grant; CohortApproval = approval; CohortPolicyRevision = policy.Revision
+                              CohortManifestDigest = manifestDigest; CohortBlueprintDigest = blueprintDigest
+                              CohortManifest = manifest; CohortPrepared = prepared }))))
+
+    let admit (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) (now: DateTimeOffset) (groupId: string) (planText: string) : Result<Admitted, string> =
+        admitCohort configuration policy now groupId |> Result.bind (fun cohort ->
+            let grant, approval, source = cohort.CohortGrant, cohort.CohortApproval, cohort.CohortGrant.Source
+            preparePlan cohort.CohortPrepared planText |> Result.bind (fun (validated, stamped) ->
+                Ordo.Construction.Construction.construct validated
+                |> Result.mapError (fun refusals -> "construction refused: " + describe refusals)
+                |> Result.map (fun built ->
+                    { Construction = built
+                      PlanText = stamped
+                      Binding =
+                        { PolicyRevision = policy.Revision; GroupId = grant.GroupId; CohortId = grant.CohortId
+                          SourceCommit = source.Commit; ManifestPath = source.ManifestPath; ManifestDigest = cohort.CohortManifestDigest
+                          BlueprintPath = source.BlueprintPath; BlueprintDigest = cohort.CohortBlueprintDigest
+                          RequirementKeys = approval.RequirementKeys; DecisionIds = approval.DecisionIds
+                          Approver = approval.Approver; ApprovalExpiresAt = approval.ExpiresAt
+                          PlanDigest = ConstructionPlan.digest validated
+                          PlanSourceManifestDigest = (ConstructionPlan.view validated).Binding.SourceManifestDigest
+                          PlanBlueprintDigest = (ConstructionPlan.view validated).Binding.BlueprintDigest
+                          PlanCanonicalJson = ConstructionPlan.canonicalJson validated
+                          GeneratorVersion = built.GeneratorVersion
+                          OrdoCoreVersion = ordoCoreVersion (); OrdoConstructionVersion = ordoConstructionVersion () } })))

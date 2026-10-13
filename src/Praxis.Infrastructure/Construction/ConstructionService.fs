@@ -97,6 +97,17 @@ module ConstructionService =
                     ConstructionAdmission.admit configuration policy DateTimeOffset.UtcNow groupId plan
                     |> Result.map (fun admitted -> configuration, admitted))))
 
+    let private applicationNode (report: ConstructionReport) =
+        let node = previewNode report.Preview
+        node["schemaVersion"] <- JsonValue.Create "praxis.construction-application/1"
+        node["constructionId"] <- JsonValue.Create report.ConstructionId
+        match report.Outcome with
+        | ConstructionOutcome.Applied candidate ->
+            node["outcome"] <- JsonValue.Create "applied"
+            node["candidateCommit"] <- JsonValue.Create candidate
+        | ConstructionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
+        node
+
     /// Read-only: nothing is written anywhere.
     let preview root hostConfig groupId planPath targetRef =
         admitted root hostConfig groupId planPath |> Result.bind (fun (configuration, admitted) ->
@@ -104,16 +115,7 @@ module ConstructionService =
 
     let apply root hostConfig groupId planPath targetRef =
         admitted root hostConfig groupId planPath |> Result.bind (fun (configuration, admitted) ->
-            ConstructionApplication.apply configuration admitted targetRef DateTimeOffset.UtcNow |> Result.map (fun report ->
-                let node = previewNode report.Preview
-                node["schemaVersion"] <- JsonValue.Create "praxis.construction-application/1"
-                node["constructionId"] <- JsonValue.Create report.ConstructionId
-                match report.Outcome with
-                | ConstructionOutcome.Applied candidate ->
-                    node["outcome"] <- JsonValue.Create "applied"
-                    node["candidateCommit"] <- JsonValue.Create candidate
-                | ConstructionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
-                node))
+            ConstructionApplication.apply configuration admitted targetRef DateTimeOffset.UtcNow |> Result.map applicationNode)
 
     /// Classify the admitted construction's work and persist the routing
     /// record in the host construction root. Never touches the repository.
@@ -139,38 +141,162 @@ module ConstructionService =
         | ExtensionWriteKind.Replace -> "replace"
         | ExtensionWriteKind.Unchanged -> "unchanged"
 
+    let private extensionNode (report: ExtensionReport) =
+        let node = JsonObject()
+        node["schemaVersion"] <- JsonValue.Create "praxis.construction-extension/1"
+        node["extensionId"] <- JsonValue.Create report.ExtensionId
+        node["constructionId"] <- JsonValue.Create report.ConstructionId
+        node["constructionCommit"] <- JsonValue.Create report.ConstructionCommit
+        node["planDigest"] <- JsonValue.Create report.Routing.Binding.PlanDigest
+        node["routeId"] <- JsonValue.Create(ConstructionRouting.routeId report.Routing)
+        node["routeRecord"] <- JsonValue.Create report.RouteRecord
+        node["targetRef"] <- JsonValue.Create report.TargetRef
+        node["targetCommit"] <- JsonValue.Create report.TargetCommit
+        node["files"] <-
+            JsonArray(
+                report.Files
+                |> List.map (fun (file, kind) ->
+                    let item = JsonObject()
+                    item["kind"] <- JsonValue.Create(kindName' kind)
+                    item["path"] <- JsonValue.Create file.Path
+                    item["sha256"] <- JsonValue.Create file.Digest
+                    item["contracts"] <- strings file.Contracts
+                    item :> JsonNode)
+                |> List.toArray)
+        let routed = ConstructionRouting.render report.Routing
+        node["exceptions"] <- routed["exceptions"].DeepClone()
+        node["measurement"] <- routed["measurement"].DeepClone()
+        match report.Outcome with
+        | ExtensionOutcome.Applied candidate ->
+            node["outcome"] <- JsonValue.Create "applied"
+            node["candidateCommit"] <- JsonValue.Create candidate
+        | ExtensionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
+        node["notice"] <- JsonValue.Create "Handwritten files committed into host-declared slots. No worker or submitted code ran; obligations remain open until independently verified."
+        node
+
     let extend root hostConfig groupId planPath targetRef filesDirectory role =
         implementationRole role |> Result.bind (fun () ->
             admitted root hostConfig groupId planPath |> Result.bind (fun (configuration, admitted) ->
-                ConstructionExtension.extend configuration admitted targetRef filesDirectory DateTimeOffset.UtcNow |> Result.map (fun report ->
-                    let node = JsonObject()
-                    node["schemaVersion"] <- JsonValue.Create "praxis.construction-extension/1"
-                    node["extensionId"] <- JsonValue.Create report.ExtensionId
-                    node["constructionId"] <- JsonValue.Create report.ConstructionId
-                    node["constructionCommit"] <- JsonValue.Create report.ConstructionCommit
-                    node["planDigest"] <- JsonValue.Create report.Routing.Binding.PlanDigest
-                    node["routeId"] <- JsonValue.Create(ConstructionRouting.routeId report.Routing)
-                    node["routeRecord"] <- JsonValue.Create report.RouteRecord
-                    node["targetRef"] <- JsonValue.Create report.TargetRef
-                    node["targetCommit"] <- JsonValue.Create report.TargetCommit
-                    node["files"] <-
-                        JsonArray(
-                            report.Files
-                            |> List.map (fun (file, kind) ->
-                                let item = JsonObject()
-                                item["kind"] <- JsonValue.Create(kindName' kind)
-                                item["path"] <- JsonValue.Create file.Path
-                                item["sha256"] <- JsonValue.Create file.Digest
-                                item["contracts"] <- strings file.Contracts
-                                item :> JsonNode)
-                            |> List.toArray)
-                    let routed = ConstructionRouting.render report.Routing
-                    node["exceptions"] <- routed["exceptions"].DeepClone()
-                    node["measurement"] <- routed["measurement"].DeepClone()
-                    match report.Outcome with
-                    | ExtensionOutcome.Applied candidate ->
-                        node["outcome"] <- JsonValue.Create "applied"
-                        node["candidateCommit"] <- JsonValue.Create candidate
-                    | ExtensionOutcome.AlreadyCurrent -> node["outcome"] <- JsonValue.Create "already-current"
-                    node["notice"] <- JsonValue.Create "Handwritten files committed into host-declared slots. No worker or submitted code ran; obligations remain open until independently verified."
-                    node)))
+                ConstructionExtension.extend configuration admitted targetRef filesDirectory DateTimeOffset.UtcNow |> Result.map extensionNode))
+
+    // ---------------------------------------- mechanical-first (CONSTRUCT-008)
+
+    let private hostState root hostConfig =
+        LocalRuntimeService.configuration root hostConfig
+        |> Result.mapError (function LocalCommandFailure.Invalid reason | LocalCommandFailure.Refused reason -> reason)
+        |> Result.bind (fun configuration -> (FileLocalRuntime.hostStore configuration).Load() |> Result.map (fun policy -> configuration, policy))
+
+    let private configurationOnly root hostConfig = hostState root hostConfig |> Result.toOption |> Option.map fst
+
+    /// Write an agent-side output file; a link is refused, a regular file replaced.
+    let private writeOutput (path: string) (content: string) =
+        try
+            let full = Path.GetFullPath path
+            let info = FileInfo full
+            if info.Exists && not (isNull info.LinkTarget) then Error("output is a symbolic link: " + path)
+            elif Directory.Exists full then Error("output is a directory: " + path)
+            else
+                File.WriteAllText(full, content, Text.UTF8Encoding(false))
+                Ok full
+        with error -> Error("cannot write " + path + ": " + error.Message)
+
+    let private twin (out: string) (suffix: string) =
+        let full = Path.GetFullPath out
+        let stem = if full.EndsWith(".json", StringComparison.OrdinalIgnoreCase) then full.Substring(0, full.Length - 5) else full
+        stem + suffix
+
+    let private notice = "Generated structure only. Not evidence of behavioral verification; obligations remain open."
+
+    /// `construct prepare`, with the default-plan generator injected (the
+    /// CLI passes `OrdoDefaultPlan.generator ()`).
+    let prepareWith (generator: DefaultPlanGenerator) root hostConfig groupId (cohort: string option) (vocabulary: string option) (decisions: string option) (out: string) (telemetryTarget: string option) =
+        let configuration = configurationOnly root hostConfig
+        let result, telemetry =
+            ConstructionTelemetry.measure root telemetryTarget configuration "prepare" groupId (fun () ->
+                match hostState root hostConfig |> Result.bind (fun (configuration, policy) -> ConstructionPrepared.prepare generator configuration policy DateTimeOffset.UtcNow groupId cohort vocabulary decisions) with
+                | Ok report -> Ok report, Some report.CacheKey, (if report.Reused then ConstructionTelemetryOutcome.Reused else ConstructionTelemetryOutcome.Prepared)
+                | Error reason ->
+                    configuration |> Option.iter (fun c -> ConstructionPrepared.recordRefusal c "prepare" groupId None [ reason ] |> ignore)
+                    Error reason, None, ConstructionTelemetryOutcome.Refused)
+        result |> Result.bind (fun report ->
+            writeOutput out report.Text |> Result.bind (fun preparedPath ->
+                writeOutput (twin out ".handoff.json") (report.HandoffJson.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n") |> Result.bind (fun handoffPath ->
+                    writeOutput (twin out ".handoff.md") report.HandoffMarkdown |> Result.map (fun markdownPath ->
+                        let node = JsonObject()
+                        node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepare/1"
+                        node["cacheKey"] <- JsonValue.Create report.CacheKey
+                        node["reused"] <- JsonValue.Create report.Reused
+                        node["prepared"] <- JsonValue.Create preparedPath
+                        node["handoff"] <- JsonValue.Create handoffPath
+                        node["handoffMarkdown"] <- JsonValue.Create markdownPath
+                        node["obligations"] <- JsonValue.Create report.Obligations
+                        node["permittedFiles"] <- strings report.PermittedFiles
+                        node["telemetry"] <- telemetry
+                        node["notice"] <- JsonValue.Create notice
+                        node))))
+        |> Result.mapError (fun reason -> reason + " [telemetry: " + telemetry.ToJsonString() + "]")
+
+    /// `construct apply --prepared`, with the generator injected.
+    /// `dokimos.host-observations/1`: every handwritten operation the host
+    /// denied, for independent verification of rejected operations.
+    let private observationsText (denied: (string * string) list) =
+        let node = JsonObject()
+        node["schemaVersion"] <- JsonValue.Create "dokimos.host-observations/1"
+        node["observations"] <-
+            JsonArray(
+                denied
+                |> List.map (fun (path, reason) ->
+                    let item = JsonObject()
+                    item["recordedBy"] <- JsonValue.Create "host"
+                    item["outcome"] <- JsonValue.Create "denied"
+                    item["path"] <- JsonValue.Create path
+                    item["reason"] <- JsonValue.Create reason
+                    item :> JsonNode)
+                |> List.toArray)
+        node.ToJsonString(Text.Json.JsonSerializerOptions(WriteIndented = true)) + "\n"
+
+    let applyPreparedWith (generator: DefaultPlanGenerator) root hostConfig groupId preparedPath targetRef (extensions: string option) (observations: string option) (telemetryTarget: string option) =
+        let configuration = configurationOnly root hostConfig
+        let mutable denied = []
+        let result, telemetry =
+            ConstructionTelemetry.measure root telemetryTarget configuration "apply" groupId (fun () ->
+                match hostState root hostConfig with
+                | Error reason -> Error reason, None, ConstructionTelemetryOutcome.Refused
+                | Ok(configuration, policy) ->
+                    match ConstructionPrepared.applyPrepared generator configuration policy DateTimeOffset.UtcNow groupId preparedPath targetRef extensions with
+                    | Ok applied ->
+                        let outcome =
+                            match applied.Construction.Outcome, applied.Extension |> Option.map _.Outcome with
+                            | _, Some(ExtensionOutcome.Applied _) | ConstructionOutcome.Applied _, _ -> ConstructionTelemetryOutcome.Applied
+                            | _ -> ConstructionTelemetryOutcome.AlreadyCurrent
+                        Ok applied, Some applied.CacheKey, outcome
+                    | Error refusal ->
+                        denied <- refusal.Denied
+                        let recorded = match refusal.RecordPath with Some path -> " (refusal recorded at " + path + ")" | None -> ""
+                        Error(String.concat "; " refusal.Reasons + recorded), None, ConstructionTelemetryOutcome.Refused)
+        result
+        |> Result.map (fun applied ->
+            let node = applicationNode applied.Construction
+            node["schemaVersion"] <- JsonValue.Create "praxis.construction-prepared-application/1"
+            node["cacheKey"] <- JsonValue.Create applied.CacheKey
+            node["extension"] <- (match applied.Extension with Some report -> extensionNode report :> JsonNode | None -> null)
+            node["telemetry"] <- telemetry
+            node)
+        |> fun outcome ->
+            match observations with
+            | None -> outcome
+            | Some path ->
+                match writeOutput path (observationsText denied), outcome with
+                | Ok written, Ok node ->
+                    node["observations"] <- JsonValue.Create written
+                    Ok node
+                | Ok written, Error reason -> Error(reason + " (denied operations recorded at " + written + ")")
+                | Error reason, Ok _ -> Error("applied, but host observations not written: " + reason)
+                | Error _, Error reason -> Error reason
+        |> Result.mapError (fun reason -> reason + " [telemetry: " + telemetry.ToJsonString() + "]")
+
+    let prepare root hostConfig groupId cohort vocabulary decisions out telemetryTarget =
+        prepareWith (OrdoDefaultPlan.generator ()) root hostConfig groupId cohort vocabulary decisions out telemetryTarget
+
+    let applyPrepared root hostConfig groupId preparedPath targetRef extensions observations telemetryTarget =
+        applyPreparedWith (OrdoDefaultPlan.generator ()) root hostConfig groupId preparedPath targetRef extensions observations telemetryTarget

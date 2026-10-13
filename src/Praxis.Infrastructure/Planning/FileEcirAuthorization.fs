@@ -98,7 +98,8 @@ module FileEcirAuthorization =
                                   ManifestDigest = docs.SourceManifestDigest
                                   BlueprintDigest = verified.BlueprintDigest
                                   RequirementKeys = keys
-                                  DecisionIds = decisions }
+                                  DecisionIds = decisions
+                                  ConstructionDecisionsDigest = None }
             | _ -> Error "ECIR cohort must exist exactly once in the Ordo-validated blueprint"
         with
         | :? JsonException as e -> Error("malformed committed ECIR blueprint: " + e.Message)

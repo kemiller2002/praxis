@@ -13,6 +13,8 @@ module ConstructionCommands =
     let usage =
         " | construct preview --host-config FILE --group ID --plan FILE --target REF"
         + " | construct apply --host-config FILE --group ID --plan FILE --target REF"
+        + " | construct prepare --host-config FILE --group ID [--cohort ID] [--vocabulary VERSION] [--decisions FILE] --out FILE [--telemetry-target WI|EXE]"
+        + " | construct apply --host-config FILE --group ID --prepared FILE --target REF [--extensions DIR] [--observations FILE] [--telemetry-target WI|EXE]"
         + " | construct route --host-config FILE --group ID --plan FILE"
         + " | construct extend --host-config FILE --group ID --plan FILE --target REF --files DIR [--role implementation]"
 
@@ -41,8 +43,27 @@ module ConstructionCommands =
         Console.Error.WriteLine("usage: praxis" + usage.Substring 2)
         2
 
+    let private only (allowed: string list) (rest: string list) = flags rest |> List.forall (fun flag -> List.contains flag allowed)
+
     let run (root: string) (arguments: string list) =
         match arguments with
+        | ("route" | "extend" | "prepare") :: rest when flags rest |> List.exists executionFlags.Contains ->
+            emit (Error ConstructionRouting.WorkerExecutionDisabled)
+        | "apply" :: rest when List.contains "--prepared" rest && flags rest |> List.exists executionFlags.Contains ->
+            emit (Error ConstructionRouting.WorkerExecutionDisabled)
+        | "prepare" :: rest ->
+            let allowed = [ "--host-config"; "--group"; "--cohort"; "--vocabulary"; "--decisions"; "--out"; "--telemetry-target" ]
+            match value "--host-config" rest, value "--group" rest, value "--out" rest with
+            | Some config, Some group, Some out when only allowed rest ->
+                // The cohort is fixed by the signed grant; an explicit one must agree.
+                emit (ConstructionService.prepare root config group (value "--cohort" rest) (value "--vocabulary" rest) (value "--decisions" rest) out (value "--telemetry-target" rest))
+            | _ -> usageError ()
+        | "apply" :: rest when List.contains "--prepared" rest ->
+            let allowed = [ "--host-config"; "--group"; "--prepared"; "--target"; "--extensions"; "--observations"; "--telemetry-target" ]
+            match value "--host-config" rest, value "--group" rest, value "--prepared" rest, value "--target" rest with
+            | Some config, Some group, Some prepared, Some target when only allowed rest ->
+                emit (ConstructionService.applyPrepared root config group prepared target (value "--extensions" rest) (value "--observations" rest) (value "--telemetry-target" rest))
+            | _ -> usageError ()
         | ("route" | "extend") :: rest when flags rest |> List.exists executionFlags.Contains ->
             emit (Error ConstructionRouting.WorkerExecutionDisabled)
         | "route" :: rest ->

@@ -90,7 +90,8 @@ module LocalOperator =
     // ----------------------------------------------------------------- grant
 
     let grantDraft (configuration: LocalHostConfiguration) keyId approver groupId cohortId sourceCommit manifestPath blueprintPath
-                   (members: Map<string, string>) (decisions: string list) (issuedAt: DateTimeOffset) (expiresAt: DateTimeOffset) cancellation =
+                   (members: Map<string, string>) (decisions: string list) (constructionDecisionsDigest: string option)
+                   (issuedAt: DateTimeOffset) (expiresAt: DateTimeOffset) cancellation =
         let git, root = configuration.Git, configuration.RepositoryRoot
         if members.IsEmpty || decisions.IsEmpty then Error "a grant needs members and decisions"
         else
@@ -103,19 +104,30 @@ module LocalOperator =
                               Scope = { GroupId = groupId; CohortId = cohortId; SourceCommit = source
                                         ManifestDigest = manifest; BlueprintDigest = blueprint
                                         RequirementKeys = members |> Map.values |> Seq.toList |> List.sort
-                                        DecisionIds = List.sort decisions } }
+                                        DecisionIds = List.sort decisions
+                                        ConstructionDecisionsDigest = constructionDecisionsDigest } }
                           ManifestPath = manifestPath; BlueprintPath = blueprintPath; Members = members })))
 
     let grantPayload (draft: LocalGrantDraft) = EcirApprovals.signingPayload draft.Approval
 
     let private receiptJson (approval: EcirSignedApproval) =
         let s = approval.Scope
-        JsonSerializer.Serialize
-            {| schemaVersion = approval.SchemaVersion; keyId = approval.KeyId; approver = approval.Approver
-               issuedAt = approval.IssuedAt; expiresAt = approval.ExpiresAt; signature = approval.Signature
-               scope = {| groupId = s.GroupId; cohortId = s.CohortId; sourceCommit = s.SourceCommit
-                          manifestDigest = s.ManifestDigest; blueprintDigest = s.BlueprintDigest
-                          requirementKeys = s.RequirementKeys; decisionIds = s.DecisionIds |} |}
+        match s.ConstructionDecisionsDigest with
+        | None ->
+            JsonSerializer.Serialize
+                {| schemaVersion = approval.SchemaVersion; keyId = approval.KeyId; approver = approval.Approver
+                   issuedAt = approval.IssuedAt; expiresAt = approval.ExpiresAt; signature = approval.Signature
+                   scope = {| groupId = s.GroupId; cohortId = s.CohortId; sourceCommit = s.SourceCommit
+                              manifestDigest = s.ManifestDigest; blueprintDigest = s.BlueprintDigest
+                              requirementKeys = s.RequirementKeys; decisionIds = s.DecisionIds |} |}
+        | Some decisions ->
+            JsonSerializer.Serialize
+                {| schemaVersion = approval.SchemaVersion; keyId = approval.KeyId; approver = approval.Approver
+                   issuedAt = approval.IssuedAt; expiresAt = approval.ExpiresAt; signature = approval.Signature
+                   scope = {| groupId = s.GroupId; cohortId = s.CohortId; sourceCommit = s.SourceCommit
+                              manifestDigest = s.ManifestDigest; blueprintDigest = s.BlueprintDigest
+                              requirementKeys = s.RequirementKeys; decisionIds = s.DecisionIds
+                              constructionDecisionsDigest = decisions |} |}
 
     let renderDraft (draft: LocalGrantDraft) =
         let node = JsonObject()
