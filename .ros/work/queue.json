@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 100,
+  "nextSeq": 101,
   "items": [
     {
       "id": "WI-0001",
@@ -6054,7 +6054,7 @@
       "sourceReference": null
     },
     {
-      "id": "WI-0099",
+      "id": "WI-0100",
       "title": "CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry",
       "description": null,
       "tags": [],

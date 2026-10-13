@@ -1,7 +1,7 @@
 {
   "schema": "ordo.execution/1",
   "executionId": "EXE-20261013T072653090Z-4b89b5cf",
-  "workItem": "kemiller2002/praxis:WI-0099",
+  "workItem": "kemiller2002/praxis:WI-0100",
   "actor": {
     "id": "anthropic/claude-code",
     "kind": "agent",
