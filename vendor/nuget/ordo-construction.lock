@@ -4,13 +4,7 @@
 # depends only on EchelonFoundry.Ordo.Core of the same version (ordo-core.lock).
 # NuGet restores EchelonFoundry.Ordo.Construction only from this folder
 # (NuGet.config package source mapping). Upgrade together with ordo-core.lock.
-# PRE-RELEASE (CONSTRUCT-008): 1.8.2 is not yet a published Ordo release. The
-# .nupkg beside this file was packed from kemiller2002/ordo branch
-# construct/default-plan at 079b216 (in-cohort conflict justification, generator /3; ConstructionDecisions,
-# ConstructionDefaultPlan, ConstructionLayout); the sha256 is of that local
-# pack. When v1.8.2 is published, replace the package with the release asset
-# at the url below and re-verify its sha256 against native-checksums.txt.
 ordo 1.8.2
 package EchelonFoundry.Ordo.Construction
 url https://github.com/kemiller2002/ordo/releases/download/v1.8.2/ordo-construction.nupkg
-sha256 860fbd45b16440987bf200c54545dec02e4ca6675f117d7e4888b62a7d853bb0
+sha256 957eb37bb49b5a094b058a271896b15507d033147820397b87f144e3d1a817c8
