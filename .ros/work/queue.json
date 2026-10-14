@@ -6136,6 +6136,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "GH-260",
+      "title": "Assess and adopt universal UI layout/action conformance (UI-LAYOUT-INTERACTION@1.0.0) for Praxis web, hub and public site (#260)",
+      "description": null,
+      "tags": [
+        "ui-conformance",
+        "gh-260"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-13T21:05:48.000Z",
+      "updatedAt": "2026-10-13T21:05:50.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "github",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/260"
     }
   ]
 }

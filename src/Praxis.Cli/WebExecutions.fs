@@ -2,6 +2,7 @@ namespace Praxis.Cli
 
 open System
 open System.Text.Json.Nodes
+open Praxis.Infrastructure.Foundations
 
 /// The control plane's declared listen scope (PRX-CTL-003).
 type ControlPlaneScope = { Host: string; Port: int }
@@ -61,41 +62,55 @@ module WebExecutions =
         node
 
     // ---------------------------------------------------------------- HTML
+    // Forma presentation (SAF-FORMA-2..6) with the composition of the work
+    // pages: lozenges carry their state as text, tables are data grids whose
+    // cells name their columns, and every field has a visible label
+    // (visual-engineering/UI-LAYOUT-INTERACTION@1.0.0 ULI-L04/L09, ULI-A06).
+
+    let private lozenge (state: string) (text: string) =
+        $"<span class=\"ef-status-lozenge\" data-state=\"{FormaMarkup.lozengeState state}\">{e text}</span>"
+
+    let private cell (column: string) (content: string) = $"<td data-label=\"{e column}\">{content}</td>"
+
+    let private grid (label: string) (headers: string list) (rows: string list) =
+        let head = headers |> List.map (fun header -> $"<th>{e header}</th>") |> String.concat ""
+        $"<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"{e label}\"><table><thead><tr>{head}</tr></thead><tbody>\n" + String.concat "\n" rows + "\n</tbody></table></div>"
 
     let private requirement (a: JsonNode) =
-        if str a "actorRequirement" = "human-required" then "<strong class=\"human-required\">human required</strong>" else "<span class=\"muted\">agent or human</span>"
+        if str a "actorRequirement" = "human-required" then "<strong class=\"human-required\">human required</strong>" else "<span>agent or human</span>"
 
     let private actionRow (a: JsonNode) =
         let target = match str a "target" with "" -> "" | t -> " " + e t
         let available = str a "available" = "true"
-        let state = if available then "<span class=\"status-pill status-ready\">legal</span>" else "<span class=\"status-pill status-blocked\">blocked</span>"
+        let state = if available then lozenge "ready" "legal" else lozenge "blocked" "blocked"
         let why = if available then "" else items a "reasons" |> List.map (fun r -> $"<li>{e (r.ToString())}</li>") |> String.concat "" |> sprintf "<ul class=\"reasons\">%s</ul>"
-        $"""<tr><td><code>{e (str a "transition")}</code>{target}</td><td>{state}</td><td>{requirement a}</td><td>{why}</td></tr>"""
+        "<tr>" + cell "Transition" $"""<code>{e (str a "transition")}</code>{target}""" + cell "Availability" state + cell "Who" (requirement a) + cell "Why not" why + "</tr>"
 
     let private form (id: string) (a: JsonNode) =
         let action = (str a "transition").Replace("execution.", "")
         let human = str a "actorRequirement" = "human-required"
         let target = $"/executions/{Html.segment id}/transitions"
+        let reasonId = $"reason-{e action}"
 
         let identity =
             if human then
-                "<label>Operator (recorded as a human actor) <input name=\"operator\" required /></label><label><input type=\"checkbox\" name=\"human\" value=\"yes\" required /> I am a human operator authorizing this transition</label>"
+                $"<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"operator-{e action}\">Operator (recorded as a human actor)</label><input id=\"operator-{e action}\" name=\"operator\" required /></div><label><input type=\"checkbox\" name=\"human\" value=\"yes\" required /> I am a human operator authorizing this transition</label>"
             else
                 ""
 
-        $"""<form method="post" action="{target}"><input type="hidden" name="action" value="{e action}" /><input name="reason" placeholder="reason" />{identity}<button type="submit">{e action}{(if human then " (human)" else "")}</button></form>"""
+        $"""<form method="post" action="{target}"><div class="ef-stack"><input type="hidden" name="action" value="{e action}" /><div class="ef-field"><label class="ef-field__label" for="{reasonId}">Reason for {e action}</label><input id="{reasonId}" name="reason" placeholder="reason" /></div>{identity}<div class="ef-actions"><button type="submit" class="ef-button">{e action}{(if human then " (human)" else "")}</button></div></div></form>"""
 
     let private stepRow (s: JsonNode) =
         let status = str s "status"
 
-        let label =
+        let label, state =
             match status with
-            | "mismatch" -> "receipt mismatch"
-            | "indeterminate" -> "unknown effect"
-            | "match" -> "receipt matches"
-            | other -> other
+            | "mismatch" -> "receipt mismatch", "blocked"
+            | "indeterminate" -> "unknown effect", "unknown"
+            | "match" -> "receipt matches", "complete"
+            | other -> other, other
 
-        $"""<tr><td>{e (str s "stepId")}</td><td><span class="status-pill status-{e status}">{e label}</span></td><td>{e (str s "attempts")}</td></tr>"""
+        "<tr>" + cell "Step" (e (str s "stepId")) + cell "Receipt" (lozenge state label) + cell "Attempts" (e (str s "attempts")) + "</tr>"
 
     /// One execution: state, actor and host, evaluator, containment,
     /// receipts, obligations, unknowns and legal actions.
@@ -109,33 +124,38 @@ module WebExecutions =
         let unknown = steps |> List.filter (fun s -> str s "status" = "indeterminate")
         let actions = items node "legalActions"
         let blocked = if str node "state" = "blocked" then $"""<p><strong>Blocked:</strong> {e (str node "stateReason")}</p>""" else ""
-        let list title (xs: string list) = match xs with [] -> $"<p class=\"muted\">No {title}.</p>" | _ -> xs |> List.map (fun x -> $"<li>{e x}</li>") |> String.concat "" |> sprintf "<ul>%s</ul>"
+        let list title (xs: string list) = match xs with [] -> $"<p>No {title}.</p>" | _ -> xs |> List.map (fun x -> $"<li>{e x}</li>") |> String.concat "" |> sprintf "<ul>%s</ul>"
         let profile = node["containmentProfile"]
+        let shown (value: string) = if value = "" then "not recorded" else value
+
+        let receipts =
+            match steps with
+            | [] -> "<p>No step receipts recorded.</p>"
+            | _ -> grid "Step receipts" [ "Step"; "Receipt"; "Attempts" ] (steps |> List.map stepRow)
 
         Html.page
             $"{id} · Praxis execution"
             (String.concat
                 "\n"
-                [ "<header><h1>Execution</h1><nav><a href=\"/\">Queue</a></nav></header><main>"
+                [ "<header class=\"ef-section\"><h1>Execution</h1><nav class=\"ef-cluster\" aria-label=\"Primary\"><a href=\"/\">Queue</a></nav></header><main id=\"main\" tabindex=\"-1\">"
                   Html.flash query
                   $"""<p><a href="/work/{Html.segment (str node "workItem" |> fun w -> w.Substring(w.LastIndexOfAny [| ':'; '#' |] + 1))}">&larr; {e (str node "workItem")}</a></p>"""
-                  $"<section id=\"execution\"><h2>{e id}</h2>"
-                  $"""<p><span class="status-pill status-{e (str node "state")}">{e (str node "state")}</span> role <strong>{e (str node "role")}</strong></p>"""
+                  $"<section id=\"execution\" class=\"ef-section\" aria-label=\"Execution\"><h2>{e id}</h2>"
+                  $"""<p class="ef-cluster">{lozenge (str node "state") (str node "state")} <span>role <strong>{e (str node "role")}</strong></span></p>"""
                   blocked
-                  $"""<dl><dt>Actor</dt><dd>{e (str actor "id")} ({e (str actor "kind")})</dd><dt>Execution host</dt><dd>{e (if host = "" then "not reported" else host)}</dd><dt>Baseline</dt><dd><code>{e (str node "baselineRevision")}</code></dd><dt>Candidate</dt><dd><code>{e (str node "candidateRevision")}</code></dd><dt>Evaluator</dt><dd><code>{e (str node["evaluator"] "fingerprint")}</code></dd><dt>Verification</dt><dd>{e (str node["verification"] "outcome")}</dd><dt>Containment</dt><dd>{e (str node "containment")} (source: {e (match str profile "source" with "" -> "no host report" | s -> s)})</dd></dl></section>"""
-                  "<section id=\"receipts\"><h3>Step receipts</h3><table><thead><tr><th>Step</th><th>Receipt</th><th>Attempts</th></tr></thead><tbody>"
-                  steps |> List.map stepRow |> String.concat "\n"
-                  "</tbody></table></section>"
-                  "<section id=\"obligations\"><h3>Obligations</h3>"
+                  $"""<dl><dt>Actor</dt><dd>{e (str actor "id")} ({e (str actor "kind")})</dd><dt>Execution host</dt><dd>{e (if host = "" then "not reported" else host)}</dd><dt>Baseline</dt><dd><code>{e (shown (str node "baselineRevision"))}</code></dd><dt>Candidate</dt><dd><code>{e (shown (str node "candidateRevision"))}</code></dd><dt>Evaluator</dt><dd><code>{e (shown (str node["evaluator"] "fingerprint"))}</code></dd><dt>Verification</dt><dd>{e (shown (str node["verification"] "outcome"))}</dd><dt>Containment</dt><dd>{e (str node "containment")} (source: {e (match str profile "source" with "" -> "no host report" | s -> s)})</dd></dl></section>"""
+                  "<section id=\"receipts\" class=\"ef-section\" aria-label=\"Step receipts\"><h3>Step receipts</h3>"
+                  receipts
+                  "</section>"
+                  "<section id=\"obligations\" class=\"ef-section\" aria-label=\"Obligations\"><h3>Obligations</h3>"
                   list "unresolved scope effects" (effects |> List.map (fun x -> $"""unresolved scope effect: {str x "resource"} ({str x "classification"})"""))
                   list "workspace divergence" (divergence |> List.map (fun d -> "workspace divergence: " + d.ToString()))
-                  "</section><section id=\"unknowns\"><h3>Unknown effects</h3>"
+                  "</section><section id=\"unknowns\" class=\"ef-section\" aria-label=\"Unknown effects\"><h3>Unknown effects</h3>"
                   list "unknown effects" (unknown |> List.map (fun s -> $"""step {str s "stepId"}: effect unknown; reconcile before retrying"""))
-                  "</section><section id=\"containment\"><h3>Containment</h3><ul>"
+                  "</section><section id=\"containment\" class=\"ef-section\" aria-label=\"Containment\"><h3>Containment</h3><ul>"
                   items profile "restrictions" |> List.map (fun r -> $"""<li>{e (str r "dimension")}: {e (str r "status")}</li>""") |> String.concat ""
-                  "</ul></section><section id=\"legal-actions\"><h3>Legal actions</h3><table><thead><tr><th>Transition</th><th>Availability</th><th>Who</th><th>Why not</th></tr></thead><tbody>"
-                  actions |> List.map actionRow |> String.concat "\n"
-                  "</tbody></table>"
+                  "</ul></section><section id=\"legal-actions\" class=\"ef-section\" aria-label=\"Legal actions\"><h3>Legal actions</h3>"
+                  grid "Legal actions" [ "Transition"; "Availability"; "Who"; "Why not" ] (actions |> List.map actionRow)
                   actions
                   |> List.filter (fun a -> str a "available" = "true" && List.contains (str a "transition") [ "execution.block"; "execution.resume"; "execution.complete"; "execution.abandon"; "execution.rebind" ])
                   |> List.map (form id)
@@ -148,10 +168,21 @@ module WebExecutions =
         | Some(:? JsonArray as list) when list.Count > 0 ->
             list
             |> Seq.choose Option.ofObj
-            |> Seq.map (fun x -> $"""<tr><td><a href="/executions/{Html.segment (str x "executionId")}">{e (str x "executionId")}</a></td><td>{e (str x "role")}</td><td>{e (str x "state")}</td><td>{e (str x["actor"] "id")} ({e (str x["actor"] "kind")})</td><td>{e (str x "containment")}</td></tr>""")
-            |> String.concat "\n"
-            |> sprintf "<section id=\"executions\" aria-label=\"Executions\"><h3>Executions</h3><table><thead><tr><th>Execution</th><th>Role</th><th>State</th><th>Actor</th><th>Containment</th></tr></thead><tbody>\n%s\n</tbody></table></section>"
-        | _ -> "<section id=\"executions\" aria-label=\"Executions\"><h3>Executions</h3><p class=\"muted\">No executions recorded.</p></section>"
+            |> Seq.map (fun x ->
+                "<tr>"
+                + cell "Execution" $"""<a href="/executions/{Html.segment (str x "executionId")}">{e (str x "executionId")}</a>"""
+                + cell "Role" (e (str x "role"))
+                + cell "State" (lozenge (str x "state") (str x "state"))
+                + cell "Actor" $"""{e (str x["actor"] "id")} ({e (str x["actor"] "kind")})"""
+                + cell "Containment" (e (str x "containment"))
+                + "</tr>")
+            |> List.ofSeq
+            |> grid "Executions" [ "Execution"; "Role"; "State"; "Actor"; "Containment" ]
+            |> sprintf "<section id=\"executions\" class=\"ef-section\" aria-label=\"Executions\"><h3>Executions</h3>%s</section>"
+        | _ -> "<section id=\"executions\" class=\"ef-section\" aria-label=\"Executions\"><h3>Executions</h3><p>No executions recorded.</p></section>"
+
+    let private failurePage (title: string) (message: string) =
+        Html.page title $"<main id=\"main\" tabindex=\"-1\">{FormaMarkup.alert message}<p><a href=\"/\">&larr; Queue</a></p></main>"
 
     // -------------------------------------------------------------- routing
 
@@ -176,8 +207,8 @@ module WebExecutions =
         | "GET", [ "executions"; id ] ->
             match run [ "execution"; "show"; id; "--json" ] with
             | Ok r when r.Exit = 0 -> parse r.Out |> Option.map (fun node -> HttpMessages.html 200 (renderExecution node request.Query))
-            | Ok r -> Some(HttpMessages.html 404 (Html.page "Not found" $"<main><p class=\"error\" role=\"alert\">{e (CliProcess.failureMessage r)}</p></main>"))
-            | Error message -> Some(HttpMessages.html 500 (Html.page "Error" $"<main><p class=\"error\" role=\"alert\">{e message}</p></main>"))
+            | Ok r -> Some(HttpMessages.html 404 (failurePage "Not found" (CliProcess.failureMessage r)))
+            | Error message -> Some(HttpMessages.html 500 (failurePage "Error" message))
         | "POST", [ "executions"; id; "transitions" ] ->
             match HttpMessages.parseBody request |> Result.map (transitionArgs id) with
             | Ok(Some args) ->

@@ -592,19 +592,19 @@ module HubWeb =
 
         match row["error"] with
         | :? JsonValue as error ->
-            $"<tr><td>{repoLabel}</td><td colspan=\"5\">{FormaMarkup.alert (error.ToString())}</td></tr>"
+            "<tr>" + FormaMarkup.cell "Repo" repoLabel + $"<td colspan=\"5\" data-label=\"Error\">{FormaMarkup.alert (error.ToString())}</td></tr>"
         | _ ->
             let status = stringField row "status"
 
             String.concat
                 ""
                 [ "<tr>"
-                  $"<td>{repoLabel}</td>"
-                  $"""<td>{e (stringField row "id")}</td>"""
-                  $"""<td>{e (stringField row "title")}</td>"""
-                  $"<td>{WebInterface.statusPill status}</td>"
-                  $"<td>{WebInterface.tagList (tagsOf row)}</td>"
-                  $"""<td>{e (stringField row "priority")}</td>"""
+                  FormaMarkup.cell "Repo" repoLabel
+                  FormaMarkup.cell "ID" (e (stringField row "id"))
+                  FormaMarkup.cell "Work" (e (stringField row "title"))
+                  FormaMarkup.cell "Status" (WebInterface.statusPill status)
+                  FormaMarkup.cell "Tags" (FormaMarkup.cluster (WebInterface.tagList (tagsOf row)))
+                  FormaMarkup.cell "Priority" (e (stringField row "priority"))
                   "</tr>" ]
 
     let private fileRows =
@@ -626,7 +626,8 @@ module HubWeb =
             | Ok entries ->
                 entries
                 |> List.map (fun repo ->
-                    $"<tr><td>{e repo.Id}</td><td>{e repo.Name}</td><td><code>{e repo.Path}</code></td><td><form method=\"post\" action=\"/repos/{Html.segment repo.Id}/unregister\"><button type=\"submit\">Unregister</button></form></td></tr>")
+                    "<tr>" + FormaMarkup.cell "ID" (e repo.Id) + FormaMarkup.cell "Name" (e repo.Name) + FormaMarkup.cell "Path" $"<code>{e repo.Path}</code>"
+                    + FormaMarkup.cell "Actions" ($"<form method=\"post\" action=\"/repos/{Html.segment repo.Id}/unregister\">" + FormaMarkup.submit "Unregister" + "</form>") + "</tr>")
                 |> String.concat "\n"
                 |> sprintf "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Registered repositories\"><table id=\"repos-table\"><thead><tr><th>ID</th><th>Name</th><th>Path</th><th><span class=\"ef-visually-hidden\">Actions</span></th></tr></thead><tbody>\n%s\n</tbody></table></div>"
 
@@ -660,33 +661,32 @@ module HubWeb =
                   "<section id=\"repos\" class=\"ef-section\" aria-label=\"Registered repositories\">"
                   "<h2>Registered repositories</h2>"
                   "<form id=\"register-form\" method=\"post\" action=\"/repos\">"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-path\">Repository path</label><input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-name\">Display name</label><input id=\"register-name\" name=\"name\" type=\"text\" placeholder=\"display name (optional)\" /></div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Register</button></div>"
+                  FormaMarkup.stack [ FormaMarkup.formField "register-path" "Repository path" "<input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required />"
+                                      FormaMarkup.formField "register-name" "Display name" "<input id=\"register-name\" name=\"name\" type=\"text\" placeholder=\"display name (optional)\" />"
+                                      FormaMarkup.actions [ FormaMarkup.primarySubmit "Register" ] ]
                   "</form>"
                   reposTable
                   "</section>"
                   "<section id=\"create\" class=\"ef-section\" aria-label=\"Create work item in a repository\">"
                   "<h2>Create work item</h2>"
                   "<form id=\"create-form\" method=\"post\" action=\"/work\" enctype=\"multipart/form-data\">"
-                  $"<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-repo\">Repository</label><select id=\"create-repo\" name=\"repo\" required>{repoOptions repoFilter}</select></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-title\">Title</label><input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-tags\">Tags</label><input id=\"create-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
-                  $"""<div class="ef-field"><label class="ef-field__label" for="create-priority">Priority</label><select id="create-priority" name="priority">{Html.options "medium" WebInterface.priorities}</select></div>"""
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-description\">Description</label><textarea id=\"create-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
-                  "<div class=\"ef-stack\">"
-                  fileRows
-                  "</div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Create</button></div>"
+                  FormaMarkup.stack [ FormaMarkup.formField "create-repo" "Repository" $"<select id=\"create-repo\" name=\"repo\" required>{repoOptions repoFilter}</select>"
+                                      FormaMarkup.formField "create-title" "Title" "<input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required />"
+                                      FormaMarkup.formField "create-tags" "Tags" "<input id=\"create-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" />"
+                                      FormaMarkup.formField "create-priority" "Priority" $"""<select id="create-priority" name="priority">{Html.options "medium" WebInterface.priorities}</select>"""
+                                      FormaMarkup.formField "create-description" "Description" "<textarea id=\"create-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea>"
+                                      FormaMarkup.stack [ fileRows ]
+                                      (if registered.IsEmpty then "<p id=\"create-requires-repo\">Register a repository above before creating work in it.</p>" else "") // ULI-A04: a real constraint, explained
+                                      FormaMarkup.actions [ (if registered.IsEmpty then "<button type=\"submit\" class=\"ef-button\" data-ef-variant=\"primary\" disabled aria-describedby=\"create-requires-repo\">Create</button>" else FormaMarkup.primarySubmit "Create") ] ]
                   "</form>"
                   "</section>"
                   "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter aggregated work\">"
                   "<h2>Filter</h2>"
                   "<form method=\"get\" action=\"/\" data-refine>"
-                  $"<label>Repo <select name=\"repo\"><option value=\"\">all</option>{repoOptions repoFilter}</select></label>"
-                  $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
-                  $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter WebInterface.statuses}</select></label>"""
-                  "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"
+                  FormaMarkup.stack [ FormaMarkup.formField "filter-repo" "Repo" $"<select id=\"filter-repo\" name=\"repo\"><option value=\"\">all</option>{repoOptions repoFilter}</select>"
+                                      FormaMarkup.formField "filter-tag" "Tag" $"<input id=\"filter-tag\" name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" />"
+                                      FormaMarkup.formField "filter-status" "Status" $"""<select id="filter-status" name="status"><option value="">any</option>{Html.options statusFilter WebInterface.statuses}</select>"""
+                                      FormaMarkup.actions [ FormaMarkup.submit "Filter"; "<a class=\"ef-button\" href=\"/\">Clear</a>" ] ]
                   "</form>"
                   "</section>"
                   "<section id=\"queue\" class=\"ef-section\" aria-label=\"Aggregated work across repositories\">"

@@ -83,6 +83,17 @@ svg {
   max-width: 100%;
 }
 
+/* Reflow at enlarged text (ULI-L05/L09, WCAG 1.4.4): an implicit grid track
+   never grows past its container because of one long word, and a word that
+   cannot fit its line breaks instead of escaping the page. */
+:where(body *) {
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+:where(h1, h2, h3, h4, p, li, dt, dd, blockquote, figcaption) {
+  overflow-wrap: break-word;
+}
+
 h1,
 h2,
 h3,
@@ -285,6 +296,7 @@ ol {
 
 .brand {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   text-decoration: none;
   min-height: 44px;
@@ -341,6 +353,7 @@ ol {
 .hero__foundry {
   margin: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -721,6 +734,14 @@ ol {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* Below 20 rem of line length (narrow phones at enlarged text) a status
+   label wraps instead of escaping the page (ULI-L05). */
+@media (max-width: 19.9375rem) {
+  .status {
+    white-space: normal;
+  }
 }
 
 .status::before {
@@ -1539,7 +1560,7 @@ ol {
 
 .tally {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
   gap: var(--space-4);
   margin: 0;
 }
@@ -1712,6 +1733,7 @@ ol {
 
 .site-footer__foundry {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   font-family: var(--font-mono);
   font-size: 0.8125rem;

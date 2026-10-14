@@ -223,3 +223,40 @@ that no page carries script and hostile titles are escaped.
 work-bound execution listed with legal actions, reasons and actor
 requirements, the declared listen scope, a refused transition as a `409`
 with state unchanged, and a human form transition recorded as a human.
+
+### UI conformance (GH-260)
+
+`tests/UiConformance.Tests` checks every Praxis browser surface -- this
+server's queue, item, validation and execution pages, `praxis hub serve`, and
+the public site (`site/`) -- against the Visual Engineering contract
+`visual-engineering/UI-LAYOUT-INTERACTION@1.0.0`, citing its rule IDs
+(ULI-L01..L13, ULI-A01..A10) rather than restating them. It is the native
+equivalent of `npm run ui:conformance`:
+
+```bash
+dotnet build Praxis.slnx --configuration Release
+dotnet build tests/UiConformance.Tests/UiConformance.Tests.fsproj --configuration Release
+PRAXIS_TEST_BROWSER=/path/to/chrome \
+  dotnet tests/UiConformance.Tests/bin/Release/net10.0/UiConformance.Tests.dll --evidence out/evidence.json
+```
+
+- **No Node.** Praxis owns no JavaScript tooling (`RQ-ROS-2026-A024`), so the
+  helpers of `@echelon-foundry/forma-conformance` 0.1.0 are ported to F#
+  (`FormaConformance.fs` for the pure decisions, `Observe.fs` for the
+  observations) and drive headless Chrome over the DevTools protocol with
+  the same BCL-only harness as the browser suite. Targets resolve by role and
+  accessible name; waits are bounded and frame-settled, never fixed sleeps.
+- **What it measures.** Every width in 320/390/768/1280 CSS px plus 200%
+  default text: horizontal overflow and escaping text, the inline gutter,
+  label words split inside tables, stacked data-grid labels, equal button
+  geometry, in-page link destinations and field names; declared alignment
+  groups (filter actions, primary navigation, the site's call-to-action
+  pairs); and a declared scenario for every enabled action the page
+  renders, with its observable outcome and a failure/recovery path where the
+  workflow has one. An enabled action without a declared scenario fails
+  (`ULI-A10`).
+- **Evidence.** `--evidence PATH` writes JSON that validates against
+  Visual Engineering's `ui-conformance.schema.json` (vendored unchanged).
+  Missing evidence is `unknown`, never `pass`. The `ui-conformance` job in
+  `praxis-validation.yml` runs it on every pull request and push, fails on any
+  `fail` or invalid evidence, and uploads the evidence as an artifact.
