@@ -10362,11 +10362,22 @@
         }
       },
       "completedAt": "2026-10-13T23:24:07.000Z"
+    },
+    {
+      "id": "GH-268",
+      "type": "bug",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-14T20:58:39.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261014T205841157Z-8fa424ca"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T23:24:07.000Z",
+  "updatedAt": "2026-10-14T20:58:39.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

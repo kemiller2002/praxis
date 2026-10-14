@@ -109,10 +109,15 @@ module ConstructionCliTests =
             run [ "local"; "operator"; "init"; "--host-config"; config; "--public-key"; publicKey; "--key-id"; "op-1"
                   "--approver"; "operator"; "--revision"; "rev-1"; "--declare-qualified-release" ] |> ok |> ignore
             let draft, payload, signature = Path.Combine(parent, "grant.json"), Path.Combine(parent, "grant.bin"), Path.Combine(parent, "grant.sig")
-            run ([ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
-                   "--group"; group; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "ecir/timer/source-manifest.json"
-                   "--blueprint"; "ecir/timer/blueprint.json"; "--member"; "WI-TIMER=" + requirement
-                   "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] @ grantExtra parent clone) |> ok |> ignore
+            let drafted =
+                run ([ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
+                       "--group"; group; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "ecir/timer/source-manifest.json"
+                       "--blueprint"; "ecir/timer/blueprint.json"; "--member"; "WI-TIMER=" + requirement
+                       "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] @ grantExtra parent clone)
+            if drafted.ExitCode <> 0 then
+                Assert.isTrue (not (File.Exists draft)) "refused grant-draft wrote an unsigned draft"
+                Assert.isTrue (not (File.Exists payload)) "refused grant-draft wrote a signing payload"
+            drafted |> ok |> ignore
             File.WriteAllBytes(signature, key.SignData(File.ReadAllBytes payload, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence))
             run [ "local"; "operator"; "grant"; "--host-config"; config; "--draft"; draft; "--signature"; signature; "--revision"; "rev-2" ] |> ok |> ignore
             let plan = Path.Combine(parent, "plan.json")

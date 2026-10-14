@@ -32,6 +32,43 @@ module LocalRuntimeCliTests =
 
     let private digest path = GitWorkspace.fileDigest path |> function Ok value -> value | Error error -> failwith error
 
+    let private localRuntimeEcir () =
+        let spec =
+            [ "A", "R-A: src/a.txt contains alpha"
+              "B", "R-B: src/b.txt contains beta"
+              "C", "R-C: src/c.txt contains gamma" ]
+        let source (id, line) : Ordo.Core.ConstructionIr.SourceRequirement =
+            let content =
+                (line + "\n") |> Text.Encoding.UTF8.GetBytes |> SHA256.HashData |> Convert.ToHexString
+                |> fun value -> "sha256:" + value.ToLowerInvariant()
+            { Key = "docs/spec.md#R-" + id; OriginalId = "R-" + id
+              Document = "docs/spec.md"; Location = "R-" + id
+              Revision = "fixture:local-runtime"; ContentDigest = content }
+        let sources = spec |> List.map source
+        let manifest : Ordo.Core.ConstructionIr.SourceManifest =
+            { Digest = Ordo.Core.ConstructionIrWire.manifestDigest sources; Requirements = sources }
+        let requirements =
+            sources |> List.map (fun item ->
+                let id = item.OriginalId.Substring(2)
+                let requirement : Ordo.Core.ConstructionIr.RequirementRecord =
+                    { Source = item
+                      Disposition = Ordo.Core.ConstructionIr.Modeled
+                      NodeIds = [ "DEC-" + id; "C-" + id; "VER-" + id ] }
+                requirement)
+        let nodes =
+            spec |> List.collect (fun (id, _) ->
+                let key = "docs/spec.md#R-" + id
+                let node nodeId kind : Ordo.Core.ConstructionIr.ConstructionNode =
+                    { Id = nodeId; Kind = kind; RequirementKeys = [ key ]; DependsOn = []; Justification = None }
+                [ node ("DEC-" + id) Ordo.Core.ConstructionIr.Decision
+                  node ("C-" + id) Ordo.Core.ConstructionIr.Cohort
+                  node ("VER-" + id) Ordo.Core.ConstructionIr.VerificationObligation ])
+        let blueprint : Ordo.Core.ConstructionIr.Blueprint =
+            { SchemaVersion = Ordo.Core.ConstructionIr.SchemaVersion
+              SourceManifestDigest = manifest.Digest; Requirements = requirements; Nodes = nodes }
+        let specText = spec |> List.map snd |> String.concat "\n" |> fun value -> value + "\n"
+        specText, Ordo.Core.ConstructionIrWire.encodeManifest manifest, Ordo.Core.ConstructionIrWire.encodeBlueprint blueprint
+
     let private texts (values: string list) = JsonArray(values |> List.map (fun value -> JsonValue.Create value :> JsonNode) |> List.toArray)
 
     /// A fixture process from this test assembly, pinned like any host tool.
@@ -114,15 +151,21 @@ module LocalRuntimeCliTests =
             let settings = JsonNode.Parse(File.ReadAllText rosJson)
             settings["workProtocol"].["workerChecklists"] <- JsonNode.Parse """{"delegatedTypes":["delegated-task"]}"""
             File.WriteAllText(rosJson, settings.ToJsonString())
-            CliHarness.write clone "docs/spec.md" "R-A: src/a.txt contains alpha\nR-B: src/b.txt contains beta\nR-C: src/c.txt contains gamma\n"
-            // A real Ordo ECIR fixture is required: grant-draft validates committed\n            // source/blueprint semantics, not just their Git blob digests.\n            CliHarness.write clone "docs/manifest.json" (File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer", "source-manifest.json")))
-            CliHarness.write clone "docs/blueprint.json" (File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer", "blueprint.json")))
+            // The exact committed source snapshot contains a real Ordo ECIR
+            // fixture with independent requirement, cohort and decision scope
+            // for every worker.
+            let spec, manifest, blueprint = localRuntimeEcir ()
+            CliHarness.write clone "docs/spec.md" spec
+            CliHarness.write clone "docs/manifest.json" manifest
+            CliHarness.write clone "docs/blueprint.json" blueprint
             for id in [ "A"; "B"; "C" ] do
                 PraxisCli.run clone (Some coordinator) [ "add"; "Deliver " + id; "--id"; "WI-" + id ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "work"; "backlog-transition"; "--id"; "WI-" + id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "work"; "group"; "create"; "--group"; "GROUP-LOCAL-" + groupNumber id; "--member"; "WI-" + id; "--occurred-at"; now () ] |> ok |> ignore
             PraxisCli.run clone (Some coordinator) [ "work"; "begin"; "--id"; "WI-COORD"; "--occurred-at"; now () ] |> ok |> ignore
             let source = pushAll clone "local runtime source"
+            for path, expected in [ "docs/manifest.json", manifest; "docs/blueprint.json", blueprint ] do
+                Assert.equal expected (GitFixture.git clone [ "show"; source + ":" + path ])
             let git = onPath "git"
             let host = Path.Combine(parent, "host")
             let roots = JsonObject()
@@ -162,12 +205,23 @@ module LocalRuntimeCliTests =
             let pilot = { Parent = parent; Clone = clone; Config = config; Key = key; Source = source; Repository = repository }
             run pilot [ "local"; "operator"; "init"; "--host-config"; config; "--public-key"; publicKey; "--key-id"; "op-1"
                         "--approver"; "operator"; "--revision"; "rev-1"; "--declare-qualified-release" ] |> ok |> ignore
+            let refusedDraft, refusedPayload =
+                Path.Combine(parent, "cross-cohort-grant.json"), Path.Combine(parent, "cross-cohort-grant.bin")
+            let crossCohort =
+                run pilot [ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
+                            "--group"; "GROUP-LOCAL-001"; "--cohort"; "C-A"; "--source"; source; "--manifest"; "docs/manifest.json"
+                            "--blueprint"; "docs/blueprint.json"; "--member"; "WI-A=docs/spec.md#R-A"
+                            "--decision"; "DEC-B"; "--draft"; refusedDraft; "--payload"; refusedPayload ]
+            Assert.equal 3 crossCohort.ExitCode
+            Assert.isTrue (crossCohort.Error.Contains "DEC-B" && crossCohort.Error.Contains "C-A") crossCohort.Error
+            Assert.isTrue (not (File.Exists refusedDraft)) "cross-cohort refusal wrote an unsigned draft"
+            Assert.isTrue (not (File.Exists refusedPayload)) "cross-cohort refusal wrote a signing payload"
             for id, revision in [ "A", "rev-2"; "B", "rev-3"; "C", "rev-4" ] do
                 let draft, payload, signature = Path.Combine(parent, id + "-grant.json"), Path.Combine(parent, id + "-grant.bin"), Path.Combine(parent, id + "-grant.sig")
                 run pilot [ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
-                            "--group"; "GROUP-LOCAL-" + groupNumber id; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "docs/manifest.json"
+                            "--group"; "GROUP-LOCAL-" + groupNumber id; "--cohort"; "C-" + id; "--source"; source; "--manifest"; "docs/manifest.json"
                             "--blueprint"; "docs/blueprint.json"; "--member"; "WI-" + id + "=docs/spec.md#R-" + id
-                            "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
+                            "--decision"; "DEC-" + id; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
                 sign pilot payload signature
                 run pilot [ "local"; "operator"; "grant"; "--host-config"; config; "--draft"; draft; "--signature"; signature; "--revision"; revision ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "plan"; "execute-group"; "GROUP-LOCAL-" + groupNumber id; "--occurred-at"; now (); "--member"; "WI-" + id; "--type"; "delegated-task" ] |> ok |> ignore
@@ -196,7 +250,7 @@ module LocalRuntimeCliTests =
         run pilot ([ "local"; "packet"; "propose"; "--host-config"; pilot.Config; "--group"; "GROUP-LOCAL-" + groupNumber id; "--worker"; "worker-" + lower
                      "--role"; "implementation"; "--dispatch"; "D-" + id; "--attempt"; "1"; "--parent"; execution pilot "WI-COORD"
                      "--child"; child pilot ("worker-" + lower); "--member"; "WI-" + id + "=" + execution pilot ("WI-" + id)
-                     "--decision"; "DEC-TIMER-STATES"; "--allow"; "src/" + lower + ".txt"; "--acceptance"; "OBL-" + id + "=WI-" + id + ":accept-" + lower
+                     "--decision"; "DEC-" + id; "--allow"; "src/" + lower + ".txt"; "--acceptance"; "OBL-" + id + "=WI-" + id + ":accept-" + lower
                      "--timeout-seconds"; "300"; "--out"; packet ] @ (prerequisites |> List.collect (fun item -> [ "--prerequisite"; item ]))) |> ok |> ignore
         run pilot [ "local"; "operator"; "review"; "--host-config"; pilot.Config; "--packet"; packet; "--key-id"; "op-1"; "--approver"; "operator"; "--payload"; payload ] |> ok |> ignore
         sign pilot payload signature

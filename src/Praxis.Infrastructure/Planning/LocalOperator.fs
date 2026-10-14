@@ -91,19 +91,24 @@ module LocalOperator =
 
     /// The decision ids a grant for `cohortId` may name: the Decision nodes in
     /// the cohort's required scope, by Ordo's own rule, over the exact
-    /// committed documents. When the cohort cannot be prepared even with every
-    /// decision authorized, any Decision node of the blueprint may be named,
-    /// and preparation reports the cohort's own refusal later.
+    /// committed documents. This derives scope without requiring the decisions
+    /// to have been authorized already; an invalid blueprint or cohort refuses
+    /// the draft instead of widening authorization to unrelated decisions.
     let private grantableDecisions git root source manifestPath blueprintPath cohortId =
         Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source manifestPath |> Result.bind (fun (manifestText, _) ->
             Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source blueprintPath |> Result.bind (fun (blueprintText, _) ->
                 Ordo.Core.ConstructionIrWire.readManifest manifestText |> Result.mapError ((+) "source manifest refused: ") |> Result.bind (fun manifest ->
-                    Ordo.Core.ConstructionIrWire.readBlueprint blueprintText |> Result.mapError ((+) "blueprint refused: ") |> Result.map (fun blueprint ->
-                        let decisions =
-                            blueprint.Nodes |> List.filter (fun n -> n.Kind = Ordo.Core.ConstructionIr.Decision) |> List.map _.Id |> Set.ofList
-                        match Ordo.Core.ConstructionIr.prepareCohort manifest blueprint cohortId decisions with
-                        | Ok prepared -> (Ordo.Core.ConstructionIr.preparedCohortView prepared).RequiredDecisionIds
-                        | Error _ -> decisions))))
+                    Ordo.Core.ConstructionIrWire.verifyManifestDigest manifest |> Result.mapError ((+) "source manifest refused: ")
+                    |> Result.bind (fun () ->
+                        Ordo.Core.ConstructionIrWire.readBlueprint blueprintText |> Result.mapError ((+) "blueprint refused: ") |> Result.bind (fun blueprint ->
+                            let decisions =
+                                blueprint.Nodes
+                                |> List.filter (fun node -> node.Kind = Ordo.Core.ConstructionIr.Decision)
+                                |> List.map _.Id
+                                |> Set.ofList
+                            match Ordo.Core.ConstructionIr.prepareCohort manifest blueprint cohortId decisions with
+                            | Error errors -> Error(sprintf "cohort %s refused by the bound blueprint: %A" cohortId errors)
+                            | Ok prepared -> Ok((Ordo.Core.ConstructionIr.preparedCohortView prepared).RequiredDecisionIds))))))
 
     /// Every named id that is not grantable, by name, or the decisions.
     let private checkDecisions (grantable: Set<string>) cohortId (decisions: string list) =
