@@ -507,6 +507,10 @@ module ConstructionHandoff =
             @ (recognition |> Option.map _.Decisions |> Option.defaultValue []
                |> List.filter (fun d -> not (known.Contains d.NodeId))
                |> List.map (fun d -> { Id = d.NodeId; Source = "recognizedDecision"; Summary = defaultArg d.Justification "Approved decision."; RequirementKeys = d.RequirementKeys }))
+        // A conflict is settled only when an approved decision in a delegation
+        // packet lists it in `resolves`; nothing else suppresses its question.
+        let resolved = recognition |> Option.map (_.Decisions >> List.collect _.Resolves >> Set.ofList) |> Option.defaultValue Set.empty
+        let settled (o: DefaultPlanObligation) = o.Kind = "conflict" && not o.NodeIds.IsEmpty && o.NodeIds |> List.forall resolved.Contains
         let mustEscalate = recognition |> Option.map _.EscalationRequired |> Option.defaultValue Set.empty
         let delegated = recognition |> Option.map _.Delegated |> Option.defaultValue Set.empty
         // Ordo states paths in the construction layout; the agent sees them placed.
@@ -522,7 +526,7 @@ module ConstructionHandoff =
         let unavailable = requirements |> List.filter (fun r -> r.Excerpt.IsNone) |> List.map _.Key
         { CohortId = cohortId
           WorkItems =
-            obligations |> List.map (fun o ->
+            obligations |> List.filter (settled >> not) |> List.map (fun o ->
                 let item = workItem nodes decided routing o
                 // An obligation on a requirement Ordo marks escalation-required
                 // cannot be implemented here (its own keys, not supporting ones).

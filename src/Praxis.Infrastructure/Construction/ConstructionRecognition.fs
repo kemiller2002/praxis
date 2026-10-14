@@ -3,8 +3,9 @@ namespace Praxis.Infrastructure.Construction
 open Ordo.Core
 
 /// One approved decision Ordo's recognition pass attaches to delegated work,
-/// with every requirement key of the packets that carry it.
-type RecognizedDecision = { NodeId: string; Justification: string option; RequirementKeys: string list }
+/// with every requirement key of the packets that carry it and the conflicts
+/// it resolves (Ordo's typed `resolves` link, ordo#88).
+type RecognizedDecision = { NodeId: string; Justification: string option; RequirementKeys: string list; Resolves: string list }
 
 /// What Praxis takes from Ordo's recognition pass (CONSTRUCT-010): whether
 /// generation is worthwhile, the approved decisions delegated work needs,
@@ -30,19 +31,20 @@ type RecognitionSeam =
       Recognize: ConstructionIr.PreparedCohort -> string -> Set<string> -> bool -> string list -> Result<RecognitionSummary, string list> }
 
 /// The single seam between Praxis and Ordo's pattern recognition
-/// (`Ordo.Core.PatternRecognitionWire`, Ordo 1.10.0).
+/// (`Ordo.Core.PatternRecognitionWire`, Ordo 1.15.0).
 [<RequireQualifiedAccess>]
 module ConstructionRecognition =
     let private summarize (report: PatternRecognition.RecognitionReport) : RecognitionSummary =
         let packets = report.Packets
         let decisions =
             packets
-            |> List.collect (fun p -> p.ApprovedDecisions |> List.map (fun d -> d.NodeId, (d.Justification, p.RequirementKeys)))
+            |> List.collect (fun p -> p.ApprovedDecisions |> List.map (fun d -> d.NodeId, (d.Justification, p.RequirementKeys, d.Resolves)))
             |> List.groupBy fst
             |> List.map (fun (nodeId, carried) ->
                 { NodeId = nodeId
-                  Justification = carried |> List.tryPick (fun (_, (justification, _)) -> justification)
-                  RequirementKeys = carried |> List.collect (fun (_, (_, keys)) -> keys) |> List.distinct })
+                  Justification = carried |> List.tryPick (fun (_, (justification, _, _)) -> justification)
+                  RequirementKeys = carried |> List.collect (fun (_, (_, keys, _)) -> keys) |> List.distinct
+                  Resolves = carried |> List.collect (fun (_, (_, _, resolves)) -> resolves) |> List.distinct |> List.sort })
         let m = report.Measurements
         { ReportDigest = PatternRecognitionWire.reportDigest report
           ReportJson = PatternRecognitionWire.encodeReport report

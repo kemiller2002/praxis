@@ -821,7 +821,7 @@ module ConstructionPreparedTests =
                 Ok { ReportDigest = "sha256:" + String('7', 64)
                      ReportJson = """{"schemaVersion":"ordo.pattern-recognition/1"}"""
                      GenerationWorthwhile = worthwhile
-                     Decisions = [ { NodeId = "DF-TE-2026-A009"; Justification = Some "Operation-id idempotency is durable across reload and restart."; RequirementKeys = [ k131 ] } ]
+                     Decisions = [ { NodeId = "DF-TE-2026-A009"; Justification = Some "Operation-id idempotency is durable across reload and restart."; RequirementKeys = [ k131 ]; Resolves = [ "CONFLICT-SETTLED" ] } ]
                      EscalationRequired = set [ k105 ]
                      Delegated = set [ k105; k131 ]
                      ForbiddenPaths = [ "generated/**" ]
@@ -872,6 +872,24 @@ module ConstructionPreparedTests =
                   let openItem = item "OBL-U-OPEN"
                   Assert.equal [ "escalated" ] (dispositions openItem)
                   Assert.isTrue (not (isNull openItem["question"])) (openItem.ToJsonString())))
+          t "a conflict is dropped from the handoff only when an approved decision lists it in resolves" (fun () ->
+              withDecisionsHost (fun host ->
+                  let conflict id node : DefaultPlanObligation =
+                      { Id = id; Kind = "conflict"; RequirementKeys = [ k131 ]; NodeIds = [ node ]
+                        Statement = sprintf "Conflict %s is inside cohort COH-TIMER and no approved decision resolves it. The blueprint records: x" node
+                        ExtensionSurface = [] }
+                  let basis = fake (ref 0) "fake@1"
+                  let generator =
+                      { basis with
+                          Recognition = Some(recognizing (ref []) true)
+                          Generate =
+                            fun prepared decisionText vocabulary ->
+                                basis.Generate prepared decisionText vocabulary |> Result.map (fun output ->
+                                    { output with Obligations = output.Obligations @ [ conflict "OBL-C-SETTLED" "CONFLICT-SETTLED"; conflict "OBL-C-OPEN" "CONFLICT-OPEN" ] }) }
+                  let node, _ = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let ids = JsonNode.Parse(File.ReadAllText(str node["handoff"])).["obligations"] :?> JsonArray |> Seq.map (fun o -> str o["id"]) |> Set.ofSeq
+                  Assert.isTrue (not (ids.Contains "OBL-C-SETTLED")) "a resolved conflict was re-emitted"
+                  Assert.isTrue (ids.Contains "OBL-C-OPEN") "an unresolved conflict was dropped"))
           t "a conflict-resolution record is listed with the conflicts it resolves and its decision node's text" (fun () ->
               let records =
                 """{"schemaVersion":"ordo.construction-decisions/3","blueprintDigest":"x","cohortId":"C","records":[

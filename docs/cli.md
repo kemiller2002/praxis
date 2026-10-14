@@ -919,7 +919,7 @@ When recognition finds nothing worth generating, `prepare` refuses before
 generation and names the report digest, so the cohort is delegated in full. The
 report (digest, measurements and the full `ordo.pattern-recognition/1`
 document) is kept in the prepared artifact under `recognition`. The handoff
-uses recognition in four ways:
+uses recognition in five ways:
 - It lists the approved decisions recognition's delegation packets carry
   (`recognizedDecision`), keyed to their requirements.
 - An obligation on a requirement recognition marks escalation-required may only
@@ -928,6 +928,9 @@ uses recognition in four ways:
   and which needs no open decision becomes implementable: its behavior says so,
   and it may be `implemented` or `escalated`.
 - It states recognition's forbidden paths, placed under the construction mount.
+- A `conflict` obligation is left out only when an approved decision in a
+  delegation packet lists that conflict in `resolves`; no other signal
+  suppresses a conflict question.
 
 With `prepare --workspace DIR` (CONSTRUCT-010), the host also creates the
 worker workspace: `DIR/HANDOFF.md` (the Markdown handoff) and an empty
