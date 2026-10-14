@@ -130,6 +130,7 @@
     <Compile Include="Construction/ConstructionHandoff.fs" />
     <Compile Include="Construction/ConstructionExtension.fs" />
     <Compile Include="Construction/ConstructionPrepared.fs" />
+    <Compile Include="Construction/ConstructionWorkspace.fs" />
     <Compile Include="Construction/ConstructionTelemetry.fs" />
     <Compile Include="Construction/ConstructionScope.fs" />
     <Compile Include="Planning/FileLocalRuntime.fs" />
@@ -137,6 +138,7 @@
     <Compile Include="Planning/LocalRuntimeService.fs" />
     <Compile Include="Planning/LocalContainmentService.fs" />
     <Compile Include="Planning/FileGroupTelemetry.fs" />
+    <Compile Include="Construction/ConstructionCheck.fs" />
     <Compile Include="Construction/ConstructionService.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />

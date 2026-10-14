@@ -161,7 +161,7 @@ module ConstructionPreparedTests =
     // ---------------------------------------------------- (b) prepare/handoff
 
     let private prepareTests =
-        [ t "prepare writes the prepared artifact and a minimal handoff with only cited excerpts, decisions, signatures and questions" (fun () ->
+        [ t "prepare writes the prepared artifact and a compact typed handoff: one record per obligation, every decision and excerpt once" (fun () ->
               withDecisionsHost (fun host ->
                   let before = ConstructionCliTests.tip host
                   let node, out = prepareWith (fake (ref 0) "fake@1") host (Some(decisionsPath host)) None |> okValue
@@ -180,11 +180,11 @@ module ConstructionPreparedTests =
                   Assert.equal (ConstructionDecisions.digest decisions) (str prepared["hostBinding"].["decisionsDigest"])
                   for field in [ "acceptanceValidators"; "validatorPolicyRevision"; "praxisVersion"; "handoffSchema" ] do
                       Assert.isTrue (not (isNull prepared["hostBinding"].[field])) ("cache key omits " + field)
-                  Assert.equal "praxis.construction-handoff/2" (str prepared["hostBinding"].["handoffSchema"])
+                  Assert.equal "praxis.construction-handoff/3" (str prepared["hostBinding"].["handoffSchema"])
                   Assert.equal 2 (prepared["defaultPlan"].["obligations"] :?> JsonArray).Count
                   let handoff = JsonNode.Parse(File.ReadAllText(str node["handoff"]))
                   let markdown = File.ReadAllText(str node["handoffMarkdown"])
-                  Assert.equal "praxis.construction-handoff/2" (str handoff["schemaVersion"])
+                  Assert.equal "praxis.construction-handoff/3" (str handoff["schemaVersion"])
                   // Only the keys obligations cite, with the pinned source text.
                   let requirements = handoff["requirements"] :?> JsonArray |> Seq.toList
                   // Every key cited anywhere (obligations and acceptance), each once.
@@ -195,9 +195,25 @@ module ConstructionPreparedTests =
                   let excerptOf key = requirements |> List.find (fun r -> str r["key"] = key) |> fun r -> str r["excerpt"]
                   Assert.equal (fixture "requirements/timer-stop-completion.txt") (excerptOf k131)
                   Assert.equal (fixture "requirements/timer-paused-time-excluded.txt") (excerptOf k105)
-                  // Decisions summarised, not the blueprint.
+                  // Every approved record, summarised, whether or not an obligation cites it.
                   let decided = handoff["decisions"] :?> JsonArray |> Seq.toList
-                  Assert.isTrue (decided |> List.exists (fun d -> str d["nodeId"] = "IFC-TIMER-PORTS" && (str d["summary"]).Contains "NOT DECIDED")) (handoff.ToJsonString())
+                  Assert.isTrue (decided |> List.exists (fun d -> str d["id"] = "IFC-TIMER-PORTS" && str d["source"] = "constructionRecord" && (str d["summary"]).Contains "NOT DECIDED")) (handoff.ToJsonString())
+                  Assert.isTrue (decided |> List.exists (fun d -> str d["id"] = "DEC-TIMER-STATES" && (str d["summary"]).Contains "Start: NoTimer -> Running")) (handoff.ToJsonString())
+                  // One typed record per obligation: question xor behavior, interfaces, paths, dispositions.
+                  let items = handoff["obligations"] :?> JsonArray |> Seq.toList
+                  Assert.equal 2 items.Length
+                  let item id = items |> List.find (fun o -> str o["id"] = id)
+                  let strings (node: JsonNode) = node :?> JsonArray |> Seq.map str |> Seq.toList
+                  let effect = item "OBL-COH-TIMER-undecidedEffectFailure-4d5e6f"
+                  Assert.isTrue (isNull effect["requiredBehavior"] && (str effect["question"]).Contains "discarded or kept active") (effect.ToJsonString())
+                  Assert.equal [ "escalated" ] (strings effect["dispositions"])
+                  Assert.isTrue (strings effect["decisions"] |> List.contains "IFC-TIMER-PORTS") (effect.ToJsonString())
+                  let behavior = item "OBL-COH-TIMER-extensionBehavior-1a2b3c"
+                  Assert.isTrue (isNull behavior["question"] && (str behavior["requiredBehavior"]).Contains "excluding paused time") (behavior.ToJsonString())
+                  Assert.equal [ "implemented"; "escalated" ] (strings behavior["dispositions"])
+                  Assert.equal [ "ITimerPorts.Perform/Stop" ] (strings behavior["interfaces"])
+                  Assert.equal [ "src/Domain/Extensions.fs" ] (strings behavior["paths"])
+                  Assert.isTrue (strings behavior["requirements"] |> List.forall (fun r -> r.StartsWith "R")) (behavior.ToJsonString())
                   // Signatures extracted from the generated source.
                   let interfaces = handoff["extensionInterfaces"] :?> JsonArray |> Seq.toList
                   let members = interfaces |> List.collect (fun i -> i["members"] :?> JsonArray |> Seq.map str |> Seq.toList)
@@ -219,9 +235,6 @@ module ConstructionPreparedTests =
                   Assert.isTrue (api.Contains "module TimerOrchestration =") api
                   for body in [ "match state, command with"; "TimerState.NoTimer, TimerCommand"; "ports.CurrentTime()" ] do
                       Assert.isTrue (not (api.Contains body) && not ((File.ReadAllText(str node["handoffMarkdown"])).Contains body)) ("generated body leaked: " + body)
-                  let questions = handoff["unresolvedQuestions"] :?> JsonArray |> Seq.choose (fun q -> match q["obligationId"] with null -> None | id -> Some(str id)) |> Seq.toList
-                  Assert.isTrue (List.contains "OBL-COH-TIMER-undecidedEffectFailure-4d5e6f" questions) (String.concat ", " questions)
-                  Assert.isTrue ((handoff["acceptance"] :?> JsonArray).Count > 0) "no acceptance expectations"
                   // Minimal: no digests, no vocabulary manual, no full source.
                   for rendered in [ handoff.ToJsonString(); markdown ] do
                       Assert.isTrue (not (rendered.Contains "sha256:")) "handoff carries a digest"
@@ -231,15 +244,17 @@ module ConstructionPreparedTests =
                   // One obligation-id scheme; no restated keys or questions.
                   for rendered in [ handoff.ToJsonString(); markdown ] do
                       Assert.isTrue (not (rendered.Contains "IMPLEMENT:") && not (rendered.Contains "VERIFY:")) "a second obligation-id scheme leaked"
-                  Assert.isTrue (markdown.Contains "cannot be implemented without an approved decision") markdown
+                  Assert.isTrue (markdown.Contains "needs an approved decision the agent cannot make") markdown
                   let fullKeyMentions = RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape k131).Count
                   Assert.equal 1 fullKeyMentions
                   let question = "When the Stop completion effect fails, is the timer discarded or kept active?"
                   Assert.equal 1 (RegularExpressions.Regex.Matches(markdown, RegularExpressions.Regex.Escape question).Count)
-                  let allowed = handoff["allowedOperations"] :?> JsonArray |> Seq.map str |> String.concat " "
+                  let allowed = handoff["operations"] :?> JsonArray |> Seq.map str |> String.concat " "
                   Assert.isTrue (allowed.Contains "Extensions.fs" && allowed.Contains "dispositions.json" && allowed.Contains "at most 3") allowed
-                  Assert.isTrue (markdown.Contains "## Allowed operations") markdown
-                  Assert.isTrue (markdown.Contains "## Unresolved questions" && markdown.Contains "abstract CurrentTime:") markdown))
+                  Assert.isTrue (allowed.Contains "\"obligationId\"") "the dispositions format is not stated"
+                  Assert.isTrue (markdown.Contains "## Obligations" && markdown.Contains "Escalate: " && markdown.Contains "Implement: ") markdown
+                  Assert.isTrue (markdown.Contains "## Approved decisions" && markdown.Contains "abstract CurrentTime:") markdown
+                  Assert.isTrue (not (markdown.Contains "Unresolved questions")) "questions are listed twice"))
           t "prepare and apply through the CLI run Ordo's default-plan generator end to end; tampered decisions fail closed" (fun () ->
               ConstructionCliTests.withHostGranting
                   (fun parent _ ->
@@ -408,8 +423,9 @@ module ConstructionPreparedTests =
     let private adapterSlot path = sprintf """[{"path":"%s","acceptanceContract":"TimerPilot.TimerOracleAdapter","maxBytes":4096}]""" path
 
     let private acceptanceTests =
-        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and applied at its existing path" (fun () ->
-              withAdapterHost [] (fun host ->
+        [ t "an acceptance adapter slot is bound, handed off with its stub signatures and the contract types it opens from anywhere in the source, and applied at its existing path" (fun () ->
+              withAdapterHost [ "contract/OracleTypes.fs", "namespace TimerPilot\n\ntype OracleStep = { Command: string; At: int }\n\nmodule OracleText =\n    let render (s: OracleStep) : string = s.Command\n"
+                                "src/Domain/Unrelated.fs", "namespace Elsewhere\n\ntype Hidden = { Secret: string }\n" ] (fun host ->
                   declareAcceptance host (adapterSlot "src/Domain/TimerOracleAdapter.fs")
                   let generator = fake (ref 0) "fake@1"
                   let node, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
@@ -425,6 +441,10 @@ module ConstructionPreparedTests =
                   let signatures = adapter["signatures"] :?> JsonArray |> Seq.map str |> Seq.toList
                   Assert.isTrue (List.contains "let decide (state: string) (command: string) : Result<string * string list, string>" signatures) (String.concat " | " signatures)
                   Assert.isTrue (signatures |> List.forall (fun line -> not (line.Contains "not implemented"))) "adapter body leaked"
+                  let types = adapter["contractTypes"] :?> JsonArray |> Seq.collect (fun g -> g["declarations"] :?> JsonArray |> Seq.map str) |> String.concat "\n"
+                  Assert.isTrue (types.Contains "type OracleStep =") types
+                  Assert.isTrue (types.Contains "let render (s: OracleStep) : string" && not (types.Contains "s.Command")) types
+                  Assert.isTrue (not (types.Contains "Hidden")) "a file the stub does not open leaked into the contract types"
                   let before = ConstructionCliTests.tip host
                   let files = ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten; "TimerOracleAdapter.fs", filledAdapter ]
                   let applied = applyWith generator host out (Some files) |> okValue
@@ -555,4 +575,236 @@ module ConstructionPreparedTests =
                       Assert.isTrue (isNull node["telemetry"].[name]) (name + " should be unavailable (null)")
                   Assert.isTrue (File.Exists(Path.Combine(host.Journal, "telemetry", "ledger.jsonl"))) "ledger missing")) ]
 
-    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ cacheTests @ telemetryTests
+    // ------------------------------------------- (c3) worker workspace (CONSTRUCT-010)
+
+    let private prepareIn generator (host: ConstructionCliTests.Host) (workspace: string) =
+        let out = Path.Combine(host.Parent, "prepared.json")
+        ConstructionService.prepareInWith generator host.Clone host.Config group None None (Some(decisionsPath host)) out (Some workspace) None
+        |> Result.map (fun node -> node, out)
+
+    let private applyIn generator (host: ConstructionCliTests.Host) (prepared: string) (workspace: string) (observations: string option) =
+        ConstructionService.applyPreparedInWith generator host.Clone host.Config group prepared target None (Some workspace) observations None
+
+    let private entries (directory: string) =
+        Directory.GetFileSystemEntries(directory, "*", SearchOption.AllDirectories)
+        |> Array.map (fun path -> Path.GetRelativePath(directory, path).Replace('\\', '/')) |> Array.sort |> Array.toList
+
+    let private workspaceTests =
+        [ t "prepare --workspace gives the worker only HANDOFF.md and an empty outbox; every host artifact stays outside" (fun () ->
+              withDecisionsHost (fun host ->
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let node, out = prepareIn (fake (ref 0) "fake@1") host workspace |> okValue
+                  Assert.equal [ "HANDOFF.md"; "outbox" ] (entries workspace)
+                  Assert.equal (File.ReadAllText(str node["handoffMarkdown"])) (File.ReadAllText(Path.Combine(workspace, "HANDOFF.md")))
+                  Assert.equal (Path.GetFullPath workspace) (str node["workspace"])
+                  let record = JsonNode.Parse(File.ReadAllText(str node["workspaceRecord"]))
+                  Assert.equal "praxis.construction-workspace/1" (str record["schema"])
+                  Assert.equal (str node["cacheKey"]) (str record["cacheKey"])
+                  for hostFile in [ out; str node["handoff"]; str node["handoffMarkdown"]; str node["workspaceRecord"]; host.Config ] do
+                      Assert.isTrue (not (ConstructionWorkspace.within workspace hostFile)) ("host artifact inside the workspace: " + hostFile)
+                  // The worker-facing text names no host location.
+                  let handoff = File.ReadAllText(Path.Combine(workspace, "HANDOFF.md"))
+                  for location in [ host.Parent; host.Clone; out ] do
+                      Assert.isTrue (not (handoff.Contains location)) ("HANDOFF.md names a host location: " + location)))
+          t "a workspace that would expose a host artifact or lie inside a host location is refused before anything is written" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let out = Path.Combine(host.Parent, "prepared.json")
+                  let refusedLayout (workspace: string) (fragment: string) =
+                      prepareIn generator host workspace |> refusedWith fragment
+                      Assert.isTrue (not (File.Exists out)) "the prepared artifact was written for a refused workspace"
+                  refusedLayout host.Parent "would be inside the workspace"
+                  refusedLayout (Path.Combine(host.Clone, "ws")) "inside the host repository"
+                  refusedLayout (Path.Combine(Path.GetDirectoryName host.Config, "ws")) "inside the host configuration directory"
+                  refusedLayout (Path.Combine(host.Journal, "ws")) "inside the host"
+                  let busy = Path.Combine(host.Parent, "busy")
+                  Directory.CreateDirectory busy |> ignore
+                  File.WriteAllText(Path.Combine(busy, "left-over.txt"), "x")
+                  prepareIn generator host busy |> refusedWith "workspace is not empty"))
+          t "apply --workspace applies outbox slot files, keeps dispositions host-side and never applies them" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  let outbox = Path.Combine(workspace, "outbox")
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  let dispositions = "{\"dispositions\":[{\"obligationId\":\"OBL-COH-TIMER-undecidedEffectFailure-4d5e6f\",\"disposition\":\"escalated\"}]}\n"
+                  File.WriteAllText(Path.Combine(outbox, "dispositions.json"), dispositions)
+                  let before = ConstructionCliTests.tip host
+                  let applied = applyIn generator host out workspace None |> okValue
+                  Assert.equal "applied" (str applied["extension"].["outcome"])
+                  let landed = changed host before (ConstructionCliTests.tip host)
+                  Assert.isTrue (landed.Contains "src/Domain/Extensions.fs") (sprintf "%A" landed)
+                  Assert.isTrue (landed |> Set.forall (fun path -> not (path.EndsWith "dispositions.json"))) "dispositions were applied"
+                  Assert.equal dispositions (File.ReadAllText(str applied["dispositions"]))
+                  Assert.isTrue (not (ConstructionWorkspace.within workspace (str applied["dispositions"]))) "dispositions copy is inside the workspace"
+                  Assert.equal [] (Directory.GetDirectories(host.Parent, "*.staged-*") |> Array.toList)))
+          t "apply --workspace refuses links, directories and undeclared files in the outbox before any effect, recording denied writes" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  let outbox = Path.Combine(workspace, "outbox")
+                  let before = ConstructionCliTests.tip host
+                  let observed = Path.Combine(host.Parent, "observations.json")
+                  let reset () = for entry in Directory.GetFileSystemEntries outbox do (if Directory.Exists entry && isNull (DirectoryInfo entry).LinkTarget then Directory.Delete(entry, true) else File.Delete entry)
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  File.CreateSymbolicLink(Path.Combine(outbox, "Peek.fs"), out) |> ignore
+                  applyIn generator host out workspace (Some observed) |> refusedWith "Peek.fs: not a regular file"
+                  let denied = JsonNode.Parse(File.ReadAllText observed).["observations"] :?> JsonArray |> Seq.toList
+                  Assert.equal [ "denied" ] (denied |> List.map (fun o -> str o["outcome"]))
+                  Assert.isTrue ((str denied.Head["path"]).EndsWith "Peek.fs") (denied.Head.ToJsonString())
+                  reset ()
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  Directory.CreateDirectory(Path.Combine(outbox, "nested")) |> ignore
+                  applyIn generator host out workspace None |> refusedWith "nested: not a regular file"
+                  reset ()
+                  File.WriteAllText(Path.Combine(outbox, "Extensions.fs"), ConstructionCliTests.handwritten)
+                  File.WriteAllText(Path.Combine(outbox, "REPORT.md"), "notes\n")
+                  applyIn generator host out workspace None |> refusedWith "REPORT.md: not a host-declared extension slot"
+                  Assert.equal before (ConstructionCliTests.tip host)))
+          t "apply --workspace is bound to the workspace and prepared artifact it was made for" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generator = fake (ref 0) "fake@1"
+                  let workspace = Path.Combine(host.Parent, "workspace")
+                  let _, out = prepareIn generator host workspace |> okValue
+                  File.WriteAllText(Path.Combine(workspace, "outbox", "Extensions.fs"), ConstructionCliTests.handwritten)
+                  let other = Path.Combine(host.Parent, "other-workspace")
+                  Directory.CreateDirectory(Path.Combine(other, "outbox")) |> ignore
+                  File.WriteAllText(Path.Combine(other, "outbox", "Extensions.fs"), ConstructionCliTests.handwritten)
+                  applyIn generator host out other None |> refusedWith "differs from the one prepared"
+                  ConstructionService.applyPreparedInWith generator host.Clone host.Config group out target (Some(Path.Combine(workspace, "outbox"))) (Some workspace) None None
+                  |> refusedWith "not both"
+                  let plain = Path.Combine(host.Parent, "plain.json")
+                  prepareWith generator host (Some(decisionsPath host)) None |> okValue |> ignore
+                  File.Copy(out, plain)
+                  applyIn generator host plain workspace None |> refusedWith "no workspace was prepared"
+                  let record = ConstructionWorkspace.recordPath out
+                  File.WriteAllText(record, File.ReadAllText(record).Replace("\"cacheKey\": \"sha256:", "\"cacheKey\": \"sha256:0"))
+                  applyIn generator host out workspace None |> refusedWith "prepared for a different prepared artifact")) ]
+
+    // ------------------------------------------- (c4) construct check (CONSTRUCT-010)
+
+    /// A direct runner for tests only; the CLI always uses the qualified-containment runner.
+    let private directRunner : ConstructionCheckRunner =
+        { Containment = "none (test runner)"
+          Run = fun spec -> Ok((Praxis.Infrastructure.Work.LocalWorkerProcess.runControllerTool spec Threading.CancellationToken.None).GetAwaiter().GetResult()) }
+
+    let private shell = "/bin/sh"
+    let private fileDigest (path: string) =
+        use input = File.OpenRead path
+        "sha256:" + (Security.Cryptography.SHA256.HashData input |> Convert.ToHexString).ToLowerInvariant()
+
+    let private checkNode (id: string) (script: string) (timeout: int) (maxOutput: int) (digest: string) =
+        let node = JsonObject()
+        node["id"] <- JsonValue.Create id
+        node["command"] <-
+            JsonNode.Parse(sprintf """{"executable":"%s","sha256":"%s","arguments":["-c",%s,"check","{candidate}"],"environment":{"PATH":"/usr/bin:/bin"},"timeoutMilliseconds":%d,"maxOutputBytes":%d}"""
+                               shell digest (JsonValue.Create(script).ToJsonString()) timeout maxOutput)
+        node :> JsonNode
+
+    let private declareChecks (host: ConstructionCliTests.Host) (checks: JsonNode list) =
+        let config = JsonNode.Parse(File.ReadAllText host.Config)
+        config["constructionChecks"] <- JsonArray(checks |> List.toArray)
+        File.WriteAllText(host.Config, config.ToJsonString())
+
+    let private standardChecks () =
+        let digest = fileDigest shell
+        [ checkNode "pass" "echo hello; exit 0" 10000 65536 digest
+          checkNode "fail" "echo broken >&2; exit 3" 10000 65536 digest
+          checkNode "slow" "/bin/sleep 5" 300 65536 digest
+          checkNode "crash" "kill -SEGV $$" 10000 65536 digest
+          checkNode "loud" "i=0; while [ $i -lt 4000 ]; do echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx; i=$((i+1)); done" 10000 1024 digest
+          checkNode "inject" "printf 'module X\\n' > \"$1/src/Domain/Injected.fs\"; mkdir -p \"$1/bin\"; printf x > \"$1/bin/out\"" 10000 65536 digest
+          checkNode "build-output" "mkdir -p \"$1/obj/Release\" \"$1/src/Domain/bin\"; printf x > \"$1/obj/Release/a.dll\"; printf y > \"$1/src/Domain/bin/b\"" 10000 65536 digest
+          checkNode "tamper" "printf changed >> \"$1/src/Domain/Extensions.fs\"; ln -s /etc/passwd \"$1/planted\"" 10000 65536 digest
+          checkNode "pinned-wrong" "exit 0" 10000 65536 ("sha256:" + String('0', 64)) ]
+
+    /// A host with the standard checks declared, prepared and applied: (host, prepared, candidate, base).
+    let private withCandidate test =
+        withDecisionsHost (fun host ->
+            declareChecks host (standardChecks ())
+            let generator = fake (ref 0) "fake@1"
+            let _, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+            let before = ConstructionCliTests.tip host
+            applyWith generator host out (Some(ConstructionCliTests.outbox host [ "Extensions.fs", ConstructionCliTests.handwritten ])) |> okValue |> ignore
+            test host out (ConstructionCliTests.tip host) before)
+
+    let private checkIn (host: ConstructionCliTests.Host) prepared candidate id =
+        ConstructionService.checkWith (fun _ -> Ok directRunner) host.Clone host.Config prepared candidate id
+
+    let private worktrees (host: ConstructionCliTests.Host) =
+        (GitFixture.git host.Clone [ "worktree"; "list"; "--porcelain" ]).Split('\n') |> Array.filter (fun l -> l.StartsWith "worktree ") |> Array.length
+
+    let private checkTests =
+        if OperatingSystem.IsWindows() then [] else
+        [ t "check: a passing check reports passed with its stdout kept as host evidence, on a fresh checkout removed afterwards" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let trees = worktrees host
+                  let result = checkIn host out candidate "pass" |> okValue
+                  Assert.equal "praxis.construction-check/1" (str result["schemaVersion"])
+                  Assert.equal "passed" (str result["status"])
+                  Assert.equal 0 (result["exitCode"].GetValue<int>())
+                  Assert.equal candidate (str result["candidate"])
+                  Assert.equal 1 (result["attempt"].GetValue<int>())
+                  Assert.equal "hello\n" (File.ReadAllText(str result["stdout"].["path"]))
+                  Assert.equal (fileDigest (str result["stdout"].["path"])) (str result["stdout"].["sha256"])
+                  Assert.isTrue (File.Exists(Path.Combine(Path.GetDirectoryName(str result["stdout"].["path"]), "result.json"))) "result not kept"
+                  Assert.isTrue ((str result["notice"]).Contains "Not acceptance evidence") (str result["notice"])
+                  Assert.equal trees (worktrees host)))
+          t "check: failure, timeout, crash and output overflow are distinct, recorded outcomes" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let failed = checkIn host out candidate "fail" |> okValue
+                  Assert.equal "failed" (str failed["status"])
+                  Assert.equal 3 (failed["exitCode"].GetValue<int>())
+                  Assert.isTrue ((str failed["stderr"].["tail"]).Contains "broken") (failed.ToJsonString())
+                  let slow = checkIn host out candidate "slow" |> okValue
+                  Assert.equal "timedOut" (str slow["status"])
+                  Assert.isTrue (slow["wallMilliseconds"].GetValue<int64>() < 5000L) (slow.ToJsonString())
+                  let crashed = checkIn host out candidate "crash" |> okValue
+                  Assert.equal "crashed" (str crashed["status"])
+                  Assert.equal 11 (crashed["signal"].GetValue<int>())
+                  let loud = checkIn host out candidate "loud" |> okValue
+                  Assert.equal "outputLimitExceeded" (str loud["status"])))
+          t "check: a write to the candidate outside build output is refused as unauthorized, links included; build output is allowed" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let injected = checkIn host out candidate "inject" |> okValue
+                  Assert.equal "unauthorizedWrite" (str injected["status"])
+                  Assert.equal [ "src/Domain/Injected.fs" ] (injected["unauthorizedWrites"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  let tampered = checkIn host out candidate "tamper" |> okValue
+                  Assert.equal "unauthorizedWrite" (str tampered["status"])
+                  Assert.equal [ "planted"; "src/Domain/Extensions.fs" ] (tampered["unauthorizedWrites"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  let built = checkIn host out candidate "build-output" |> okValue
+                  Assert.equal "passed" (str built["status"])
+                  // The candidate commit itself is never changed by a check.
+                  Assert.equal candidate (ConstructionCliTests.tip host)))
+          t "check: repeats are separate attempts, each run and recorded" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  let first = checkIn host out candidate "pass" |> okValue
+                  let second = checkIn host out candidate "pass" |> okValue
+                  Assert.equal [ 1; 2 ] [ first["attempt"].GetValue<int>(); second["attempt"].GetValue<int>() ]
+                  Assert.isTrue (str first["stdout"].["path"] <> str second["stdout"].["path"]) "a repeat reused the first attempt's evidence"
+                  Assert.isTrue (File.Exists(str first["stdout"].["path"]) && File.Exists(str second["stdout"].["path"])) "an attempt's evidence was lost"))
+          t "check: unknown checks, changed adapter pins and candidates not built from the prepared artifact are refused before running" (fun () ->
+              withCandidate (fun host out candidate before ->
+                  checkIn host out candidate "missing" |> refusedWith "unknown construction check 'missing'"
+                  checkIn host out candidate "pinned-wrong" |> refusedWith "differs from its pinned digest"
+                  checkIn host out before "pass" |> refusedWith "does not carry the prepared artifact's generated files"
+                  checkIn host out "refs/heads/no-such-ref" "pass" |> refusedWith "candidate does not resolve to a commit"
+                  Assert.isTrue (not (Directory.Exists(Path.Combine(host.Parent, "prepared.checks", "pinned-wrong")))) "a refused check left evidence"))
+          t "check: the host configuration refuses malformed check adapters" (fun () ->
+              withDecisionsHost (fun host ->
+                  let digest = fileDigest shell
+                  let refusedConfig (checks: JsonNode list) (fragment: string) =
+                      declareChecks host checks
+                      prepareWith (fake (ref 0) "fake@1") host (Some(decisionsPath host)) None |> refusedWith fragment
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest |> fun n -> (n["command"].["arguments"] :?> JsonArray).Add(JsonValue.Create "{worktree}"); n ] "placeholders"
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest |> fun n -> n["tests"] <- JsonValue.Create true; n ] "a tests validator must pass {trx}"
+                  refusedConfig [ checkNode "x" "exit 0" 1000 1024 digest; checkNode "x" "exit 1" 1000 1024 digest ] "validator ids must be unique"))
+          t "check: the CLI runs checks only under qualified containment and refuses on a host without it" (fun () ->
+              withCandidate (fun host out candidate _ ->
+                  ConstructionService.check host.Clone host.Config out candidate "pass" |> refusedWith "requires a qualified containment profile"
+                  let cli = PraxisCli.run host.Clone (Some ConstructionCliTests.coordinator) [ "construct"; "check"; "--host-config"; host.Config; "--prepared"; out; "--candidate"; candidate; "--check"; "pass" ]
+                  Assert.equal 3 cli.ExitCode)) ]
+
+    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ checkTests @ cacheTests @ telemetryTests

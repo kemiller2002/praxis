@@ -162,6 +162,40 @@ module ConstructionPrepared =
 
     // ----------------------------------------------------------- generate
 
+    let private nodeKind (kind: Ordo.Core.ConstructionIr.NodeKind) =
+        match kind with
+        | Ordo.Core.ConstructionIr.Decision -> "decision"
+        | Ordo.Core.ConstructionIr.Contract -> "contract"
+        | Ordo.Core.ConstructionIr.Invariant -> "invariant"
+        | Ordo.Core.ConstructionIr.Interface -> "interface"
+        | Ordo.Core.ConstructionIr.Cohort -> "cohort"
+        | Ordo.Core.ConstructionIr.VerificationObligation -> "verificationObligation"
+        | Ordo.Core.ConstructionIr.Conflict -> "conflict"
+        | Ordo.Core.ConstructionIr.Deferral -> "deferral"
+        | Ordo.Core.ConstructionIr.EngineeringRationale -> "engineeringRationale"
+
+    /// The cohort's required-scope ECIR nodes, as the handoff states them.
+    let handoffNodes (cohort: ConstructionAdmission.AdmittedCohort) : HandoffNode list =
+        let view = Ordo.Core.ConstructionIr.preparedCohortView (ConstructionAdmission.cohortPrepared cohort)
+        view.Blueprint.Nodes
+        |> List.filter (fun n -> view.RequiredNodeIds.Contains n.Id)
+        |> List.map (fun n -> { Id = n.Id; Kind = nodeKind n.Kind; RequirementKeys = n.RequirementKeys; DependsOn = n.DependsOn; Justification = n.Justification })
+
+    let private maxContractSourceBytes = 65536L
+    let private maxContractSources = 256
+
+    /// Candidate contract sources for an acceptance stub: committed F# files,
+    /// the stub's own directory first (a contract project the stub references
+    /// may live elsewhere), bounded in size and number.
+    let private contractSources (read: string -> Result<string, string>) (files: (string * int64) list) (stubPath: string) =
+        let directory = match stubPath.LastIndexOf '/' with -1 -> "" | at -> stubPath.Substring(0, at + 1)
+        files
+        |> List.filter (fun (path, size) -> path.EndsWith ".fs" && path <> stubPath && size > 0L && size <= maxContractSourceBytes && not (path.StartsWith "."))
+        |> List.sortBy (fun (path, _) -> (if path.StartsWith directory then 0 else 1), path)
+        |> List.truncate maxContractSources
+        |> List.choose (fun (path, _) -> read path |> Result.toOption |> Option.map (fun content -> path, content))
+
+
     let private obligationNode (o: DefaultPlanObligation) =
         obj [ "id", str o.Id; "kind", str o.Kind; "requirementKeys", strs o.RequirementKeys; "nodeIds", strs o.NodeIds
               "question", str o.Statement; "extensionSurface", strs o.ExtensionSurface ] :> JsonNode
@@ -196,12 +230,16 @@ module ConstructionPrepared =
                         let source = b.SourceCommit
                         ConstructionTree.regularFiles git root source |> Result.map (fun files ->
                             let read path = ConstructionTree.readCommitted git root source path |> Result.map fst
-                            let cited = ConstructionHandoff.handoffKeys output.Obligations routing
+                            let nodes = handoffNodes cohort
+                            let cited = ConstructionHandoff.handoffKeys output.Obligations routing nodes decisions
                             let requirements =
                                 ConstructionHandoff.excerpts read files (ConstructionHandoff.manifestRequirements (ConstructionAdmission.cohortManifest cohort)) cited
                             let generated = built.Artifacts |> List.map (fun a -> ConstructionTree.placed configuration.ConstructionMount a.Path, a.Content)
+                            let typedAdapters =
+                                adapters |> List.map (fun (slot, content) ->
+                                    slot, content, ConstructionHandoff.contractTypes slot.AcceptancePath content (contractSources read files slot.AcceptancePath))
                             let handoff =
-                                ConstructionHandoff.build b.CohortId output.Obligations requirements decisions generated routing adapters
+                                ConstructionHandoff.build b.CohortId output.Obligations requirements nodes decisions generated routing typedAdapters
                                     (configuration.AcceptanceValidators |> Map.keys |> Seq.toList)
                             let permitted = ConstructionRouting.usableSlots routing
                             // Dokimos requires blueprint, sourceManifest and decisionRecords;
