@@ -32,7 +32,11 @@ module TelemetrySegmentationTests =
           Value = value
           Unit = "tokens"
           Currency = None
-          Quality = EvidenceQuality.ProviderReported }
+          Quality = EvidenceQuality.ProviderReported
+          Lineage = []
+          CostBasis = None
+          Origin = None
+          LowerBound = false }
 
     let private agentA = agent "anthropic/claude-code" "anthropic" "claude-code" "claude-session-A"
     let private agentB = agent "google/gemini-cli" "google" "gemini-cli" "gemini-session-B"

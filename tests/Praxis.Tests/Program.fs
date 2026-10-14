@@ -56,6 +56,7 @@ let main argv =
     @ TelemetryIngestClaudeStatuslineTests.tests
     @ TelemetryIngestOtelTests.tests
     @ TelemetryIngestClaudeSessionTests.tests
+    @ TelemetryUsageAttributionTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ StepTelemetryTests.tests

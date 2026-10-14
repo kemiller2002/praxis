@@ -412,14 +412,20 @@ module TelemetryCliTests =
                 CliPort.withRepository recordProject (fun root ->
                     writeMinimalExecution root "EXE-1" "WI-A" "active" "2026-01-01T00:00:00.000Z"
 
+                    let estimate pricing =
+                        telemetry root ([ "record"; "EXE-1"; "--metric"; "cost.input"; "--value"; "0.05"; "--unit"; "currency"; "--currency"; "EUR"
+                                          "--quality"; "estimated"; "--confidence"; "0.9"; "--collected-at"; "2026-01-01T00:00:00.000Z" ] @ pricing)
+
+                    // An estimate names its dated price table (CONSTRUCT-010 Phase 6).
+                    Assert.equal 1 (estimate []).Exit
+
                     let cost =
-                        telemetry root [ "record"; "EXE-1"; "--metric"; "cost.input"; "--value"; "0.05"; "--unit"; "currency"; "--currency"; "EUR"
-                                         "--quality"; "estimated"; "--confidence"; "0.9"; "--collected-at"; "2026-01-01T00:00:00.000Z" ]
+                        estimate [ "--pricing-source"; "fixture-table"; "--pricing-version"; "v1"; "--pricing-effective-at"; "2026-01-01" ]
                         |> ok |> stdoutJson
 
                     CliPort.deepEqual
-                        (CliPort.fill [ "cliSource", cliSource ] """{"measurementId":"MEAS-e26645bdcdcdb5e3e4687de3","id":"cost.input","value":0.05,"unit":"currency","currency":"EUR","quality":"estimated",
-                             "confidence":0.9,"scope":"execution","aggregation":"sum","dimensions":{},"pricing":null,"source":{{cliSource}},
+                        (CliPort.fill [ "cliSource", cliSource ] """{"measurementId":"MEAS-243b3c1a220d7225f4b3139b","id":"cost.input","value":0.05,"unit":"currency","currency":"EUR","quality":"estimated",
+                             "confidence":0.9,"scope":"execution","aggregation":"sum","dimensions":{},"pricing":{"source":"fixture-table","version":"v1","effectiveAt":"2026-01-01"},"source":{{cliSource}},
                              "collectedAt":"2026-01-01T00:00:00.000Z","schemaVersion":"1.0.0"}""")
                         cost
 

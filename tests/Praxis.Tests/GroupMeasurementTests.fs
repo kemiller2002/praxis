@@ -26,18 +26,26 @@ module GroupMeasurementTests =
           SessionId = Some "s-1"
           RuntimeVersion = None
           RequestKey = Some at
+          AgentId = None
+          IsSidechain = false
           Model = Some "model-x"
           Usage = usage
           ToolUses = tools
           ToolErrors = 0
           IsCompactSummary = false
-          CostUsd = None }
+          CostUsd = None
+          RetryAttempt = None }
 
-    let private usage input cacheRead cacheWrite : TranscriptUsage option =
-        Some { Input = input; Output = 10L; CacheRead = cacheRead; CacheCreation = cacheWrite }
+    let private usage (input: int64) (cacheRead: int64) (cacheWrite: int64) : TranscriptUsage option =
+        Some
+            { TranscriptUsage.empty with
+                Input = Some input
+                Output = Some 10L
+                CacheRead = Some cacheRead
+                CacheCreation = Some cacheWrite }
 
-    let private read path = { Name = "Read"; FilePath = Some $"/repo/{path}"; Command = None }
-    let private edit path = { Name = "Edit"; FilePath = Some $"/repo/{path}"; Command = None }
+    let private read path = { Id = None; Name = "Read"; FilePath = Some $"/repo/{path}"; Command = None }
+    let private edit path = { Id = None; Name = "Edit"; FilePath = Some $"/repo/{path}"; Command = None }
 
     let private executed (id: string) (cost: decimal option) (activeMs: int64 option) : HistoricalExecution =
         { ExecutionId = id

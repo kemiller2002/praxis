@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 101,
+  "nextSeq": 103,
   "items": [
     {
       "id": "WI-0001",
@@ -6147,6 +6147,29 @@
       "attachments": [],
       "createdAt": "2026-10-13T19:54:55Z",
       "updatedAt": "2026-10-13T20:38:36Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0102",
+      "title": "Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12)",
+      "description": "Usage-only transcript adapter extension (dedup per request, cache buckets incl. TTL split, reasoning, output lower bound, unknown != 0, cost provenance, parent/child no double count, host vs agent time, repair cycles) and telemetry usage report; golden tests against CONSTRUCT-008 usage.py. First captured as WI-0101 on this branch, which collided with main's unrelated WI-0101.",
+      "tags": [
+        "telemetry"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-13T22:42:37.619Z",
+      "updatedAt": "2026-10-13T23:24:07.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
