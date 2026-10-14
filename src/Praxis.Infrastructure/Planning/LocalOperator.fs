@@ -89,6 +89,29 @@ module LocalOperator =
 
     // ----------------------------------------------------------------- grant
 
+    /// The decision ids a grant for `cohortId` may name: the Decision nodes in
+    /// the cohort's required scope, by Ordo's own rule, over the exact
+    /// committed documents. When the cohort cannot be prepared even with every
+    /// decision authorized, any Decision node of the blueprint may be named,
+    /// and preparation reports the cohort's own refusal later.
+    let private grantableDecisions git root source manifestPath blueprintPath cohortId =
+        Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source manifestPath |> Result.bind (fun (manifestText, _) ->
+            Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source blueprintPath |> Result.bind (fun (blueprintText, _) ->
+                Ordo.Core.ConstructionIrWire.readManifest manifestText |> Result.mapError ((+) "source manifest refused: ") |> Result.bind (fun manifest ->
+                    Ordo.Core.ConstructionIrWire.readBlueprint blueprintText |> Result.mapError ((+) "blueprint refused: ") |> Result.map (fun blueprint ->
+                        let decisions =
+                            blueprint.Nodes |> List.filter (fun n -> n.Kind = Ordo.Core.ConstructionIr.Decision) |> List.map _.Id |> Set.ofList
+                        match Ordo.Core.ConstructionIr.prepareCohort manifest blueprint cohortId decisions with
+                        | Ok prepared -> (Ordo.Core.ConstructionIr.preparedCohortView prepared).RequiredDecisionIds
+                        | Error _ -> decisions))))
+
+    /// Every named id that is not grantable, by name, or the decisions.
+    let private checkDecisions (grantable: Set<string>) cohortId (decisions: string list) =
+        match decisions |> List.filter (grantable.Contains >> not) |> List.distinct with
+        | [] -> Ok decisions
+        | unknown ->
+            Error(sprintf "decision ids not Decision nodes of cohort %s in the bound blueprint: %s" cohortId (String.concat ", " unknown))
+
     let grantDraft (configuration: LocalHostConfiguration) keyId approver groupId cohortId sourceCommit manifestPath blueprintPath
                    (members: Map<string, string>) (decisions: string list) (constructionDecisionsDigest: string option)
                    (issuedAt: DateTimeOffset) (expiresAt: DateTimeOffset) cancellation =
@@ -97,7 +120,10 @@ module LocalOperator =
         else
             FileLocalGitCandidates.resolveCommit git root sourceCommit cancellation |> Result.bind (fun source ->
                 FileLocalGitCandidates.blobDigest git root source manifestPath cancellation |> Result.bind (fun manifest ->
-                    FileLocalGitCandidates.blobDigest git root source blueprintPath cancellation |> Result.map (fun blueprint ->
+                    FileLocalGitCandidates.blobDigest git root source blueprintPath cancellation |> Result.bind (fun blueprint ->
+                    grantableDecisions git root source manifestPath blueprintPath cohortId
+                    |> Result.bind (fun grantable -> checkDecisions grantable cohortId decisions)
+                    |> Result.map (fun decisions ->
                         { Approval =
                             { SchemaVersion = EcirApprovals.SchemaVersion; KeyId = keyId; Approver = approver
                               IssuedAt = utc issuedAt; ExpiresAt = utc expiresAt; Signature = ""
@@ -106,7 +132,7 @@ module LocalOperator =
                                         RequirementKeys = members |> Map.values |> Seq.toList |> List.sort
                                         DecisionIds = List.sort decisions
                                         ConstructionDecisionsDigest = constructionDecisionsDigest } }
-                          ManifestPath = manifestPath; BlueprintPath = blueprintPath; Members = members })))
+                          ManifestPath = manifestPath; BlueprintPath = blueprintPath; Members = members }))))
 
     let grantPayload (draft: LocalGrantDraft) = EcirApprovals.signingPayload draft.Approval
 

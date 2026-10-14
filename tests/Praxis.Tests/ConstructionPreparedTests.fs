@@ -146,6 +146,12 @@ module ConstructionPreparedTests =
           t "a decisions-bound grant also keeps the plan-driven apply path working" (fun () ->
               withDecisionsHost (fun host ->
                   Assert.equal "applied" (text (ConstructionCliTests.construct host "apply" host.Plan |> ok).Json["outcome"])))
+          t "grant-draft refuses, by name, decision ids that are not Decision nodes of the cohort" (fun () ->
+              [ "DEC-TIME-ENTRY-WEEK"; "CONFLICT-TIMER-SHORT-STOP" ] |> List.iter (fun wrong ->
+                  let mutable result = None
+                  try ConstructionCliTests.withHostGranting (fun _ _ -> [ "--decision"; wrong ]) true excerpts ignore
+                  with error -> result <- Some error.Message
+                  Assert.isTrue (result |> Option.exists (fun message -> message.Contains("Decision nodes of cohort COH-TIMER") && message.Contains wrong)) (sprintf "%A" result)))
           t "grant-draft refuses decision records for another cohort" (fun () ->
               let mutable result = None
               try
