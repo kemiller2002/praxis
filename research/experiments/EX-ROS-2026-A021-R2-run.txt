@@ -1,0 +1,256 @@
+EX-ROS-2026-A021-R2 -- replication run record
+=============================================
+
+Replication of EX-ROS-2026-A021 (grouped versus independent execution of one
+high-affinity cohort). Mechanical record only: no qualitative comparison, no
+winner, no claim that the result replicated. That needs the blind evaluation
+and the metrics comparison, which have not been run.
+
+File format: plain text, not .md. The requested path was
+research/experiments/EX-ROS-2026-A021-R2-run.md, but `./ros validate` parses
+every *.md under research/experiments as an experiment record, which needs
+front matter and an `EX-...--` file name. The grouped arm ran into the same
+rule (see deviation G1).
+
+Recorded by the orchestrator session session_0186wu2wQu7VnhTJQnVPeQuc
+(claude-opus-5-5) on 2026-09-30.
+
+
+1. Baseline
+-----------
+Baseline SHA: 8b4ffa392e93b19bf39f6672a608954c934cb815
+  ("EX-ROS-2026-A021: experiment harness (session metrics script)"; the same
+  frozen baseline as the original A021 run. It is not an ancestor of main; it
+  was fetched by SHA).
+Both arm branches were created at exactly this commit and pushed at
+2026-09-30T15:21:32Z, before either agent started.
+Both final tips descend from the baseline (`git merge-base --is-ancestor`).
+
+Cohort: PRAXIS-GROUP-01..05 (work group create, show, add, remove,
+checkpoint), with acceptance criteria as recorded in the baseline backlog.
+
+
+2. Branches and final SHAs
+--------------------------
+Grouped arm: experiment/a021-r2-grouped
+  final SHA 0b5284c37482d16bceafac214fa81f93417e2987
+Control arm: experiment/a021-r2-control
+  final SHA 8bb8f78adbaa67273ac507d1d14ad475e46fedd3
+Neither branch was merged. No pull request was opened for either branch; the
+repository's PR list was checked after both arms finished.
+
+
+3. Model and runtime
+--------------------
+Every session was a Claude Code remote session (container_cc_version
+2.1.285) in environment env_016QeyeEJj49imTiwTeC9Tgd, with permission mode
+auto. In get_session, each one reports configured_model =
+session_context.model = external_metadata.last_served_model =
+claude-opus-5-5. No model switch or fallback was observed. The orchestrator
+checked this directly for Agent G, Agent C and workers C1 to C5.
+
+
+4. Sessions, times and platform usage
+-------------------------------------
+The start time is get_session.created_at. The end time is
+get_session.updated_at after the session went idle. The usage columns are
+whole-session figures from get_session.external_metadata.usage, observed by
+the orchestrator after each session finished. Times are UTC, 2026-09-30.
+
+Role               Session                         Start     End       input  output   cache-read   cache-write  cost USD
+G  grouped arm     session_01FtMsxoVE5eL6Zkz2gsLNgD 15:22:55  16:18:48    262  132,902  27,911,832     314,024   10.7536464
+C  control orch.   session_01HySizJjio1tGqfvPAXp3WV 15:22:57  17:46:30    138   26,239   8,472,440     159,138    3.4929240
+C1 PRAXIS-GROUP-01 session_01TBSowZ5EdWBAfJky3MEpP2 15:23:28  15:41:26    152   48,711  10,005,927     166,742    4.3099494
+C2 PRAXIS-GROUP-02 session_01T6C9t1bNaqfAXEckAxu7Zz 15:54:08  16:19:17    206   44,024  16,107,298     190,816    5.6292916
+C3 PRAXIS-GROUP-03 session_019PbeHJSP9f4A8L9QXKyQRX 16:29:07  16:50:37    174   53,228   8,415,319     258,780    4.4210508
+C4 PRAXIS-GROUP-04 session_01KfJswoaJGxqcviM6kiTr2i 16:52:52  17:08:23    124   34,504   7,455,994     125,433    3.1852388
+C5 PRAXIS-GROUP-05 session_01CMeWM1tj4PBwoRA9tJYiSc 17:16:19  17:36:44    162   56,187  12,503,731     173,211    5.0108222
+
+Overall: both arms started at 15:22:55Z. The grouped arm ended at 16:18:48Z
+and the control arm at 17:46:30Z. The control arm's elapsed time includes
+the gaps between workers, while Agent C waited for each worker to go idle.
+
+The arms' own metrics files were captured inside the sessions, before each
+session's final completion and commit steps, so they undercount slightly
+compared with the platform usage above. Neither kind of figure has been
+corrected into the other.
+
+
+5. Session identities and isolation of the control workers
+----------------------------------------------------------
+Grouped arm: one implementing session (G).
+Control arm: one orchestrator session (C) and five implementing sessions,
+C1 to C5. Each was created by C with create_session. get_session shows each
+worker's parent_session_id as session_01HySizJjio1tGqfvPAXp3WV, and each
+worker had its own container, workspace and conversation. The Claude-Session
+trailers in the control branch's commits name exactly these five worker
+sessions plus C (for the run-log commit).
+
+Were the control workers genuinely isolated? Yes, in context. No worker
+inherited another's conversation, scratchpad or reasoning. According to
+Agent C's run log, the workers ran strictly one after another: each was
+started only after the previous worker was idle and its commits were on the
+remote. The session timestamps agree.
+
+There is one qualification about repository state, not context: see deviation
+C2. Workers C2 and C3 received a checkout at the baseline rather than the
+branch head.
+
+Both prompts told the agents not to read or fetch the other arm or the
+original A021 branches and records. The orchestrator gave neither arm any
+information about the other. The orchestrator did not check the arms'
+session event logs for compliance, so that check remains open for the
+evaluator (as in the A021 protocol).
+
+
+6. Completion (mechanical check)
+--------------------------------
+Grouped, experiment/a021-r2-grouped @ 0b5284c:
+  PRAXIS-GROUP-01..05 complete (.ros/work/queue.json)     yes
+  metrics file   research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/grouped.json   yes
+  group analysis research/experiments/EX-ROS-2026-A021-R2-grouped/group-analysis.txt     yes (.txt; see G1)
+  analysis committed before production code (e604b81 is the first commit)                yes
+  every commit prefixed with a work-item ID                                              yes (13 commits)
+  final branch pushed                                                                    yes
+
+Control, experiment/a021-r2-control @ 8bb8f78:
+  five separate fresh worker session identities           yes (section 5)
+  PRAXIS-GROUP-01..05 complete (.ros/work/queue.json)     yes
+  five metrics files research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-01..05.json  yes
+  run log research/experiments/EX-ROS-2026-A021-R2-control/control-run-log.md  present (see C5)
+  every worker commit prefixed with its item ID           yes
+  final branch pushed                                     yes
+
+
+7. Build, test and validation totals
+------------------------------------
+These are the totals the arms reported. The orchestrator did not re-run
+builds, tests or validation for either arm.
+
+Grouped (from grouped.json and the session's final report):
+  F# (tests/Ros.Tests) 819/819; Node differential (test:fsharp) 257/257;
+  npm test 104/104; Python 7/7.
+  During the run: 1 test run with 2 failing new tests (fixed in the tests),
+  1 validation failure (G1), 3 retries.
+Control (final mechanical pass by Agent C at head 0b9e81f, recorded in
+control-run-log.md):
+  build 0 warnings, 0 errors; F# 839 passed, 0 failed; npm test Node 104
+  passed; Python 7 passed; Node differential 257 passed; `./ros validate`
+  passed; `./ros work show PRAXIS-GROUP-01..05` all complete.
+
+
+8. Protocol deviations
+----------------------
+Both arms, and the environment:
+  E1. No .NET was preinstalled. The Microsoft download hosts and
+      scripts/install-toolchain.sh's release lookup returned HTTP 403. Both
+      arms installed dotnet-sdk-10.0 10.0.112 from the Ubuntu archive. Its
+      FSharp.Core is older than the repository requires, so every build used
+      -p:FSharpCoreImplicitPackageVersion=10.1.400 (and the npm scripts were
+      run as their constituent steps). No repository file was changed for
+      this. The same workaround was used in both arms.
+  E2. The orchestrator added the same neutral note to both prompts: install
+      .NET with the repository's own scripts if it is missing, and use the
+      baseline's session_metrics.py for metrics if helpful. Neither note
+      appeared in the original A021 frozen prompts.
+  E3. Sessions created with create_session carry the reserved tag
+      config:auto-create-pr:draft, which cannot be removed. No PR was
+      actually opened for either arm branch.
+
+Grouped arm:
+  G1. The group analysis was committed as group-analysis.txt, not
+      group-analysis.md, because `./ros validate` rejected the .md (the
+      experiment-record rule above). The content was moved unchanged.
+  G2. grouped.json was captured before PRAXIS-GROUP-05's checkpoint and
+      completion, so the last few minutes and 2 commits are not counted in
+      it. commitsAtSnapshot is 11; the final branch has 13 commits. Cost is
+      recorded there as unknown; the platform cost is in section 4.
+
+Control arm:
+  C1. Toolchain: as E1.
+  C2. Workers started from a stale checkout. Although each worker was
+      created after the previous worker's commits were on the remote, the
+      first commits of C2 (962b1f4) and C3 (b05fd8b) are parented on the
+      baseline 8b4ffa3, not the branch head. The most likely cause is that
+      the platform served a checkout that did not yet include the latest
+      push. This is not confirmed.
+        - C2 implemented `work group show` (962b1f4) without GROUP-01's code
+          in its workspace. It then merged GROUP-01 from the remote (fa821cc),
+          resolving conflicts, renaming one clashing function and adding a
+          test. So GROUP-02 was initially designed without the repository
+          state the protocol intended it to see.
+        - C3 recorded its work start on the stale base, then merged
+          GROUP-01/02 (5a03452) before writing any implementation. The effect
+          on its design is expected to be small, but it is recorded.
+        - C4 and C5 started from the current head.
+      No one repaired this. The control branch therefore has two merge
+      commits.
+  C3. Worker metrics were captured before each worker's final
+      completion/commit steps. Whole-session platform usage is in section 4.
+  C4. The metrics schemas differ between workers, because each worker wrote
+      its own file. control-01.json has no failedTests, retries,
+      validationFailures or commits fields. control-04.json and
+      control-05.json have no contextResets field. The missing values are
+      unrecorded, not zero, and no one filled them in afterwards.
+  C5. The control run log is a .md file under research/experiments
+      (control-run-log.md). Agent C reports that `./ros validate` passed at
+      0b9e81f, before the log was committed. The final tip 8bb8f78 was not
+      re-validated by the orchestrator, and by the rule in G1 it may fail
+      validation.
+  C6. No replacement workers were needed. Every worker completed its item
+      in its first session.
+
+Orchestrator:
+  O1. The orchestration branch's own commits (this record and the blind kit)
+      were made without a Praxis work item or `./ros` lifecycle, because
+      there is no local .NET runtime in the orchestrator container. No Praxis
+      state was hand-edited.
+  O2. The original A021 prompts named the branch without a replication
+      suffix. The R2 prompts carry the fuller R2 instructions given by the
+      repository owner (the group-analysis sections, per-milestone
+      checkpoint content, and metrics fields). Both arms received their
+      instructions in the same form.
+
+
+9. Validity for evaluation
+--------------------------
+Grouped arm: valid for evaluation. All five items are complete under
+separate lifecycles, the analysis was committed before code, and the
+deviations (G1, G2, E1) are recorded and do not affect the independent
+variable.
+
+Control arm: valid for evaluation, with deviation C2 flagged. The independent
+variable was respected: five fresh, isolated contexts ran strictly in order,
+and no shared-context substitution was made. However, C2 (and nominally C3)
+began from the baseline instead of the branch head. That departs from the
+protocol's "later workers see earlier workers' pushed commits", and it makes
+GROUP-02 somewhat more independent than designed. The evaluator and the
+metrics comparison should take C2 into account, for example as a threat to
+validity on cross-item consistency and merge churn. Whether to accept the
+arm as is or re-run GROUP-02 is the repository owner's decision.
+
+Status: BOTH R2 ARMS COMPLETE AND READY FOR FRESH BLIND EVALUATION.
+
+
+10. Locations
+-------------
+Grouped metrics: research/experiments/EX-ROS-2026-A021-R2-grouped/metrics/grouped.json
+                 (+ session-metrics-raw.json) on experiment/a021-r2-grouped
+Control metrics: research/experiments/EX-ROS-2026-A021-R2-control/metrics/control-01.json .. control-05.json
+                 (+ control-run-log.md) on experiment/a021-r2-control
+Blind bundle:    branch blind/a021-r2/kit (6f82f67),
+                 research/experiments/EX-ROS-2026-A021-R2-blind/
+                 blind/a021-r2/arm-M 72a6c0408140bce1b9c1b60fe174e7080d3f3c05
+                 blind/a021-r2/arm-N f6d0b5c49a2c592d3d8791dc819518578116a1cc
+  Each blind tree is the arm's final tree with .ros/ reset to the baseline and
+  that arm's research/experiments/EX-ROS-2026-A021-R2-* records removed. It
+  is one squashed commit on the baseline with a neutral author and date. The
+  orchestrator checked that src/, tests/ and docs/ match exactly one arm and
+  differ from it only in the excluded paths.
+  The arm-M/arm-N mapping was drawn at random from /dev/urandom. It is
+  withheld from the repository until evaluation is complete. The kit holds
+  only its SHA-256 commitment,
+    sha256("arm-M=<mode>;arm-N=<mode>;salt=<hex>")
+  (mapping-commitment.sha256). The mapping and salt were given to the
+  repository owner directly.
+  Nobody has evaluated the bundle yet.
