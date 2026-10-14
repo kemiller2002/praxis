@@ -7,15 +7,45 @@ open System.Text.RegularExpressions
 /// session metrics read. The command text is inspected in memory and never
 /// stored (`docs/development-telemetry.md`, privacy).
 type TranscriptToolUse =
-    { Name: string
+    { /// The provider's `tool_use` block ID: a call split over several
+      /// transcript entries is counted once.
+      Id: string option
+      Name: string
       FilePath: string option
       Command: string option }
 
+/// One request's provider-reported usage. Every bucket is optional: a field
+/// the provider did not report is unknown, never zero. Cache read and cache
+/// write are their own buckets and are never folded into input; the TTL
+/// split partitions cache write, and reasoning is a subset of output.
 type TranscriptUsage =
-    { Input: int64
-      Output: int64
-      CacheRead: int64
-      CacheCreation: int64 }
+    { Input: int64 option
+      Output: int64 option
+      CacheRead: int64 option
+      CacheCreation: int64 option
+      CacheCreation5m: int64 option
+      CacheCreation1h: int64 option
+      /// `output_tokens_details.thinking_tokens`, when the provider exposes it.
+      Reasoning: int64 option
+      /// Numeric usage fields this adapter does not normalize, by dotted
+      /// path (e.g. `server_tool_use.web_search_requests`). Preserved through
+      /// the sanitized raw layer, never promoted silently.
+      Unmapped: (string * int64) list
+      /// Textual usage fields (`service_tier`, `speed`, `inference_geo`).
+      Labels: (string * string) list }
+
+[<RequireQualifiedAccess>]
+module TranscriptUsage =
+    let empty =
+        { Input = None
+          Output = None
+          CacheRead = None
+          CacheCreation = None
+          CacheCreation5m = None
+          CacheCreation1h = None
+          Reasoning = None
+          Unmapped = []
+          Labels = [] }
 
 /// One Claude Code transcript line, reduced to content-free facts.
 type TranscriptEntry =
@@ -26,15 +56,88 @@ type TranscriptEntry =
       SessionId: string option
       RuntimeVersion: string option
       /// `message.id`, else `requestId`, else `uuid`: usage repeated once per
-      /// content block is counted once per request.
+      /// content block (streaming) is counted once per request.
       RequestKey: string option
+      /// `agentId` of a subagent (sidechain) transcript entry.
+      AgentId: string option
+      IsSidechain: bool
       Model: string option
       Usage: TranscriptUsage option
       ToolUses: TranscriptToolUse list
       ToolErrors: int
       IsCompactSummary: bool
       /// `totalCostUSD` of a `cost-state` line: the runtime's own estimate.
-      CostUsd: decimal option }
+      CostUsd: decimal option
+      /// `retryAttempt` of an `api_error` system entry, when present.
+      RetryAttempt: int option }
+
+[<RequireQualifiedAccess>]
+module TranscriptEntry =
+    /// The kind the reader gives a line that is not a JSON object: counted,
+    /// never parsed, never fatal.
+    let malformedKind = "praxis.malformed-line"
+
+    let malformed =
+        { Kind = malformedKind
+          Subtype = None
+          Timestamp = None
+          Cwd = None
+          SessionId = None
+          RuntimeVersion = None
+          RequestKey = None
+          AgentId = None
+          IsSidechain = false
+          Model = None
+          Usage = None
+          ToolUses = []
+          ToolErrors = 0
+          IsCompactSummary = false
+          CostUsd = None
+          RetryAttempt = None }
+
+/// One provider request after deduplication: the unit every usage total
+/// counts exactly once. Its key is the provider's own message ID, so a
+/// parent and child that both hold it can be reconciled (`RequestAttribution`).
+type TranscriptRequest =
+    { Key: string
+      Model: string option
+      AgentId: string option
+      Usage: TranscriptUsage }
+
+/// One usage bucket summed over a session's requests. The sum is a usable
+/// total only when every request reported the bucket (`TokenTotal.complete`).
+type TokenTotal =
+    { Sum: int64
+      Reporting: int
+      Requests: int }
+
+type TokenTotals =
+    { Input: TokenTotal
+      Output: TokenTotal
+      CacheRead: TokenTotal
+      CacheWrite: TokenTotal
+      CacheWrite5m: TokenTotal
+      CacheWrite1h: TokenTotal
+      Reasoning: TokenTotal }
+
+[<RequireQualifiedAccess>]
+module TokenTotal =
+    let ofRequests (selector: TranscriptUsage -> int64 option) (requests: TranscriptRequest list) : TokenTotal =
+        let known = requests |> List.choose (fun request -> selector request.Usage)
+
+        { Sum = List.sum known
+          Reporting = known.Length
+          Requests = requests.Length }
+
+    /// `Some` only when every request reported the bucket: a partially
+    /// reported bucket is unknown, never a silently low total.
+    let complete (total: TokenTotal) =
+        if total.Requests > 0 && total.Reporting = total.Requests then Some total.Sum else None
+
+    let unavailableReason (total: TokenTotal) =
+        if total.Requests = 0 then "the transcript carries no provider request with usage"
+        elif total.Reporting = 0 then "the provider did not report this usage bucket on any request"
+        else $"the provider reported this usage bucket on {total.Reporting} of {total.Requests} requests"
 
 type SessionSummary =
     { SessionId: string option
@@ -53,7 +156,22 @@ type SessionSummary =
       /// read and cache creation tokens (PRX-GRP-151).
       PeakContextTokens: int64 option
       ModelRequests: int
-      Tokens: TranscriptUsage option
+      /// Every deduplicated provider request, in first-seen order.
+      Requests: TranscriptRequest list
+      Tokens: TokenTotals option
+      /// Unnormalized numeric usage fields summed over requests, by path.
+      UsageExtensions: (string * int64) list
+      /// Distinct values of textual usage fields, by name.
+      UsageLabels: (string * string list) list
+      /// Distinct subagent IDs on the transcript's entries.
+      AgentIds: string list
+      /// Every entry is a sidechain (subagent) entry: a child's transcript.
+      Sidechain: bool
+      /// Lines that were not JSON objects: skipped, counted, never fatal.
+      MalformedLines: int
+      /// `api_error` system entries, and those that name a retry attempt.
+      ApiErrors: int
+      Retries: int
       CostUsd: decimal option
       ToolCalls: (string * int) list
       ToolErrors: int
@@ -75,7 +193,12 @@ type SessionMeasurement =
     { MetricId: string
       Value: decimal option
       Quality: string
-      Currency: string option }
+      Currency: string option
+      /// Why `Value` is `None`, when the adapter knows more than "absent".
+      UnavailableReason: string option
+      /// The value is a lower bound, not the provider's final count: a
+      /// transcript records output at streaming start.
+      LowerBound: bool }
 
 /// PRAXIS-PLAN-05: the `anthropic-claude-session` telemetry adapter's pure
 /// half. It promotes EX-ROS-2026-A021's `session_metrics.py` (EV-ROS-2026-A064)
@@ -214,6 +337,57 @@ module SessionTranscript =
     let private counts (values: string list) =
         values |> List.countBy id |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
 
+    /// Deduplicates provider requests by request key. A transcript repeats
+    /// an assistant message once per content block while streaming, so each
+    /// request is kept once, in first-seen order, carrying its last-written
+    /// usage (the CONSTRUCT-008 `usage.py` script keeps the first; the two
+    /// agree whenever repeated blocks carry identical usage, as recorded
+    /// transcripts do). Entries without usage are not requests.
+    let requestsOf (assistant: TranscriptEntry list) : TranscriptRequest list =
+        let order, latest =
+            assistant
+            |> List.fold
+                (fun (order: string list, latest: Map<string, TranscriptRequest>) entry ->
+                    match entry.RequestKey, entry.Usage with
+                    | Some key, Some usage ->
+                        let request =
+                            { Key = key
+                              Model = entry.Model |> Option.filter ((<>) syntheticModel)
+                              AgentId = entry.AgentId
+                              Usage = usage }
+
+                        (if latest.ContainsKey key then order else key :: order), latest.Add(key, request)
+                    | _ -> order, latest)
+                ([], Map.empty)
+
+        order |> List.rev |> List.map (fun key -> latest[key])
+
+    let tokenTotals (requests: TranscriptRequest list) : TokenTotals =
+        let total selector = TokenTotal.ofRequests selector requests
+
+        { Input = total (fun usage -> usage.Input)
+          Output = total (fun usage -> usage.Output)
+          CacheRead = total (fun usage -> usage.CacheRead)
+          CacheWrite = total (fun usage -> usage.CacheCreation)
+          CacheWrite5m = total (fun usage -> usage.CacheCreation5m)
+          CacheWrite1h = total (fun usage -> usage.CacheCreation1h)
+          Reasoning = total (fun usage -> usage.Reasoning) }
+
+    /// Tool calls, each counted once: a `tool_use` block ID seen again
+    /// (the same call repeated over streamed entries) is not a new call.
+    let distinctToolUses (assistant: TranscriptEntry list) : (DateTimeOffset option * TranscriptToolUse) list =
+        assistant
+        |> List.collect (fun entry -> entry.ToolUses |> List.map (fun tool -> entry.Timestamp, tool))
+        |> List.fold
+            (fun (seen: Set<string>, kept) (at, tool) ->
+                match tool.Id with
+                | Some id when seen.Contains id -> seen, kept
+                | Some id -> seen.Add id, (at, tool) :: kept
+                | None -> seen, (at, tool) :: kept)
+            (Set.empty, [])
+        |> snd
+        |> List.rev
+
     /// `isProductive` judges a written path against the repository's
     /// meaningful-path configuration; a shell write counts when it names a
     /// code directory, as for the first code change.
@@ -225,19 +399,10 @@ module SessionTranscript =
         let endedAt = if stamps.IsEmpty then None else Some(List.max stamps)
         let assistant = entries |> List.filter (fun entry -> entry.Kind = "assistant")
 
-        // Last usage per request wins, matching the harness script.
-        let usage =
-            assistant
-            |> List.fold
-                (fun (seen: Map<string, TranscriptUsage>) entry ->
-                    match entry.RequestKey, entry.Usage with
-                    | Some key, Some value -> seen.Add(key, value)
-                    | _ -> seen)
-                Map.empty
-
+        let requests = requestsOf assistant
         let calls =
-            assistant
-            |> List.collect (fun entry -> entry.ToolUses |> List.map (fun tool -> entry.Timestamp, tool, toolFacts cwd tool))
+            distinctToolUses assistant
+            |> List.map (fun (at, tool) -> at, tool, toolFacts cwd tool)
 
         let facts = calls |> List.map (fun (_, _, fact) -> fact)
         let reads = facts |> List.collect (fun fact -> fact.Reads) |> List.filter (String.IsNullOrEmpty >> not) |> counts
@@ -259,15 +424,8 @@ module SessionTranscript =
         let elapsedTo (moment: DateTimeOffset option) =
             Option.map2 (fun (started: DateTimeOffset) (changed: DateTimeOffset) -> int64 (changed - started).TotalMilliseconds) startedAt moment
 
-        let sumTokens (values: TranscriptUsage list) =
-            values
-            |> List.fold
-                (fun total value ->
-                    { Input = total.Input + value.Input
-                      Output = total.Output + value.Output
-                      CacheRead = total.CacheRead + value.CacheRead
-                      CacheCreation = total.CacheCreation + value.CacheCreation })
-                { Input = 0L; Output = 0L; CacheRead = 0L; CacheCreation = 0L }
+        let apiErrors =
+            entries |> List.filter (fun entry -> entry.Kind = "system" && entry.Subtype = Some "api_error")
 
         { SessionId = firstSome (fun entry -> entry.SessionId)
           RuntimeVersion = firstSome (fun entry -> entry.RuntimeVersion)
@@ -280,10 +438,37 @@ module SessionTranscript =
           MsToFirstCodeChange = elapsedTo firstCodeChange
           MsToFirstProductiveChange = elapsedTo firstProductiveChange
           PeakContextTokens =
-            if usage.IsEmpty then None
-            else usage |> Map.toList |> List.map (fun (_, value) -> value.Input + value.CacheRead + value.CacheCreation) |> List.max |> Some
-          ModelRequests = usage.Count
-          Tokens = if usage.IsEmpty then None else Some(usage |> Map.toList |> List.map snd |> sumTokens)
+            requests
+            |> List.choose (fun request ->
+                let usage = request.Usage
+                [ usage.Input; usage.CacheRead; usage.CacheCreation ] |> List.choose id |> function
+                    | [] -> None
+                    | known -> Some(List.sum known))
+            |> function
+                | [] -> None
+                | sizes -> Some(List.max sizes)
+          ModelRequests = requests.Length
+          Requests = requests
+          Tokens = if requests.IsEmpty then None else Some(tokenTotals requests)
+          UsageExtensions =
+            requests
+            |> List.collect (fun request -> request.Usage.Unmapped)
+            |> List.groupBy fst
+            |> List.map (fun (path, values) -> path, values |> List.sumBy snd)
+            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+          UsageLabels =
+            requests
+            |> List.collect (fun request -> request.Usage.Labels)
+            |> List.groupBy fst
+            |> List.map (fun (name, values) -> name, values |> List.map snd |> List.distinct |> List.sortWith (fun a b -> String.CompareOrdinal(a, b)))
+            |> List.sortWith (fun (left, _) (right, _) -> String.CompareOrdinal(left, right))
+          AgentIds = entries |> List.choose (fun entry -> entry.AgentId) |> List.distinct |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
+          Sidechain =
+            let parsed = entries |> List.filter (fun entry -> entry.Kind <> TranscriptEntry.malformedKind)
+            not parsed.IsEmpty && parsed |> List.forall (fun entry -> entry.IsSidechain)
+          MalformedLines = entries |> List.filter (fun entry -> entry.Kind = TranscriptEntry.malformedKind) |> List.length
+          ApiErrors = apiErrors.Length
+          Retries = apiErrors |> List.filter (fun entry -> entry.RetryAttempt.IsSome) |> List.length
           CostUsd = entries |> List.choose (fun entry -> entry.CostUsd) |> List.tryLast
           ToolCalls = calls |> List.map (fun (_, tool, _) -> tool.Name) |> counts
           ToolErrors = entries |> List.filter (fun entry -> entry.Kind = "user") |> List.sumBy (fun entry -> entry.ToolErrors)
@@ -315,23 +500,48 @@ module SessionTranscript =
     /// transcript records directly are `observed`; counts pattern-matched
     /// from shell commands, and time derived from entry timestamps, are
     /// `derived`; the runtime's own cost is an `estimated` cumulative
-    /// session cost, never `cost.execution_total`.
+    /// session cost, never `cost.execution_total`. Every value the
+    /// transcript does not carry is `None` with a reason, never zero.
     let measurements (summary: SessionSummary) : SessionMeasurement list =
         let measured metricId quality (value: decimal option) =
             { MetricId = metricId
               Value = value
               Quality = quality
-              Currency = None }
+              Currency = None
+              UnavailableReason = None
+              LowerBound = false }
 
         let count metricId quality (value: int) = measured metricId quality (Some(decimal value))
-        let tokens selector = summary.Tokens |> Option.map (selector >> decimal)
+
+        let tokens metricId (selector: TokenTotals -> TokenTotal) =
+            match summary.Tokens |> Option.map selector with
+            | None -> { measured metricId "observed" None with UnavailableReason = Some "the transcript carries no provider request with usage" }
+            | Some total ->
+                match TokenTotal.complete total with
+                | Some sum -> measured metricId "observed" (Some(decimal sum))
+                | None -> { measured metricId "observed" None with UnavailableReason = Some(TokenTotal.unavailableReason total) }
+
+        // A transcript records an API error only when one happens; with none
+        // recorded, absence is not proof of zero.
+        let onlyWhenRecorded metricId (value: int) =
+            if value > 0 then
+                count metricId "observed" value
+            else
+                { measured metricId "observed" None with
+                    UnavailableReason = Some "the transcript records API errors and retries only when they occur; none were recorded, which does not prove zero" }
+
         let transcriptSeen = summary.StartedAt.IsSome
 
         [ count "model.requests" "observed" summary.ModelRequests
-          measured "tokens.input" "observed" (tokens (fun usage -> usage.Input))
-          measured "tokens.output" "observed" (tokens (fun usage -> usage.Output))
-          measured "tokens.cache_read" "observed" (tokens (fun usage -> usage.CacheRead))
-          measured "tokens.cache_write" "observed" (tokens (fun usage -> usage.CacheCreation))
+          tokens "tokens.input" _.Input
+          { tokens "tokens.output" _.Output with LowerBound = true }
+          tokens "tokens.cache_read" _.CacheRead
+          tokens "tokens.cache_write" _.CacheWrite
+          tokens "tokens.cache_write_5m" _.CacheWrite5m
+          tokens "tokens.cache_write_1h" _.CacheWrite1h
+          { tokens "tokens.reasoning" _.Reasoning with LowerBound = true }
+          onlyWhenRecorded "model.request_failures" summary.ApiErrors
+          onlyWhenRecorded "agent.retries" summary.Retries
           count "tool.calls" "observed" (summary.ToolCalls |> List.sumBy snd)
           count "tool.failures" "observed" summary.ToolErrors
           count "tool.shell_commands" "observed" summary.ShellCommands
@@ -348,8 +558,34 @@ module SessionTranscript =
           measured "time.first_code_change_ms" "derived" (summary.MsToFirstCodeChange |> Option.map decimal)
           measured "time.first_productive_change_ms" "derived" (summary.MsToFirstProductiveChange |> Option.map decimal)
           measured "time.active_ms" "derived" (summary.ActiveMs |> Option.map decimal)
+          measured "time.agent_wall_ms" "derived" (summary.SpanMs |> Option.map decimal)
           { MetricId = "cost.session_cumulative"
             Value = summary.CostUsd
             Quality = "estimated"
-            Currency = Some "USD" } ]
-        |> List.map (fun measurement -> if transcriptSeen then measurement else { measurement with Value = None })
+            Currency = Some "USD"
+            UnavailableReason = None
+            LowerBound = false } ]
+        |> List.map (fun measurement ->
+            if transcriptSeen then measurement
+            else { measurement with Value = None; UnavailableReason = Some "the transcript has no entries" })
+
+    /// Metrics the transcript can never observe: host compute is measured by
+    /// the host (`telemetry record`), never inferred from the agent's log;
+    /// acceptance outcomes come from verification, not from the transcript.
+    let unobservable =
+        [ "host.compile_ms"
+          "host.verify_ms"
+          "host.prepare_apply_ms"
+          "acceptance.first_pass"
+          "acceptance.repaired"
+          "acceptance.repair_cycles" ]
+
+    /// The snapshot identity: a subagent (sidechain) transcript is its own
+    /// snapshot, so a child's transcript never collides with its parent
+    /// session's under one session ID.
+    let snapshotId (summary: SessionSummary) : string option =
+        summary.SessionId
+        |> Option.map (fun session ->
+            match summary.Sidechain, summary.AgentIds with
+            | true, [ agent ] -> $"claude-session-{session}-agent-{agent}"
+            | _ -> $"claude-session-{session}")

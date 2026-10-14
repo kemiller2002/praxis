@@ -25,7 +25,11 @@ module TelemetryStepsUsageTests =
           Value = value
           Unit = "tokens"
           Currency = None
-          Quality = quality }
+          Quality = quality
+          Lineage = []
+          CostBasis = None
+          Origin = None
+          LowerBound = false }
 
     let tests =
         [ { Name = "steps: a step runs until it completes or fails, and its lifecycle is projected from events"

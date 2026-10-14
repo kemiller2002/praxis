@@ -102,7 +102,8 @@ module TelemetryIngestClaudeSessionTests =
               Assert.equal [ "claude-test" ] summary.Models
               Assert.equal (Some 2_401_000L) summary.SpanMs
               Assert.equal 5 summary.ModelRequests
-              Assert.equal (Some { Input = 1000L; Output = 100L; CacheRead = 3000L; CacheCreation = 50L }) summary.Tokens
+              let tokens = summary.Tokens.Value
+              Assert.equal (Some 1000L, Some 100L, Some 3000L, Some 50L) (TokenTotal.complete tokens.Input, TokenTotal.complete tokens.Output, TokenTotal.complete tokens.CacheRead, TokenTotal.complete tokens.CacheWrite)
               Assert.equal [ "Bash", 3; "Edit", 1; "Read", 2 ] summary.ToolCalls
               Assert.equal 1 summary.ToolErrors
               Assert.equal 3 summary.ShellCommands

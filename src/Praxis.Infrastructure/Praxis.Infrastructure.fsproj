@@ -76,6 +76,7 @@
     <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
     <Compile Include="Work/FileNativeCompletionEffects.fs" />
     <Compile Include="Work/FileLocalIntegratedCompletion.fs" />
+    <Compile Include="Work/PriceTableReader.fs" />
     <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />

@@ -59,6 +59,9 @@
     <Compile Include="Telemetry/Validation.fs" />
     <Compile Include="Telemetry/TelemetryValidation.fs" />
     <Compile Include="Telemetry/Steps.fs" />
+    <Compile Include="Telemetry/RequestAttribution.fs" />
+    <Compile Include="Telemetry/UsageCost.fs" />
+    <Compile Include="Telemetry/Acceptance.fs" />
     <Compile Include="Telemetry/Usage.fs" />
     <Compile Include="Pacing/Model.fs" />
     <Compile Include="Provenance/Actor.fs" />

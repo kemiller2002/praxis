@@ -1,13 +1,16 @@
 module Praxis.Tests.Program
 
 /// `--suite browser` runs the browser suite (headless Chrome, DF-ROS-2026-A058);
-/// with no argument, every other test runs. CI runs both.
+/// `--suite pinned-release` runs the pinned release binary against this
+/// repository (PRAXIS_PINNED_RELEASE); with no argument, every other test
+/// runs. CI runs all three.
 [<EntryPoint>]
 let main argv =
   match argv with
   | args when args.Length >= 2 && args[0] = "--local-worker-fixture" -> LocalWorkerFixture.run args[1] (args |> Array.skip 2 |> Array.toList)
   | [| "--local-host-lock-fixture"; path |] -> LocalEcirAuthorityTests.lockFixture path
   | [| "--suite"; "browser" |] -> TestRunner.run BrowserTests.tests
+  | [| "--suite"; "pinned-release" |] -> TestRunner.run PinnedReleaseTests.tests
   | [||] ->
     ArchitectureTests.tests
     @ CliHarnessTests.tests
@@ -53,6 +56,7 @@ let main argv =
     @ TelemetryIngestClaudeStatuslineTests.tests
     @ TelemetryIngestOtelTests.tests
     @ TelemetryIngestClaudeSessionTests.tests
+    @ TelemetryUsageAttributionTests.tests
     @ TelemetryClassifyTests.tests
     @ TelemetryStartTests.tests
     @ StepTelemetryTests.tests
@@ -178,4 +182,4 @@ let main argv =
     @ ProvenanceAcknowledgementTests.tests
     @ UrlEnhancementTests.tests
     |> TestRunner.run
-  | other -> eprintfn "unknown arguments: %s (expected none, or --suite browser)" (String.concat " " other); 2
+  | other -> eprintfn "unknown arguments: %s (expected none, --suite browser, or --suite pinned-release)" (String.concat " " other); 2

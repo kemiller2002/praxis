@@ -851,13 +851,20 @@ module FileTelemetryFinalizationRepository =
         | Some text -> JsonValue.Create text
         | None -> null
 
-    let private pricingNode (source: string option) (version: string option) : JsonNode =
-        match source, version with
-        | None, None -> null
+    let private pricingNode (source: string option) (version: string option) (effectiveAt: string option) : JsonNode =
+        match source, version, effectiveAt with
+        | None, None, None -> null
         | _ ->
             let node = JsonObject()
             node["source"] <- optionalStringNode source
             node["version"] <- optionalStringNode version
+
+            // Only a dated record carries the key, so earlier records keep
+            // their content-addressed measurement IDs.
+            match effectiveAt with
+            | Some date -> node["effectiveAt"] <- JsonValue.Create date
+            | None -> ()
+
             node
 
     /// Mirrors production's `quality`-to-capability-`status` mapping inside
@@ -970,7 +977,18 @@ module FileTelemetryFinalizationRepository =
                 | Error failure, Ok _ -> Error failure.Message
                 | _, value -> value
 
-    let recordMetric (root: string) (target: string option) (request: RecordMetricRequest) : Result<JsonObject, string> =
+    /// An estimated or calculated amount names the price table it was
+    /// priced with -- source, version and effective date -- or it is not
+    /// recorded (CONSTRUCT-010 Phase 6). Provider-reported (`observed`)
+    /// cost needs none.
+    let private estimateLacksPriceTable (definition: MetricDefinition) (request: RecordMetricRequest) (effectiveAt: string option) =
+        let blank = Option.forall String.IsNullOrWhiteSpace
+        let estimate = request.Quality = "estimated" || request.Quality = "derived" || request.Source.Type = "calculated"
+        definition.Unit = "currency" && estimate && (blank request.PricingSource || blank request.PricingVersion || blank effectiveAt)
+
+    /// `telemetry record ... --pricing-effective-at DATE`: `recordMetric`
+    /// with the price table's effective date.
+    let recordMetricPriced (root: string) (target: string option) (request: RecordMetricRequest) (effectiveAt: string option) : Result<JsonObject, string> =
         match resolveExecutionTarget root target true with
         | Error message -> Error message
         | Ok executionId ->
@@ -991,6 +1009,8 @@ module FileTelemetryFinalizationRepository =
                                 ->
                                 // Refuse at write time what `validate` would reject later.
                                 Error $"metric '{request.MetricId}': {TelemetryValidation.costUnitMessage}; record it with --unit currency --currency XXX (e.g. USD)"
+                            | Some definition when estimateLacksPriceTable definition request effectiveAt ->
+                                Error $"metric '{request.MetricId}': an estimated or calculated cost must name its price table; pass --pricing-source, --pricing-version and --pricing-effective-at (provider-reported cost is --quality observed)"
                             | Some definition ->
                                 let file = executionFile root executionId
 
@@ -1012,7 +1032,7 @@ module FileTelemetryFinalizationRepository =
                                     sortedForDigest["dimensions"] <- dimensionsNode request.Step
                                     sortedForDigest["id"] <- JsonValue.Create request.MetricId
                                     sortedForDigest["measurementId"] <- JsonValue.Create ""
-                                    sortedForDigest["pricing"] <- pricingNode request.PricingSource request.PricingVersion
+                                    sortedForDigest["pricing"] <- pricingNode request.PricingSource request.PricingVersion effectiveAt
                                     sortedForDigest["quality"] <- JsonValue.Create request.Quality
                                     sortedForDigest["schemaVersion"] <- JsonValue.Create "1.0.0"
                                     sortedForDigest["scope"] <- JsonValue.Create request.Scope
@@ -1053,7 +1073,7 @@ module FileTelemetryFinalizationRepository =
                                         metricNode["scope"] <- JsonValue.Create request.Scope
                                         metricNode["aggregation"] <- JsonValue.Create definition.Aggregation
                                         metricNode["dimensions"] <- dimensionsNode request.Step
-                                        metricNode["pricing"] <- pricingNode request.PricingSource request.PricingVersion
+                                        metricNode["pricing"] <- pricingNode request.PricingSource request.PricingVersion effectiveAt
                                         metricNode["source"] <- FileTelemetryExecutionRepository.sourceNode request.Source
                                         metricNode["collectedAt"] <- JsonValue.Create collectedAt
                                         metricNode["schemaVersion"] <- JsonValue.Create "1.0.0"
@@ -1104,6 +1124,9 @@ module FileTelemetryFinalizationRepository =
                 match lease.Release(), result with
                 | Error releaseFailure, Ok _ -> Error releaseFailure.Message
                 | _, outcome -> outcome
+
+    let recordMetric (root: string) (target: string option) (request: RecordMetricRequest) : Result<JsonObject, string> =
+        recordMetricPriced root target request None
 
     // ---- telemetry ingest (generic adapter only; every other adapter is
     // its own future MIG-08 slice, rejected outright at the CLI layer) ----
@@ -1513,8 +1536,8 @@ module FileTelemetryFinalizationRepository =
     /// The raw snapshot is the content-free summary, never the transcript.
     /// The snapshot ID is the session ID, so one session is ingested into an
     /// execution once and its session totals are never summed twice.
-    let private adaptClaudeSession (isProductive: string -> bool) (input: JsonNode) (collectedAt: string) : AdaptedSnapshot =
-        let summary = ClaudeSessionTranscriptReader.entries input |> SessionTranscript.summarizeWith isProductive
+    let private adaptClaudeSession (isProductive: string -> bool) (maxPayloadBytes: int) (entries: TranscriptEntry list) (collectedAt: string) : AdaptedSnapshot =
+        let summary = entries |> SessionTranscript.summarizeWith isProductive
         let node (value: 'T) : JsonNode = JsonValue.Create value
         let optional (value: 'T option) : JsonNode = value |> Option.map node |> Option.toObj
 
@@ -1555,11 +1578,24 @@ module FileTelemetryFinalizationRepository =
                   "status", node (if measurement.Value.IsSome then capabilityStatusForQuality measurement.Quality else "supported-unavailable")
                   "reason",
                   node (
-                      if measurement.Value.IsSome then "derived from the session transcript"
-                      else "adapter recognizes the metric but the transcript did not carry it"
+                      match measurement.Value, measurement.UnavailableReason with
+                      | Some _, _ when measurement.LowerBound ->
+                          "derived from the session transcript; a lower bound: the transcript records the streaming-start count, not the provider's final count"
+                      | Some _, _ -> "derived from the session transcript"
+                      | None, Some reason -> reason
+                      | None, None -> "adapter recognizes the metric but the transcript did not carry it"
                   )
                   "source", source ()
                   "discoveredAt", node collectedAt ]
+
+        // The runtime's own cost estimate names its price table: the
+        // runtime's built-in prices at the runtime version that wrote it,
+        // whose effective date the transcript does not state.
+        let runtimePricing () =
+            record
+                [ "source", node "claude-code-runtime-price-table"
+                  "version", optional summary.RuntimeVersion
+                  "effectiveAt", null ]
 
         let metric (measurement: SessionMeasurement) (value: decimal) =
             record
@@ -1569,30 +1605,81 @@ module FileTelemetryFinalizationRepository =
                   yield "source", source ()
                   yield "scope", node "session"
                   yield "quality", node measurement.Quality
+                  if measurement.LowerBound then yield "dimensions", record [ "bound", node "lower" ] :> JsonNode
                   if measurement.Quality = "estimated" then yield "confidence", node "medium"
                   match measurement.Currency with
-                  | Some currency -> yield "currency", node currency
+                  | Some currency ->
+                      yield "currency", node currency
+                      yield "pricing", runtimePricing () :> JsonNode
                   | None -> () ]
 
-        let raw =
+        let usageValues (usage: TranscriptUsage) =
+            [ usage.Input; usage.Output; usage.CacheRead; usage.CacheCreation; usage.CacheCreation5m; usage.CacheCreation1h; usage.Reasoning ]
+            |> List.map optional
+            |> array
+
+        // The request ledger: one content-free row per deduplicated provider
+        // request (its provider message ID, model, subagent and usage), so a
+        // parent and child that both hold a request count it once
+        // (`RequestAttribution`). Dropped, and the omission stated, when it
+        // would push the snapshot over the raw-payload budget.
+        let ledgerRows =
+            summary.Requests
+            |> List.map (fun request ->
+                record
+                    [ "key", node request.Key
+                      "model", optional request.Model
+                      "agentId", optional request.AgentId
+                      "usage", usageValues request.Usage ]
+                :> JsonNode)
+
+        let summaryFields =
+            [ "schema", node "praxis.claude-session-summary/2"
+              "sessionId", optional summary.SessionId
+              "runtimeVersion", optional summary.RuntimeVersion
+              "models", summary.Models |> List.map node |> array
+              "agentIds", summary.AgentIds |> List.map node |> array
+              "sidechain", node summary.Sidechain
+              "startedAt", stamp summary.StartedAt
+              "endedAt", stamp summary.EndedAt
+              "spanMs", optional summary.SpanMs
+              "activeMs", optional summary.ActiveMs
+              "idleGapMs", node SessionTranscript.idleGapMs
+              "idleGapsExcluded", node summary.IdleGapsExcluded
+              "msToFirstCodeChange", optional summary.MsToFirstCodeChange
+              "msToFirstProductiveChange", optional summary.MsToFirstProductiveChange
+              "peakContextTokens", optional summary.PeakContextTokens
+              "distinctFilesRead", node summary.DistinctFilesRead
+              "malformedLines", node summary.MalformedLines
+              "apiErrors", node summary.ApiErrors
+              "retries", node summary.Retries
+              "repeatedReads", counted "path" (repositoryPaths summary.RepeatedReads)
+              "governanceReads", counted "path" (repositoryPaths summary.GovernanceReads)
+              "toolCalls", counted "name" summary.ToolCalls
+              // Provider usage fields this adapter does not normalize: kept
+              // here (sanitized, unmapped, so discovered as `unknown`).
+              "usage",
+              record
+                  [ "extensions", record (summary.UsageExtensions |> List.map (fun (path, value) -> path, node value)) :> JsonNode
+                    "labels", record (summary.UsageLabels |> List.map (fun (name, values) -> name, values |> List.map node |> array)) ]
+              :> JsonNode ]
+
+        let ledger =
             record
-                [ "schema", node "praxis.claude-session-summary/1"
-                  "sessionId", optional summary.SessionId
-                  "runtimeVersion", optional summary.RuntimeVersion
-                  "models", summary.Models |> List.map node |> array
-                  "startedAt", stamp summary.StartedAt
-                  "endedAt", stamp summary.EndedAt
-                  "spanMs", optional summary.SpanMs
-                  "activeMs", optional summary.ActiveMs
-                  "idleGapMs", node SessionTranscript.idleGapMs
-                  "idleGapsExcluded", node summary.IdleGapsExcluded
-                  "msToFirstCodeChange", optional summary.MsToFirstCodeChange
-                  "msToFirstProductiveChange", optional summary.MsToFirstProductiveChange
-                  "peakContextTokens", optional summary.PeakContextTokens
-                  "distinctFilesRead", node summary.DistinctFilesRead
-                  "repeatedReads", counted "path" (repositoryPaths summary.RepeatedReads)
-                  "governanceReads", counted "path" (repositoryPaths summary.GovernanceReads)
-                  "toolCalls", counted "name" summary.ToolCalls ]
+                [ "columns", RequestLedger.columns |> List.map node |> array
+                  "rows", array ledgerRows ]
+
+        let withLedger = record (summaryFields @ [ "requestLedger", (ledger :> JsonNode) ])
+
+        let raw =
+            if Text.Encoding.UTF8.GetByteCount(CanonicalJson.serializeCompact withLedger) <= maxPayloadBytes then
+                withLedger
+            else
+                record (
+                    summaryFields
+                    @ [ "requestLedger",
+                        record [ "omitted", node "the request ledger would exceed the raw-payload budget"; "requests", node summary.Requests.Length ] :> JsonNode ]
+                )
 
         let identity =
             record
@@ -1602,10 +1689,12 @@ module FileTelemetryFinalizationRepository =
                   "model", optional (summary.Models |> List.tryExactlyOne)
                   "sessionId", optional summary.SessionId ]
 
-        // PRX-GRP-150: what this adapter declares it cannot observe.
+        // PRX-GRP-150: what this adapter declares it cannot observe; host
+        // compute and acceptance outcomes are never in an agent transcript.
         let unsupported =
-            ContextMetrics.ids
-            |> List.filter (fun metricId -> ContextMetrics.declaration SessionTranscript.adapterName metricId = ContextMetricSupport.Unsupported)
+            (ContextMetrics.ids
+             |> List.filter (fun metricId -> ContextMetrics.declaration SessionTranscript.adapterName metricId = ContextMetricSupport.Unsupported))
+            @ SessionTranscript.unobservable
             |> List.map (fun metricId ->
                 record
                     [ "metricId", node metricId
@@ -1624,12 +1713,15 @@ module FileTelemetryFinalizationRepository =
           Links = None
           Raw = raw
           MappedFields =
-            [ "schema"; "sessionId"; "runtimeVersion"; "models[]"; "startedAt"; "endedAt"; "spanMs"; "activeMs"
+            [ "schema"; "sessionId"; "runtimeVersion"; "models[]"; "agentIds[]"; "sidechain"; "startedAt"; "endedAt"; "spanMs"; "activeMs"
               "idleGapMs"; "idleGapsExcluded"; "msToFirstCodeChange"; "msToFirstProductiveChange"; "peakContextTokens"; "distinctFilesRead"
+              "malformedLines"; "apiErrors"; "retries"
               "repeatedReads[].path"; "repeatedReads[].count"; "governanceReads[].path"; "governanceReads[].count"
-              "toolCalls[].name"; "toolCalls[].count" ]
+              "toolCalls[].name"; "toolCalls[].count"
+              "requestLedger.columns[]"; "requestLedger.rows[].key"; "requestLedger.rows[].model"; "requestLedger.rows[].agentId"
+              "requestLedger.rows[].usage[]"; "requestLedger.omitted"; "requestLedger.requests" ]
           SchemaVersion = null
-          SnapshotId = summary.SessionId |> Option.map (fun session -> $"claude-session-{session}")
+          SnapshotId = SessionTranscript.snapshotId summary
           CollectedAt = collectedAt
           Source = source () }
 
@@ -2802,7 +2894,17 @@ module FileTelemetryFinalizationRepository =
         if not (Praxis.Domain.Telemetry.TelemetryAdapters.all |> List.contains adapter) then
             Error $"unknown telemetry adapter '{adapter}'"
         else
-            match parseIngestInput inputText with
+            // A transcript is read line by line, so a malformed line is
+            // counted instead of failing the whole ingest; every other
+            // adapter keeps the strict JSON / JSON Lines parse.
+            let parsed =
+                if adapter = SessionTranscript.adapterName then
+                    if inputText.Trim() = "" then Error "telemetry input is empty"
+                    else Ok(JsonArray() :> JsonNode)
+                else
+                    parseIngestInput inputText
+
+            match parsed with
             | Error message -> Error message
             | Ok inputNode ->
                 let collectedAt = FileTelemetryExecutionRepository.nowIso ()
@@ -2813,7 +2915,8 @@ module FileTelemetryFinalizationRepository =
                     | "anthropic-claude-statusline" -> adaptClaudeStatusline inputNode collectedAt
                     | "anthropic-claude-session" ->
                         let paths = FileWorkConfigRepository.readPathFilterConfig root
-                        adaptClaudeSession (Praxis.Domain.Work.PathFilter.isMeaningful paths) inputNode collectedAt
+                        let budget = FileWorkConfigRepository.readTelemetryMaxRawPayloadBytes root
+                        adaptClaudeSession (Praxis.Domain.Work.PathFilter.isMeaningful paths) budget (ClaudeSessionTranscriptReader.parseLines inputText) collectedAt
                     | "anthropic-claude-hook" -> adaptHook inputNode collectedAt "anthropic" "claude-code"
                     | "google-gemini-hook" -> adaptHook inputNode collectedAt "google" "gemini-cli"
                     | "github-copilot-hook" -> adaptHook inputNode collectedAt "github" "copilot"
@@ -2831,7 +2934,7 @@ module FileTelemetryFinalizationRepository =
                 | None ->
                     let seed = JsonObject()
                     seed["adapter"] <- JsonValue.Create adapter
-                    seed["input"] <- inputNode.DeepClone()
+                    seed["input"] <- (if adapter = SessionTranscript.adapterName then JsonValue.Create inputText :> JsonNode else inputNode.DeepClone())
                     Ok { adapted with SnapshotId = Some("SNAP-" + CanonicalJson.contentDigest 24 seed) }
 
     /// One adapted input reduced to content-free metric values (id, value,
@@ -2870,8 +2973,69 @@ module FileTelemetryFinalizationRepository =
                     if execution.Telemetry |> List.exists (fun snapshot -> snapshot.SnapshotId = snapshotId) then Some execution.Id else None)
             | Error _ -> None
 
-    let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
-        match adaptInput root adapter inputText with
+    /// Stamps every metric of a transcript snapshot with its snapshot ID
+    /// (the `snapshot` dimension), so a usage report can tell when a parent
+    /// and a child hold the same transcript and count its metrics once.
+    let private stampSnapshot (adapted: AdaptedSnapshot) : AdaptedSnapshot =
+        match adapted.SnapshotId with
+        | None -> adapted
+        | Some snapshotId ->
+            let stamped (metric: JsonObject) =
+                let copy = metric.DeepClone().AsObject()
+
+                let dimensions =
+                    match copy["dimensions"] with
+                    | :? JsonObject as existing -> existing
+                    | _ ->
+                        let created = JsonObject()
+                        copy["dimensions"] <- created
+                        created
+
+                dimensions["snapshot"] <- JsonValue.Create snapshotId
+                copy
+
+            { adapted with Metrics = adapted.Metrics |> List.map stamped }
+
+    /// Attributes every metric of an adapted snapshot to one step (the
+    /// `step` dimension) and records the step in its raw payload, so a
+    /// request ledger is attributed to the step too. The snapshot ID is
+    /// unchanged: one input is still ingested into an execution once.
+    let private attributeToStep (step: string) (adapted: AdaptedSnapshot) : AdaptedSnapshot =
+        let stamped (metric: JsonObject) =
+            let copy = metric.DeepClone().AsObject()
+
+            let dimensions =
+                match copy["dimensions"] with
+                | :? JsonObject as existing -> existing
+                | _ ->
+                    let created = JsonObject()
+                    copy["dimensions"] <- created
+                    created
+
+            dimensions["step"] <- JsonValue.Create step
+            copy
+
+        let raw =
+            match adapted.Raw with
+            | :? JsonObject as payload ->
+                let copy = payload.DeepClone().AsObject()
+                copy["step"] <- JsonValue.Create step
+                copy :> JsonNode
+            | other -> other
+
+        { adapted with
+            Metrics = adapted.Metrics |> List.map stamped
+            Raw = raw
+            MappedFields = "step" :: adapted.MappedFields }
+
+    /// `telemetry ingest ... --step STEP-ID`: like `ingestTarget`, with every
+    /// adapted metric attributed to a step the execution has started.
+    let ingestTargetAt (root: string) (target: string option) (adapter: string) (step: string option) (inputText: string) : Result<JsonObject, string> =
+        let prepared (adapted: AdaptedSnapshot) =
+            let stamped = if adapter = SessionTranscript.adapterName then stampSnapshot adapted else adapted
+            step |> Option.fold (fun snapshot id -> attributeToStep id snapshot) stamped
+
+        match adaptInput root adapter inputText |> Result.map prepared with
         | Error message -> Error message
         | Ok adapted ->
             match ingestedByGroupExecution root adapted.SnapshotId.Value with
@@ -2888,13 +3052,24 @@ module FileTelemetryFinalizationRepository =
                             try
                                 match resolveExecutionTarget root (Some executionId) true with
                                 | Error message -> Error message
-                                | Ok _ -> ingestAdaptedGeneric root executionId adapted
+                                | Ok _ ->
+                                    let started () =
+                                        match JsonNode.Parse(File.ReadAllText(executionFile root executionId)) with
+                                        | :? JsonObject as record -> Steps.project (stepEvents record) |> List.exists (fun recorded -> Some recorded.StepId = step)
+                                        | _ -> false
+
+                                    match step with
+                                    | Some id when not (started ()) -> Error $"step '{id}' has not been started in execution '{executionId}'"
+                                    | _ -> ingestAdaptedGeneric root executionId adapted
                             with error ->
                                 Error error.Message
 
                         match lease.Release(), result with
                         | Error releaseFailure, Ok _ -> Error releaseFailure.Message
                         | _, outcome -> outcome
+
+    let ingestTarget (root: string) (target: string option) (adapter: string) (inputText: string) : Result<JsonObject, string> =
+        ingestTargetAt root target adapter None inputText
 
     // ---- telemetry classify (a thin wrapper over generic ingest) ----
 
