@@ -1,0 +1,113 @@
+{
+  "branch": "experiment/a024-arm-3",
+  "capturedAt": "2026-10-07T17:18:09.158444+00:00",
+  "headAtCapture": "331c8764b3e953f6ee848d28a3247fb20c161370",
+  "label": "arm-3-01",
+  "main": {
+    "builds": 6,
+    "compactions": 0,
+    "distinctFilesEdited": 2,
+    "distinctFilesRead": 24,
+    "endedAt": "2026-10-07T17:18:08.401000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 52
+      },
+      "entrypoint": {
+        "remote": 52
+      },
+      "models": {
+        "claude-opus-5-5": 52
+      },
+      "runtimeVersion": {
+        "2.1.292": 52
+      }
+    },
+    "fileReads": 35,
+    "fileWrites": 12,
+    "governanceReads": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 2,
+      "docs/planning.md": 2,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": "2026-10-07T17:04:40.598000+00:00",
+      "lastAt": "2026-10-07T17:17:58.522000+00:00",
+      "paths": [],
+      "reads": 1,
+      "toolCalls": 2,
+      "writes": 1
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 52,
+    "msToFirstCodeMutation": 239694,
+    "peakContextTokens": 194014,
+    "readPaths": [
+      ".config/dotnet-tools.json",
+      "/tmp/claude-0/apt.log",
+      "/tmp/claude-0/tests.log",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/planning.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A024-harness/handoff.schema.json",
+      "research/experiments/EX-ROS-2026-A024-harness/harness-note.txt",
+      "research/experiments/EX-ROS-2026-A024-harness/validate_handoff.py",
+      "src/Ros.Application/Planning/Operations.fs",
+      "src/Ros.Cli/Program.fs",
+      "src/Ros.Cli/ReconciliationCommands.fs",
+      "src/Ros.Cli/Ros.Cli.fsproj",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Contracts/Provenance/ActorJson.fs",
+      "src/Ros.Domain/Planning/Model.fs",
+      "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/GroupingTests.fs",
+      "tests/Ros.Tests/PlanningCliTests.fs",
+      "tests/Ros.Tests/PlanningTests.fs",
+      "tests/Ros.Tests/Program.fs",
+      "tests/Ros.Tests/WorkGroupTests.fs"
+    ],
+    "repeatedReadExcess": 11,
+    "repeatedReadPaths": 8,
+    "repeatedReadsTop": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 2,
+      "docs/planning.md": 2,
+      "src/Ros.Cli/Program.fs": 3,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 4,
+      "src/Ros.Domain/Planning/Model.fs": 2,
+      "tests/Ros.Tests/PlanningCliTests.fs": 2,
+      "tests/Ros.Tests/Program.fs": 2
+    },
+    "searches": 39,
+    "startedAt": "2026-10-07T17:04:35.185000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 4,
+    "tokens": {
+      "cacheCreation": 150311,
+      "cacheRead": 7167749,
+      "input": 104,
+      "output": 44581
+    },
+    "toolCalls": {
+      "Bash": 53,
+      "Write": 2
+    },
+    "toolErrors": 1,
+    "wallMs": 813216
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "e4ae840e-7231-54fa-8310-4708328f7ef8",
+  "subagents": [],
+  "transcript": "e4ae840e-7231-54fa-8310-4708328f7ef8.jsonl",
+  "transcriptSha256": {
+    "e4ae840e-7231-54fa-8310-4708328f7ef8.jsonl": "6fe2a008e9a179419a8041c46bd78bc19e05fae4faa34e47a77e875c4ee47dd7"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "branch": "experiment/a024-arm-1",
+  "capturedAt": "2026-10-07T17:55:20.312704+00:00",
+  "headAtCapture": "28d70c4e9f05e823ffb0497fb618a0de34c2146f",
+  "label": "arm-1",
+  "main": {
+    "builds": 20,
+    "compactions": 0,
+    "distinctFilesEdited": 5,
+    "distinctFilesRead": 31,
+    "endedAt": "2026-10-07T17:55:19.574000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 94
+      },
+      "entrypoint": {
+        "remote": 94
+      },
+      "models": {
+        "claude-opus-5-5": 94
+      },
+      "runtimeVersion": {
+        "2.1.292": 94
+      }
+    },
+    "fileReads": 46,
+    "fileWrites": 36,
+    "governanceReads": {
+      "AGENTS.md": 1,
+      "docs/cli.md": 1,
+      "docs/planning.md": 3,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": null,
+      "lastAt": null,
+      "paths": [],
+      "reads": 0,
+      "toolCalls": 0,
+      "writes": 0
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 94,
+    "msToFirstCodeMutation": 372291,
+    "peakContextTokens": 306524,
+    "readPaths": [
+      ".ros/events/events.jsonl",
+      ".ros/work/groups.json",
+      "/tmp/claude-0/-home-user-praxis/2e0a47e2-b6dc-5012-ab33-2cad09da8767/scratchpad/t1.log",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/migrations/fsharp/STATUS.md",
+      "docs/planning.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "ros.json",
+      "src/Ros.Application/Planning/Operations.fs",
+      "src/Ros.Application/Work/Checkpoint.fs",
+      "src/Ros.Cli/CheckpointCommands.fs",
+      "src/Ros.Cli/PlanCommands.fs",
+      "src/Ros.Cli/Program.fs",
+      "src/Ros.Cli/Ros.Cli.fsproj",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Contracts/Provenance/ActorJson.fs",
+      "src/Ros.Domain/Planning/Grouping.fs",
+      "src/Ros.Domain/Planning/Model.fs",
+      "src/Ros.Domain/Work/Checkpoint.fs",
+      "src/Ros.Infrastructure/Planning/FilePlanningRepository.fs",
+      "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs",
+      "src/Ros.Infrastructure/Work/FileEventLogRepository.fs",
+      "src/Ros.Infrastructure/Work/WorkStateTransaction.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/CheckpointDomainTests.fs",
+      "tests/Ros.Tests/GroupingTests.fs",
+      "tests/Ros.Tests/PlanningCliTests.fs",
+      "tests/Ros.Tests/PlanningTests.fs",
+      "tests/Ros.Tests/Program.fs",
+      "tests/Ros.Tests/TestFramework.fs"
+    ],
+    "repeatedReadExcess": 15,
+    "repeatedReadPaths": 11,
+    "repeatedReadsTop": {
+      "docs/planning.md": 3,
+      "src/Ros.Cli/CheckpointCommands.fs": 2,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 2,
+      "src/Ros.Domain/Planning/Grouping.fs": 3,
+      "src/Ros.Domain/Planning/Model.fs": 4,
+      "src/Ros.Domain/Work/Checkpoint.fs": 2,
+      "src/Ros.Infrastructure/Work/FileCheckpointRepository.fs": 2,
+      "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+      "tests/Ros.Tests/CheckpointDomainTests.fs": 2,
+      "tests/Ros.Tests/GroupingTests.fs": 2,
+      "tests/Ros.Tests/Program.fs": 2
+    },
+    "searches": 66,
+    "startedAt": "2026-10-07T17:04:47.237000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 10,
+    "tokens": {
+      "cacheCreation": 278401,
+      "cacheRead": 19261090,
+      "input": 188,
+      "output": 99976
+    },
+    "toolCalls": {
+      "Bash": 91,
+      "Write": 5
+    },
+    "toolErrors": 0,
+    "wallMs": 3032337
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "2e0a47e2-b6dc-5012-ab33-2cad09da8767",
+  "subagents": [],
+  "transcript": "2e0a47e2-b6dc-5012-ab33-2cad09da8767.jsonl",
+  "transcriptSha256": {
+    "2e0a47e2-b6dc-5012-ab33-2cad09da8767.jsonl": "53e8355d8400237e70781b6481ad51fbfe69f6dbe275e1280afb1a2d8f67156f"
+  }
+}

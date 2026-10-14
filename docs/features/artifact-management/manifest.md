@@ -1,5 +1,12 @@
 # Feature Manifest — Artifact management
 
+> **Current state (2026-09-28, `DF-ROS-2026-A049`).** This feature is
+> implemented only in F# (`src/`). The Node modules (`tools/*.mjs`) and the
+> Node test files this manifest's history cites were removed; their
+> end-to-end coverage now lives in `tests/Praxis.Tests` (mapping in
+> `docs/migrations/fsharp/TRACEABILITY.md`). References to them
+> below are migration lineage, recoverable from Git history.
+
 ## Purpose
 
 Route changes to canonical research-artifact validation and deterministic
@@ -24,8 +31,8 @@ replaceable projections.
 
 ## Interfaces
 
-- Inbound: artifact front matter, `./ros validate [--json]`, and
-  `./ros registry build|check`.
+- Inbound: artifact front matter, `./praxis validate [--json]`, and
+  `./praxis registry build|check`.
 - Outbound: findings on stdout/stderr, process exit status, eight managed
   registry JSON files, and the optional `registries/requirements.json` for
   requirement records (`RQ-`, `research/requirements/`). That registry is
@@ -35,12 +42,13 @@ replaceable projections.
 
 ## Tests and verification
 
-- Local behavior tests: `tests/test_ros_cli.py`, artifact cases in
-  `tests/work-protocol.test.mjs`, and the F# compatibility suite linked from
-  `docs/migrations/fsharp/README.md`.
+- Local behavior tests: `tests/Praxis.Tests/ArtifactTests.fs` and
+  `GitArtifactCliTests.fs` over the frozen `tests/fixtures/artifacts` cases.
+  The Python artifact-validator oracle (`tools/ros_cli.py`) was retired once
+  the F# suite covered all of its cases (WI-0066).
 - Boundary/contract tests: `schemas/*.schema.json`, registry byte comparison,
   and old/new differential fixtures.
-- Integration/live verification: `./ros registry check` and `./ros validate`.
+- Integration/live verification: `./praxis registry check` and `./praxis validate`.
 
 ## Dependencies
 
@@ -52,7 +60,7 @@ replaceable projections.
 
 ## Modification boundaries
 
-- Normal: `research/`, `tools/ros_cli.mjs`, artifact schemas, artifact tests,
+- Normal: `research/`, `src/**/Artifacts/`, artifact schemas, artifact tests,
   and generated registries.
 - Escalation required: accepted decisions and schemas that alter an external
   artifact or registry contract; record the intentional migration.
@@ -66,4 +74,4 @@ replaceable projections.
 - Owner: repository-governance
 - Last checked against implementation: 2026-09-07
 - Known gaps: the JSON schema omits the runtime-supported `medium-high`
-  confidence value; Node and Python duplicate the parser and policy.
+  confidence value.

@@ -1,0 +1,192 @@
+{
+  "label": "snapshot-K",
+  "criteria": [
+    {
+      "id": "01.1",
+      "status": "pass",
+      "evidence": "`./ros work group create --id GROUP-T-1 --member PRAXIS-GROUP-01 --member PRAXIS-GROUP-02 --occurred-at 2026-10-07T10:00:00Z --kind shared-architecture --execution-repository praxis --cross-repository --shared-context 'ctx one' --architecture-note 'note A' --json` -> exit 0; .ros/work/groups.json created containing id, members, kind shared-architecture, origin human-declared, sharedContext ['ctx one'], executionRepository 'praxis', crossRepository true, architectureNotes, declaredAt, declaredBy. Writer: src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:55-58 (atomic write under work-protocol lock, :62-72). [fixture: git init of a copy of snapshot-K/tree at $SCRATCH/fx/repo, built with `npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400` (exit 0). H = sha256 over every file under .ros plus `git status --porcelain`; L = sha256 over .ros/work/queue.json, queue.md, .ros/context/current.json, .ros/events, .ros/telemetry, .ros/remote.]"
+    },
+    {
+      "id": "01.2",
+      "status": "pass",
+      "evidence": "`./ros work group create --id GROUP-T-1 --member PRAXIS-GROUP-01 --member NOPE-1 ... --json` -> exit 1, rejections [{code: unknown-member, message: 'NOPE-1 is not a recorded work item (backlog or live context)'}]; H unchanged (c708883d8f245652 before and after; no groups.json)."
+    },
+    {
+      "id": "01.3",
+      "status": "pass",
+      "evidence": "`./ros work group create --id GROUP-T-1 --member PRAXIS-GROUP-01 --member WI-0001 --member WI-0055 ...` -> exit 1, 'ERROR WI-0001 is abandoned; terminal work cannot join a group' and 'ERROR WI-0055 is complete; terminal work cannot join a group'; H unchanged."
+    },
+    {
+      "id": "01.4",
+      "status": "pass",
+      "evidence": "After GROUP-T-1 exists: `./ros work group create --id GROUP-T-1 --member PRAXIS-GROUP-03 --member PRAXIS-GROUP-04 ...` -> exit 1 'ERROR group GROUP-T-1 is already declared'; H unchanged (679294de81507d4d before and after)."
+    },
+    {
+      "id": "01.5",
+      "status": "pass",
+      "evidence": "After successful create, `git status --porcelain` shows only `?? .ros/work/groups.json`; `./ros work group create --id GROUP-T-4 --member WI-READY --member WI-ACTIVE ...` -> exit 0 with L (queue, context, events, telemetry) identical before/after. Text output states 'member lifecycle states are unchanged'. Code: FileWorkGroupRepository.fs:19-21 writes only the group store."
+    },
+    {
+      "id": "01.6",
+      "status": "pass",
+      "evidence": "`./ros plan groups --as-of 2026-10-07T10:00:00Z --json` with the stored GROUP-T-1 vs. the same run with groups.json moved away and the identical group supplied via `--config cfg.json` (grouping.groups) -> documents equal after removing 'snapshot' (python compare: True); without either the group is absent. GROUP-T-1 appears first in groups with origin human-declared and members' recordedState/planningState. Code: FilePlanningRepository.fs readConfiguration merges via GroupDeclaration.mergeInto (GroupDeclaration.fs:459-475); JSON read by the same readDeclaredGroup (PlanningJson.fs:700-712)."
+    },
+    {
+      "id": "01.7",
+      "status": "pass",
+      "evidence": "`./ros work group create ... --dry-run` -> exit 0, 'would declare GROUP-T-1 (human-declared, kind shared-architecture) ...'; H unchanged and `ls .ros/work` shows no groups.json."
+    },
+    {
+      "id": "01.8",
+      "status": "pass",
+      "evidence": "`--json` emits {schema: 'praxis.work-group/1.0.0', kind: 'work-group-create', dryRun, ok, group|rejections} (observed for both success and refusal)."
+    },
+    {
+      "id": "01.9",
+      "status": "pass",
+      "evidence": "Appended to groups.json a group with id 'bad-id' and member GHOST-9; `./ros validate` -> 'ERROR .ros/work/groups.json:groups[bad-id]: GHOST-9 is not a recorded work item ...' and '... group ID 'bad-id' must look like GROUP-<AREA>-<SEQUENCE> ...'; `./ros validate --json` lists them with path .ros/work/groups.json, field groups[bad-id], severity error. Baseline validate output had no groups findings. Wiring: src/Ros.Cli/Program.fs:2086-2087."
+    },
+    {
+      "id": "02.1",
+      "status": "pass",
+      "evidence": "`./ros work group show GROUP-T-2` -> member lines e.g. 'WI-READY: recorded active; planning active (in-progress)', 'WI-ACTIVE: recorded blocked; planning blocked (blocked)', 'PRAXIS-GROUP-03: recorded ready; planning ready (runnable)'. JSON members carry recordedState, planningState, status."
+    },
+    {
+      "id": "02.2",
+      "status": "pass",
+      "evidence": "Text: 'Progress: 0 of 5 complete; blocked: WI-ACTIVE, CI-LATEST-ON-VERSION-BUMP; ...'; JSON view.progress {total, complete, inProgress, runnable, blocked, notRunnable, unknown, statement}."
+    },
+    {
+      "id": "02.3",
+      "status": "pass",
+      "evidence": "After adding WI-0065 (captured with description 'Depends on: WI-ACTIVE.'): show -> 'WI-ACTIVE: ... (blocked); gates WI-0065', 'WI-0065: ... waits on blocked WI-ACTIVE', section 'Blocked members: WI-ACTIVE gates WI-0065 / CI-LATEST-ON-VERSION-BUMP gates no other member'. JSON has view.blocked and per-member gates/gatedBy."
+    },
+    {
+      "id": "02.4",
+      "status": "pass",
+      "evidence": "Text: 'Execution repository: repository-operating-system (derived); cross-repository: False' (GROUP-T-2); JSON for GROUP-T-1: executionRepository {name: 'praxis', basis: 'declared'}."
+    },
+    {
+      "id": "02.5",
+      "status": "pass",
+      "evidence": "Text section 'Architecture notes: arch note X'; JSON view has architectureNotes."
+    },
+    {
+      "id": "02.6",
+      "status": "pass",
+      "evidence": "`./ros work group show GROUP-T-2` -> exit 0 with the text view quoted above."
+    },
+    {
+      "id": "02.7",
+      "status": "pass",
+      "evidence": "`./ros work group show GROUP-T-1 --json` -> exit 0, {schema 'praxis.work-group/1.0.0', kind 'work-group-show', ok true, view{group, executionRepository, members, progress, blocked, architectureNotes, ...}}."
+    },
+    {
+      "id": "02.8",
+      "status": "pass",
+      "evidence": "`./ros work group show GROUP-NOPE-1` -> 'ERROR group GROUP-NOPE-1 is not declared ...', exit 1; with --json -> {ok:false, error:...}, exit 1."
+    },
+    {
+      "id": "02.9",
+      "status": "pass",
+      "evidence": "H identical before and after text show, --json show and unknown-group show (same=yes each time)."
+    },
+    {
+      "id": "03.1",
+      "status": "pass",
+      "evidence": "`./ros work group add --id GROUP-T-2 --member WI-0065 --occurred-at 2026-10-07T10:07:00Z` -> exit 0 'added WI-0065 to GROUP-T-2 ...'; groups.json members now include WI-0065."
+    },
+    {
+      "id": "03.2",
+      "status": "pass",
+      "evidence": "`./ros work group add --id GROUP-T-2 --member NOPE-1 ...` -> exit 1 'ERROR NOPE-1 is not a recorded work item (backlog or live context)'; H unchanged."
+    },
+    {
+      "id": "03.3",
+      "status": "pass",
+      "evidence": "`add --member WI-0055 --json` -> exit 1 rejection code terminal-member 'WI-0055 is complete; ...'; `add --member WI-0001` -> exit 1 'WI-0001 is abandoned; ...'; H unchanged."
+    },
+    {
+      "id": "03.4",
+      "status": "pass",
+      "evidence": "`./ros work group add --id GROUP-T-2 --member WI-READY ...` -> exit 1 'ERROR WI-READY is already a member of GROUP-T-2'; H unchanged."
+    },
+    {
+      "id": "03.5",
+      "status": "pass",
+      "evidence": "GROUP-T-3 created non-cross-repository with --execution-repository other-repo; `./ros work group add --id GROUP-T-3 --member WI-0002 ...` -> exit 1 'ERROR WI-0002 executes in repository-operating-system but the group executes in other-repo; only a cross-repository group may span execution repositories (PRX-GRP-051)'; H unchanged."
+    },
+    {
+      "id": "03.6",
+      "status": "pass",
+      "evidence": "`./ros work group add --id GROUP-T-1 --member WI-0002 ... --json` (GROUP-T-1 cross-repository, declared repo 'praxis', item in repository-operating-system) -> exit 0, ok true, members [PRAXIS-GROUP-01, PRAXIS-GROUP-02, WI-0002]."
+    },
+    {
+      "id": "03.7",
+      "status": "pass",
+      "evidence": "Stored additions: [{workItem: 'WI-0002', addedAt: '2026-10-07T10:08:00Z', addedBy: 'anthropic/claude-code'}] (resolved actor)."
+    },
+    {
+      "id": "03.8",
+      "status": "pass",
+      "evidence": "`./ros work group add --id GROUP-T-2 --member WI-0002 ...` -> exit 0 with L identical before/after; `./ros work list` still shows WI-0002 status captured."
+    },
+    {
+      "id": "04.1",
+      "status": "pass",
+      "evidence": "`./ros work group remove --id GROUP-T-2 --member WI-ACTIVE --occurred-at 2026-10-07T10:09:00Z --reason 'split out' --json` -> ok true, members [WI-READY, CI-LATEST-ON-VERSION-BUMP, PRAXIS-GROUP-03, WI-0065]."
+    },
+    {
+      "id": "04.2",
+      "status": "pass",
+      "evidence": "`./ros work group remove --id GROUP-T-2 --member PRAXIS-GROUP-01 ...` -> exit 1 'ERROR PRAXIS-GROUP-01 is not a member of GROUP-T-2'; H unchanged."
+    },
+    {
+      "id": "04.3",
+      "status": "pass",
+      "evidence": "L (queue, context, events, telemetry, remote) identical before/after the remove; `./ros work list` still shows WI-ACTIVE blocked (live blocked). Code: decideRemove reads only the group store (FileWorkGroupRepository.fs:108-121)."
+    },
+    {
+      "id": "04.4",
+      "status": "pass",
+      "evidence": "`./ros work group remove --id GROUP-T-3 --member PRAXIS-GROUP-04 ...` (2 members) -> exit 1 'removing PRAXIS-GROUP-04 would leave GROUP-T-3 with 1 member(s); a group needs at least two, so its last members cannot be removed'; H unchanged. Refused (no override option exists)."
+    },
+    {
+      "id": "04.5",
+      "status": "pass",
+      "evidence": "Stored removals: [{workItem: 'WI-ACTIVE', removedAt: '2026-10-07T10:09:00Z', removedBy: 'anthropic/claude-code', reason: 'split out'}]."
+    },
+    {
+      "id": "05.1",
+      "status": "pass",
+      "evidence": "With a bare remote and pushed clean HEAD: `./ros work group checkpoint --id GROUP-T-2 --occurred-at 2026-10-07T10:15:00Z --summary 'group done-x' --next-action next-y --shared-decision 'one store' --json` -> ok true; stored checkpoint has checkpointId GROUP-T-2-checkpoint-1, members {active [WI-READY], completed [], remaining [...], abandoned, unknown}, sharedDecisions ['one store'], location {repository, branch main, commit 7508eb3..., remote origin, remoteBranch main}, nextAction 'next-y', summary. Group ID is the stored group's key and in checkpointId."
+    },
+    {
+      "id": "05.2",
+      "status": "pass",
+      "evidence": "No upstream -> exit 1 'branch 'main' has no upstream remote branch'; local commit ahead -> exit 1 'local HEAD has 1 commit(s) that origin/main does not; the candidate commit is not pushed'; README.md modified -> exit 1 'meaningful uncommitted changes exist and would be hidden by the checkpoint: README.md'. Uses CheckpointVerification.locate, factored out of the same verify used by work checkpoint (src/Ros.Domain/Work/Checkpoint.fs locate/durability; FileWorkGroupRepository.fs:141-148)."
+    },
+    {
+      "id": "05.3",
+      "status": "pass",
+      "evidence": "After `./ros work start --id PRAXIS-GROUP-04` and `./ros work checkpoint --id PRAXIS-GROUP-04 ...` (checkpoint 7cd0569b9079651781889b44): `./ros work group checkpoint --id GROUP-T-3 ...` -> 'PRAXIS-GROUP-04: own checkpoint 7cd0569b9079651781889b44 at 0c47ee59... (2026-10-07T10:17:00Z)', 'PRAXIS-GROUP-05: no checkpoint of its own yet'; stored memberCheckpoints [{workItem, status recorded, checkpointId, commit, recordedAt}, {status none}]."
+    },
+    {
+      "id": "05.4",
+      "status": "pass",
+      "evidence": "Hash of all tracked .ros files except groups.json identical before/after the group checkpoint; `./ros work checkpoint show PRAXIS-GROUP-04 --offline` byte-identical before/after (cmp); `git status` shows only groups.json modified."
+    },
+    {
+      "id": "05.5",
+      "status": "pass",
+      "evidence": "Group checkpoint record has no path/attribution fields (keys: checkpointId, recordedAt, recordedBy, summary, nextAction, sharedDecisions, members, location, memberCheckpoints) and output states 'claims no paths: each member's changes stay attributed through its own checkpoints'; no event or member record written (05.4 evidence). Code: GroupDeclaration.fs checkpoint (only memberCheckpoints references). The snapshot's own test 'work group: checkpoint: claims no member's changes; a later member checkpoint still attributes its own' could not run here (see blinding/notes)."
+    }
+  ],
+  "confirmedDefects": [
+    {
+      "summary": "work group create accepts a non-cross-repository group whose declared --execution-repository differs from its members' execution repository, and validate does not flag it, although work group add refuses exactly that mismatch (PRX-GRP-051 admission applied inconsistently).",
+      "reproduction": "In the fixture: `./ros work group create --id GROUP-T-3 --member PRAXIS-GROUP-04 --member PRAXIS-GROUP-05 --execution-repository other-repo --occurred-at 2026-10-07T10:08:00Z` -> exit 0 'execution repository: other-repo; cross-repository: False' although both members locate to repository-operating-system; `./ros validate` reports no groups finding; `./ros plan groups --json` shows GROUP-T-3 executionRepository other-repo, crossRepository false; whereas `./ros work group add --id GROUP-T-3 --member WI-0002 ...` -> exit 1 repository-mismatch."
+    }
+  ],
+  "blinding": "Only this checkout was used (inputs/, snapshot-K/, and a scratch copy of snapshot-K/tree under the session scratchpad with a local bare remote). No other branch, tag or ref was fetched, listed, read or diffed; no GitHub search/API or web pages were used. I did not attempt to infer, and do not know, the experimental condition. Note: the snapshot's own F# test run (`dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll`) gave 855 tests, 816 passed, 39 failed; all failures inspected report 'starter manifest references a missing source file: starter/greenfield/[record].md', a file name altered by package sanitization (not in diff.patch), and include 3 work group checkpoint tests and many pre-existing checkpoint tests; scoring relied on direct CLI runs instead."
+}

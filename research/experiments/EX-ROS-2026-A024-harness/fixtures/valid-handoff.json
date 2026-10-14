@@ -1,0 +1,4 @@
+{"schemaVersion":"1.0.0","experimentId":"EX-ROS-2026-A024","arm":"structured-handoff","completedItem":"PRAXIS-GROUP-01","baselineCommit":"8b4ffa392e93b19bf39f6672a608954c934cb815","headCommit":"8b4ffa392e93b19bf39f6672a608954c934cb815",
+"decisions":[{"topic":"t","decision":"d","evidencePaths":["src/a.fs"]}],"invariants":[{"statement":"s","evidencePaths":[]}],"reusableAbstractions":[{"name":"n","path":"p","purpose":"q"}],
+"changedPaths":["src/a.fs"],"verification":{"acceptanceStatus":[{"criterion":"c","status":"pass","evidence":"e"}],"testsRun":[{"command":"x","result":"y"}]},
+"unresolvedRisks":[],"nextItemContext":{"constraints":[],"likelyReuse":[],"openQuestions":[]}}

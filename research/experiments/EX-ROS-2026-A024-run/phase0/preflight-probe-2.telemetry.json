@@ -1,0 +1,75 @@
+{
+  "branch": "experiment/a024-preflight-2",
+  "capturedAt": "2026-10-07T17:02:32.822158+00:00",
+  "headAtCapture": "ddda83790b91d0f7e7c27b7b8cdc88bf330ad17d",
+  "label": "preflight-probe-2",
+  "main": {
+    "builds": 0,
+    "compactions": 0,
+    "distinctFilesEdited": 0,
+    "distinctFilesRead": 1,
+    "endedAt": "2026-10-07T17:02:31.970000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 2
+      },
+      "entrypoint": {
+        "remote": 2
+      },
+      "models": {
+        "claude-opus-5-5": 2
+      },
+      "runtimeVersion": {
+        "2.1.292": 2
+      }
+    },
+    "fileReads": 1,
+    "fileWrites": 0,
+    "governanceReads": {},
+    "handoff": {
+      "firstAt": null,
+      "lastAt": null,
+      "paths": [],
+      "reads": 0,
+      "toolCalls": 0,
+      "writes": 0
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 2,
+    "msToFirstCodeMutation": null,
+    "peakContextTokens": 65396,
+    "readPaths": [
+      "research/experiments/EX-ROS-2026-A024-harness/harness-note.txt"
+    ],
+    "repeatedReadExcess": 0,
+    "repeatedReadPaths": 0,
+    "repeatedReadsTop": {},
+    "searches": 0,
+    "startedAt": "2026-10-07T17:02:24.702000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 0,
+    "tokens": {
+      "cacheCreation": 21693,
+      "cacheRead": 107053,
+      "input": 4,
+      "output": 418
+    },
+    "toolCalls": {
+      "Bash": 2
+    },
+    "toolErrors": 0,
+    "wallMs": 7268
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "ce6b8995-d959-5156-af2d-c5ae36440baf",
+  "subagents": [],
+  "transcript": "ce6b8995-d959-5156-af2d-c5ae36440baf.jsonl",
+  "transcriptSha256": {
+    "ce6b8995-d959-5156-af2d-c5ae36440baf.jsonl": "5e151f360940b4d4520c1b860845af50f1763930f32669dac25f7b99079717d5"
+  }
+}

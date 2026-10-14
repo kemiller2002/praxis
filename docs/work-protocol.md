@@ -1,34 +1,318 @@
-# ROS Work Protocol 1.0
+# Praxis Work Protocol 1.0
 
-ROS owns the versioned protocol, legal transitions, repository validation, and adapter contract. A consuming repository owns code and evidence. An external project-management service owns work-item truth, prioritization, and portfolio state. Disagreement is reported; no layer silently overwrites another.
+Praxis owns the versioned protocol, legal transitions, repository validation, and adapter contract. A consuming repository owns code and evidence. An external project-management service owns work-item truth, prioritization, and portfolio state. Disagreement is reported; no layer silently overwrites another.
+
+Commands below use `./praxis`; an older installation may have `./ros`, a compatibility alias that runs the same CLI.
 
 ## Local protocol
 
 ```bash
-./ros work begin FEAT-142 --type feature
-./ros work context FEAT-142
-./ros telemetry show FEAT-142
-./ros work block FEAT-142 --reason "waiting for fixture"
-./ros work resume FEAT-142
-./ros work complete FEAT-142 \
+./praxis work begin --id FEAT-142 --occurred-at TIMESTAMP --type feature
+./praxis work context FEAT-142
+./praxis telemetry show FEAT-142
+./praxis work block --id FEAT-142 --occurred-at TIMESTAMP --reason "waiting for fixture"
+./praxis work resume --id FEAT-142 --occurred-at TIMESTAMP
+./praxis work abandon --id FEAT-143 --occurred-at TIMESTAMP --reason "superseded by FEAT-142"
+./praxis work complete --id FEAT-142 --occurred-at TIMESTAMP \
   --evidence implementation=src/feature.js \
   --evidence tests=tests/feature.test.js
-./ros validate
-./ros validate --json
-./ros status
+./praxis validate
+./praxis validate --json
+./praxis status
 ```
 
-The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`. Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive` (the default). Any other work type records a `--conclusion` only when one is supplied; it is never accepted and then dropped.
+The legal semantic core is `ready -> active -> blocked -> active` and `active -> complete`; any of `ready`, `active` or `blocked` may also move to the terminal `abandoned` (see "Abandoning work" below). Durable checkpoints and `work continue` (below) add evidence and a new execution; they are not lifecycle states. Local states may be supplied with `--local-state`; `ros.json` maps repository states to the shared semantic vocabulary. Research completion accepts an independent `--conclusion`, including `inconclusive` (the default). Any other work type records a `--conclusion` only when one is supplied; it is never accepted and then dropped.
 
-Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./ros validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
+Beginning work automatically starts a segmented execution record under `.ros/telemetry/executions/`; completing work automatically finalizes all active records. Block/resume transitions preserve interruption intervals. Runtime adapters can ingest token, cost, context, agent, tool, and provider-specific observations without changing the work-state protocol. `./praxis validate` checks telemetry structure and finalization alongside work attribution. See [`development-telemetry.md`](development-telemetry.md).
+
+For substantial execution, record meaningful plan units with `./praxis step begin` and `./praxis step complete`. Steps sit inside the active execution; they do not replace work items or requirements. Use nesting only when a parent genuinely contains a subtask. Do not manufacture historical steps for work completed before the capability existed, and do not create command-by-command noise. Work completion fails while a step is planned, active, or blocked, so crash recovery remains explicit.
 
 `work context` is the normal agent entry point. It reports current state, legal next actions, and evidence required for completion. `status` combines compact work state with repository validation and recommended next actions. Validation errors include deterministic repair guidance; `validate --json` provides a stable structured result for agents and CI consumers.
 
-`.ros/context/current.json` is local work context. Its `actor` field is the last actor to transition work. It is not provenance and is never used to attribute anything. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. Each work event carries `actor`, the structured identity of the process that performed the transition (`kind`, `id`, and `provider`/`model`/`runtime` when applicable). ROS resolves it the same way it resolves the execution's identity and never inherits it from stored context. `./ros provenance record` appends `artifact.contributed` events. Each one records the actor, the execution, the operation, the reason, the evidence, lineage, and the before/after content digests of the attributed artifact. See `agent-provenance.md`. `.ros/telemetry/executions/` contains per-execution observations linked from work context and events. These files do not replace the external work item.
+`.ros/context/current.json` is local work context. Its `actor` field is the last actor to transition work. It is not provenance and is never used to attribute anything. `.ros/events/events.jsonl` contains small immutable, idempotently identified semantic events and durable file attribution. Each work event carries `actor`, the structured identity of the process that performed the transition (`kind`, `id`, and `provider`/`model`/`runtime` when applicable). Praxis resolves it the same way it resolves the execution's identity and never inherits it from stored context. `./praxis provenance record` appends `artifact.contributed` events. Each one records the actor, the execution, the operation, the reason, the evidence, lineage, and the before/after content digests of the attributed artifact. See `agent-provenance.md`. `.ros/telemetry/executions/` contains per-execution observations linked from work context and events. These files do not replace the external work item.
 
-Completion validates configured evidence types and paths before changing state. `./ros validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. Committed changes that were made without an active work item are repaired with `./ros work reconcile` (see "Post-hoc attribution reconciliation" below), never by touching files. CI is the authoritative enforcement boundary; hooks are optional convenience.
+Completion validates configured evidence types and paths before changing state. `./praxis validate` rejects meaningful dirty paths when enforcement is enabled and neither active context nor a completed event attributes them. Committed changes that were made without an active work item are repaired with `./praxis work reconcile` (see "Post-hoc attribution reconciliation" below), never by touching files. CI is the authoritative enforcement boundary; hooks are optional convenience.
+
+When the Praxis executable genuinely cannot run, an agent may write the approved runtime-free envelope and let `./praxis reconcile --envelope FILE` enter the same planners and canonical stores. The envelope is proposed input, not state; do not edit `.ros` files directly. See [`fallback-reconciliation.md`](fallback-reconciliation.md). This is distinct from `work reconcile`, which repairs Git attribution after work was committed without an active work item.
 
 Deterministic housekeeping may use the configured `mechanical` work type. It still requires an explicit work-item identity and event, but the default profile does not require implementation/test evidence for that type.
+
+### Abandoning work
+
+`work abandon --id ID --occurred-at TIMESTAMP --reason TEXT` records that the
+owner cancelled work that will not be delivered. It is the truthful end for
+work that was started or captured and then dropped; completing it would claim
+delivery that never happened.
+
+- A live item (`ready`, `active` or `blocked`) moves to the terminal state
+  `abandoned`: no action is legal afterwards. The item records `abandonedAt`
+  and `abandonedReason`, and a `work.abandoned` event records the reason and
+  the actor.
+- Its active executions receive a `work.abandoned` lifecycle event and are
+  finalized, so abandoned work leaves nothing running. An open block interval
+  counts as blocked time, not productive time.
+- A backlog row for the same ID is abandoned too (with `abandonedReason`), so
+  the backlog and the live record never disagree. An ID that exists only in
+  the backlog is abandoned there.
+- Abandoning claims no paths and needs no checkpoint: it asserts nothing was
+  delivered. Committed work stays in Git history; anything else is left
+  exactly where it is.
+- `--reason` is required, and completed or already abandoned work cannot be
+  abandoned.
+
+### Branch policy
+
+`workProtocol.branchPolicy` in `ros.json` is `none` (the default) or
+`work-item-id`. With `work-item-id`, `./praxis validate` fails when meaningful
+changes exist on a branch whose name is not the ID of a work item in the work
+context, so each work item runs on a branch named for its ID (DER-01 of
+`requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md`). Pull-request CI uses
+`GITHUB_HEAD_REF`; a detached HEAD with meaningful work fails. See
+[`identity.md`](identity.md#branch-policy-der-01).
+
+## Quality evidence at completion
+
+Praxis owns the work lifecycle; it does not measure code quality. A repository
+can make completion depend on quality evidence that other tools produce
+(PRX-QUAL-023; Praxis decision `DF-ROS-2026-A052`):
+
+| Evidence type | Contract | Produced by |
+|---|---|---|
+| `dokimos-ratchet` | `dokimos.ratchet` 1.0.0 | `dokimos ratchet check --build-log LOG --json > FILE` |
+| `ordo-boundary` | `ordo.boundary-amplification/1` | `ordo boundary assess --map ... --expected ... --changed ... --json > FILE` |
+| `design-debt` | `praxis.design-debt/1` | the executor (PRX-QUAL-021) |
+| `verification-matrix` | `praxis.verification-matrix/1` | the executor (PRX-QUAL-022) |
+| `release-readiness` | `praxis.release-readiness/1` | the release process (PRX-QUAL-023) |
+
+The three `praxis.*` documents are defined under `$defs` in
+`schemas/praxis-completion-readiness.schema.json`.
+
+Praxis consumes these files; it never runs Dokimos or Ordo, never recomputes a
+Dokimos verdict, and never re-derives an Ordo recommendation. Supply them like
+any other evidence:
+
+```bash
+./praxis work complete --id FEAT-142 --occurred-at TIMESTAMP \
+  --evidence implementation=src/feature.fs --evidence tests=tests/FeatureTests.fs \
+  --evidence dokimos-ratchet=artifacts/ratchet.json \
+  --evidence ordo-boundary=artifacts/boundary.json
+```
+
+### Policy
+
+The gate is opt-in through `workProtocol.qualityEvidence` in `ros.json`
+(schema: `schemas/work-protocol.schema.json`):
+
+```json
+"qualityEvidence": {
+  "version": "1.0.0",
+  "dokimos": "required",
+  "dokimosBaseline": "quality/baseline.json",
+  "ordoBoundary": "optional",
+  "requiredFacets": ["behavior-verified"],
+  "workTypes": ["feature", "task"]
+}
+```
+
+- `dokimos`, `ordoBoundary`: `required` (absent, malformed, unsupported or
+  unavailable evidence blocks), `optional` (failing evidence blocks; absent or
+  unavailable evidence is recorded but does not block), or `off` (default).
+- `dokimosBaseline` pins the Dokimos profile: a report measured against any
+  other accepted baseline is unavailable, not a pass.
+- `requiredFacets` additionally requires `implementation-complete`,
+  `behavior-verified`, `architecture-verified`, `release-ready`,
+  `design-debt-declared` or `verification-matrix-satisfied`.
+- `workTypes` limits the policy to those work types (default: every type).
+- A present but invalid policy (an unknown member or value) fails closed:
+  completion is refused rather than silently ungated.
+
+**Migration bridge.** Without `qualityEvidence`, completion behaves exactly as
+before: nothing is evaluated, recorded, or printed. This default is tracked
+debt; it is retired, and newly initialized repositories default to
+`dokimos: required`, once Conditor installs Dokimos by default.
+
+### Risk metadata and completion obligations
+
+A work item can declare engineering-risk metadata (PRX-QUAL-020,
+`praxis.work-risk/1`), stored as `risk` on its queue item:
+
+```bash
+./praxis work update --id FEAT-142 --occurred-at TIMESTAMP \
+  --change-class persistence --risk-level high --state-impact \
+  --failure-posture fail-closed --tier domain --tier infrastructure \
+  --live-proof "hold survives a restart on a real machine"
+```
+
+- `--change-class` (repeatable, at least one): `stateful-control-plane`,
+  `persistence`, `release-bootstrap`, `security`, `remote-execution`,
+  `external-protocol`, `feature`, `refactor`, `documentation`, `tooling`.
+- `--risk-level`: `low`, `medium`, `high`, `critical`.
+- `--state-impact`, `--protocol-impact`, `--security-impact`: persistent-state,
+  external protocol/provider and security/privacy impact. Any of them needs
+  `--failure-posture fail-open|fail-closed|indeterminate`.
+- `--tier` (repeatable): the tiers the change is expected to own (`domain`,
+  `contracts`, `application`, `infrastructure`, `cli`).
+- `--live-proof TEXT`: the live or integration proof the work must show.
+
+Invalid values are refused and nothing is written. Praxis derives completion
+obligations from the declaration; `work context ID` shows the risk, the
+obligations and the evidence they require under
+`qualityEvidenceForCompletion` while the item is open:
+
+- **high or critical** work must declare its design debt
+  (`design-debt-declared`, PRX-QUAL-021);
+- **stateful control-plane, persistence, release/bootstrap, security or
+  remote-execution** work, or work declaring state, protocol or security
+  impact, must satisfy a verification matrix (`verification-matrix-satisfied`,
+  PRX-QUAL-022) over happy path, negative/failure, corruption/partial state,
+  compatibility/version skew and recovery/rollback; concurrency is added when
+  state is shared (persistence, control plane, remote execution or declared
+  state impact) and a representative live effect when a live proof is
+  declared or the change crosses a release, remote or external-protocol
+  boundary.
+
+An item with obligations is gated even when `qualityEvidence` is off; an item
+without risk metadata completes exactly as before. Supplying obligation
+evidence for any item brings it under the gate (failing evidence is never
+silently accepted).
+
+**Design debt** (`--evidence design-debt=PATH`): either `knownDebt: none`, or
+`declared` with entries naming the captured work item that pays the debt, its
+rationale, risk and the compromised boundary. An entry naming the item being
+completed, or anything that is not a recorded open work item, is untracked
+debt and refuses completion. A `prototype: true` declaration needs at least
+one entry, so a prototype cannot become canonical silently.
+
+**Verification matrix** (`--evidence verification-matrix=PATH`): one row per
+dimension, `met` (with evidence), `not-met` or `not-applicable` (with a
+reason). Every required dimension must be met and no row may be not-met.
+Evidence kinds are `build`, `unit-test`, `integration-test`, `command`,
+`location` and `live`: a row resting on compilation alone, or a matrix whose
+met rows rest only on unit tests and compilation, is not satisfied; a
+live-effect row needs `live` evidence; `location` references (`path` or
+`path:line`) must exist.
+
+### Readiness facets
+
+Completion readiness has six independent facets, each `satisfied`,
+`not-satisfied`, `unavailable` or `not-required`:
+
+- `implementation-complete` / `behavior-verified`: the `implementation` /
+  `tests` evidence was supplied (an attestation, not a proof).
+- `architecture-verified`: satisfied only when Dokimos reports `pass` (a
+  regression fully covered by valid exceptions is already a `pass` in
+  Dokimos's own verdict) and Ordo does not recommend `require-design-review`
+  without `full` exception coverage. `regression` and `invalid-exceptions` are
+  not satisfied. A Dokimos `unavailable` verdict, a verdict that contradicts
+  its exit code, an Ordo assessment of a different work item, or two reports
+  of the same type are unavailable. It is required whenever a source is
+  `required`.
+- `release-ready`: established by a `praxis.release-readiness/1` document
+  (`--evidence release-readiness=PATH`) naming the release (name, version,
+  commit), the checks run and the producer's verdict. Only verdict `ready`
+  with at least one check and every check `passed` satisfies it; a `ready`
+  verdict over a failed or skipped check is inconsistent and unavailable;
+  `not-ready` is not satisfied; absent evidence is unavailable when required.
+- `design-debt-declared` / `verification-matrix-satisfied`: judged from the
+  documents above; required by risk obligations or `requiredFacets`.
+
+A not-satisfied facet always blocks; an unavailable facet blocks when it is
+required. **Unavailable evidence is never treated as a pass.**
+
+### What is recorded
+
+A refused `work complete` changes no state, prints
+`{"outcome": "refused", "completionReadiness": [...]}` on stdout, one
+`ERROR completion readiness refused for 'ID': ...` line per blocking facet on
+stderr, and exits `3` (verification failed). An invalid policy also exits `3`.
+
+A ready completion writes a `praxis.completion-readiness/1` record
+(`schemas/praxis-completion-readiness.schema.json`) as `completionReadiness`
+on its `work.completed` event and on the completed item in
+`.ros/context/current.json`, so `work context ID` shows it. The record names
+the policy, every facet's status, reasons and evidence, and the consumed
+fields of each source (Dokimos verdict, exit code, baseline path and digest;
+Ordo risk, recommendation and exception coverage), the item's `risk` and
+`obligations`, and `consumedEvidence`: every evidence file the gate read, with
+the SHA-256 digest (`sha256:...`) of the exact bytes it decoded, or `null`
+when the file could not be read. Both additions are
+additive: events and items of repositories without a policy are unchanged.
+While the item is still open, `work context ID` lists the policy under
+`qualityEvidenceForCompletion`, including `requiredEvidenceTypes`. The
+runtime-free envelope path (`praxis reconcile --envelope`) applies the same
+gate and fails with `completion-readiness-refused:REASONS`.
+
+In the Praxis source repository, the fixtures in
+`tests/fixtures/quality-evidence/` are real reports: the
+Dokimos ones were produced by `dokimos ratchet check --json` (Dokimos
+`0.2.0+b176c53`, whose tree is Dokimos `main` at `7d29c4b`) against the
+Dokimos repository and a copy with an added debt marker and an exception; the
+Ordo ones by `ordo boundary assess --json` (Ordo 1.4.0, `main` at `a716fb0`)
+on Ordo's boundary-amplification fixtures. Each validates against its tool's
+published schema.
+
+## Upstream synchronization and bounded drift
+
+Upstream synchronization is a fetch-only elapsed-time guard (`DF-GOV-014`).
+It is separate from durable checkpoints: upstream checks happen on a clock,
+while durable checkpoints happen only at coherent recovery boundaries.
+
+```bash
+./praxis sync check --start --json   # startup: fetch and record the baseline
+./praxis sync status --json          # read-only; never contacts the remote
+./praxis sync check --json           # when due, and before final validation
+```
+
+The default configuration for new repositories is:
+
+```json
+{
+  "workProtocol": {
+    "upstreamSync": {
+      "enabled": true,
+      "remote": "origin",
+      "branch": "main",
+      "maxAgeMinutes": 30
+    }
+  }
+}
+```
+
+The interval is wall-clock elapsed time from the last successful fetch.
+Waiting, a stalled tool, a suspended executor, and time spent awaiting user
+input all count. A failed attempt is recorded but does not reset the clock.
+Run the due check at the next safe boundary rather than interrupting a
+non-atomic command. Run it immediately before final validation and handoff
+even if another boundary is not due.
+
+`sync check` fetches only the configured branch, with prompts disabled and a
+bounded timeout. It updates Git remote-tracking metadata and stores its state
+at `git rev-parse --git-path praxis/upstream-sync.json`; it never dirties the
+checkout. It does not pull, merge, rebase, switch, stash, reset, discard,
+commit, or push. `sync status` makes no network request. Both commands report:
+
+- the configured remote, branch, remote-tracking ref, and maximum age;
+- last attempt and last successful check, elapsed milliseconds, due time, and
+  stale state;
+- HEAD, the upstream commit at session start, and the current fetched upstream
+  commit;
+- ahead/behind counts and whether integration is required;
+- incoming paths, upstream paths changed since session start, local committed
+  and uncommitted paths, and their exact intersection;
+- `safeForFinalValidation` / `validationAgainstCurrentUpstream`.
+
+When the report is behind, integrate at a coherent boundary according to the
+repository's branch policy, preserve user work, then rerun affected tests and
+the final check. Exact overlap is a warning signal, not a proof that a merge
+will or will not conflict. A stale, unavailable, failed, or behind report is
+never safe for final validation. If integration cannot be performed safely,
+block or hand off with the exact condition instead of forcing it. A fresh
+report is evidence about the most recently fetched snapshot only; a remote can
+move after any observation. Repositories without a usable upstream set
+`enabled` to `false` and record that limitation.
+
+`./praxis status` includes the same read-only report as additive
+`upstreamSync` output; it does not fetch.
 
 ## Durable checkpoints and continuity
 
@@ -66,7 +350,7 @@ recoverability, never a lifecycle state: `ready`, `active`, `blocked` and
 ```bash
 git commit -am "Implement capability boundary"   # you decide what is coherent
 git push                                           # Praxis never pushes for you
-./ros work checkpoint --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+./praxis work checkpoint --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
   --summary "Implemented capability boundary" \
   --next-action "Implement Rust consumer fixture" [--step STEP-ID] [--json]
 git add .ros && git commit -m "praxis: checkpoint FEAT-142" && git push
@@ -102,18 +386,33 @@ Praxis state after a checkpoint does not "move past" it: freshness compares
 meaningful paths only.
 
 The event records the actor, the execution, the optional step, the full
-checkpoint, and the meaningful `paths` that changed since the item's previous
-checkpoint (or its start commit). Those paths keep contemporaneous path
-attribution intact when work is committed before `work complete`. On a
-branch shared by several concurrently active work items they are
-branch-level, as completion paths always were. Use a branch per work item,
-or `work reconcile`, when that matters. The context keeps only
-`latestCheckpoint`; history lives in the event log and is never rewritten.
+checkpoint, and the meaningful `paths` this item's own commits changed since
+its previous checkpoint (or its start commit). Those paths keep
+contemporaneous path attribution intact when work is committed before `work
+complete`. The context keeps only `latestCheckpoint`; history lives in the
+event log and is never rewritten.
+
+**Other items' work is never claimed (PRAXIS-CONT-12).** On a branch that
+several work items share, or after merging the default branch, the commits
+after a checkpoint include other items' work. A commit belongs to *other*
+items when every meaningful path it changed is already claimed by an item
+whose recorded evidence contains it: a `work.checkpointed` event whose commit
+descends from it, or a Git-evidenced `work.attribution.reconciled` event that
+names it. Merge commits carry no change of their own. Such commits are not
+attributed to the checkpointing item, do not make its checkpoint stale, and
+do not stop it from completing or blocking. The evidence is recorded Praxis
+claims and Git ancestry only, never authors, messages or timing. Anything no
+other item has claimed still counts as the item's own work, as does a commit
+that mixes claimed and unclaimed paths, so un-checkpointed work is never
+excused. When no other item's evidence covers any commit in the range, or the
+commit history cannot be read, the result is the plain difference, as
+before. Work done before Praxis recorded checkpoints has no such evidence;
+record it with `work reconcile` so later checkpoints stop claiming it.
 
 ### Reading continuity
 
-`./ros work context ID` adds a `continuity` block, and `--text` renders it for
-people. `./ros work checkpoint show ID` adds the full history. `./ros status`
+`./praxis work context ID` adds a `continuity` block, and `--text` renders it for
+people. `./praxis work checkpoint show ID` adds the full history. `./praxis status`
 adds `continuity.warnings`. `--offline` never contacts a remote and reports
 its state as unknown. The block reports:
 
@@ -181,8 +480,8 @@ without the blocked/resume cycle:
 
 ```bash
 git fetch origin && git switch --track origin/<branch>   # a clean checkout
-./ros work context FEAT-142 --text                        # checkpoint, next action, freshness
-./ros work continue --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+./praxis work context FEAT-142 --text                        # checkpoint, next action, freshness
+./praxis work continue --id FEAT-142 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 ```
 
 Continuation is refused in these cases:
@@ -203,6 +502,20 @@ completes, finalization closes every active execution; "finalized" means
 closed, not successful, and the `work.continued` event remains the record of
 the interruption.
 
+An interrupted predecessor may have left steps planned, active or blocked.
+Only their owner may resolve a step, and the owner is gone, so completion
+does not wait for it (WI-0088). Its `execution.finalized` event carries an
+`interruption` naming those step IDs, the continuation event and the
+successor, with `disposition: interrupted` and `dispositionSource:
+observed-by-successor`. The steps themselves keep their last recorded state;
+nothing marks them completed or abandoned. This applies only to an execution
+that a `work.continued` event for the same work item took over as
+interrupted. Unresolved steps of any other execution, including the
+successor's own, still refuse completion. `validate` accepts a finalized
+execution with unresolved steps only when its interruption lists exactly
+those steps and cites a continuation that took that execution over as
+interrupted for the named successor.
+
 The output also includes the checkpoint, the completed work, the next
 action, the completion evidence still required, the test measurements every
 execution recorded (with their evidence quality), and the predecessor's
@@ -214,13 +527,13 @@ automation, keeps its own identity.
 Attribution is supposed to be established *while* work happens: begin a work
 item, change files, complete it. Sometimes that does not happen. An agent or
 a person commits meaningful changes while no work item is active, and a later
-`./ros validate` (in CI, with `ROS_BASE_REF` set) reports them:
+`./praxis validate` (in CI, with `PRAXIS_BASE_REF` set; the legacy `ROS_BASE_REF` also works) reports them:
 
 ```text
 ERROR src/report.fs:work_items: meaningful change has no active or completed work-item attribution
 ```
 
-`./ros work reconcile` repairs that gap after the fact, **using Git history as
+`./praxis work reconcile` repairs that gap after the fact, **using Git history as
 evidence**, and records that it did so. It is recovery, not a substitute for
 the protocol: the reconciled work was *not* attributed when it was done, and
 the record says so permanently.
@@ -228,7 +541,7 @@ the record says so permanently.
 ### When to use it
 
 - Meaningful changes are already **committed**, they belong to a real work
-  item (or to a real external issue you have captured with `./ros add` /
+  item (or to a real external issue you have captured with `./praxis add` /
   `work capture`), and validation reports them as unattributed.
 - The commits are in the history of your current `HEAD`.
 
@@ -243,7 +556,7 @@ event is not touched.
   not know which work item a change belongs to, find out or capture the
   obligation first. Never invent a work item to absorb changes.
 - **Instead of beginning work.** For work you are about to do, run
-  `./ros work begin`. Reconciliation is only for work that already happened.
+  `./praxis work begin`. Reconciliation is only for work that already happened.
 - **For uncommitted changes.** The working tree is not evidence: it has no
   author, no immutable identity, and can change underneath you. Commit the
   changes (the commit is the evidence), then reconcile that commit; or, if the
@@ -256,24 +569,24 @@ event is not touched.
 
 ```bash
 # Preview: what would be attributed, from which commits, and why.
-./ros work reconcile --id GH-80 --reason "committed while no work item was active" \
+./praxis work reconcile --id GH-80 --reason "committed while no work item was active" \
   --commit 3f2a9c1 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" --dry-run
 
 # Record it.
-./ros work reconcile --id GH-80 --reason "committed while no work item was active" \
+./praxis work reconcile --id GH-80 --reason "committed while no work item was active" \
   --commit 3f2a9c1 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 
 # Several commits: repeat --commit, or give a BASE..HEAD range.
-./ros work reconcile --id GH-80 --reason "three commits made before GH-80 was begun" \
+./praxis work reconcile --id GH-80 --reason "three commits made before GH-80 was begun" \
   --range 1a2b3c4..9d8e7f6 --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 
 # Narrow to specific paths (can only remove paths Git proves; never add).
-./ros work reconcile --id GH-80 --reason "only the parser change is GH-80" \
+./praxis work reconcile --id GH-80 --reason "only the parser change is GH-80" \
   --commit 3f2a9c1 --path src/parser.fs --occurred-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 ```
 
 You never list files by hand: Git establishes them. For every selected commit
-ROS reads the commit's own changes against its single parent
+Praxis reads the commit's own changes against its single parent
 (`git diff-tree --raw -M`) and assesses each touched path:
 
 | Change | Paths attributed |
@@ -337,7 +650,7 @@ never modified. The event records:
   parents, subject, **original Git author and committer**, and the exact
   per-path changes (status, path, rename source, and resulting blob id).
 
-`./ros work show ID` lists a work item's reconciliations (with `valid`
+`./praxis work show ID` lists a work item's reconciliations (with `valid`
 reporting whether validation accepts each one), so post-hoc attribution stays
 visible next to the item it was reconciled to.
 
@@ -352,7 +665,7 @@ two work items.
 
 ### How validation behaves afterwards
 
-`./ros work validate` and `./ros validate` accept a reconciled path only while
+`./praxis work validate` and `./praxis validate` accept a reconciled path only while
 **its current content is exactly what the Git evidence recorded** (the
 recorded blob, or absence after a deletion or as a rename source). Reconciling
 a change never pre-authorizes later edits: change that path again without an
@@ -381,20 +694,27 @@ been assigned one yet -- captured ideas, discovered obligations, follow-ups --
 with its own small lifecycle: `captured -> ready -> {blocked, abandoned}`.
 
 ```bash
-./ros add "Investigate state payload growth" --tag wasm,state --priority high
-./ros work                       # list the unified backlog + in-flight queue
-./ros work ready                 # query: items with no blocker
-./ros work ready WI-0001         # mutate: captured/blocked -> ready
-./ros work show WI-0001
-./ros work start WI-0001         # requires ready; delegates to `begin`
-./ros work block WI-0001 --reason "waiting on benchmark"
-./ros work done WI-0001 --evidence implementation=... --evidence tests=...
-./ros work abandon WI-0002 --reason "no longer relevant"
+./praxis add "Investigate state payload growth" --tag wasm,state --priority high
+./praxis work                       # list the unified backlog + in-flight queue
+./praxis work ready                 # query: items with no blocker
+./praxis work backlog-transition --action ready --id WI-0001 --occurred-at TIMESTAMP         # mutate: captured/blocked -> ready
+./praxis work show WI-0001
+./praxis work start --id WI-0001 --occurred-at TIMESTAMP         # requires ready; delegates to `begin`
+./praxis work block --id WI-0001 --occurred-at TIMESTAMP --reason "waiting on benchmark"
+./praxis work done --id WI-0001 --occurred-at TIMESTAMP --evidence implementation=... --evidence tests=...
+./praxis work abandon --id WI-0002 --occurred-at TIMESTAMP --reason "no longer relevant"
 ```
 
 Canonical storage is `.ros/work/queue.json`; `.ros/work/queue.md` is a
 generated human-readable projection, and `.ros/work/items/<ID>.md` is an
 optional free-form detail file `work show` will include when present.
+
+When two branches each capture backlog rows, `queue.json` and `queue.md`
+conflict in Git. Do not take one side's queue, which drops the other
+branch's rows, and do not hand-edit them: run `./praxis work history merge`
+(preview) and `--apply`, which merges the queue by row ID together with the
+conflicted native history and regenerates `queue.md`. See
+[native history reconciliation](work-history-merge.md#backlog-queue).
 
 The backlog is **not** a second work-item authority. `work start` requires
 `ready`, then delegates directly to the existing `begin` transition above --
@@ -408,6 +728,38 @@ authority (that boundary belongs to the external system; see below). For a
 worked, example-heavy walkthrough of every command, see
 [`work-backlog-guide.md`](https://github.com/kemiller2002/repository-operating-system/blob/main/docs/work-backlog-guide.md).
 
+### Backlog and live status must agree
+
+A backlog row and a live work item with the same ID are one obligation. A
+row that is still `captured`, `ready` or `blocked` is the pre-promotion
+record and never conflicts. A row whose status is terminal (`complete` or
+`abandoned`) must match the live item's state; otherwise `./praxis validate`
+and `./praxis work backlog-validate` fail with a `status_agreement` finding,
+because the merged view (where the live state wins) would hide the
+contradiction. When the row is a different obligation that reused the ID,
+give the row alone a new, never-used ID:
+
+```bash
+./praxis work reidentify --id WI-0061 --new-id WI-0061-REUSED \
+  --reason "a different obligation reused the ID" --occurred-at TIMESTAMP
+```
+
+The row records `reidentifiedFrom` and `reidentifiedReason`; the live item,
+its events and its telemetry are untouched. The command refuses any row that
+validation does not report, a used or invalid new ID, and a missing reason.
+Otherwise bring both records to the same state with the lifecycle commands.
+
+### Fixtures stay out of canonical state
+
+Tests and manual smoke tests of mutating commands (`add`, `work begin`,
+`work block`, ...) run against a scratch root (`praxis init` in a temporary
+directory, or `--root DIR`), never against a repository whose `.ros/` state
+is canonical: fixture items committed there become live work that the
+planner and `status` report to everyone. A CI step that fails when the test
+suite changes the checkout (`git status --porcelain --untracked-files=all`
+is not empty after the tests) catches a test that writes into the
+repository.
+
 ## Adapter contract
 
 The stable executable interface is `getWorkItem`, `transitionWorkItem`, and `publishRepositoryEvent`. Protocol 1.0 implements a file-backed adapter for conformance tests:
@@ -415,13 +767,13 @@ The stable executable interface is `getWorkItem`, `transitionWorkItem`, and `pub
 The normalized, testable contract is defined in [`work-adapter-contract.md`](work-adapter-contract.md). Its initial executable operations are `getWorkItem`, `transitionWorkItem`, and `publishRepositoryEvent`; broad listing is deferred.
 
 ```bash
-./ros adapter publish --target .ros/mock-project-store/events.jsonl
+./praxis adapter publish --target .ros/mock-project-store/events.jsonl
 ```
 
-Event IDs make retries idempotent. Successful local publication creates `.ros/publications.json` receipts without mutating immutable events. A write error returns failure and creates no success receipt; ROS never treats failure or an unknown remote outcome as success. Production adapters must add authentication, authorization, repository identity checks, version negotiation, retry policy, and explicit `success|failure|unknown` outcomes.
+Event IDs make retries idempotent. Successful local publication creates `.ros/publications.json` receipts without mutating immutable events. A write error returns failure and creates no success receipt; Praxis never treats failure or an unknown remote outcome as success. Production adapters must add authentication, authorization, repository identity checks, version negotiation, retry policy, and explicit `success|failure|unknown` outcomes.
 
 ## Adoption and versioning
 
-Initialize a repository with `ros-bootstrap init`, configure `repository` and `workProtocol` in `ros.json`, and call `./ros validate` in CI. Repositories pin a package/protocol version. Breaking semantic or event-schema changes require a new major protocol version; additive evidence types and local mappings are compatible minor changes.
+Initialize a repository with `praxis init`, configure `repository` and `workProtocol` in `ros.json`, and call `./praxis validate` in CI. Repositories pin a package/protocol version. Breaking semantic or event-schema changes require a new major protocol version; additive evidence types and local mappings are compatible minor changes.
 
-Deferred: remote reads and transitions, signed events, review/approval transitions, commit graph indexing, global aggregation, telemetry publication/retention, and UI. These belong behind the adapter or in the external project-management system—not in ROS core.
+Deferred: remote reads and transitions, signed events, review/approval transitions, commit graph indexing, global aggregation, telemetry publication/retention, and UI. These belong behind the adapter or in the external project-management system—not in Praxis core.

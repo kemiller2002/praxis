@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-11 (post `DF-ROS-2026-A033`, which executes `DF-ROS-2026-A032` Phase 2's refined scope). Attempting Phase 2's original plan -- deleting Node's source outright -- surfaced a real blocker: `tools/ros_server.mjs` (the separate, permanently out-of-scope web UI) still imports `tools/ros_cli.mjs`'s functions in-process, so wholesale deletion would break a feature this migration never touches. `DF-ROS-2026-A033` resolves this: Node's CLI entrypoint stays fully retired everywhere (already true); its source stays in this repository and in the `project-administration` starter profile only, re-characterized as that profile's own web/hub servers' internal library dependency, never again as a CLI or a rollback path; the `greenfield` starter profile no longer scaffolds it at all. Every differential/CLI test that used to treat Node as a live oracle -- importing its functions directly, or spawning `node tools/ros_cli.mjs` against a bootstrapped fixture -- is now a golden-master test (expected values captured once from real Node behavior, frozen as literals; Node is no longer executed at test time). `tests/work-protocol.test.mjs` and `tests/telemetry.test.mjs` (Node's own pre-migration CLI test suite, exercising an entrypoint nothing in production invokes anymore) were deleted outright rather than converted.
 
+
+**Closed (2026-09-28, `DF-ROS-2026-A049`).** Node is gone from this
+repository: the Node library (`tools/*.mjs`), the web/hub servers (now F#
+`ros web serve` / `ros hub`), the npm package and launchers, the site tooling
+and every Node test are removed or ported to F#, and `./ros architecture
+check` keeps it that way. The rows below are the migration's historical
+ledger; where they describe Node as retained, `DF-ROS-2026-A049` supersedes
+them.
+
 | Category | Current state |
 |---|---|
 | Baseline | clean SHA tagged and pushed; active continuation branch `migration/ros-work-verified-context` started from `ff47c69` |
@@ -27,13 +36,15 @@ commit; production authority remains unchanged.
 - **To F# core/commands:** artifact rules/projection and read-only Git status now
   shadow-owned; later work, execution, telemetry, evidence, configured stable
   policy, initialization/upgrade, and release-plan decisions.
-- **Retained thin adapters:** launchers, npm acquisition, HTTP, TypeScript UI,
-  provider mappings, hub-to-spoke process boundary, package task glue.
+- **Retained thin adapters:** shell launchers, native installers, the F#
+  HTTP adapters for the web interface and hub, provider mappings, the
+  hub-to-spoke process boundary. (npm acquisition, the TypeScript UI and
+  package task glue were removed by `DF-ROS-2026-A049`.)
 - **Retained platform declarations:** GitHub YAML, profile manifests, schemas,
   metric catalog, UI/compiler configuration, SDE inputs.
 - **Deprecated only after proof:** independent Python artifact CLI and legacy
   Python layout generator.
-- **Deferred:** project-administration F# ownership and production distribution.
+- **Done (`DF-ROS-2026-A049`):** project-administration F# ownership and native-only distribution.
 - **Blocked for missing requirements:** Time Entry semantics.
 
 This file is updated after T3–T6; it must not be used as evidence that a planned

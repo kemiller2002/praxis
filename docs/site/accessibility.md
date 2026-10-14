@@ -4,28 +4,30 @@ Accessibility is a release requirement for `site/`. This file records what was
 checked, how, and what was found and fixed. Target: WCAG 2.2 AA.
 
 Date: 2026-09-27. Browser: Chromium (Playwright 1.56, headless). Page served by
-`node site-tools/serve.mjs`. Web fonts were unreachable from the build
+the local preview server (then `site-tools/serve.mjs`; now `praxis-site serve`).
+Web fonts were unreachable from the build
 container, so every rendered check ran on the fallback font stacks. That is the
 harder case for layout, but it means the Google Fonts rendering was not
 inspected.
 
 ## Automated, in the repository (runs in CI)
 
-`node site-tools/verify.mjs` runs:
+`dotnet run --project site-tools/SiteTools.fsproj -c Release -- verify`
+(`praxis-site verify`) runs:
 
-- `site-tools/check.mjs`: `lang`, a title, the four landmarks, one `main`,
+- `praxis-site check` (`site-tools/Html.fs`): `lang`, a title, the four landmarks, one `main`,
   one `h1`, no skipped heading levels, unique ids, in-page links and
   `aria-labelledby` targets that exist, image alternatives, accessible names
   for links and buttons, meaningful link text, and a skip link to `#main`.
-- `tests/site/design.test.mjs`: WCAG contrast for every text/background token
+- `tests/Site.Tests/DesignTests.fs`: WCAG contrast for every text/background token
   pair the stylesheet uses (4.5:1 text, 3:1 focus indicator), square geometry,
   visible focus, reduced motion.
-- `tests/site/accessibility.test.mjs`: scrollable regions are focusable named
-  regions, `aria-label` only where the role allows it, no hover-only changes,
-  44px targets for buttons and navigation, reduced motion removes motion,
-  the claim enhancement uses a status live region and a real `button`.
-- `tests/site/content.test.mjs`: the "Done is a claim" component is complete
-  in the static HTML (nothing hidden without JavaScript).
+- `tests/Site.Tests/AccessibilityTests.fs`: scrollable regions are focusable
+  named regions, `aria-label` only where the role allows it, no hover-only
+  changes, 44px targets for buttons and navigation, reduced motion removes
+  motion, and the page ships no script or inline event handler.
+- `tests/Site.Tests/ContentTests.fs`: the "Done is a claim" component is
+  complete in the static HTML (nothing hidden, no script hook).
 
 ## Rendered checks (run for this change; tooling kept out of the repository)
 
@@ -37,6 +39,11 @@ axe-core 4.13.0 was injected into the rendered page with rule sets `wcag2a`,
 | 1280px, JavaScript on | 2 rules (6 nodes) | 0 (48 rules passed) |
 | 320px, enhancement script blocked | 2 rules (6 nodes) | 0 (46 rules passed) |
 | 1280px, reduced motion, claim fully interrogated | 2 rules (6 nodes) | 0 (48 rules passed) |
+
+On 2026-09-28 the page's only script (`claim.js`, the step-by-step reveal of
+the claim) was removed. The page it leaves is the one the "enhancement script
+blocked" run above checked: every claim step and the verdict are static and
+visible.
 
 Found and fixed:
 
@@ -57,9 +64,10 @@ immediate), at 1280px and 320px:
 - The skip link is visible when focused and moves focus to `#main`.
 - No non-inline control is smaller than 24 by 24 CSS pixels; buttons,
   navigation and footer links are at least 44px tall.
-- The claim control works with Enter; progress is announced through a
+- The claim control worked with Enter; progress was announced through a
   `role="status"` region ("3 of 8 questions answered", then "All 8 questions
-  answered.").
+  answered."). The control was removed with the script on 2026-09-28; keyboard
+  traversal was not re-rendered after that change.
 
 Found and fixed: the reduced-motion rule set `transition-duration: 0.01ms` on
 every element, which gave every property change an (imperceptible) transition
@@ -88,11 +96,11 @@ focusable region.
 - **Tables.** The Git comparison and the ledger are real tables with captions
   and `scope`d headers. On narrow screens the comparison reflows to labelled
   blocks without losing header association in the markup.
-- **No JavaScript.** Everything, including the full claim interrogation, is
-  present without JavaScript. The script only hides answers until the visitor
-  asks, and it never moves focus.
-- **Motion.** The only animation is the reveal of claim answers, which is
-  opt-in (after a button press) and removed under reduced motion.
+- **No JavaScript.** The page ships no script at all, and its content security
+  policy sets `script-src 'none'`. Everything, including the full claim
+  interrogation, is static HTML.
+- **Motion.** The page has no animation. Smooth scrolling for in-page links
+  is turned off under reduced motion.
 - **Language and naming.** `lang="en"`; external links are named by their
   destination; the GitHub navigation link's arrow is hidden from assistive
   technology.

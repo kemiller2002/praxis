@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- vendor/nuget/limen-routing.lock; restored only from vendor/nuget (DF-ROS-2026-A057). -->
+    <PackageReference Include="EchelonFoundry.Limen.Routing" Version="0.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Git/Operations.fs" />
+    <Compile Include="Work/Operations.fs" />
+    <Compile Include="Work/CompletionReadiness.fs" />
+    <Compile Include="Work/EnvelopeReconciliationOperations.fs" />
+    <Compile Include="Work/Reconciliation.fs" />
+    <Compile Include="Work/Checkpoint.fs" />
+    <Compile Include="Work/InputInboxOperations.fs" />
+    <Compile Include="Work/LocalHandoffInspection.fs" />
+    <Compile Include="Work/LocalDispatchReservation.fs" />
+    <Compile Include="Work/LocalWorkerSupervision.fs" />
+    <Compile Include="Work/LocalContainedLaunch.fs" />
+    <Compile Include="Work/LocalValidator.fs" />
+    <Compile Include="Work/LocalWorkerAdapters.fs" />
+    <Compile Include="Work/LocalJournaledDispatch.fs" />
+    <Compile Include="Work/WorkerChecklist.fs" />
+    <Compile Include="Work/LocalSubmissionIntake.fs" />
+    <Compile Include="Work/LocalSpooledDispatch.fs" />
+    <Compile Include="Work/LocalIntegration.fs" />
+    <Compile Include="Work/LocalIntegratedCompletion.fs" />
+    <Compile Include="Telemetry/Operations.fs" />
+    <Compile Include="Pacing/Contracts.fs" />
+    <Compile Include="Pacing/Events.fs" />
+    <Compile Include="Pacing/Status.fs" />
+    <Compile Include="Pacing/StatusDocument.fs" />
+    <Compile Include="Pacing/Operations.fs" />
+    <Compile Include="Artifacts/Operations.fs" />
+    <Compile Include="Ordo/Operations.fs" />
+    <Compile Include="Lifecycle/Operations.fs" />
+    <Compile Include="Planning/Operations.fs" />
+    <Compile Include="Execution/Operations.fs" />
+    <Compile Include="Web/HttpHeaders.fs" />
+    <Compile Include="Web/UrlState.fs" />
+    <Compile Include="Web/UrlEnhancement.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The one approved browser script (DF-ROS-2026-A058), served by UrlEnhancement. -->
+    <EmbeddedResource Include="Web/url-state.js" LogicalName="url-state.js" />
+  </ItemGroup>
+</Project>

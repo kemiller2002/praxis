@@ -1,0 +1,134 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "member": "PRAXIS-GROUP-07",
+  "rows": [
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "a cross-repository group must use GROUP-ECHELON-<AREA>-<SEQUENCE>, a repository-local group must not, and members outside the home are named owner/repo:WORK-ID while a bare ID means the home (PRX-GRP-100, PRX-GRP-111)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: a cross-repository group needs GROUP-ECHELON- and a home; a local group may not use it or name another repository's item",
+        "result": "passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "the group record holds homeRepository (owner/repo) set where work group create ran, and no command changes it implicitly (PRX-GRP-101)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli cross-repository group observes a member repository read-only, reports unlinked until link, and never writes there",
+        "result": "passed: group.homeRepository equals the origin-derived owner/repo; the domain test asserts it, and historyFindings reports a changed home"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "work group link run in a member repository writes only an immutable group reference (group ID and home), is idempotent, and refuses a conflicting reference (PRX-GRP-102)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: link records only an immutable reference on the member's own item; repeats are unchanged and a different home is refused",
+        "result": "passed (plus the cli two-repository test: groups.json in the member repository holds references only)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "a reference without matching home membership, or a membership without a matching reference, is reported unlinked by work group show and as a validate warning (PRX-GRP-102)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli cross-repository group observes a member repository read-only, reports unlinked until link, and never writes there",
+        "result": "passed: show lists the member under unlinked before link and validate warns 'unlinked'; empty after link"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "each cross-repository member's state is derived read-only from that repository's own Praxis state at a fetched Git ref, each observation records repository, commit, observedAt and method, and no command or flag sets a group's status (PRX-GRP-103)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli cross-repository group observes a member repository read-only, reports unlinked until link, and never writes there",
+        "result": "passed: the member row carries observation {kind: observation, method git-ref, ref, commit, observedAt}; status is derived (domain test 'status is derived from dated observations')"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "an observation older than grouping.crossRepository.maxObservationAgeMinutes (default 1440) is reported stale and an unobservable member is unknown, never complete (PRX-GRP-103)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: status is derived from dated observations; an unobservable or stale member is unknown, never complete",
+        "result": "passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "member dependencies may name qualified IDs with a complete, merged or released producer milestone; an unmet consumer is waiting, an unobservable producer leaves it unknown, and cycles are detected across repositories (PRX-GRP-105)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: dependency edges order members across repositories, unmet or unobservable producers leave consumers waiting or unknown, and cycles are refused",
+        "result": "passed (and the cli test: released:v1.0.0 waiting, then satisfied after the tag)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "progress is reported per repository and overall as k of n complete, and removed-open members are reported (PRX-GRP-106)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: status is derived from dated observations; an unobservable or stale member is unknown, never complete",
+        "result": "passed: repositoryProgress per repository; the cli test reports two repositories; removed-open from PRAXIS-GROUP-08 still applies"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "a group checkpoint records, per cross-repository member, the repository, branch, latest member checkpoint ID and commit, pull request when observed and observedAt, labelled as observations (PRX-GRP-107)",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "src/Praxis.Domain/Work/WorkGroups.fs",
+        "result": "WorkGroups.checkpoint records MemberObservations for every qualified member (observationNode labels kind: observation); parsed by WorkGroupJson.readCheckpoint"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "no group command writes another repository's state or working tree, and the planner never schedules another repository's member into this checkout (PRX-GRP-104, PRX-GRP-108)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli cross-repository group observes a member repository read-only, reports unlinked until link, and never writes there",
+        "result": "passed: the member repository's Praxis files, git status and refs are unchanged after list, show, validate and plan explain-group in the home; plan reports executes-elsewhere and lists only HOME-1"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-07",
+      "criterion": "an unreachable repository, missing Praxis, unsupported state schema or denied access makes the member unknown with the reason while the rest of the view renders; an unreachable member added is recorded verified:false with a warning and an observed-terminal member is refused (PRX-GRP-109, PRX-GRP-111)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli an unconfigured or missing member repository is unknown with a reason and the rest of the group still renders",
+        "result": "passed (plus 'a qualified member is checked by observation: terminal or unknown there is refused, unobservable joins verified false with a warning')"
+      },
+      "deferredTo": null
+    }
+  ],
+  "suite": {
+    "command": "dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll (ROS_BASE_REF=origin/main)",
+    "result": "1470 test(s); 1470 passed; 0 failed",
+    "commit": "0713344daddcf16f0de208a0fc6d0f21a3a5732a"
+  }
+}

@@ -44,3 +44,12 @@ installer does the same.
 
 The site states all of this under "From ROS to Praxis" instead of implying the
 rename is finished.
+
+Later change (2026-09-28): the repository is now F#/.NET only and has no npm
+distribution; `release.json` is the name and version source. The page's
+"From ROS to Praxis" list no longer mentions the npm package or the
+repository-local launcher. It says the native installers install both
+`praxis` and `ros`, which `scripts/install-native.sh`
+(`for command_name in praxis ros`) and `scripts/install-native.ps1`
+(`foreach ($name in @("praxis", "ros"))`) do. The run recorded above was not
+repeated.

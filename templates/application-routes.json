@@ -1,0 +1,114 @@
+{
+  "home": "home",
+  "legacy": [],
+  "mode": "hash",
+  "notFound": "notFound",
+  "routes": [
+    {
+      "guards": [],
+      "name": "home",
+      "params": [],
+      "pattern": "/",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "items.list",
+      "params": [
+        {
+          "default": null,
+          "in": "query",
+          "name": "q",
+          "required": false,
+          "type": "string",
+          "values": null
+        },
+        {
+          "default": [
+            "open"
+          ],
+          "in": "query",
+          "name": "status",
+          "required": false,
+          "type": "set",
+          "values": [
+            "closed",
+            "open"
+          ]
+        },
+        {
+          "default": "updated",
+          "in": "query",
+          "name": "sort",
+          "required": false,
+          "type": "enum",
+          "values": [
+            "updated",
+            "title"
+          ]
+        },
+        {
+          "default": 1,
+          "in": "query",
+          "name": "page",
+          "required": false,
+          "type": "int",
+          "values": null
+        }
+      ],
+      "pattern": "/items",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "items.item",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "type": "string",
+          "values": null
+        },
+        {
+          "default": "summary",
+          "in": "query",
+          "name": "tab",
+          "required": false,
+          "type": "enum",
+          "values": [
+            "summary",
+            "history"
+          ]
+        }
+      ],
+      "pattern": "/items/{id}",
+      "requires": [
+        "item"
+      ],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "notFound",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "rest",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/{*rest}",
+      "requires": [],
+      "returnTarget": false
+    }
+  ],
+  "schema": "echelon.routes/v1",
+  "signIn": null
+}

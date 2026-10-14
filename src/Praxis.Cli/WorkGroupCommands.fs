@@ -1,0 +1,419 @@
+namespace Praxis.Cli
+
+open System
+open System.Globalization
+open System.IO
+open System.Text.Json.Nodes
+open Praxis.Contracts.Planning
+open Praxis.Contracts.Work
+open Praxis.Domain.Planning
+open Praxis.Domain.Provenance
+open Praxis.Domain.Work
+open Praxis.Application.Work
+open Praxis.Infrastructure.Git
+open Praxis.Infrastructure.Json
+open Praxis.Infrastructure.Planning
+open Praxis.Infrastructure.Work
+
+/// `work group create|show|add|remove|checkpoint` (PRX-GRP-073, phase two):
+/// durable, human-declared execution groups recorded in
+/// `.ros/work/groups.json`. This module parses arguments, gathers repository
+/// facts through the file adapters, and renders; every decision is made by
+/// `Praxis.Domain.Work.WorkGroups`.
+[<RequireQualifiedAccess>]
+module WorkGroupCommands =
+    let showUsage = "work group show GROUP-ID [--config FILE] [--json]"
+
+    let checkpointUsage =
+        "work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT [--decision TEXT ...] [--dry-run] [--json] [IDENTITY]"
+
+    let removeUsage =
+        "work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
+    let addUsage =
+        "work group add --group GROUP-ID --member ID|OWNER/REPO:ID --occurred-at TIMESTAMP [--dependency CONSUMER=PRODUCER[@MILESTONE] ...] [--execution-mode independent] [--independent-member ID] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
+    let usage =
+        showUsage
+        + " | "
+        + addUsage
+        + " | "
+        + removeUsage
+        + " | "
+        + checkpointUsage
+        + " | work group create --group GROUP-ID --member ID [--member ID ...] --occurred-at TIMESTAMP [--kind KIND] [--origin ORIGIN] [--shared-context TEXT ...] [--architecture-note TEXT ...] [--execution-repository NAME] [--cross-repository] [--home-repository OWNER/REPO] [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG] ...] [--execution-mode independent --reason TEXT] [--independent-member ID ...] [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]"
+
+    // ---- argument parsing (shared by the family) ----
+
+    let private identityFlags =
+        [ "--actor-kind"; "--agent"; "--actor"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--subagent" ]
+
+    /// Parsed arguments: repeatable value flags, boolean switches, and
+    /// everything that was not understood.
+    type Arguments =
+        { Values: Map<string, string list>
+          Switches: Set<string>
+          Positional: string list
+          Unexpected: string list }
+
+    let parse (valueFlags: string list) (switches: string list) (arguments: string list) : Arguments =
+        let values = Set.ofList (valueFlags @ identityFlags)
+        let flags = Set.ofList ("--json" :: switches)
+
+        let rec walk (remaining: string list) (parsed: Arguments) =
+            match remaining with
+            | [] -> { parsed with Values = parsed.Values |> Map.map (fun _ values -> List.rev values); Positional = List.rev parsed.Positional; Unexpected = List.rev parsed.Unexpected }
+            | flag :: value :: rest when values.Contains flag && not (value.StartsWith("--", StringComparison.Ordinal)) ->
+                let existing = parsed.Values |> Map.tryFind flag |> Option.defaultValue []
+                walk rest { parsed with Values = parsed.Values |> Map.add flag (value :: existing) }
+            | flag :: rest when flags.Contains flag -> walk rest { parsed with Switches = parsed.Switches.Add flag }
+            | token :: rest when not (token.StartsWith("--", StringComparison.Ordinal)) -> walk rest { parsed with Positional = token :: parsed.Positional }
+            | token :: rest -> walk rest { parsed with Unexpected = token :: parsed.Unexpected }
+
+        walk arguments { Values = Map.empty; Switches = Set.empty; Positional = []; Unexpected = [] }
+
+    let all (arguments: Arguments) (flag: string) = arguments.Values |> Map.tryFind flag |> Option.defaultValue []
+
+    let single (arguments: Arguments) (flag: string) =
+        match all arguments flag with
+        | [ value ] -> Some value
+        | _ -> None
+
+    let private isTimestamp (value: string) =
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) |> fst
+
+    let commonErrors (command: string) (arguments: Arguments) (singles: string list) =
+        [ yield! arguments.Unexpected |> List.map (fun token -> $"unexpected argument '{token}'")
+          for flag in singles do
+              if (all arguments flag).Length > 1 then
+                  yield $"{command} accepts {flag} once" ]
+
+    let occurredAtErrors (command: string) (arguments: Arguments) =
+        match all arguments "--occurred-at" with
+        | [ value ] when isTimestamp value -> []
+        | [ value ] -> [ $"--occurred-at '{value}' is not a timestamp" ]
+        | _ -> [ $"{command} requires exactly one --occurred-at TIMESTAMP (the real current time)" ]
+
+    let groupErrors (command: string) (arguments: Arguments) =
+        match all arguments "--group" with
+        | [ _ ] -> []
+        | [] -> [ $"{command} requires --group GROUP-ID" ]
+        | _ -> [ $"{command} names exactly one group; pass --group once" ]
+
+    // ---- repository facts ----
+
+    let standing (root: string) = FileWorkGroupFacts.standing root
+
+    let contextFor (root: string) (configurationFile: string option) (groupId: string) (groups: StoredWorkGroup list) =
+        FileWorkGroupFacts.contextFor root configurationFile (Some groupId) groups
+
+    // ---- rendering (shared by the family) ----
+
+    let envelope (command: string) (status: string) (fields: (string * JsonNode) list) =
+        WorkGroupJson.record ([ "command", WorkGroupJson.text command; "schemaVersion", WorkGroupJson.integer 1; "status", WorkGroupJson.text status ] @ fields)
+
+    let printJson (node: JsonObject) = printf "%s" (WorkGroupJson.render node)
+
+    let reportArgumentErrors (command: string) (commandUsage: string) (errors: string list) =
+        errors |> List.iter (eprintfn "ERROR %s")
+        eprintfn "Usage: ros %s" commandUsage
+        2
+
+    let reportFailure (asJson: bool) (command: string) (message: string) =
+        if asJson then
+            printJson (envelope command "failed" [ "failure", WorkGroupJson.record [ "code", WorkGroupJson.text "persistence-failed"; "message", WorkGroupJson.text message ] ])
+        else
+            eprintfn "ERROR [persistence-failed] %s" message
+
+        1
+
+    let reportRejections (asJson: bool) (command: string) (groupId: string) (rejections: GroupRejection list) =
+        if asJson then
+            printJson (envelope command "rejected" [ "groupId", WorkGroupJson.text groupId; "rejections", rejections |> List.map WorkGroupJson.rejectionNode |> WorkGroupJson.array ])
+        else
+            for rejection in rejections do
+                eprintfn "ERROR [%s] %s" (GroupRejection.code rejection) (GroupRejection.message rejection)
+
+            eprintfn "%s refused; nothing was recorded" command
+
+        if rejections |> List.forall GroupRejection.isArgumentError then 2 else 1
+
+    let private stateNotice = $"Praxis state changed in {FileWorkGroupRepository.relativePath}; commit and push it. No member's lifecycle, evidence or attribution was changed."
+
+    /// Runs one mutation of the store: facts, decision, write (unless
+    /// `--dry-run` or nothing changed), render. Every mutating verb goes
+    /// through here. A repeat whose end state holds reports `changed: false`
+    /// and appends no history (PRX-GRP-114).
+    let private mutate
+        (root: string)
+        (command: string)
+        (arguments: Arguments)
+        (groupId: string)
+        (decide: GroupContext -> Result<GroupChange, GroupRejection list>)
+        (describe: StoredWorkGroup -> string list)
+        =
+        let asJson = arguments.Switches.Contains "--json"
+        let dryRun = arguments.Switches.Contains "--dry-run"
+
+        let outcome =
+            FileWorkGroupRepository.transact root dryRun (fun groups ->
+                match contextFor root (single arguments "--config") groupId groups with
+                | Error message -> Error(Choice1Of2 message)
+                | Ok(_, context) ->
+                    decide context
+                    |> Result.mapError Choice2Of2
+                    |> Result.map (fun change -> (if change.Changed then WorkGroups.upsert groups change.Group else groups), change))
+
+        match outcome with
+        | Error message
+        | Ok(Error(Choice1Of2 message)) -> reportFailure asJson command message
+        | Ok(Error(Choice2Of2 rejections)) -> reportRejections asJson command groupId rejections
+        | Ok(Ok change) ->
+            let status = if dryRun then "dry-run" elif change.Changed then "recorded" else "unchanged"
+
+            if asJson then
+                printJson (
+                    envelope
+                        command
+                        status
+                        [ "dryRun", WorkGroupJson.boolean dryRun
+                          "changed", WorkGroupJson.boolean change.Changed
+                          "warnings", WorkGroupJson.texts change.Warnings
+                          "group", WorkGroupJson.groupNode change.Group ]
+                )
+            else
+                describe change.Group |> List.iter (printfn "%s")
+                change.Warnings |> List.iter (eprintfn "WARN %s")
+
+                if not change.Changed then printfn "unchanged: the requested state already holds; nothing was recorded"
+                elif dryRun then printfn "dry run: nothing was written"
+                else printfn "%s" stateNotice
+
+            0
+
+    /// `--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG]`.
+    let private dependencies (arguments: Arguments) =
+        all arguments "--dependency" |> List.map (fun raw -> raw, MemberDependency.tryParse raw)
+
+    let private dependencyErrors (arguments: Arguments) =
+        dependencies arguments
+        |> List.choose (fun (raw, parsed) ->
+            match parsed with
+            | None -> Some $"--dependency '{raw}' is not CONSUMER=PRODUCER[@complete|merged|released:TAG]"
+            | Some _ -> None)
+
+    /// `--execution-mode independent|grouped` (PRX-GRP-132).
+    let private independentGroup (arguments: Arguments) = single arguments "--execution-mode" = Some "independent"
+
+    let private executionModeErrors (arguments: Arguments) =
+        [ match all arguments "--execution-mode" with
+          | []
+          | [ "independent" ]
+          | [ "grouped" ] -> ()
+          | values -> yield $"""--execution-mode takes once one of grouped, independent (got {String.concat ", " values})""" ]
+
+    // ---- work group create ----
+
+    let private createValues =
+        [ "--group"; "--member"; "--occurred-at"; "--kind"; "--origin"; "--shared-context"; "--architecture-note"; "--execution-repository"; "--home-repository"; "--dependency"; "--config"; "--reason"; "--execution-mode"; "--independent-member" ]
+
+    let private callerExecution (root: string) (rawArguments: string list) =
+        FileWorkGroupFacts.callerExecution root (ProvenanceCommands.identityOverridesFrom rawArguments)
+
+    let create (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group create"
+        let arguments = parse createValues [ "--cross-repository"; "--dry-run" ] rawArguments
+
+        let kind = single arguments "--kind" |> Option.map (fun value -> value, GroupKind.tryParse value)
+        let origin = single arguments "--origin" |> Option.map (fun value -> value, GroupOrigin.tryParse value)
+
+        let errors =
+            [ yield! commonErrors command arguments [ "--kind"; "--origin"; "--execution-repository"; "--config"; "--reason" ]
+              yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
+              yield! groupErrors command arguments
+              yield! occurredAtErrors command arguments
+              if (all arguments "--member").IsEmpty then
+                  yield $"{command} requires at least one --member ID"
+              match kind with
+              | Some(value, None) -> yield $"--kind '{value}' is not a group kind (shared-area, shared-architecture, dependency-chain, shared-files, shared-data-model, shared-api-surface, shared-migration, shared-test-surface, context-affinity, custom:NAME)"
+              | _ -> ()
+              match origin with
+              | Some(value, None) -> yield $"--origin '{value}' is not a group origin (human-declared, architecture-declared, dependency-derived, planner-recommended)"
+              | _ -> ()
+              yield! executionModeErrors arguments ]
+
+        match errors with
+        | _ :: _ -> reportArgumentErrors command usage errors
+        | [] ->
+            let groupId = (single arguments "--group").Value
+
+            let decide (context: GroupContext) =
+                WorkGroups.create
+                    context
+                    { GroupId = groupId
+                      Members = all arguments "--member"
+                      Kind = kind |> Option.bind snd
+                      Origin = origin |> Option.bind snd |> Option.defaultValue GroupOrigin.HumanDeclared
+                      SharedContext = all arguments "--shared-context"
+                      ExecutionRepository =
+                        single arguments "--execution-repository"
+                        |> Option.defaultValue (FilePlanningRepository.readRepository root).Name
+                      CrossRepository = arguments.Switches.Contains "--cross-repository"
+                      ArchitectureNotes = all arguments "--architecture-note"
+                      OccurredAt = (single arguments "--occurred-at").Value
+                      Actor = actor
+                      Reason = single arguments "--reason"
+                      ExecutionId = callerExecution root rawArguments
+                      HomeRepository = single arguments "--home-repository" |> Option.orElse (FileWorkGroupFacts.thisRepository root)
+                      Dependencies = dependencies arguments |> List.choose snd
+                      IndependentReason = (if independentGroup arguments then single arguments "--reason" |> Option.orElse (Some "") else None)
+                      IndependentMembers = all arguments "--independent-member" |> List.map (fun id -> id, single arguments "--reason" |> Option.defaultValue "") }
+
+            let describe (group: StoredWorkGroup) =
+                let declaration = group.Declaration
+                let members = String.concat ", " declaration.Members
+                let repository = declaration.ExecutionRepository |> Option.defaultValue "unknown"
+                let scope = if declaration.CrossRepository then " (cross-repository)" else ""
+
+                [ $"work group {declaration.Id} declared with {declaration.Members.Length} member(s): {members}"
+                  $"  executes in {repository}{scope}; origin {GroupOrigin.code declaration.Origin}"
+                  $"  recorded by {ActorKind.code group.CreatedBy.Kind}:{group.CreatedBy.Id} at {group.CreatedAt}" ]
+
+            mutate root command arguments groupId decide describe
+
+    // ---- membership changes (add, remove) ----
+
+    let private memberValues = [ "--group"; "--member"; "--occurred-at"; "--config"; "--reason"; "--dependency"; "--execution-mode"; "--independent-member" ]
+
+    let private memberErrors (command: string) (arguments: Arguments) =
+        [ yield! commonErrors command arguments [ "--config"; "--reason" ]
+          yield! dependencyErrors arguments
+          yield! executionModeErrors arguments
+          if not (List.forall (fun id -> Some id = single arguments "--member") (all arguments "--independent-member")) then
+              yield $"{command} --independent-member must name the --member it changes"
+          yield! arguments.Positional |> List.map (fun token -> $"unexpected argument '{token}'")
+          yield! groupErrors command arguments
+          yield! occurredAtErrors command arguments
+          match all arguments "--member" with
+          | [ _ ] -> ()
+          | [] -> yield $"{command} requires --member ID"
+          | _ -> yield $"{command} changes exactly one member; pass --member once" ]
+
+    let private memberRequest (root: string) (rawArguments: string list) (arguments: Arguments) (actor: Actor) : GroupMemberRequest =
+        { GroupId = (single arguments "--group").Value
+          WorkItemId = (single arguments "--member").Value
+          OccurredAt = (single arguments "--occurred-at").Value
+          Actor = actor
+          Reason = single arguments "--reason"
+          AllowEmpty = arguments.Switches.Contains "--allow-empty"
+          ExecutionId = callerExecution root rawArguments
+          Dependencies = dependencies arguments |> List.choose snd
+          GroupIndependent = independentGroup arguments
+          MemberIndependent = not (all arguments "--independent-member").IsEmpty }
+
+    let private changeLines (verb: string) (request: GroupMemberRequest) (group: StoredWorkGroup) =
+        let members = match group.Declaration.Members with [] -> "(none)" | ids -> String.concat ", " ids
+
+        [ $"{request.WorkItemId} {verb} {group.Declaration.Id} by {ActorKind.code request.Actor.Kind}:{request.Actor.Id} at {request.OccurredAt}"
+          $"  members now: {members}" ]
+
+    let add (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group add"
+        let arguments = parse memberValues [ "--dry-run" ] rawArguments
+
+        match memberErrors command arguments with
+        | _ :: _ as errors -> reportArgumentErrors command addUsage errors
+        | [] ->
+            let request = memberRequest root rawArguments arguments actor
+            mutate root command arguments request.GroupId (fun context -> WorkGroups.add context request) (changeLines "added to" request)
+
+    let remove (root: string) (rawArguments: string list) (actor: Actor) =
+        let command = "work group remove"
+        let arguments = parse memberValues [ "--dry-run"; "--allow-empty" ] rawArguments
+
+        match memberErrors command arguments with
+        | _ :: _ as errors -> reportArgumentErrors command removeUsage errors
+        | [] ->
+            let request = memberRequest root rawArguments arguments actor
+            mutate root command arguments request.GroupId (fun context -> WorkGroups.remove context request) (changeLines "removed from" request)
+
+    // ---- validate ----
+
+    /// `validate`'s findings for stored groups: an unreadable store, a
+    /// malformed record, or a stored group that breaks a group invariant.
+    let validationFindings (root: string) : (string * string * string) list =
+        let path = FileWorkGroupRepository.relativePath
+
+        match FileWorkGroupRepository.parse root with
+        | None -> []
+        | Some(Error message) -> [ path, "groups", message ]
+        | Some(Ok read) ->
+            let malformed =
+                read.Groups
+                |> List.collect (fun (index, id, result) ->
+                    match result with
+                    | Ok _ -> []
+                    | Error problems ->
+                        let name = id |> Option.defaultValue $"groups[{index}]"
+                        problems |> List.map (fun problem -> path, name, problem))
+
+            let groups = read.Groups |> List.choose (fun (_, _, result) -> match result with Ok group -> Some group | Error _ -> None)
+
+            let invariants =
+                match FileWorkGroupFacts.context root None groups with
+                | Error message -> [ path, "groups", message ]
+                | Ok(_, context) ->
+                    let references = match read.References with Ok references -> references | Error _ -> []
+                    (WorkGroups.findings context @ WorkGroups.crossRepositoryFindings { Groups = groups; References = references } context.Standing) |> List.map (fun (id, field, message) -> path, (if id = "" then field else $"{id}.{field}"), message)
+
+            let checkpoints =
+                let owners =
+                    FileCheckpointRepository.readEvents root
+                    |> List.map (fun (_, event) -> event.EventId, event.WorkItemId)
+                    |> Map.ofList
+
+                WorkGroups.checkpointFindings owners.TryFind groups
+                |> List.map (fun (id, field, message) -> path, $"{id}.{field}", message)
+
+            let history =
+                FileWorkGroupFacts.committed root
+                |> List.collect (fun (revision, committed) -> WorkGroups.historyFindings revision committed groups)
+                |> List.distinctBy (fun (id, field, _) -> id, field)
+                |> List.map (fun (id, field, message) -> path, $"{id}.{field}", message)
+
+            let references =
+                match read.References with
+                | Ok _ -> []
+                | Error problems -> problems |> List.map (fun problem -> path, "references", problem)
+
+            malformed @ references @ invariants @ checkpoints @ history
+
+    /// `validate` warnings (PRX-GRP-102): a cross-repository membership whose
+    /// member repository holds no reference, or a reference whose home does
+    /// not list the item. Only observable repositories are judged; the two
+    /// repositories change at different times, so this is never an error.
+    let validationWarnings (root: string) : (string * string * string) list =
+        let path = FileWorkGroupRepository.relativePath
+
+        match FileWorkGroupRepository.readStore root with
+        | Error _ -> []
+        | Ok store ->
+            let home =
+                store.Groups
+                |> List.filter (fun group -> group.Declaration.CrossRepository)
+                |> List.collect (fun group ->
+                    match FileWorkGroupFacts.memberFactsFor root None (Some group.Declaration.Id) with
+                    | Error _ -> []
+                    | Ok facts ->
+                        WorkGroups.unlinkedMembers (WorkGroups.progress group facts)
+                        |> List.map (fun memberId -> path, $"{group.Declaration.Id}.members", $"{memberId} is a member of {group.Declaration.Id}, but its repository holds no reference to the group: unlinked (run work group link there)"))
+
+            let members =
+                match store.References, FileWorkGroupFacts.homeMembership root None with
+                | [], _
+                | _, Error _ -> []
+                | references, Ok membership ->
+                    WorkGroups.unlinkedReferences references (FileWorkGroupFacts.thisRepository root) membership
+                    |> List.map (fun (reference, message) -> path, $"references.{reference.GroupId}.{reference.WorkItemId}", message)
+
+            home @ members

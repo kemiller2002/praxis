@@ -1,0 +1,213 @@
+name: Praxis validation
+
+# Every repository-owned step here runs .NET/F# (DF-ROS-2026-A049): no Node
+# runtime or npm install is part of building, testing or validating Praxis.
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet restore Praxis.slnx
+      - run: dotnet build Praxis.slnx --configuration Release --no-restore
+      - name: F# tests
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+      # Tests use isolated scratch roots. A test that writes into the checkout
+      # (for example fixture work items in canonical `.ros/` state, as
+      # WI-READY/WI-ACTIVE once were: PRAXIS-HYG-01) fails here.
+      # The approved url-state.js enhancement and its script-free fallback in
+      # a real browser (DF-ROS-2026-A058): headless Chrome, driven over the
+      # DevTools protocol by the F# suite itself. No Node is involved.
+      - name: F# browser tests (headless Chrome)
+        run: |
+          export PRAXIS_TEST_BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)"
+          test -n "$PRAXIS_TEST_BROWSER"
+          dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll --suite browser
+      - name: F# tests leave the checkout unchanged
+        run: |
+          changes="$(git status --porcelain --untracked-files=all)"
+          if [ -n "$changes" ]; then
+            echo "The F# test suite changed the checkout; tests must use isolated state:"
+            echo "$changes"
+            exit 1
+          fi
+      - name: F#/.NET-only repository invariant
+        run: ./praxis architecture check
+      - run: ./praxis registry check
+      - run: ./praxis validate
+        env:
+          PRAXIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+      # `ros` is a compatibility alias for `praxis` (DF-ROS-2026-A050): the
+      # same program, never a second implementation.
+      - name: Compatibility alias runs the same Praxis CLI
+        run: test "$(./ros --version)" = "$(./praxis --version)"
+
+  # The release .echelon/toolchain.json pins must accept this repository too,
+  # not only the validator built from source above (WI-0101). The pinned
+  # release is installed by the repository's own praxis-setup action
+  # (scripts/praxis-bootstrap.sh): SHA-256 against the release checksum list,
+  # build-provenance attestation required, and the reported version checked.
+  pinned-release-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install and verify the pinned Praxis release
+        id: pinned
+        uses: ./.github/actions/praxis-setup
+        with:
+          attestation: required
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build tests/Praxis.Tests/Praxis.Tests.fsproj --configuration Release
+      - name: The pinned release validates this repository
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll --suite pinned-release
+        env:
+          PRAXIS_PINNED_RELEASE: ${{ steps.pinned.outputs.praxis }}
+          PRAXIS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  worker-checklists:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build tests/Praxis.Tests/Praxis.Tests.fsproj --configuration Release
+      - name: Checklist refusal and input invalidation
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: worker checklist
+      - name: Portable handoff contracts and read-only checklist inspection
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local handoff
+      - name: Native Git history merge and interrupted journal recovery
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: work history merge
+      - name: Concrete checklist execution and evidence custody
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: concrete checklist
+      - name: Native completion effect boundary
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local completion commit
+      - name: Concrete validator and Git acceptance flow
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: concrete acceptance flow
+      - name: Git candidate staging and expected-head updates
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local git candidates
+      - name: Execution-envelope lifecycle lease
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: execution lifecycle lease
+      - name: Host configuration and private-key-free operator tooling
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local operator
+      - name: praxis local runtime through the real CLI (fixture agent command)
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local runtime cli
+      - name: Host-controlled Ordo construction through the real CLI
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: construction cli
+      - name: Construction-package scope verification in worker checklists
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: "construction scope:"
+
+  # Functional portability is separate from OS containment qualification;
+  # the containment step qualifies Linux only and asserts refusal elsewhere.
+  local-worker-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build tests/Praxis.Tests/Praxis.Tests.fsproj --configuration Release
+      - name: Portable worker and storage adapters
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: portability
+      - name: Bounded subprocess mechanism
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local worker process
+      - name: Signed worker delegation
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: local delegation
+      - name: Durable output spool
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: worker output spool
+      - name: Concrete local validator runners
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: "local validator:"
+      # Fail-closed gate on GitHub-hosted runners. This is NOT containment
+      # qualification: hosted runners are never reconfigured to permit user
+      # namespaces. Where namespaces are blocked (expected on hosted Ubuntu)
+      # qualification and launch must refuse; macOS/Windows have no mechanism
+      # and must refuse. Real qualification runs only on a provisioned,
+      # disposable self-hosted runner (containment-qualification.yml).
+      - name: Host containment fail-closed gate (hosted; not qualification)
+        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        env:
+          PRAXIS_TEST_FILTER: "local containment:"
+          PRAXIS_TEST_CONTAINMENT: ${{ runner.os == 'Linux' && 'auto' || 'unavailable' }}
+
+  # The lifecycle commands must work on every supported operating system,
+  # straight from the F# CLI with its embedded scaffold payload.
+  lifecycle:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build src/Praxis.Cli/Praxis.Cli.fsproj --configuration Release
+      - name: Initialize, verify and validate a fresh project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli="$GITHUB_WORKSPACE/src/Praxis.Cli/bin/Release/net10.0/praxis.dll"
+          project="$RUNNER_TEMP/lifecycle-project"
+          rm -rf "$project"
+          mkdir -p "$project"
+          git -C "$project" init -q
+          dotnet "$cli" --root "$project" init
+          dotnet "$cli" --root "$project" init --check
+          dotnet "$cli" --root "$project" verify
+          dotnet "$cli" --root "$project" doctor

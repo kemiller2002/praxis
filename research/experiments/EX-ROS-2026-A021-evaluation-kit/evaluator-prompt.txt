@@ -1,0 +1,177 @@
+# EX-ROS-2026-A021 evaluator brief (PRX-GRP-084)
+
+Paste this whole file as the first message of a fresh evaluator session.
+
+You are the independent evaluator for experiment EX-ROS-2026-A021 in
+`kemiller2002/praxis`. Two arms implemented the same five work items
+(`PRAXIS-GROUP-01..05`: `work group create | show | add | remove | checkpoint`)
+from the same start commit. You implemented none of it. Your job is to compare the two
+implementations as evidence, not as a score, and without knowing which arm is which.
+
+## Rules (read before doing anything)
+
+1. **Stay blind.** You see the arms only as `arm-X` and `arm-Y` in the bundle the
+   prep script builds. Do not `git fetch`, `git log`, `git show`, `git checkout` or
+   otherwise read any `experiment/a021-*` branch yourself. Do not read
+   `$EVAL/sealed/`. Do not try to infer which arm is which. If you believe you
+   have learned the mapping anyway, say so and how in the report's "Blinding"
+   section, and keep evaluating.
+2. **Read-only toward the arms.** Never modify, merge, rebase or push either arm's branch.
+   Build and test only inside the bundle's copies.
+3. **Evidence over score.** Every judgement cites a file and line (`arm-X/tree/path:line`)
+   or a patch, or a command you ran with its output. Never state that a test passed
+   unless you ran it. A thing you could not check is recorded as `unknown`, not guessed.
+4. **Symmetry.** Apply every check to both arms the same way. When you look for
+   something in one arm, look for it in the other.
+5. **Work autonomously.** No human will answer questions. Do not open a pull request
+   and do not merge anything.
+
+## Step 1: build the blind bundle
+
+Check out the evaluation kit branch and run its prep script from the repository root:
+
+```
+git fetch origin experiment/a021-evaluation-kit
+git checkout experiment/a021-evaluation-kit
+bash research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh "$HOME/a021-eval"
+export EVAL="$HOME/a021-eval"
+```
+
+You may read `research/evidence/EV-ROS-2026-A065--a021-blind-evaluation-kit.md` (the method)
+and the kit folder. Do **not** read `research/evidence/EV-ROS-2026-A066--*` or any other
+session record of this experiment: they name the arms. Copy the printed **mapping commitment** hash into your report verbatim. After
+this step, use only `$EVAL/bundle/` and `$EVAL/output/`.
+
+The bundle contains:
+
+- `inputs/`: identical for both arms. It holds the requirements (`PLANNING-WORK-GROUPS.md`), the frozen
+  protocol, the five work items with their acceptance criteria
+  (`work-items-PRAXIS-GROUP-01..05.json`, in the `description` field), the frozen
+  planner baseline, and the start commit.
+- `arm-X/`, `arm-Y/`: each has a `tree/` (the arm's final source, buildable), a `patches/`
+  directory (one patch per commit, excluding `.ros/` and arm metrics), `diffstat.txt` and
+  `commit-subjects.txt`. The trees' `.ros/` state has been scrubbed of branch names and
+  is there only so the tests run. Do not assess `.ros/` content.
+
+## Step 2: build and test each arm
+
+If `dotnet` is missing: `apt-get update && apt-get install -y dotnet-sdk-10.0`
+(Microsoft's download host is blocked). That SDK bundles an older FSharp.Core, so in
+each `tree/`:
+
+```
+dotnet build Ros.slnx --configuration Release --disable-build-servers --maxcpucount:1 \
+  -p:UseSharedCompilation=false -p:BuildInParallel=false -p:FSharpCoreImplicitPackageVersion=10.1.400
+dotnet tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+```
+
+Record the build result, warnings, total/passed/failed counts, and every failing test name,
+per arm. Also count the tests each arm added for the group commands (the test names begin
+`work group`, or check the arm's test files touched in `patches/`).
+
+## Step 3: check the acceptance criteria per item, per arm
+
+For each of PRAXIS-GROUP-01..05, take the acceptance criteria from its description in
+`inputs/work-items-PRAXIS-GROUP-01..05.json`. For every criterion, record
+`met | partially met | not met | unknown` with evidence. Prefer running the arm's own
+CLI in a throwaway fixture repository (for example
+`dotnet <tree>/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll --root <fixture> work group ...`,
+with a fixture that has `.ros/work/queue.json` and `.ros/context/current.json` committed
+in a fresh `git init`). Run the same fixture script against both arms. Check in particular:
+
+- refusals (unknown/terminal members, duplicate IDs), `--dry-run`, `--json`, exit codes;
+- "never writes" / "never changes a member's lifecycle state" claims: hash
+  `.ros/work/queue.json` and `.ros/context/current.json` before and after, and run `git status`;
+- partial completion (a member completed after the group was declared);
+- that the planner (`plan groups`, `plan explain-group`) still reads stored groups after
+  add/remove;
+- `validate` behaviour on stored groups.
+
+## Step 4: assess the cross-item architecture (PRX-GRP-084)
+
+For each arm, and then side by side, document with citations:
+
+- **Store model**: one store and format for all five commands, or several? Schema versioning.
+- **Validation**: one member-validation rule (unknown/terminal/duplicate) reused by
+  create/add/remove/checkpoint, or several near-copies?
+- **Output contracts**: one JSON document shape and `kind` convention across commands, or
+  conflicting API patterns? Consistent exit codes and error wording?
+- **Checkpoint shape** (PRAXIS-GROUP-05 versus PRX-GRP-044): group ID, active/completed/
+  remaining members, shared decisions, branch/commit, next action; do members keep their
+  own checkpoint history? Any attribution laundering (PRX-GRP-043)?
+- **Reuse versus duplication**: duplicated abstractions, parallel types that shadow existing
+  planner types, copy-pasted parsing, unnecessary dependencies.
+- **Compatibility**: changes to existing commands, schemas or planner behaviour; migration needs.
+- **Design revisions / churn**: code added by one item and rewritten by a later one (read
+  the patches in order). Count lines added/removed from `diffstat.txt`.
+- **Maintainability and technical debt**: long functions, inconsistent naming, functional
+  versus imperative style relative to the surrounding code, missing docs (`docs/cli.md`,
+  `docs/planning.md`).
+- **Cross-item consequences**: decisions in an early item that helped or constrained later ones.
+- **Defects**: every bug you find, with a reproduction.
+
+Do not score or rank overall. Where one arm is clearly better on a dimension, say so for that
+dimension with the evidence; where they differ without one being better, describe the difference.
+
+## Step 5: write the report
+
+Write the report in `$EVAL/output/EVALUATION.md` with these sections:
+
+1. Summary (at most ten lines; no overall winner)
+2. Method: commands run, fixture used, tools, anything you could not do
+3. Blinding: the mapping commitment hash; the last line of `arm-X/diffstat.txt` and of
+   `arm-Y/diffstat.txt` verbatim (the owner uses them to unblind after the evaluation); and whether
+   and how you think blinding was compromised
+4. Build and tests, per arm (table)
+5. Acceptance criteria: a table per item, with criterion × arm → status and evidence
+6. Cross-item architecture: per Step 4 dimension, arm-X, arm-Y, and the difference
+7. Defects and risks, per arm, with reproductions
+8. Unknowns and limitations
+
+Also write `$EVAL/output/findings.json`: an array of
+`{"arm": "arm-X"|"arm-Y"|"both", "item": "PRAXIS-GROUP-0N"|"cross-item", "dimension": "...",
+"finding": "...", "evidence": "path:line or command", "severity": "defect"|"inconsistency"|"debt"|"observation"}`.
+
+## Step 6: persist the result
+
+Your container is temporary. On the branch `experiment/a021-evaluation-kit`:
+
+1. Copy the report to `research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md`,
+   and put this front matter at its top (the repository validates it):
+
+   ```
+   ---
+   id: EV-ROS-2026-A067
+   title: "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)"
+   status: draft
+   version: 1.0.0
+   owners:
+     - repository-governance
+   created: <today, YYYY-MM-DD>
+   updated: <today, YYYY-MM-DD>
+   research_area: repository-operating-system
+   evidence_type: primary
+   supports: [EX-ROS-2026-A021]
+   related_documents:
+     - EX-ROS-2026-A021
+     - EV-ROS-2026-A065
+   tags: [planning, grouping, experiment, evaluation]
+   confidence: medium
+   ---
+   ```
+2. Copy `findings.json` to `research/experiments/EX-ROS-2026-A021-evaluation-kit/output/findings.json`.
+3. Build the repository's own CLI and refresh the registry:
+
+   ```
+   npm run build:fsharp -- -p:FSharpCoreImplicitPackageVersion=10.1.400
+   ./ros registry build && ./ros validate
+   ```
+
+   Fix only your own two files if validation complains.
+4. Commit only those two files and the updated `registries/evidence.json`, with the message
+   prefix `EX-ROS-2026-A021: blind evaluation`, and run
+   `git push origin experiment/a021-evaluation-kit`.
+
+Do not commit `sealed/`, the bundle, or anything else, and do not push any other branch. Do not
+open a pull request. Finally, reply with the mapping commitment hash, the commit you pushed, and
+the report's summary.

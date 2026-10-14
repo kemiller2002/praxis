@@ -25,16 +25,27 @@ confidence: medium
 derived_from: [RQ-ROS-2026-A023, RQ-ROS-2026-A022]
 provenance:
   contributions:
-    EXE-20260929T130548213Z-63fe94ae:
+    EXE-20260929T162324008Z-39bbe593:
       operations: [created]
-      at: 2026-09-29T13:06:08.640Z
+      at: 2026-09-29T16:23:38.842Z
       actor:
         kind: agent
         id: anthropic/claude-code
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from branch claude/remote-inbox-relay)"
+      reason: "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+    EXE-20261006T204120763Z-b0001e2e:
+      operations: [modified]
+      at: 2026-10-06T20:42:25.165Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
+      evidence: [EV-ROS-2026-A073]
 ---
 
 # Context
@@ -119,6 +130,9 @@ the Actions API.
   another provider. That is `RQ-ROS-2026-A023`'s second acceptance
   criterion, and only an actual OpenAI execution can meet it
   (`PRAXIS-XPROVIDER-PROOF-01`).
+- **Shown later (2026-09-30):** an OpenAI/ChatGPT successor continued and
+  completed `PRAXIS-XPROVIDER-PROOF-01` through the inbox
+  (`EV-ROS-2026-A073`).
 
 # Alternatives considered
 

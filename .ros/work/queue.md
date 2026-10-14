@@ -6,18 +6,33 @@
 | ATTR-COMPLETE-BASE-REF-SWEEP | Stop work complete from sweeping ROS_BASE_REF committed-range paths into its completion event | captured | attribution, reconciliation | medium |
 | ATTR-RECONCILE-SYMLINK-SUBMODULE | Content-match symbolic links and submodules for reconciled attribution | captured | attribution, reconciliation | low |
 | BOOTSTRAP-ADOPTION-FIX | BOOTSTRAP-ADOPTION-FIX | complete |  |  |
+| BUG-WORK-ID-COLLISION | Reject auto-generated backlog IDs already present in work context | captured | bug, work-protocol | medium |
 | CI-BASE-REF-FIX | CI-BASE-REF-FIX | complete |  |  |
 | CI-LATEST-ON-VERSION-BUMP | CI-LATEST-ON-VERSION-BUMP | blocked |  |  |
 | CI-NPM-PUBLISH | CI-NPM-PUBLISH | complete |  |  |
 | DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
+| EX-ROS-2026-A024 | EX-ROS-2026-A024 | complete |  |  |
 | EXEC-INSTALL-109 | Execution envelopes, step ledger, worktrees, legal actions, installation registration client | complete |  | high |
 | EXEC-INSTALL-109-NPM-BIN | Keep npm bin as ros only; praxis stays canonical via native release and ./praxis | complete |  | high |
 | FEAT-AGENT-PROVENANCE | FEAT-AGENT-PROVENANCE | complete |  |  |
+| FSHARP-ONLY-MAIN-MERGE | After merging main (GH-90 remote execution): port its Node tests to F# and renumber the colliding DF/RQ records | complete | fsharp, node-removal, follow-up | high |
+| FSHARP-ONLY-REPOSITORY | Remove repository-owned Node/JavaScript/TypeScript code and tooling; make Praxis F#/.NET only and enforce it | complete | fsharp, architecture, tooling, node-removal | high |
+| GH-113 | GH-113 | complete |  |  |
+| GH-154 | GH-154 | complete |  |  |
+| GH-155 | GH-155 | complete |  |  |
+| GH-167 | GH-167 | complete |  |  |
+| GH-220 | GH-220 | active |  |  |
+| GH-228 | GH-228 | complete |  |  |
+| GH-230 | GH-230 | active |  |  |
+| GH-231 | GH-231 | active |  |  |
+| GH-234 | GH-234 | complete |  |  |
+| GH-235 | GH-235 | active |  |  |
+| GH-242 | GH-242 | complete |  |  |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
-| GH-84 | GH-84 | blocked |  |  |
-| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | blocked | remote-execution, gh-90 | high |
+| GH-84 | GH-84 | abandoned |  |  |
+| GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
 | MIG-05-BACKLOG-PERSISTENCE | Add bounded recovery for backlog queue and Markdown projection | complete | fsharp, migration, persistence | high |
 | MIG-05-PERSISTENCE | MIG-05 characterize and shadow transactional persistence recovery | complete | fsharp, migration, persistence | high |
 | MIG-05-TELEMETRY-RECOVERY | Recover telemetry execution backlinks without duplicating execution evidence | complete | fsharp, migration, telemetry, persistence | high |
@@ -37,8 +52,17 @@
 | OIDC-REPO-IDENTITY | OIDC-REPO-IDENTITY | complete |  |  |
 | PKG-BIN-EXECUTABLE | PKG-BIN-EXECUTABLE | complete |  |  |
 | PKG-ECHELON-FOUNDRY | PKG-ECHELON-FOUNDRY | complete |  |  |
+| PKG-FALLBACK-GOLDEN | Align F# payload differential golden | complete | fsharp, testing | high |
+| PKG-FALLBACK-GUIDE | Ship fallback reconciliation guide in distributed package | complete | packaging, documentation | high |
+| PKG-FALLBACK-PAYLOAD | Embed fallback reconciliation guide in native F# payload | complete | fsharp, packaging | high |
 | PKG-MIT-LICENSE | PKG-MIT-LICENSE | complete |  |  |
 | PKG-PUBLISH-READINESS | PKG-PUBLISH-READINESS | complete |  |  |
+| PR79-FALLBACK-RECONCILIATION | Complete dual-entry reconciliation and merge PR #79 | complete | reconciliation, integration | high |
+| PR79-MAIN-INTEGRATION | Integrate current main into PR 79 | complete | fsharp, integration | high |
+| PR79-MAIN-INTEGRATION-2 | Integrate latest main into PR 79 after CI race | complete |  | medium |
+| PR79-POSTMERGE-PROVENANCE | Fix PR #79 post-merge provenance validation | complete |  | high |
+| PRAXIS-A021-EVAL-KIT | EX-ROS-2026-A021 blind evaluation kit | complete | experiment | medium |
+| PRAXIS-CLI-RENAME | Finish the ROS to Praxis product/CLI rename: praxis canonical, ros only as compatibility alias, persisted state or history | complete | rename, praxis, cli | high |
 | PRAXIS-CONT-00 | Durable work checkpoints and agent continuity (umbrella) | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-01-DOMAIN | Durable checkpoint domain model and invariants | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-02-GIT | Git remote/upstream/durability observations | complete | continuity, durable-checkpoints | high |
@@ -51,8 +75,86 @@
 | PRAXIS-CONT-09-GOVERNANCE | AGENTS/governance/docs/starter propagation | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-10-HARDEN | Compatibility, edge cases, validation, final end-to-end review | complete | continuity, durable-checkpoints | high |
 | PRAXIS-CONT-11-SEGMENTATION | Effective-current telemetry segmentation and continuity proof gaps | complete | continuity, durable-checkpoints | high |
-| PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | captured | continuity, gh-90 | medium |
-| PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | captured | rename, gh-90 | low |
+| PRAXIS-CONT-12 | work checkpoint attributes every meaningful path since the previous checkpoint to the checkpointing item, regardless of which work item produced it | complete | continuity, gh-90 | medium |
+| PRAXIS-DIST-NATIVE-DOTNET-TOOL | Retire npm distribution; ship native bundles and a .NET global tool | complete | distribution | high |
+| PRAXIS-EXEC-01 | Bind an execution envelope to every governed work execution (PRX-EXEC-030, 014, 055, 026, 053, 041) | complete | execution, binding | high |
+| PRAXIS-EXEC-02 | Governed evaluation runner and attributed receipts (PRX-VER-001, 002, PRX-EXEC-024, PRX-REC-007) | complete | execution, evaluation | high |
+| PRAXIS-EXEC-03 | Role-specific launchers and repository execution policy (PRX-EXEC-005, 040, 041, 042, 010) | complete | execution, launchers | medium |
+| PRAXIS-EXEC-04 | Host containment profile and enforcement evidence (PRX-SEC-001, 003, 010, 011, 013, 014) | complete | execution, containment | medium |
+| PRAXIS-EXEC-05 | Local control-plane execution API in web serve (PRX-CTL-001, 003, 005, 006, 011, 012, PRX-UI-008) | complete | execution, control-plane | high |
+| PRAXIS-EXEC-06 | Operator UI execution views with legal actions and human-required boundaries (PRX-UI-001, 004, 007, 020, 021, 026) | complete | execution, operator-ui | high |
+| PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | complete | execution, docs | medium |
+| PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | abandoned | execution, ordo | low |
+| PRAXIS-EXEC-09 | Link execution step ledger to telemetry and analyse cost and reliability by role (PRX-STEP-006, PRX-STEP-008) | captured | execution, telemetry | medium |
+| PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | complete | ordo, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | complete | ordo, execution, group:GROUP-FND-ORDO | high |
+| PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | complete | foundations, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-04 | Classify operational failures with Aegis at Praxis's Git, process, filesystem, network and web boundaries, with redaction and sink tests (SAF-AEGIS-1, SAF-AEGIS-5, SAF-AEGIS-6) | complete | foundations, aegis, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-05 | Present praxis web serve and hub serve with a pinned Forma release instead of local CSS (SAF-FORMA-1, 2, 5, 6; PRX-UI-030, PRX-UI-031) | complete | foundations, forma, web, group:GROUP-FND-FOUNDATIONS | high |
+| PRAXIS-FND-06 | Ingest Tutela security assessments and query security metrics over time with repository, ref and time provenance (TUT-1, TUT-2, TUT-3) | complete | tutela, telemetry | medium |
+| PRAXIS-GROUP-01 | praxis work group create: durable human-declared execution group | complete | work-group, cli | low |
+| PRAXIS-GROUP-02 | praxis work group show: a declared group with member states and progress | complete | work-group, cli | low |
+| PRAXIS-GROUP-03 | praxis work group add: add a member to a declared group | complete | work-group, cli | low |
+| PRAXIS-GROUP-04 | praxis work group remove: remove a member from a declared group | complete | work-group, cli | low |
+| PRAXIS-GROUP-05 | praxis work group checkpoint: a group checkpoint over members' own checkpoints | complete | work-group, cli | low |
+| PRAXIS-GROUP-06 | Phase-two work groups: grouped arm as base with the control arm's strengths ported | complete | work-group, cli | low |
+| PRAXIS-GROUP-07 | First-class cross-repository groups: GROUP-ECHELON IDs, home record, member references, derived status, cross-repo order (PRX-GRP-100..109) | complete | grouping | medium |
+| PRAXIS-GROUP-08 | Group command surface: work group list, idempotent mutations, append-only audit, versioned contracts, derived completion (PRX-GRP-110..116) | complete | grouping | high |
+| PRAXIS-GROUP-09 | plan execute-group and grouped execution by default for qualifying high-affinity groups (PRX-GRP-117, 130..132, 136..137) | complete | grouping | high |
+| PRAXIS-GROUP-10 | Grouped-execution completion gates: machine-checkable reuse inventory and per-criterion verification (PRX-GRP-133..135, 040, 045) | complete | grouping | high |
+| PRAXIS-HYG-01 | Retire the leaked test-fixture work items WI-READY and WI-ACTIVE and keep tests out of canonical state | complete | state-hygiene, work-protocol | high |
+| PRAXIS-HYG-02 | validate fails when a backlog row's terminal status contradicts its live work item; repair WI-0061 with a typed re-identification | complete | state-hygiene, backlog | high |
+| PRAXIS-HYG-03 | Record the missing created provenance of EV-ROS-2026-A063 and EV-ROS-2026-A067 truthfully | complete | provenance | medium |
+| PRAXIS-HYG-04 | Correct docs/planning.md work-group replication status and guard requirement status tables against dangling citations | complete | docs, state-hygiene | medium |
+| PRAXIS-ID-01 | Typed repository identity and canonical work-item identity (PRX-REMOTE-045, 046, 048, 049, 050) | complete | identity | high |
+| PRAXIS-ID-02 | Remote protocol 1.4: structured canonical work-item references with explicit old-peer compatibility (PRX-REMOTE-047, implementation-order amendment) | complete | identity | high |
+| PRAXIS-ID-03 | Telemetry and planner schemas carry canonical work-item identity; correct identity status docs (PRX-REMOTE-047, PRX-PLAN-182) | complete | identity, planning | medium |
+| PRAXIS-ID-04 | Generate and govern the Praxis instance identity (DER-16, 17, 22, 23, 24) | complete | identity | high |
+| PRAXIS-ID-05 | Praxis instance registration projection (DER-19, 20, 25, 26) | complete | identity | medium |
+| PRAXIS-ID-06 | Policy-gated validate rule: meaningful work runs on a branch named for its work item (DER-01) | complete | identity | medium |
+| PRAXIS-INTERNAL-NAMESPACES | Migrate internal Ros.* projects, namespaces, assemblies and Ros.slnx to Praxis.* (deferred from PRAXIS-CLI-RENAME, DF-ROS-2026-A043) | complete | rename, follow-up | low |
+| PRAXIS-MISC-01 | Input-document inbox: crash-safe claim/process lifecycle with provenance-preserving derivation (DER-09, DER-10) | complete | inbox, reconciliation | high |
+| PRAXIS-MISC-02 | Planner: observe CI status for checkpoints that wait on CI (PRX-PLAN-020) | complete | planning, planner-evidence | medium |
+| PRAXIS-MISC-03 | Planner: historical merge-conflict evidence in the collision graph (PRX-PLAN-081) | complete | planning, planner-evidence | low |
+| PRAXIS-MISC-04 | Planner replay: compare predicted and observed cost (PRX-PLAN-152) | complete | planning, planner-evidence | low |
+| PRAXIS-MISC-05 | Planner: compare a saved plan's recommendations with what happened (PRX-PLAN-162) | complete | planning, planner-evidence | low |
+| PRAXIS-MISC-06 | Planner: persist estimate-error history over time (PRX-PLAN-170) | complete | planning, planner-evidence | low |
+| PRAXIS-MISC-07 | Record the cross-provider continuation proof on main (RQ-ROS-2026-A023 acceptance, PRAXIS-XPROVIDER-PROOF-01) | complete | remote, continuity | medium |
+| PRAXIS-MISC-08 | F#/.NET-only automation: port tracked Python and inline python3 (RQ-ROS-2026-A024) | complete | implementation-policy, tooling | medium |
+| PRAXIS-MISC-09 | Fix stale requirement citations: deleted Node tests and test paths in RQ-ROS-2026-A021..A024 | complete | documentation, requirements | medium |
+| PRAXIS-MISC-10 | Remote adapter without Python: F# commands in the pinned release, then switch the scripts (RQ-ROS-2026-A024, DF-ROS-2026-A054) | captured | implementation-policy, remote | medium |
+| PRAXIS-NPM-BIN | Expose a praxis npm bin alongside ros and update the public site's ROS-to-Praxis transition copy | abandoned | rename, gh-90 | low |
+| PRAXIS-PLAN-01 | Deterministic shadow planner: praxis plan analyze/simulate/compare/explain (PRX-PLAN-001..182) | complete | planning, architecture, cli | high |
+| PRAXIS-PLAN-02 | Accept planner decision DF-ROS-2026-A046 on the owner's approval | complete | planning, governance | medium |
+| PRAXIS-PLAN-03 | Accept DF-ROS-2026-A047 and triage the EX-ROS-2026-A021 cohort on the owner's approval | complete | planning, governance | medium |
+| PRAXIS-PLAN-04 | Grouped-execution guidance: reuse inventory and per-criterion verification pass (EV-ROS-2026-A064) | complete | planning, grouping | medium |
+| PRAXIS-PLAN-05 | Make context overhead and cost observable: session-metrics telemetry adapter and cost.execution_total (EV-ROS-2026-A064) | complete | planning, telemetry | medium |
+| PRAXIS-PLAN-06 | Renumber the EX-ROS-2026-A021 results record to avoid an evidence ID collision and relate it to the parallel evaluation kit | complete | planning, governance | high |
+| PRAXIS-PLAN-07 | Reconcile PR #130 (PGEI) with main after the A021 results | complete | planning, grouping | medium |
+| PRAXIS-PLAN-08 | Land the EX-ROS-2026-A021 evaluation kit and second blind evaluation on main | complete | planning, grouping | medium |
+| PRAXIS-PLAN-09 | Grouped-work requirements v2: cross-repository groups, mutation commands, grouped-by-default execution, context and cost measurement (DF-ROS-2026-A053) | complete | planning,grouping,requirements | high |
+| PRAXIS-PLAN-10 | Measure context reuse and cost for grouped work and price it in the planner (PRX-GRP-150..158) | complete | grouping | medium |
+| PRAXIS-PLAN-11 | Review grouped-by-default at its trigger and roll back if a threshold is crossed (PRX-GRP-138) | captured | grouping | low |
+| PRAXIS-PLAN-EXP-01 | Run grouping experiment EX-ROS-2026-A021: control arm, grouped arm, blind evaluation, telemetry comparison | complete | planning, experiment | medium |
+| PRAXIS-PLAN-EXP-02 | Preserve A021 R2 replication and pre-register the affinity falsification experiment | complete | planning,experiment | medium |
+| PRAXIS-PLAN-EXP-03 | Record A022 target-gate result and design affinity follow-on experiment | complete | planning, experiment | medium |
+| PRAXIS-PLAN-EXP-04 | Build and freeze the EX-ROS-2026-A023 affinity/scale instrument, then run its target inventory | captured | planning, experiment | medium |
+| PRAXIS-PR92-ID-RENUMBER | Renumber PR #92's DF/RQ records that collide with main's (A042/A043, RQ A022/A023) | complete | pr92, decision | high |
+| PRAXIS-PR92-POSTMERGE-FENCE | On the reconciled branch, write post-merge tests P1-P7 from EV-ROS-2026-A060 section 6 and re-point PraxisCli to praxis.dll | complete | pr92, testing | high |
+| PRAXIS-PR92-PREMERGE-REGRESSION-FENCE | Regression fence before reconciling PR #92 with main | complete | testing, pr92 | high |
+| PRAXIS-PR92-PREMERGE-RENAME-FENCE | Harden Praxis rename invariants on PR #92 before main is reconciled | complete | testing, pr92 | high |
+| PRAXIS-PR92-RECONCILE | Reconcile PR #92 (F#-only cleanup, Praxis rename) with current main | complete | pr92 | high |
+| PRAXIS-QUAL-01 | Per-window Stale/Unsupported pacing observation states and hard-hold creation evidence (PRX-QUAL-003, PRX-QUAL-004) | complete | quality, pacing | high |
+| PRAXIS-QUAL-02 | Typed provider, model, quota-bucket and scope identities for pacing (PRX-QUAL-005) | complete | quality, pacing | high |
+| PRAXIS-QUAL-03 | Typed pacing telemetry events with stable codes replacing free-text pace.log (PRX-QUAL-008) | complete | quality, pacing | medium |
+| PRAXIS-QUAL-04 | Adversarial pacing adapter tests: Keychain, HTTP errors and redirects, provider process timeout/EOF, live hook fixtures (PRX-QUAL-011) | complete | quality, pacing | high |
+| PRAXIS-QUAL-05 | Provider-neutral capacity port consumed by the planner (PRX-QUAL-009) | complete | quality, planning | medium |
+| PRAXIS-QUAL-06 | Declared protocol and state-schema compatibility instead of the release.json == toolchain pin fence (PRX-QUAL-010) | complete | quality, release | high |
+| PRAXIS-QUAL-07 | Engineering-risk metadata on work items (PRX-QUAL-020) | complete | quality, completion | high |
+| PRAXIS-QUAL-08 | Design-debt declaration as a completion-readiness facet (PRX-QUAL-021) | complete | quality, completion | high |
+| PRAXIS-QUAL-09 | Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022) | complete | quality, completion | high |
+| PRAXIS-QUAL-10 | Evidence-file digests and a release-readiness evidence contract (PRX-QUAL-023 leftovers) | complete | quality, completion | medium |
+| PRAXIS-QUEUE-MD-LIVE-STATE | queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write | captured | work, backlog | low |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
@@ -73,9 +175,12 @@
 | PRAXIS-REMOTE-13 | Adapter recognizes GitHub rate limiting on push and pull-request creation (PRX-REMOTE-038) | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-14 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-15 | Agent contract: a handoff needs a block before the successor resumes | complete | remote-execution, gh-90 | high |
-| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | active | remote-execution, gh-90 | medium |
+| PRAXIS-REMOTE-16 | work complete silently drops the conclusion for non-research work items | complete | remote-execution, gh-90 | medium |
 | PRAXIS-REMOTE-17 | Record the live praxis.remote 1.3 continuation proof as evidence | complete |  | medium |
 | PRAXIS-REMOTE-INBOX-01 | Remote request inbox: a contents-write path to praxis.remote for agents that cannot dispatch Actions | complete | remote-execution, continuity | high |
+| PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | PRAXIS-REMOTE-PROBE-COMPLETE-CROSS | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC | complete |  |  |
+| PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | PRAXIS-REMOTE-PROBE-COMPLETE-WITHEXEC | complete |  |  |
 | PRAXIS-SITE-01 | Establish public-site architecture | complete | gh-84, public-site | high |
 | PRAXIS-SITE-02 | Implement Echelon Foundry design foundation | complete | gh-84, public-site | high |
 | PRAXIS-SITE-03 | Build the hero | complete | gh-84, public-site | high |
@@ -105,11 +210,24 @@
 | PRAXIS-SITE-27 | Align Pages deployment workflow with echelon-foundry deploy-pages.yml | complete | gh-84, public-site | medium |
 | PRAXIS-STATE-MERGE-01 | Parallel work items conflict in single-document Praxis state files | captured | work-protocol | high |
 | PRAXIS-TELEMETRY-CLASSIFY-VOCAB | telemetry classify accepts classifications that validate rejects | captured | telemetry | medium |
+| PRAXIS-TELEMETRY-COST-UNIT | telemetry record accepts a cost metric with a non-'currency' unit (e.g. --unit USD) that validate then rejects | complete | telemetry, bug | medium |
+| PRAXIS-WORK-ABANDON-01 | work abandon: cancel live (ready/active/blocked) work items truthfully | complete | work-protocol, cli | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
+| RELEASE-3-10-0 | Release Praxis 3.10.0 | complete |  | medium |
+| RELEASE-3-11-0 | Release Praxis 3.11.0 | complete |  | medium |
+| RELEASE-3-12-0 | Release Praxis 3.12.0 | complete |  | medium |
+| RELEASE-3-13-0 | Release Praxis 3.13.0 | complete |  | medium |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |
+| RELEASE-3-7-0 | Release Praxis 3.7.0 | complete | release | high |
+| RELEASE-3-7-1 | Release Praxis 3.7.1 | complete |  | medium |
+| RELEASE-3-7-2 | Release Praxis 3.7.2 | complete |  | medium |
+| RELEASE-3-8-0 | Release Praxis 3.8.0 | complete |  | medium |
+| RELEASE-3-9-0 | Release Praxis 3.9.0 | complete |  | medium |
+| RELEASE-3-9-1 | Release Praxis 3.9.1 | complete |  | medium |
 | REMOTE-ENABLE-3-5-0 | Pin Praxis 3.5.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | REMOTE-ENABLE-3-6-0 | Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3) | complete |  | high |
+| REMOTE-ENABLE-3-8-0 | Pin Praxis 3.8.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
@@ -176,12 +294,52 @@
 | WI-0058 | Release 3.0.0: version bump plus refreshed README and instructions | complete |  | high |
 | WI-0059 | Classify registries/theories.json as generated in both starter manifests | complete |  | high |
 | WI-0060 | Bump npm package version to 3.0.3 | complete | release, npm | medium |
-| WI-0061 | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | complete | remote-execution, gh-90 | medium |
+| WI-0061 | WI-0061 | complete |  |  |
+| WI-0061-REUSED | Pull-request persistence: a same-request retry after the state branch was pushed is misreported as concurrency-conflict | abandoned | remote-execution, gh-90 | medium |
 | WI-0062 | Triage SDE 1.3.0 structural review findings | complete | sde, structural-review | high |
 | WI-0063 | Implement ROS next-pass Ordo observation and structured handoff (#63) | complete | ordo,next-pass | high |
+| WI-0064 | Evidence-based work groups for the advisory planner (plan groups/explain-group) and the frozen grouping A/B experiment protocol | complete | planning, architecture, cli | high |
+| WI-0065 | Implement first-class step-level execution telemetry | complete | telemetry, execution | high |
+| WI-0066 | Retire the Python artifact-validator oracle: add the missing F# supersession-reciprocity test, delete tools/ros_cli.py, tools/__init__.py and tests/test_ros_cli.py, and drop the oracle CI step and docs | complete |  | medium |
+| WI-0067 | Remove the uncalled legacy Python layout generator setup_ros_layout.py (superseded by praxis init) and its SDE-MAP row | complete |  | medium |
+| WI-0068 | Recognize Limen 0.7.0 package @echelon-foundry/limen in foundations verify and Echelon doctor fixtures | complete | limen | medium |
+| WI-0069 | Doctor smoke fixtures name the Limen package by its 0.7.0 name @echelon-foundry/limen | complete | limen | medium |
+| WI-0070 | Derive the seeded .echelon/toolchain.json Praxis pin from the running release instead of a hard-coded 3.4.0 | complete | toolchain, lifecycle | high |
+| WI-0071 | Step commands record the caller's discovered identity instead of the owning execution's, so validate rejects the step | captured | telemetry, provenance | medium |
 | WI-0072 | Port provenance follow-ups onto the merged model: collaboration aggregates in provenance audit, producedBy on ordo handoffs, installer event actor | complete | provenance | medium |
-| WI-ACTIVE | Active item | blocked |  | medium |
-| WI-READY | Ready item | active |  | medium |
-| WORK-CAPTURE-ID-COLLISION | ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item | captured | work-protocol, backlog | medium |
+| WI-0073 | Fix 3.7.1 sweep findings: work-item ID reuse, consumer doc links, upgrade hygiene, launcher EOL | complete |  | high |
+| WI-0074 | praxis-remote-enable.sh: land before completing, and retire the previous pin's exceptions | captured |  | medium |
+| WI-0075 | Move the Praxis source repository's Ordo pin and .sde installation to Ordo 1.5.0 (echelon-current 1.2.0) | complete |  | medium |
+| WI-0076 | Reconcile a completed work item's stale backlog row: queue.json status stays 'ready' when the item completed before markComplete existed, and no CLI transition can correct it | captured | work, backlog, queue | medium |
+| WI-0077 | URL-addressable state (deep linking): shared requirement SAF-URL-1..10, static-hosting decision, and a foundations verify routing capability | complete | foundations, deep-linking | high |
+| WI-0078 | Bring praxis web and hub to SAF-URL-2/3/4/9/10: canonical filter URLs, replace on refinement, not-found page for unknown paths, route formatter with round-trip property tests, Copy link | complete | foundations, deep-linking, web | medium |
+| WI-0079 | Replace schemas/echelon-routes-v1.schema.json with a copy of Limen 0.9.0's contract/routes.schema.json once published, and add its inventory vectors to the routing tests | complete | foundations, deep-linking, limen | medium |
+| WI-0080 | Pin Praxis 3.9.0 (URL-addressable state foundations) in the self-hosting toolchain | complete | release | high |
+| WI-0081 | Pin Praxis 3.9.1 (Limen routes schema vendored) in the self-hosting toolchain | complete | release | high |
+| WI-0082 | Approved exception (DF-ROS-2026-A058): one external url-state.js for replace-on-refine and one-action Copy link in praxis web and hub, progressive enhancement under a strict CSP | complete | deep-linking, web, decision | medium |
+| WI-0083 | Pin Praxis 3.10.0 (web and hub URL state through Limen.Routing) in the self-hosting toolchain | complete | release | high |
+| WI-0084 | Pin Praxis 3.11.0 in the self-hosting toolchain and record its release compatibility | complete |  | high |
+| WI-0085 | Build and verify the ros-fs assets on pull requests; gate only attestation and upload to releases | complete |  | high |
+| WI-0086 | Investigate work-protocol lock acquisition stack overflow with stale PID metadata in constrained process namespaces | captured | defect,local-host | high |
+| WI-0087 | Serialize execution-envelope lifecycle writers with local host dispatch; FileExecutionPorts/ExecutionStore currently do not share the work/group lease scope, so fresh assignment observations are not a whole-lifecycle lock | captured |  | medium |
+| WI-0088 | Work completion cannot finalize a predecessor execution left with unresolved steps after work continue; finalize it with its open steps recorded as interrupted (observed by successor) instead of requiring the absent owner | complete |  | medium |
+| WI-0089 | Resuming an exited local dispatch whose submission was never archived fails instead of archiving from the host spool (Windows CI intermittent) | complete |  | medium |
+| WI-0090 | WI-0090 | complete |  |  |
+| WI-0091 | WI-0091 | complete |  |  |
+| WI-0092 | WI-0092 | complete |  |  |
+| WI-0093 | work history merge does not cover .ros/work/queue.json: concurrent branches that each capture a backlog row conflict, and the only rule-compliant resolution drops one branch's row (observed merging main into PR #249: WI-0090's capture row was lost). Extend native history merge to union independent backlog rows. | complete |  | medium |
+| WI-0094 | Windows CI: the worker supervisor allowed only 500 ms for output pumps to drain after root exit, truncating a complete result on a loaded runner (portability host test on PR #250) | complete |  | medium |
+| WI-0095 | WI-0095 | complete |  |  |
+| WI-0096 | WI-0096 | complete |  |  |
+| WI-0097 | WI-0097 | complete |  |  |
+| WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |
+| WI-0099 | Requirement: reclassify a work item's type (auditable event with reason, from active and blocked) and accept non-file evidence references (PR/check-run URLs, validated by form, recorded as external) at work complete | complete |  | medium |
+| WI-0100 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | active |  | medium |
+| WI-0101 | Pin Praxis 3.12.0 and validate with the pinned release binary in CI | complete |  | medium |
+| WI-0102 | Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12) | complete | telemetry | high |
+| WI-ACTIVE | Active item | abandoned |  | medium |
+| WI-READY | Ready item | abandoned |  | medium |
+| WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
+| WORK-CAPTURE-ID-COLLISION | ros add can auto-allocate a WI-NNNN ID that already belongs to a live-context work item | complete | work-protocol, backlog | medium |
 | WORK-ITEM-ATTACHMENTS | WORK-ITEM-ATTACHMENTS | complete |  |  |
 | WORKQUEUE-BACKLOG-LAYER | WORKQUEUE-BACKLOG-LAYER | complete |  |  |

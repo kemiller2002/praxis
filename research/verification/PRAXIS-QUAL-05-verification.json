@@ -1,0 +1,57 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "groupExecutionId": null,
+  "rows": [
+    {
+      "member": "PRAXIS-QUAL-05",
+      "criterion": "A provider-neutral capacity observation (available, constrained until a time, exhausted until a time, unknown with reason) is read by the planner through a port; the planner never calls pacing providers directly.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "planning capacity: an exhausted provider orders provider-free work first and explains why; pacing state maps onto capacity",
+        "result": "passed (PlanningReadPort.Capacity; FilePacingCapacity)"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-05",
+      "criterion": "Capacity uncertainty (unknown) is distinct from zero capacity in the plan output.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "planning capacity: no observed capacity is unknown, not zero, and changes nothing; unknown capacity is reported separately and never treated as exhausted",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-05",
+      "criterion": "Plan output explains whether capacity affected ordering (a per-item capacity note and a plan-level summary).",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "planning capacity: the analysis document reports capacity and that provider switching is never chosen; a constrained provider affects every strategy's order",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-05",
+      "criterion": "The planner never proposes switching provider or model; it reports only whether the current provider's capacity constrains the item, and compatibility is out of its authority.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "planning capacity: an exhausted provider ... reasons say the planner does not choose providers",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-05",
+      "criterion": "Capacity input is optional and read-only: absent capacity leaves plans unchanged. Tests cover all states.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "planning capacity: no observed capacity is unknown, not zero, and changes nothing; capacity is part of the snapshot evidence only when observed",
+        "result": "passed"
+      }
+    }
+  ]
+}

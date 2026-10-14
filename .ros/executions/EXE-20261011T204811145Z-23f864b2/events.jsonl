@@ -1,0 +1,4 @@
+{"entry":"transition","transition":"execution.start","state":"active","origin":"work-transition","originReference":"work.begin","actor":"openai/codex","actorKind":"agent","at":"2026-10-11T20:48:11.615Z"}
+{"entry":"transition","transition":"work.block","state":"blocked","reason":"Checklist gate implementation and validation complete locally; branch publication awaits explicit GitHub destination authorization after automatic approval review rejected push","actor":"openai/codex","actorKind":"agent","at":"2026-10-11T21:14:04.566Z"}
+{"entry":"transition","transition":"work.resume","state":"active","reason":null,"actor":"openai/codex","actorKind":"agent","at":"2026-10-11T21:15:24.878Z"}
+{"entry":"transition","transition":"work.continue","state":"interrupted","reason":"taken over by a successor execution","actor":"anthropic/claude-code","actorKind":"agent","at":"2026-10-12T11:53:18.908Z"}

@@ -76,3 +76,13 @@ Neither can be evidenced from this branch.
 **Not deployed.** `site-pages.yml` has never run: it runs only on `main`.
 Whether Pages is enabled is unknown; the build environment could not reach the
 Pages API or `github.io`. See `site-deployment.md`.
+
+## Later change (2026-09-28)
+
+This record describes the Node-based tooling of 2026-09-27. The site tooling
+and tests have since been ported to F# (`site-tools/SiteTools.fsproj`,
+`tests/Site.Tests/Site.Tests.fsproj`), and the page's only script (`claim.js`)
+was removed. The equivalent checks are now
+`dotnet run --project site-tools/SiteTools.fsproj -c Release -- verify` and
+`-- assemble _site`. The results above were not re-run with the new tooling
+except where another document says so.

@@ -1,0 +1,156 @@
+{
+  "test1Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "New title",
+        "description": "new desc",
+        "tags": [
+          "code"
+        ],
+        "priority": "low",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1"
+          }
+        ],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test1Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | New title | ready | code | low |\n",
+  "test2Description": null,
+  "test2Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1"
+          }
+        ],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test3Tags": [
+    "code"
+  ],
+  "test3Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "Only title changes",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1"
+          }
+        ],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test4Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 1,
+    "items": [
+      {
+        "id": "{install}",
+        "title": "{install}",
+        "description": null,
+        "tags": [
+          "upserted"
+        ],
+        "priority": "medium",
+        "status": "captured",
+        "attachments": [],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test4Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete | upserted | medium |\n",
+  "test5Message": "work item 'WI-9999' was not found",
+  "test5Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1"
+          }
+        ],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  },
+  "test6Message": "title cannot be empty",
+  "test6Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1"
+          }
+        ],
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      }
+    ]
+  }
+}

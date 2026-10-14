@@ -1,0 +1,112 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "member": "PRAXIS-GROUP-08",
+  "rows": [
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "work group list is read-only and reports each group's ID, kind, origin, home, crossRepository, member count, derived status, progress, execution mode and latest checkpoint time, sorted by ID and filterable by --status, --member and --repository (PRX-GRP-110)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli list is read-only, sorted by ID, reports derived status and progress, and filters by status, member and repository",
+        "result": "passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "every group command prints exactly one {command, schemaVersion, status, ...} JSON document with --json, list uses the same envelope, and each document kind round-trips through its parser (PRX-GRP-112)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: a version-1 store reads unchanged and is written as version 2 only by a mutation, history intact; list rows round-trip",
+        "result": "passed (plus 'the store round-trips through JSON byte for byte'; every mutation, show and list prints one envelope, asserted by the cli tests)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "the store is written as schemaVersion 2 with additive fields and a version-1 store is read without rewriting its history (PRX-GRP-112)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: a version-1 store reads unchanged and is written as version 2 only by a mutation, history intact; list rows round-trip",
+        "result": "passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "a repeated request whose end state already holds succeeds with changed:false, exits 0 and appends no history; a conflicting request is refused with exit 1 (PRX-GRP-114)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli repeats are idempotent (changed:false, exit 0, no history) and record the caller's execution; conflicts exit 1",
+        "result": "passed (and the domain test 'repeated identical create, add and remove are unchanged and append nothing; conflicting requests are refused')"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "every mutation appends one history entry recording operation, member, time, actor, reason, explicit-empty and the caller's active execution ID when it has one (PRX-GRP-113)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli repeats are idempotent (changed:false, exit 0, no history) and record the caller's execution; conflicts exit 1",
+        "result": "passed: history[0].executionId is the caller's EXE; 'add joins by the creation rule...' asserts executionId and memberState"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "validate refuses a group history that was rewritten, reordered or truncated relative to the committed store (PRX-GRP-113)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli validate refuses a group history rewritten or truncated relative to the committed store",
+        "result": "passed (and the domain test 'history is append-only: a truncated, reordered or rewritten history or a vanished group is reported')"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "group commands write only the group store and the lifecycle-hash no-mutation test covers every group command (PRX-GRP-115)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: cli no group command alters a member's lifecycle; there is no group completion transition",
+        "result": "passed: create, add (twice), remove (dry-run and real), show, list and checkpoint leave queue, context and events byte-identical"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "there is no group completion transition; group status is derived (complete, unknown, partially-complete, blocked, active, not-started), removed-open members are reported with their removal reason and abandoned members are reported abandoned (PRX-GRP-116)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: derived status follows the PRX-GRP-103 precedence and no stored field sets it",
+        "result": "passed (and 'removed-open members are reported...' and 'cli no group command alters...': work group complete/done/finish exit non-zero and write nothing)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-08",
+      "criterion": "the existing validation rules are kept: ID grammar, recorded non-terminal members named once, the executionLocation join rule, unknown groups refused, --allow-empty for the last member, all problems reported together and nothing written (PRX-GRP-111)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "work group: create refuses unknown, terminal and repeated members, invalid IDs, duplicates and foreign-repository items together",
+        "result": "passed, with the unchanged 'cli create --dry-run and refusals write nothing' and 'remove refuses non-members and the last member unless explicit' tests"
+      },
+      "deferredTo": null
+    }
+  ],
+  "suite": {
+    "command": "dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll (ROS_BASE_REF=origin/main)",
+    "result": "1463 test(s); 1463 passed; 0 failed",
+    "commit": "c8477d6b05fa63cd5f235296e5f8c974d400edce"
+  }
+}

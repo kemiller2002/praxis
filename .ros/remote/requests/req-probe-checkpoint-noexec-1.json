@@ -1,0 +1,84 @@
+{
+  "schema": "praxis.remote-journal",
+  "schemaVersion": 1,
+  "requestId": "req-probe-checkpoint-noexec-1",
+  "fingerprint": "sha256:ae2a38638d9aea233c9fb0b01a7771986d66d39401f92d6baaafc4259d436533",
+  "protocolVersion": "1.3",
+  "operation": "work.checkpoint",
+  "recordedAt": "2026-09-29T13:39:43.474Z",
+  "requestedAt": null,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "5c71762e02c77866a0106de4cdb659eb76d34053"
+  },
+  "requester": {
+    "assurance": "asserted-by-request",
+    "actor": {"kind":"agent","id":"anthropic/claude-code","provider":"anthropic","model":"unknown","runtime":"claude-code"},
+    "sessionId": "session_01SPhuLnHrRLQBMtv2Gd1UbU",
+    "execution": "EXE-20260929T133747603Z-1a0e3a22"
+  },
+  "principal": "github:kemiller2002",
+  "response": {
+  "protocol": "praxis.remote",
+  "protocolVersion": "1.3",
+  "requestId": "req-probe-checkpoint-noexec-1",
+  "operation": "work.checkpoint",
+  "outcome": "succeeded",
+  "replayed": false,
+  "repository": {
+    "ref": "refs/heads/main",
+    "expectedSha": "5c71762e02c77866a0106de4cdb659eb76d34053",
+    "observedSha": "5c71762e02c77866a0106de4cdb659eb76d34053"
+  },
+  "praxisVersion": "3.6.0",
+  "executor": {
+    "kind": "github-actions",
+    "runId": "36576672810",
+    "runAttempt": "1",
+    "workflowRef": "kemiller2002/praxis/.github/workflows/praxis-remote.yml@refs/heads/main",
+    "repository": "kemiller2002/praxis",
+    "host": "github-hosted",
+    "principal": "github:kemiller2002",
+    "praxisVersion": "3.6.0",
+    "assurance": "observed-by-executor"
+  },
+  "persistence": {
+    "paths": [
+      ".ros/context/current.json",
+      ".ros/events/events.jsonl",
+      ".ros/remote/requests/req-probe-checkpoint-noexec-1.json"
+    ]
+  },
+  "failure": null,
+  "result": {
+    "command": "work checkpoint",
+    "schemaVersion": 1,
+    "workItemId": "PRAXIS-REMOTE-PROBE-COMPLETE-NOEXEC",
+    "status": "recorded",
+    "checkpoint": {
+      "id": "998cc970af87a66fafebcb4e",
+      "recordedAt": "2026-09-29T13:39:38.776Z",
+      "executionId": "EXE-20260929T133747603Z-1a0e3a22",
+      "repository": "repository-operating-system",
+      "branch": "main",
+      "commit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+      "remote": {
+        "name": "origin",
+        "url": "https://github.com/kemiller2002/praxis"
+      },
+      "remoteBranch": "main",
+      "remoteCommit": "5c71762e02c77866a0106de4cdb659eb76d34053",
+      "summary": "Probe item started remotely; no repository code was changed",
+      "nextAction": "Complete the item without an execution block",
+      "verification": {
+        "status": "verified",
+        "mechanism": "git-remote-observation"
+      },
+      "status": "verified"
+    },
+    "paths": [],
+    "excludedBaselinePaths": []
+  }
+}
+
+}

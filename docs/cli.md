@@ -1,15 +1,19 @@
 # CLI reference
 
-The canonical public interface is the `ros` executable shipped by
-`@echelon-foundry/repository-operating-system`.
+The canonical public interface is the `praxis` command (compatibility alias
+`ros`, also kept as a scaffolded project's `./ros`), a self-contained F#
+binary. Install it from the native bundle (see
+[`native-installation.md`](native-installation.md)) or as the .NET global tool
+`EchelonFoundry.Praxis`; see [`installation.md`](installation.md).
 
 ```bash
-npx --package=@echelon-foundry/repository-operating-system ros <command>
+praxis <command>
 ```
 
 All five lifecycle commands, and the repository commands below them, are the
-same F# CLI. The npm package contains a small Node launcher whose only job is
-to start that CLI; no lifecycle decision is made in JavaScript.
+same F# CLI. No lifecycle decision is made in a launcher: launchers
+(`praxis`, a project's `./praxis`, and the `ros`/`./ros` compatibility aliases)
+only start it, and no Node.js or npm is involved (`DF-ROS-2026-A049`).
 
 ## Lifecycle commands
 
@@ -25,8 +29,8 @@ to start that CLI; no lifecycle decision is made in JavaScript.
 
 | Option | Meaning |
 |---|---|
-| `-h`, `--help` | Show help. `ros <command> --help` shows that command's help. |
-| `-V`, `--version` | Print `ros-fs <version>`, where the version is the npm package version. |
+| `-h`, `--help` | Show help. `praxis <command> --help` shows that command's help. |
+| `-V`, `--version` | Print `praxis <version>`, where the version is the release version (`release.json`). |
 | `--root PATH` | Repository to act on. Defaults to the current directory. |
 | `--package-root PATH` | Install from this scaffold directory instead of the one compiled into the binary. Rarely needed — see [Where the scaffold comes from](installation.md#where-the-scaffold-comes-from). |
 | `--json` | Emit machine-readable JSON on stdout. |
@@ -35,7 +39,7 @@ to start that CLI; no lifecycle decision is made in JavaScript.
 ## `init`
 
 ```
-ros init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
+praxis init [--profile NAME] [--project NAME] [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Inspects the repository, determines the installed state, calculates the
@@ -53,11 +57,11 @@ will not overwrite, and how ownership works.
 ## `status`
 
 ```
-ros status [--json] [--verbose]
+praxis status [--json] [--verbose]
 ```
 
 Read-only. Prints a JSON document covering work items, validation findings,
-telemetry counts and the installation.
+telemetry counts, upstream synchronization freshness, and the installation.
 
 The output is JSON with or without `--json`. This command emitted JSON before
 the lifecycle interface existed and consumers depend on that, so the default
@@ -67,7 +71,7 @@ adds the full `installation.managedArtifacts` list.
 ## `verify`
 
 ```
-ros verify [--strict] [--json] [--verbose]
+praxis verify [--strict] [--json] [--verbose]
 ```
 
 Read-only. Checks that every tool-owned artifact the installation manifest
@@ -85,7 +89,7 @@ strict pass always implies a non-strict pass.
 ## `upgrade`
 
 ```
-ros upgrade [--dry-run] [--check] [--json] [--verbose]
+praxis upgrade [--dry-run] [--check] [--json] [--verbose]
 ```
 
 Resolves the ordered chain of migrations from the installed configuration
@@ -95,7 +99,7 @@ reconciles tool-owned files. See [`upgrading.md`](upgrading.md).
 ## `doctor`
 
 ```
-ros doctor [--strict] [--json] [--verbose]
+praxis doctor [--strict] [--json] [--verbose]
 ```
 
 Read-only. Reports every problem it can detect, each with the reason and,
@@ -175,7 +179,7 @@ was added:
     { "severity": "error", "code": "managed-artifact-missing",
       "message": "managed artifact is missing",
       "path": "framework/REP-SPECIFICATION.md",
-      "remedy": "Run 'ros init' to restore the missing tool-owned artifact." }
+      "remedy": "Run 'praxis init' to restore the missing tool-owned artifact." }
   ]
 }
 ```
@@ -220,13 +224,13 @@ document either way:
 
 ```bash
 # Fail the build if the repository is not installed and current.
-npx --package=@echelon-foundry/repository-operating-system ros verify --strict
+praxis verify --strict
 
 # Fail the build if init would change anything.
-npx --package=@echelon-foundry/repository-operating-system ros init --check
+praxis init --check
 
 # Machine-readable, for a step that parses the result.
-npx --package=@echelon-foundry/repository-operating-system ros verify --json
+praxis verify --json
 ```
 
 Exit code `0` means the assertion held; `3` means it did not. Any other
@@ -258,26 +262,122 @@ The same executable carries the repository's artifact, work and telemetry
 commands. These predate the lifecycle interface and are unchanged:
 
 ```
-ros validate [--json]
-ros registry build [--dry-run] | registry check
-ros git status [--json]
-ros work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
-ros add "..."
-ros telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
-ros adapter <call|publish>
-ros provenance <identity|record|show|audit>
+praxis validate [--json]
+praxis registry build [--dry-run] | registry check
+praxis git status [--json]
+praxis sync status [--json] | sync check [--start] [--json]
+praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+praxis add "..."
+praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
+praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
+praxis reconcile --envelope FILE
+praxis inbox <list|show|claim|derive|complete|release|reject|recover>
+praxis adapter <call|publish>
+praxis provenance <identity|record|show|audit>
+praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
 ```
 
-Run `ros --help` for the full argument list, and see
+Run `praxis --help` for the full argument list, and see
 [`work-protocol.md`](work-protocol.md),
 [`development-telemetry.md`](development-telemetry.md),
 [`work-adapter-contract.md`](work-adapter-contract.md) and
 [`agent-provenance.md`](agent-provenance.md) for what they mean.
 
+### `sync status`, `sync check`
+
+```
+praxis sync status [--json]
+praxis sync check [--start] [--json]
+```
+
+`sync check` performs the configured fetch-only upstream check and records its
+state in per-worktree Git metadata. `--start` resets the session's starting
+upstream commit and is used once at agent startup. A routine check retains that
+baseline. The default policy is `origin/main` with a 30-minute maximum age,
+configured at `workProtocol.upstreamSync` in `ros.json`.
+
+`sync status` is local and read-only: it never fetches. Both commands report
+freshness, HEAD and start/current upstream commits, ahead/behind counts,
+incoming/local/overlap paths, whether integration is required, and whether
+final validation is safe against the fetched snapshot. A failed fetch exits
+`1` and does not reset the last-success clock; invalid arguments exit `2`.
+Disabled policy exits `0` and reports `outcome: "disabled"`.
+
+The check never pulls, merges, rebases, switches, stashes, resets, discards,
+commits, pushes, or edits working files. Agents integrate an advanced upstream
+deliberately at a safe boundary and rerun affected validation. “Current” means
+the latest successfully fetched snapshot within the configured window, not a
+guarantee that the remote cannot move after the check. See [Upstream
+synchronization and bounded drift](work-protocol.md#upstream-synchronization-and-bounded-drift).
+
+### `repository identity`, `instance`
+
+`praxis repository identity [set ...]` shows or records the repository's
+stable identity (`ros.json` `repository.identity`: provider, provider
+repository ID, `owner/repo` locator), from which canonical work-item
+identities (`owner/repo:ID`, structurally `{repositoryId, repository,
+localId}`) are derived. `praxis instance [show|init|projection|register]`
+shows, creates, projects and optionally registers the Praxis instance
+identity (`.praxis/instance.json`); `init` and `upgrade` create it when it is
+missing. See [`identity.md`](identity.md) for the verification states, the
+clone/template rules, the legacy migration rule and the `workProtocol.branchPolicy`
+setting.
+
+### `reconcile --envelope`
+
+Validates one runtime-free envelope, dispatches its ordered work requests through the native work/evidence rules, imports optional execution steps into canonical telemetry, commits only the resulting canonical paths, and creates `praxis-reconcile/<transaction-id>`. Exit `0` means applied or an already-checkpointed replay, `1` means an interrupted transaction remains pending and is safe to retry, and `2` means the envelope was rejected without canonical mutation. `inbox list` inventories pending envelope/document inputs. See [`fallback-reconciliation.md`](fallback-reconciliation.md).
+
+`praxis inbox` runs the input-document lifecycle (DER-08..10): `list [--json]` reports pending inputs and every claim; `claim PATH` moves a pending input into `.praxis/processing/<claim-id>/`; `derive CLAIM-ID --kind {requirement|decision|constraint|evidence|risk|question|reference} (--id ARTIFACT-ID|--path PATH) --summary TEXT [--locator TEXT]` records what the input yielded; `complete CLAIM-ID [--no-derivations REASON]` archives it to `.praxis/processed/` only once every derived change is committed in HEAD (and every derived artifact names the claim in `derived_from`); `release CLAIM-ID --reason TEXT` returns it to the inbox; `reject PATH|CLAIM-ID --reason TEXT` moves it to `.praxis/rejected/documents/`; `recover` finishes any interrupted operation (every mutating command runs it first). Exit `0` success, `2` refused, `1` storage failure that is safe to retry. See [`fallback-reconciliation.md`](fallback-reconciliation.md) ("Input documents").
+
+`praxis telemetry adapters` lists the ingest adapters. Besides production's
+catalog it includes the F#-only `anthropic-claude-session`, which derives
+session metrics (repeated and governance reads, time to first code change,
+active time, requests, tool calls, compactions, tokens) from a Claude Code
+transcript: `praxis telemetry ingest ID --adapter anthropic-claude-session
+--input SESSION.jsonl`. Platform-reported cost is recorded with `praxis telemetry
+record ID --metric cost.execution_total --value N --currency USD --quality
+observed`; `praxis plan` reads both (see
+[`development-telemetry.md`](development-telemetry.md) and
+[`planning.md`](planning.md)).
+
+### `plan`
+
+```
+praxis plan analyze   [--json]
+praxis plan simulate  [--for baseline|speed|balanced|cost|max-parallel] [--max-concurrency N]
+                      [--budget AMOUNT [--currency CODE]] [--deadline 4h|90m] [--details] [--json]
+praxis plan compare   [--max-concurrency N] [--json]
+praxis plan explain   ID [--json]
+praxis plan replay    [--record] [--details] [--json]
+praxis plan freshness --plan FILE [--json]
+praxis plan groups    [--json]
+praxis plan explain-group GROUP-ID [--json]
+praxis plan simulate --groups [--max-concurrency N] [--json]
+praxis plan compare  --groups [--max-concurrency N] [--json]
+     common: [--observations FILE] [--observe-ci] [--config FILE] [--as-of TIMESTAMP]
+```
+
+The advisory planner: read-only, deterministic, and never changes work state
+(`DF-ROS-2026-A046`). It classifies every queue and live-context item, finds
+stale state from Git and supplied evidence, and recommends execution waves
+under an explicit strategy and risk policy, with a reason for every entry.
+Unknown durations and costs stay unknown; without cost telemetry the `cost`
+strategy is unavailable and `--budget` cannot be evaluated. `--json` documents
+use the versioned `praxis.plan/1.0.0` schema. `freshness` exits `3` when the
+saved plan is stale. `groups` recommends evidence-based work groups (items to
+reason about together, with the evidence, collision risk and recommended
+execution for each) without changing any item; `explain-group` answers why a
+group exists and what would change it (`DF-ROS-2026-A047`). `--observe-ci`
+reads GitHub check runs (through `gh`) for checkpoints that wait on CI; it is
+the only network read and is off by default, and a source it cannot read is
+reported unavailable. `replay --record` appends the replay result to
+`.ros/planning/calibration.jsonl` (once per work state and planner version);
+it is the only planning write. See [`planning.md`](planning.md).
+
 ### `work reconcile`
 
 ```
-ros work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
+praxis work reconcile --id ID --occurred-at TIMESTAMP --reason TEXT
                    (--commit REV | --range BASE..HEAD) [--commit REV]* [--range BASE..HEAD]*
                    [--path PATH]* [--dry-run] [--json] [IDENTITY]
 ```
@@ -299,14 +399,22 @@ recording. See "Post-hoc attribution reconciliation" in
 ### `work checkpoint`, `work checkpoint show`, `work continue`
 
 ```
-ros work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
-                    [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
-ros work checkpoint show ID [--json] [--offline]
-ros work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
-ros work context [ID] [--text] [--offline]
-ros work block ... [--unrecoverable-reason TEXT]
-ros status [--json] [--verbose] [--offline]
+praxis work history merge [--apply]
+praxis work checkpoint --id ID --occurred-at TIMESTAMP --summary TEXT --next-action TEXT
+                       [--step STEP-ID] [--execution EXE-ID] [--json] [IDENTITY]
+praxis work checkpoint show ID [--json] [--offline]
+praxis work continue --id ID --occurred-at TIMESTAMP [--json] [IDENTITY]
+praxis work context [ID] [--text] [--offline]
+praxis work block ... [--unrecoverable-reason TEXT]
+praxis work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [IDENTITY]
+praxis status [--json] [--verbose] [--offline]
 ```
+
+**`work history merge`** previews reconciliation of independent Git-conflicted
+native contexts and event logs, and of the backlog queue (`queue.json` merged
+by row ID, `queue.md` regenerated) when it is conflicted too; `--apply` writes
+through the native recovery journals. Divergent changes to the same identity refuse. Use an exclusive idle
+checkout, then review and stage the result. See [native history reconciliation](work-history-merge.md).
 
 **`work checkpoint`** records a verified durable checkpoint. The remote itself
 must show that local HEAD, the checkpoint commit, and the upstream branch head
@@ -346,6 +454,264 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work group`
+
+```
+ros work group cost GROUP-ID [--json]
+ros telemetry ingest GEX-ID --input FILE [--adapter NAME] [--json]
+ros work group list [--status STATUS] [--member ID] [--repository NAME] [--config FILE] [--json]
+ros work group show GROUP-ID [--config FILE] [--json]
+ros work group add    --group GROUP-ID --member ID --occurred-at TIMESTAMP [--config FILE]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group remove --group GROUP-ID --member ID --occurred-at TIMESTAMP [--allow-empty]
+                      [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group checkpoint --group GROUP-ID --occurred-at TIMESTAMP --summary TEXT
+                      --next-action TEXT [--decision TEXT]* [--dry-run] [--json] [IDENTITY]
+ros work group create --group GROUP-ID --member ID|OWNER/REPO:ID [--member ...]* --occurred-at TIMESTAMP
+                      [--kind KIND] [--origin ORIGIN] [--shared-context TEXT]*
+                      [--architecture-note TEXT]* [--execution-repository NAME]
+                      [--cross-repository] [--home-repository OWNER/REPO]
+                      [--dependency CONSUMER=PRODUCER[@complete|merged|released:TAG]]*
+                      [--config FILE] [--reason TEXT] [--dry-run] [--json] [IDENTITY]
+ros work group link   --group GROUP-ECHELON-AREA-SEQ --home OWNER/REPO --member ID
+                      --occurred-at TIMESTAMP [--dry-run] [--json] [IDENTITY]
+```
+
+Durable execution groups (PRX-GRP-073, phase two; `PRAXIS-GROUP-01..05`),
+recorded in `.ros/work/groups.json`. Group commands write that file and
+nothing else: membership never changes a member's lifecycle state, evidence,
+attribution, telemetry or checkpoints. `plan` merges stored groups into
+`grouping.groups`, so a stored group is read exactly as the same declaration
+in planner configuration; a group that `--config` also declares keeps its
+configured form. `validate` checks stored groups (readable records, unique
+IDs, recorded members, no repeated member, a history that begins with the
+creation, and no empty group without an explicit empty removal) and
+re-validates every stored group checkpoint (local commit equals the recorded
+remote commit, summary and next action present, each member under one
+standing, and every referenced member checkpoint is one that member itself
+recorded).
+
+**`work group create`** declares a group. Group IDs are
+`GROUP-<AREA>-<SEQUENCE>` in upper case. Every member must be a recorded work
+item (queue or live context) that is not `complete` or `abandoned`, named
+once, and must execute in the group's repository (`--execution-repository`,
+default this repository) unless `--cross-repository` is given; an item's
+repository comes from the planner's own rule (`Grouping.executionLocation`):
+its `grouping.executionRepositories` entry in `--config`, else an unknown
+external repository when its description names one, else this repository. `--kind` and `--origin` take the planner's codes (default
+origin `human-declared`). The creation is recorded with the resolved actor,
+`--occurred-at` and `--reason`. Every problem is reported together and nothing
+is written: invalid arguments exit `2`, refusals (unknown, terminal or
+foreign-repository member, an existing group with a different declaration)
+exit `1`. Repeating a `create` whose declaration is identical to the recorded
+one succeeds unchanged (below). `--dry-run` shows the group without writing it.
+
+**`work group add`** adds one member by the same join rule as `create`
+(recorded, non-terminal, same execution repository unless the group is
+cross-repository) and refuses a group that is not recorded. Adding a current
+member succeeds unchanged. The history entry records who added it (resolved
+actor), when and why. The member's own record is untouched.
+
+**`work group remove`** removes one member, whatever its state, and refuses
+an item that was never a member; removing a member whose removal is already
+recorded succeeds unchanged. Removing the last member is refused unless
+`--allow-empty` is given; the removal is then recorded as `explicitEmpty` and
+`validate` accepts the empty group. The history entry records who removed it.
+The item's lifecycle state, evidence and attribution are untouched.
+
+**`work group checkpoint`** records a group checkpoint (PRX-GRP-044) after an
+architectural or implementation milestone: the completed, active, blocked,
+remaining and abandoned members, shared decisions (`--decision`, repeatable),
+summary and next action, and the branch and commit. It requires the same
+durable-checkpoint verification as `work checkpoint` (local HEAD equals its
+upstream remote head, read from the remote itself, and no meaningful
+uncommitted change; the same rejection codes) and the same ownership rule: at
+least one member must be active (`no-active-member`) and at least one active
+member's execution must resolve to the caller, as `work checkpoint` resolves
+it (`no-own-execution`). It is refused otherwise, with exit `1`. It
+references each member's own latest durable checkpoint by ID and commit and
+never writes, replaces or supersedes one; it records no paths and no
+execution, so no member claims another's changes (PRX-GRP-043). `work group
+show` prints the latest group checkpoint for later member executions.
+
+**`work group show`** is read-only (no lock, no write): the group's
+declaration, each member's own recorded state and planning state (from the
+planner's analysis; `--config` is passed through), partial-completion
+progress (`k of n complete`; `progress.complete` is true only when every
+member completed on its own evidence), the work items each member still waits
+on, blocked members and the open members they gate, shared context,
+architecture notes and history, the derived group status (`groupStatus`), and
+every member that was removed while open (`removedOpen`, with its removal
+reason). An unknown group exits `1`.
+
+**`work group list`** is read-only (PRX-GRP-110): one row per group, sorted by
+ID, with its kind, origin, home and execution repository, `crossRepository`,
+member count, derived `groupStatus`, progress, removed-open members, execution
+mode and latest group checkpoint time. `--status`, `--member` and
+`--repository` filter the rows (all given filters must hold); `--config` is
+passed to the planner.
+
+**Group status is derived, never stored** (PRX-GRP-103, PRX-GRP-116). In
+order of precedence: `complete` (every current member completed on its own
+evidence), `unknown` (some member's state is not known), `partially-complete`
+(some member completed), `blocked` (every open member is blocked or waits on a
+blocked prerequisite), `active` (some member is active), `not-started`. There
+is no `work group complete`: no command or flag can mark a group done. A
+member removed while open never counts toward `k of n` and is reported
+`removed-open`; an abandoned member is reported `abandoned`, never complete.
+
+**Idempotency** (PRX-GRP-114). A repeated request whose end state already
+holds (`create` of an identical declaration, `add` of a current member,
+`remove` of an already-removed member) exits `0` with `"status": "unchanged"`
+and `"changed": false`, and appends no history. Every mutation document
+carries `changed`. A request that conflicts with recorded state is refused
+with exit `1`. Concurrent mutations are serialized by the store lock.
+
+**Audit** (PRX-GRP-113). Every change appends one history entry with the
+operation, member, time, resolved actor, reason, explicit-empty flag, the
+caller's active execution (`executionId`, when it has exactly one) and the
+member's state when it joined or left (`memberState`). History is
+append-only: `validate` refuses a store whose history for a group recorded at
+`HEAD` (or at `$ROS_BASE_REF`, when set) was rewritten, reordered or truncated,
+or whose group vanished. Group commands write only the group store, so no
+`work.group.*` event is appended to `.ros/events` (PRX-GRP-115 outranks that
+PRX-GRP-113 SHOULD; the group history is the audit trail).
+
+**Cross-repository groups** (PRX-GRP-100..109). A group whose members live in
+several repositories (a portfolio sweep: one brief, one pull request per
+repository, one consolidated status table) is created with
+`--cross-repository` and an ID in the reserved area `GROUP-ECHELON-<AREA>-<SEQ>`;
+a repository-local group may not use that area. Its **home** is the repository
+where `create` ran (`homeRepository`, from `--home-repository` or the
+checkout's `origin` remote, `owner/repo`); only the home holds the group record,
+and the home never changes. Members of other repositories are named
+`owner/repo:WORK-ID` (a bare ID is a home item; a qualified name of the home is
+stored bare). Each member is governed only in its own repository: its own
+queue entry, executions, evidence, checkpoints, pull request and completion.
+
+- **Observation, never copying.** The home reads a member repository's Praxis
+  state read-only from a local clone at a fetched ref (`git show REF:.ros/...`),
+  configured in planner configuration under
+  `grouping.crossRepository.repositories` (`{"owner/repo": {"path": "../repo",
+  "ref": "origin/main"}}`; `ref` defaults to `origin/HEAD`). Planner
+  configuration is `--config FILE`, else the `planner` object of `ros.json`.
+  Each observation records repository, ref, commit, `observedAt`, how current
+  the ref was (`sourceAsOf`: its reflog, else its commit time) and the method
+  (`git-ref`). Nothing is fetched, written, committed or pushed in another
+  repository. An observation older than `maxObservationAgeMinutes` (default
+  1440) is `stale`; a repository that is not configured, missing, a clone of a
+  different repository, without Praxis, with state this version cannot parse,
+  or denying access makes its members `unknown` with the reason (`unreachable`,
+  `praxis-not-installed`, `unsupported-schema`, `access-denied`). A stale or
+  unknown member is never complete; the rest of the view still renders.
+- **Joining.** A qualified member is checked by observation: a terminal or
+  unrecorded item is refused; an unobservable one joins with
+  `verified: false` and a warning (`verifications` in the group record).
+- **Order.** `--dependency CONSUMER=PRODUCER[@MILESTONE]` records an edge whose
+  producer must reach `complete` (default), `merged` (its latest checkpoint
+  commit is reachable from its observed ref) or `released:TAG` (the tag exists
+  there). `show` reports each edge `satisfied`, `waiting` or `unknown`, and each
+  consumer's planning state; it never changes the consumer's lifecycle state.
+  Edges must join members and may not form a cycle, across repositories.
+- **References.** `work group link`, run in a member's own repository, records
+  the only group data that repository holds: an immutable reference on its
+  item (group ID and home). Repeating it is `unchanged`; another home is
+  refused. A membership whose member repository holds no reference, or a
+  reference the observed home does not list, is `unlinked`: shown by `show`
+  and reported by `validate` as a warning.
+- **Status table.** `show` is the consolidated sweep table: per member its
+  repository, observed state, ref and commit, latest checkpoint, staleness and
+  link; progress per repository and overall (`k of n complete`); order edges.
+  In a member repository, `show` of a group homed elsewhere prints that
+  repository's references and whether the home lists them. Group checkpoints
+  in the home record `memberObservations` (labelled observations, never
+  verifications of another repository's remote). The planner reports a
+  qualified member as `executes-elsewhere` with the repository to act in and
+  never schedules it into this checkout (PRX-GRP-108).
+
+**Grouped execution** (PRX-GRP-117, 130..132, 136..138).
+
+```
+ros plan execute-group GROUP-ID --occurred-at TIMESTAMP [--member ID]
+                       [--mode grouped|independent --reason TEXT]
+                       [--independent-member ID --reason TEXT]* [--type TYPE]
+                       [--config FILE] [--dry-run] [--json] [IDENTITY]
+```
+
+`plan execute-group` is the only `plan` verb that mutates, and only Praxis
+state: it begins the next runnable member of the group in its required order
+(or `--member`) through the existing `work begin` transition and records a
+**group execution** (`GEX-<timestamp>-<suffix>`) in the group record, with the
+actor, start time, repository, member order, mode and its basis, opt-outs, and
+each member it began linked to that member's own execution. One execution
+context carries the members one after another; each member keeps its own
+execution, evidence, checkpoints and completion. It never launches an agent,
+creates a branch, selects a provider or model, or changes priorities or
+dependencies. A member already begun in the open group execution is
+`unchanged`; a member that waits on an unsatisfied prerequisite, is not
+`ready`, or belongs to another repository is not begun here (the reason is
+given). It refuses (exit `1`) an unknown group, a dependency cycle among
+members, a group with nothing runnable in this checkout, and a caller who
+already owns an open group execution of another group. A group execution
+ends when no runnable member remains.
+
+- **Default.** `plan groups` and `plan explain-group` report each group's
+  `groupedExecution` qualification: affinity `high` with no `none`/`unknown`
+  member pair, `minimumSize`..`maximumSize` runnable members (default 2..6),
+  every runnable member in this checkout, no limiting context pressure, and no
+  `captured` member; every failed threshold is explained. A qualifying group
+  is recommended `grouped` and `execute-group` defaults to grouped mode; any
+  other defaults to `independent`, and grouped mode then needs
+  `--mode grouped --reason TEXT`. Settings live under
+  `grouping.groupedExecution` (`default`, `minimumSize`, `maximumSize`,
+  `compactionLimit` 1, `repeatedReadLimit` 25, `elapsedFactor` 1.5). Setting
+  `default` to `advisory` is the rollback (PRX-GRP-138): a configuration change
+  only.
+- **Gates.** A member begun in grouped mode completes only with committed
+  `group-analysis` and `group-verification` evidence (see
+  `docs/group-analysis-template.md`); members that execute independently
+  complete under the normal policy.
+- **Opt-outs** (PRX-GRP-132) need a non-empty `--reason`, are recorded with the
+  actor and time in the group history (`opted-out`), are shown by `show`,
+  `list` and `explain-group`, and apply only to executions not yet begun. Per
+  group: `work group create|add --execution-mode independent --reason TEXT` or
+  `execute-group --mode independent --reason TEXT`. Per item:
+  `work group create --independent-member ID --reason TEXT`,
+  `work group add --member ID --independent-member ID --reason TEXT`, or
+  `execute-group --independent-member ID --reason TEXT`: the member stays a
+  member but executes in its own fresh context.
+- **Fallback** (PRX-GRP-136). When a member begun in grouped mode records
+  `context.compactions` of at least `compactionLimit`, `context.repeated_file_reads`
+  above `repeatedReadLimit`, elapsed time above `elapsedFactor` times its upper
+  estimate, or an explicit `context-pressure` observation names it,
+  `execute-group` records `fallback: independent` with the signal and its
+  evidence, ends the group execution, and recommends a fresh independent
+  execution (or a split) for each remaining member; the next group execution
+  runs independently. Members already active or complete are unchanged. A
+  metric that was never recorded never triggers it (unknown is not zero).
+
+**Store and documents** (PRX-GRP-112). `.ros/work/groups.json` is written as
+`schemaVersion` 2 (additive fields); a version-1 store is read as-is and is
+rewritten only by a mutation, its history intact. Every group command prints
+exactly one `{command, schemaVersion, status, ...}` document with `--json`;
+unknown values are `null`, never `0`.
+
+### `tutela ingest`, `tutela metrics`
+
+```
+praxis tutela ingest --input FILE [--collected-at TIMESTAMP] [--json]
+praxis tutela metrics [--repository NAME] [--json]
+```
+
+`tutela ingest` records a Tutela security assessment (`schemaVersion` 1) as
+an append-only observation in `.ros/telemetry/tutela/observations.jsonl`,
+with its repository, ref (resolved to a commit when this repository has it),
+collection time and source sha256. Re-ingesting the same document is a no-op.
+`tutela metrics` derives security metrics per observation and over time
+(`praxis.tutela-metrics/1`). Missing measurements are `unknown` with a reason,
+never zero, and there is no single score. See
+[`tutela-security-metrics.md`](tutela-security-metrics.md).
+
 ### `remote execute`
 
 ```
@@ -380,20 +746,32 @@ or `work capture`, and `telemetry start` accepts the same identity
 declaration. Each flag overrides the whitelisted environment:
 
 ```
---actor-kind agent|human|automation|unknown|x-...   (env ROS_ACTOR_KIND)
---agent ID | --actor ID                              (env ROS_ACTOR; stable identity)
+--actor-kind agent|human|automation|unknown|x-...   (env PRAXIS_ACTOR_KIND)
+--agent ID | --actor ID                              (env PRAXIS_ACTOR; stable identity)
 --provider P --model M --model-version V --runtime R --runtime-version V
---session S --conversation C --run R --subagent ID   (env ROS_TELEMETRY_*)
+--session S --conversation C --run R --subagent ID   (env PRAXIS_TELEMETRY_*)
 ```
 
-An invalid `--actor-kind` is an argument error (exit `2`).
+The legacy `ROS_*` names of these variables still work; the `PRAXIS_*` name
+wins when both are set. An invalid `--actor-kind` is an argument error (exit `2`).
 
 | Command | Purpose |
 |---|---|
 | `provenance identity [--json]` | who this process is recorded as, how that was determined, and the active executions |
 | `provenance record --path PATH\|--id ID --operation OP [--reason T] [--evidence REF]* [--derived-from REF]* [--execution EXE] [--occurred-at TS] [--json]` | attribute a contribution to an artifact's front matter and append an `artifact.contributed` event; identity is inherited from the active execution; idempotent |
 | `provenance show ID\|PATH [--json]` | contributors, involvement label, lineage (sources and derivatives), legacy-declared authors, and events |
+| `provenance acknowledge-unrecorded --path PATH --reason T [--execution EXE] [--occurred-at TS] [--json]` | acknowledge that no Praxis execution recorded the artifact's creation (DF-ROS-2026-A055): records an `origin-unrecorded` contribution under the acknowledging actor, naming no creator; refused when `created` exists; `validate` reports it as a `NOTE` |
 | `provenance audit [--json]` | coverage, per-actor summaries, flattened contribution facts for metrics, and every finding including informational ones; exits `1` on errors |
+| `step plan --name NAME --occurred-at TS [--description TEXT] [--classification TYPE]* [--parent STEP] [--execution EXE] [--json]` | add a planned step to the current execution |
+| `step begin --name NAME --occurred-at TS [...]` | create and activate a step; use `--parent` for a nested child |
+| `step begin\|resume --id STEP --occurred-at TS [--execution EXE]` | activate a planned or blocked step |
+| `step complete\|block\|abandon [--id STEP] --occurred-at TS [--reason TEXT]` | transition the explicit step or current active leaf; block requires a reason |
+| `step record --metric ID --value N --collected-at TS [--id STEP] [--quality observed\|derived\|estimated] [cost provenance flags]` | record one canonical step-attributed normalized measurement |
+| `step availability --metric ID --status supported-unavailable\|unsupported\|unknown --reason TEXT --occurred-at TS [--id STEP]` | record measurement availability without inventing a value |
+| `step checkpoint --phase begin\|end (--measurement MEAS\|--snapshot SNAP)+ --occurred-at TS [--id STEP]` | preserve source observations and derive compatible cumulative deltas |
+| `step link --kind KIND --value VALUE --occurred-at TS [--source SOURCE] [--id STEP]` | relate sourced engineering evidence without duplicating its canonical record |
+| `step list [--execution EXE\|--work-item ID] [--json]` | list ordered steps; JSON is deterministic and includes summaries |
+| `step show STEP-ID` | show the canonical step, availability, measurements, duration, nesting, and evidence as JSON |
 
 `validate` reports provenance errors (which fail validation) and provenance
 warnings (which do not). In `--json`, warnings carry `"severity":"warning"`,
@@ -410,5 +788,201 @@ registers installations with Project Administration's inventory. See
 [`installation-registration.md`](installation-registration.md).
 
 `praxis` is the canonical command. The native release installs `praxis` and
-`ros`, and `./praxis` runs this checkout. The npm package still exposes only
-`ros` (plus `ros-fs` and `ros-bootstrap`). Every name runs the same F# CLI.
+`ros`, the .NET global tool installs `praxis`, and `./praxis` runs this
+checkout. The npm package is no longer published (`DF-ROS-2026-A044`). Every
+name runs the same F# CLI.
+
+## `handoff explain`
+
+```text
+praxis handoff explain --packet FILE [--packet FILE]* [--as-of UTC-TIMESTAMP] [--json]
+```
+
+Read-only local inspection of 1..64 strict worker packet proposals. Relative
+packet paths resolve under `--root`; files are bounded to 65,536 UTF-8 bytes.
+The optional timestamp must explicitly name UTC; otherwise use current UTC.
+Output names assignment identities, source requirements, execution lineage,
+decisions, dependencies, budgets, independent acceptance obligations and
+blocking reasons. It also detects dependency cycles, duplicate ownership,
+mixed input revisions, shared workers and overlapping write scope. See
+[local agent coordination](local-agent-coordination.md#read-only-local-first-pass).
+
+This command reads no host approval or prerequisite evidence. Every proposal
+retains unobserved-authority and unqualified-adapter blockers. It neither starts
+workers nor schedules, integrates or changes native work state. No Git or
+external service is required. `--json` emits
+`praxis.local-handoff-explanation/1`; exit 0 means inspection succeeded even
+when proposals are blocked, while malformed input/arguments exit 2.
+
+## `local`
+
+```text
+praxis local run --host-config FILE --dispatch PACKET=DELEGATION [--dispatch ...]* --target REF [--json] [IDENTITY]
+praxis local status --host-config FILE --dispatch ID
+praxis local packet propose --host-config FILE --group ID --worker ID --role ROLE --dispatch ID --attempt ID --parent EXE-ID --child EXE-ID --member WI=EXE-ID ... --decision ID ... --allow PATH ... --acceptance OBLIGATION=WI:VALIDATOR ... [--prerequisite WI]* [--valid-minutes N] [--timeout-seconds N] [--max-output-bytes N] --out FILE
+praxis local validator pin --host-config FILE --validator ID
+praxis local operator init|grant-draft|grant|revoke|review|delegate ...
+praxis local worker-bridge --git PATH (--agent-command EXE [--agent-arg ARG]* | --ollama-model MODEL [--ollama-endpoint URL] | --openai-model MODEL [--openai-endpoint URL])
+praxis local containment qualify|status --host-config FILE [--json]
+```
+
+The local coordinator/worker runtime. `run` dispatches each operator-signed
+packet to its configured worker, independently runs the configured build,
+test, architecture, scope and acceptance validators on the worker's commit and
+on the staged integration candidate, moves `--target` only with an
+expected-head update, and completes the native members. Operator commands
+write exact signing payloads and verify external ECDSA P-256 signatures; they
+never handle private keys. `worker-bridge` is the worker-side adapter the host
+configuration launches. `containment qualify` launches real probes through the
+Linux confined adapter and writes `praxis.containment-evidence/1`;
+`containment status` reports whether a worker requiring containment would be
+admitted (exit 3 when unqualified, including on macOS and Windows; see
+[host containment](containment.md)). Exit 0 success, 2 invalid arguments,
+3 refused. See [the local runtime guide](local-runtime.md).
+
+## `construct`
+
+```text
+praxis construct preview --host-config FILE --group ID --plan FILE --target REF
+praxis construct apply --host-config FILE --group ID --plan FILE --target REF
+praxis construct route --host-config FILE --group ID --plan FILE
+praxis construct extend --host-config FILE --group ID --plan FILE --target REF --files DIR [--role implementation]
+praxis construct prepare --host-config FILE --group ID [--cohort ID] [--vocabulary VERSION] [--decisions FILE] --out FILE [--telemetry-target WI|EXE]
+praxis construct apply --host-config FILE --group ID --prepared FILE --target REF [--extensions DIR] [--observations FILE] [--telemetry-target WI|EXE]
+```
+
+Host-controlled application of an Ordo construction plan. The plan is the only
+agent input; when it omits `binding`, the host stamps the binding from the
+approved cohort. `preview` is read-only and deterministic. `apply` builds the
+planned generated files as Git objects, journals the construction and moves
+`--target` with an expected-head update. Both re-verify the operator grant and
+the committed ECIR sources, and run the pinned Ordo engine in-process.
+
+`route` classifies the admitted construction's work. Generated artifacts are
+deterministic. `resolve` obligations are semantic decisions. `implement`
+obligations are bounded custom work in host-declared `extensionSlots`. An
+`implement` obligation without a slot is a typed exception that keeps its
+requirement keys. The content-addressed routing record goes to the host
+construction root.
+
+`extend` commits handwritten files from `DIR` into declared slots on a target
+that already carries this exact construction. It names every refused entry:
+- undeclared names, symlinks and subdirectories;
+- dot entries, generated, project, package, policy and CI files;
+- ECIR and requirement sources;
+- oversized files.
+
+It re-admits the plan like `apply`, and moves `--target` by expected-head
+update. It never runs a worker or submitted code. Worker-execution flags
+(`--worker`, `--command`, `--run`, and others) are refused until host
+containment is qualified. Only the `implementation` role (the default) may
+extend.
+
+Mechanical-first construction (CONSTRUCT-008). The operator binds an
+`ordo.construction-decisions/1` file into the signed grant with
+`local operator grant-draft ... --decisions FILE` (SHA-256 of its exact bytes;
+grants without it keep their original signing payload). `prepare` admits the
+cohort under that grant, refuses decision records whose digest differs from the
+signed one, calls Ordo's default-plan generator (vocabulary 1 unless
+`--vocabulary` says otherwise), admits the generated plan through the ordinary
+plan admission and writes `praxis.construction-prepared/1` to `--out`, plus the
+agent handoff `praxis.construction-handoff/3` as `<out>.handoff.json` and its
+Markdown twin `<out>.handoff.md`. The handoff (CONSTRUCT-010) carries one typed
+record per default-plan obligation (requirements, relevant decisions, the
+question to escalate or the behavior to implement, extension interfaces and
+paths, allowed dispositions, verification), every approved decision once
+(operator-approved records, blueprint decision nodes, and accepted decision
+documents the cohort cites), the excerpts of every requirement key the cohort's
+required scope cites, and, for each acceptance slot, the public types of the
+contract files its stub opens. The Markdown twin is the worker-facing form; it
+states each verification expectation once and shortens Ordo's question
+boilerplate only where the exact known form matches. The host keeps the approved decision records
+and the validated artifact under its construction root, keyed by a cache key
+over every binding input; an identical key reuses the artifact byte for byte,
+any change invalidates it. `apply --prepared` re-derives the binding from
+current host state and refuses any drift (grant, policy revision, source,
+blueprint, decisions, generator, vocabulary, host placement policy) or any
+difference from the host's validated copy, then applies the generated files
+like `apply` and the handwritten files from `--extensions` only at the
+artifact's `permittedExtensionFiles`, like `extend`. Every handwritten-file check (name, content, slot kind, links, and placement
+on the target tree) runs before any effect, so any refused entry refuses the
+whole apply with the target unchanged. With `prepare --workspace DIR` (CONSTRUCT-010), the host also creates the
+worker workspace: `DIR/HANDOFF.md` (the Markdown handoff) and an empty
+`DIR/outbox/`, and records the binding host-side in `<out>.workspace.json`
+(`praxis.construction-workspace/1`: workspace, cache key, handoff SHA-256).
+Before anything is written, the layout is checked: the workspace must be fresh
+(absent or empty, not a link) and must neither contain nor lie inside any host
+location (the configuration directory, the governed repository, the policy,
+journal, spool, submission, integration, evidence, checkout and construction
+roots, the prepared artifact and its twins); a violation refuses the whole
+prepare. `apply --prepared P --workspace DIR` (instead of `--extensions`) is
+bound to the workspace and cache key recorded for `P`. It refuses any outbox
+entry that is not a regular file as a denied write (recorded with
+`--observations`). It stages the remaining files host-side beside `P` and
+removes that copy afterwards, so the bytes judged are the bytes applied. It
+applies them under the same slot rules as `--extensions` (anything that is not a
+permitted slot, `REPORT.md` included, refuses the apply). It keeps
+`outbox/dispositions.json` host-side as `<P>.dispositions.json` and never
+applies it. Host isolation of the worker *process* is not provided by this
+layout: it needs qualified containment (docs/containment.md) or a separate
+machine. Without either, a worker that knows an absolute host path can still
+read it.
+`construct check --host-config FILE --prepared FILE --candidate REF --check ID`
+(CONSTRUCT-010) gives a construction worker feedback without giving it a
+general command line. The host configuration declares the approved checks
+under the optional `constructionChecks` array. Each check is an
+`{ "id", "command" }` validator template: a pinned executable, arguments,
+environment, timeout and output limit, with `{candidate}` as the only
+placeholder and no TRX.
+
+`check` refuses before running when:
+- the check is unknown;
+- the executable or a dependency differs from its pin;
+- the candidate does not carry exactly the prepared artifact's generated files.
+
+Otherwise it runs the check on a fresh detached checkout of the candidate,
+inside the host's qualified containment profile (`docs/containment.md`). It
+refuses on a host without one, because a check runs submitted code. The
+checkout is observed before and after the run without following links. Any
+change outside `bin/`, `obj/` and `TestResults/` (a new, changed or removed
+file, or a planted link) makes the result `unauthorizedWrite`. Otherwise the
+status is one of:
+- `passed`;
+- `failed` (exit code);
+- `crashed` (death by signal);
+- `timedOut`;
+- `outputLimitExceeded`;
+- `cancelled`;
+- `error`.
+
+Each run is a new attempt. Its stdout, stderr and `result.json`
+(`praxis.construction-check/1`) are kept host-side under
+`<prepared>.checks/<id>/<attempt>/`, and the printed result carries the
+digests and the last 2,000 characters of each stream. The checkout is removed
+afterwards; the candidate commit never changes. Exit status: 0 passed,
+1 ran but did not pass, 2 usage, 3 refused. A check result is agent feedback
+only. It is not acceptance evidence and does not replace independent
+verification.
+
+Refusals are recorded under the host
+construction root and, with `--observations`, written as
+`dokimos.host-observations/1` (Dokimos's contract: `schema`, then one
+`observations` entry per denial with `id`, `kind`, `recordedBy: host`,
+`outcome: denied`, `path` and `detail`). Generated and handwritten files still land as
+two commits (construction, then extension); a failure between them is possible
+only if the target moves concurrently, and is reported.
+
+Each invocation is an execution-telemetry step (`construct prepare` /
+`construct apply`) of the active execution or `--telemetry-target`. It records
+host compute time as `time.tool_ms`, plus `tool.calls`, `tool.failures` and,
+when known, `tool.retries`, all with source type `host`. Consumers must not
+add `host`-sourced values to the agent runtime's own tool calls. A refused call
+is a failure. A retry is a repeat call of the same operation in the same
+execution after an earlier refused call of that operation. The host ledger
+(`telemetry/ledger.jsonl` under the construction root, appended under an
+exclusive lock) gives `prepares`, `retry`, `retries` and `failures`. A count
+the host cannot establish (no execution, no ledger) is null, never zero. Model
+usage is never recorded by the host.
+
+Exit 0 success, 2 invalid arguments, 3 refused. See
+[the construction guide](construction.md).

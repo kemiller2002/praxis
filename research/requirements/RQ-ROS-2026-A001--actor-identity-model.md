@@ -6,7 +6,7 @@ version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-28
 research_area: repository-operating-system
 priority: high
 related_documents:
@@ -25,6 +25,26 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [modified]
+      at: 2026-09-28T10:18:57.631Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:39.377Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
 ---
 
 # Requirement
@@ -45,4 +65,4 @@ Agents, humans, automated processes, and unknown actors must be distinguishable,
 ## Verification
 
 - ProvenanceTests: actor kinds round-trip; agent identity is resolved from a known agent runtime; identity resolution is provider-neutral; nothing known resolves to an explicit unknown actor; actor JSON is canonical
-- tests/provenance-actor-fsharp-differential.test.mjs (Node/F# parity)
+- tests/Praxis.Tests/ProvenanceCliTests.fs (actor resolution against the frozen golden masters)

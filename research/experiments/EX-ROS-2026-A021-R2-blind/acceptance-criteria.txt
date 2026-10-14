@@ -1,0 +1,15 @@
+PRAXIS-GROUP-01: praxis work group create: durable human-declared execution group
+Record a declared group (ID, members, kind, execution repository, cross-repository flag, shared context) in Praxis state. Acceptance: refuses unknown or terminal members and duplicate IDs; never changes a member's lifecycle state; the planner reads the stored declaration exactly as it reads grouping.groups; --dry-run and --json supported; validate checks stored groups. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.
+
+PRAXIS-GROUP-02: praxis work group show: a declared group with member states and progress
+Read-only view of one declared group: members with their own recorded and planning states, partial-completion progress, blocked members and who they gate, execution repository, architecture notes. Acceptance: text and --json; unknown group exits 1; never writes. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.
+
+PRAXIS-GROUP-03: praxis work group add: add a member to a declared group
+Add one work item to a declared group. Acceptance: refuses unknown/terminal items, items already present, and an item whose execution repository differs unless the group is cross-repository; records who added it (provenance); member lifecycle untouched. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.
+
+PRAXIS-GROUP-04: praxis work group remove: remove a member from a declared group
+Remove one member from a declared group. Acceptance: refuses non-members; removal never changes the item's lifecycle state, evidence or attribution; removing the last member is refused or explicit; provenance recorded. Depends on: PRAXIS-GROUP-01. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.
+
+PRAXIS-GROUP-05: praxis work group checkpoint: a group checkpoint over members' own checkpoints
+Record a group checkpoint (PRX-GRP-044): group ID, active/completed/remaining members, shared architectural decisions, branch and commit, next action. Acceptance: requires the same durable-checkpoint verification as work checkpoint; references members' own checkpoints and never replaces them; no member claims another's changes (PRX-GRP-043). Depends on: PRAXIS-GROUP-01, PRAXIS-GROUP-02. Phase two of requirements/PLANNING-WORK-GROUPS.md (covers PRX-GRP-073); proposed cohort of EX-ROS-2026-A021. Must not be merged before that experiment is evaluated and the owner accepts phase two.
+

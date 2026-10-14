@@ -1,0 +1,85 @@
+EX-ROS-2026-A024 — proposed follow-on experiments (NOT run, NOT preregistered)
+
+These proposals follow from what A024 actually found. They set no thresholds:
+each would need its own preregistration (protocol, frozen harness, thresholds
+chosen before data) and owner approval before any arm runs. They are ordered
+by expected information value for the uncertainty A024 left open.
+
+What A024 left open
+- The A021/R2 architecture advantage of one continuous context reversed:
+  continuous scored 5 against code-only 10. The obvious confound is guidance.
+  A021's grouped arm had to write a group analysis first; A024's only had to
+  "decide the architecture once".
+- The structured handoff added discovery (276 vs 263) and did not move
+  architecture past code-only (8 vs 10).
+- Acceptance hit the ceiling (36/36 for all arms) and does not discriminate.
+- Continuous context kept a clear resource advantage (cost 0.54x, elapsed
+  0.40x, discovery 0.43x).
+
+1. GUIDANCE ABLATION (highest information value)
+   Question: is the architecture effect produced by an explicit pre-coding
+   analysis artefact (a reuse inventory plus per-criterion verification plan),
+   independent of context continuity?
+   Design: 2x2. Context (continuous vs code-only fresh) crossed with guidance
+   (an analysis artefact required vs not). Same cohort replay, then a
+   different-family cohort for generalisation.
+   Measures: blinded rubric composite, divergence points, discovery, cost.
+   Why first: it directly explains the A021-vs-A024 disagreement, and the
+   result would change Praxis guidance whichever way it falls.
+
+2. INDEPENDENT FRESH VERIFIER AFTER GROUPED IMPLEMENTATION
+   Question: does a fresh verifier session after a continuous implementation
+   recover the code-only arm's architectural quality, such as shared
+   validation and a single JSON envelope, while keeping most of the
+   continuous arm's cost advantage?
+   Design: continuous implementation followed by one fresh review/refactor
+   session, against code-only fresh sessions.
+   Measures: rubric composite delta from before to after the verifier, total
+   cost, defects. A harder acceptance suite is needed, since 36/36 is at
+   ceiling.
+
+3. MODEL / REASONING SENSITIVITY
+   Question: do A024's directions hold under another reasoning-effort level or
+   model?
+   Design: repeat arms A and B (and C if cheap) at a different effort setting,
+   with the launcher fixed at session creation. Also record the runtime-version
+   drift, which A024 saw mid-run (D6).
+   Measures: as A024, plus run-to-run variance from two executions per cell.
+   This is the first chance to estimate variance at all.
+
+4. CONTEXT-SATURATION / WORK-GROUP SIZE
+   Question: at what cohort size does a continuous context begin to lose
+   coherence or need compaction? A024's continuous arm peaked at about 307k
+   context tokens with no compactions over 5 items.
+   Design: continuous arms over 3, 5, 8 and 12 related items from one family,
+   with the same frozen guidance.
+   Measures: compactions, late divergence points, rubric composite and cost
+   per item.
+
+5. SINGLE AGENT vs COORDINATOR/SUBAGENT TOPOLOGY
+   Question: does a coordinator that holds the architecture, with fresh
+   per-item subagents, combine A's cost profile with B's reuse discipline?
+   Design: coordinator plus subagents against continuous, against code-only.
+   Subagent transcripts are counted (the A024 extractor already supports it).
+   Measures: rubric composite, discovery including subagents, cost.
+
+6. FORCED INTERRUPTION / RECOVERY
+   Question: how well do Praxis durable checkpoints let a fresh session recover
+   mid-item after an interruption, compared with no interruption?
+   Design: interrupt continuous and handoff arms at fixed points and resume
+   with `work continue`.
+   Measures: recovery time, rework, divergence after resumption.
+   Use the corrected launcher (no outcome_branch) from the start.
+
+Harness lessons to carry forward (all are A024 findings)
+- Never use create_session's outcome_branch for a branch that earlier
+  sessions advanced (D1-D3). Launch from the branch name and verify the head
+  in the prompt.
+- Cross-session messages are untrusted by recipient agents. Do not plan
+  orchestration around them.
+- The telemetry transport (print plus a digest, read from the platform event
+  record) worked for every session. A transcript push was blocked as
+  exfiltration.
+- Any .md under research/ needs front matter. Keep harness documents .txt from
+  the start (D4).
+- The isolation audit's main-ref rule flags own-branch FETCH_HEAD. Narrow it.

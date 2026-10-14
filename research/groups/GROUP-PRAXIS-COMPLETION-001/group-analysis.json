@@ -1,0 +1,155 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-PRAXIS-COMPLETION-001",
+  "groupExecutionId": null,
+  "repository": "kemiller2002/praxis",
+  "baseCommit": "f242aae664b4601e106b6e33ebce2b95bedfae35",
+  "members": [
+    {
+      "workItemId": "PRAXIS-QUAL-07",
+      "repository": null,
+      "obligation": "Engineering-risk metadata on work items (PRX-QUAL-020)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "A work item may declare praxis.work-risk/1 metadata: change class, risk level, persistent-state impact, external protocol/provider impact, security/privacy impact, failure posture (fail-open, fail-closed, indeterminate), tier ownership and required live/integration proof, set by work capture/update flags and shown by work context.",
+        "Invalid values are refused at capture/update.",
+        "Completion obligations (design-debt declaration, verification-matrix dimensions) are derived from the metadata by a pure domain function.",
+        "Absent metadata keeps existing behaviour.",
+        "Tests cover parsing, validation and obligation derivation."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-08",
+      "repository": null,
+      "obligation": "Design-debt declaration as a completion-readiness facet (PRX-QUAL-021)",
+      "dependsOn": [
+        "PRAXIS-QUAL-07"
+      ],
+      "acceptanceCriteria": [
+        "Completion accepts --evidence design-debt=PATH, a praxis.design-debt/1 document declaring either no known design debt or debt entries referencing captured work items with rationale, risk and the compromised boundary.",
+        "A design-debt-declared facet joins the A052 completion-readiness record.",
+        "For high-risk work (from PRAXIS-QUAL-07 metadata), a missing declaration or debt referencing no recorded non-terminal work item refuses completion (exit 3, no state change).",
+        "A declared prototype cannot complete as canonical without a debt entry.",
+        "Tests cover each case."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-09",
+      "repository": null,
+      "obligation": "Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022)",
+      "dependsOn": [
+        "PRAXIS-QUAL-07"
+      ],
+      "acceptanceCriteria": [
+        "Completion accepts --evidence verification-matrix=PATH, a praxis.verification-matrix/1 document with rows for happy path, negative/failure, corruption/partial state, concurrency, compatibility/version skew, recovery/rollback and representative live effect, each met, not-applicable (with reason) or not-met, with evidence.",
+        "A verification-matrix facet joins the A052 completion-readiness record.",
+        "For stateful control-plane, persistence, release/bootstrap, security or remote-execution work (from PRAXIS-QUAL-07 change class), a missing matrix or any required dimension not met refuses completion; unit-test or build evidence alone never satisfies it.",
+        "Tests cover each case."
+      ]
+    },
+    {
+      "workItemId": "PRAXIS-QUAL-10",
+      "repository": null,
+      "obligation": "Evidence-file digests and a release-readiness evidence contract (PRX-QUAL-023 leftovers)",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Every consumed evidence file (dokimos-ratchet, ordo-boundary and the new design-debt, verification-matrix and release-readiness documents) is recorded with its sha256 digest in the completion-readiness record.",
+        "A praxis.release-readiness/1 contract is documented and consumed through --evidence release-readiness=PATH: release identity, the checks run and their results; release-ready is satisfied only by a consistent document whose checks all passed, unavailable when absent, malformed or inconsistent.",
+        "requirements/CODE-QUALITY-HARDENING.md drops both items from its not-yet-done list.",
+        "Tests cover digest recording and each release-readiness outcome."
+      ]
+    }
+  ],
+  "order": [
+    {
+      "consumer": "PRAXIS-QUAL-08",
+      "producer": "PRAXIS-QUAL-07",
+      "milestone": "merged"
+    },
+    {
+      "consumer": "PRAXIS-QUAL-09",
+      "producer": "PRAXIS-QUAL-07",
+      "milestone": "merged"
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "CompletionFacet / FacetStatus / FacetAssessment",
+      "location": "src/Praxis.Domain/Work/CompletionReadiness.fs:29",
+      "disposition": "extended",
+      "reason": "the A052 facet mechanism; design-debt-declared and verification-matrix are new facets beside the four existing ones (PRAXIS-GROUP-10 adds group-verified the same way)"
+    },
+    {
+      "element": "EvidenceReading / SourceObservation / observationGap",
+      "location": "src/Praxis.Domain/Work/CompletionReadiness.fs:118",
+      "disposition": "reused",
+      "reason": "every new evidence document is observed and judged through the same reading/observation types, so unavailable is never a pass"
+    },
+    {
+      "element": "CompletionReadinessOperations.observe/assess/gate",
+      "location": "src/Praxis.Application/Work/CompletionReadiness.fs:70",
+      "disposition": "extended",
+      "reason": "the one pure gate; new sources and the risk metadata are inputs to assess"
+    },
+    {
+      "element": "FileCompletionReadiness.readText/sources",
+      "location": "src/Praxis.Infrastructure/Work/FileCompletionReadiness.fs:17",
+      "disposition": "extended",
+      "reason": "the one evidence-file reader; it also computes the sha256 digest of the bytes it decoded"
+    },
+    {
+      "element": "QualityEvidenceJson decoders and readinessNode",
+      "location": "src/Praxis.Contracts/Work/QualityEvidenceJson.fs:152",
+      "disposition": "extended",
+      "reason": "the one contract module for consumed evidence; design-debt, verification-matrix and release-readiness decoders are added beside decodeDokimos/decodeOrdo"
+    },
+    {
+      "element": "WorkUpdate.plan and FileBacklogQueueRepository.applyUpdate",
+      "location": "src/Praxis.Domain/Work/Update.fs:59",
+      "disposition": "extended",
+      "reason": "risk metadata is set through the existing work update transition and stored on the queue item"
+    },
+    {
+      "element": "QualityEvidencePolicies.appliesTo (policy opt-in)",
+      "location": "src/Praxis.Application/Work/CompletionReadiness.fs:31",
+      "disposition": "extended",
+      "reason": "risk-derived obligations activate the gate for an item even when the repository policy is otherwise off, keeping one gate"
+    },
+    {
+      "element": "QualityEvidenceTests fixtures",
+      "location": "tests/Praxis.Tests/QualityEvidenceTests.fs:1",
+      "disposition": "reused",
+      "reason": "existing gate/test helpers are extended with the new facets"
+    }
+  ],
+  "searches": [
+    {
+      "command": "grep -rn \"risk\\|changeClass\\|failurePosture\" src/Praxis.Domain/Work src/Praxis.Contracts/Work",
+      "finding": "no work-item risk metadata exists (only the Ordo boundary risk level, which is an external tool's judgement)"
+    },
+    {
+      "command": "grep -rn \"designDebt\\|verificationMatrix\\|release-readiness\" src",
+      "finding": "none exist; release-ready is always unavailable (CompletionReadiness.releaseFacet)"
+    },
+    {
+      "command": "grep -rn \"SHA256\\|sha256\" src --include=*.fs -l",
+      "finding": "digest helpers exist for lifecycle payloads and installation records; the readiness reader uses System.Security.Cryptography.SHA256 directly at the file edge"
+    }
+  ],
+  "newAbstractions": [
+    {
+      "name": "WorkRisk (praxis.work-risk/1)",
+      "consideredExisting": "OrdoBoundaryEvidence.Risk and work tags",
+      "whyNotReused": "Ordo's risk is an assessment of a diff; tags are untyped and carry no failure posture or obligations"
+    },
+    {
+      "name": "DesignDebtDeclaration, VerificationMatrix, ReleaseReadinessEvidence documents",
+      "consideredExisting": "DokimosRatchetEvidence/OrdoBoundaryEvidence decoders",
+      "whyNotReused": "different contracts; they reuse the same EvidenceReading/SourceObservation path rather than a parallel one"
+    }
+  ],
+  "decisions": [
+    "New facets are added as CompletionFacet cases and keep the facet-code pattern so PRAXIS-GROUP-10's group-verified facet can be merged beside them",
+    "Risk-derived obligations bind only items that declared risk metadata; items without it keep existing behaviour"
+  ]
+}

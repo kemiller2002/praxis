@@ -1,5 +1,7 @@
 # ROS F# migration roadmap
 
+> **Closed (2026-09-28, `DF-ROS-2026-A049`).** The repository is now F#/.NET only; the Node files this document names were removed and are recoverable from Git history. See [`TRACEABILITY.md`](TRACEABILITY.md) for where their tests moved.
+
 Status values are `complete`, `in progress`, `ready`, `deferred`, and
 `blocked`. Completion is evidence-based; adding a project or compiling does not
 complete a capability.

@@ -22,16 +22,16 @@ confidence: medium
 derived_from: [RQ-ROS-2026-A022]
 provenance:
   contributions:
-    EXE-20260929T130548213Z-63fe94ae:
+    EXE-20260929T162324008Z-39bbe593:
       operations: [created]
-      at: 2026-09-29T13:06:07.548Z
+      at: 2026-09-29T16:23:37.680Z
       actor:
         kind: agent
         id: anthropic/claude-code
         provider: anthropic
         model: unknown
         runtime: claude-code
-      reason: "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from branch claude/remote-inbox-relay)"
+      reason: "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
 ---
 
 # Cross-provider continuation attempt 1

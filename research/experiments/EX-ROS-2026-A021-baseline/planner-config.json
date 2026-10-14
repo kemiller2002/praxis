@@ -1,0 +1,25 @@
+{
+  "grouping": {
+    "groups": [
+      {
+        "id": "GROUP-PRAXIS-WORK-GROUP-001",
+        "members": ["PRAXIS-GROUP-01", "PRAXIS-GROUP-02", "PRAXIS-GROUP-03", "PRAXIS-GROUP-04", "PRAXIS-GROUP-05"],
+        "kind": "shared-api-surface",
+        "origin": "human-declared",
+        "sharedContext": [
+          "one declared-group record in Praxis state, read by the planner as grouping.groups",
+          "one CLI command family: praxis work group create|show|add|remove|checkpoint",
+          "PRX-GRP-041..044: per-member identity, attribution, partial completion and checkpoints"
+        ],
+        "executionRepository": "repository-operating-system"
+      }
+    ]
+  },
+  "areas": {
+    "PRAXIS-GROUP-01": ["src/Ros.Cli", "src/Ros.Domain/Work", "src/Ros.Contracts/Work"],
+    "PRAXIS-GROUP-02": ["src/Ros.Cli", "src/Ros.Domain/Work", "src/Ros.Contracts/Work"],
+    "PRAXIS-GROUP-03": ["src/Ros.Cli", "src/Ros.Domain/Work", "src/Ros.Contracts/Work"],
+    "PRAXIS-GROUP-04": ["src/Ros.Cli", "src/Ros.Domain/Work", "src/Ros.Contracts/Work"],
+    "PRAXIS-GROUP-05": ["src/Ros.Cli", "src/Ros.Domain/Work", "src/Ros.Contracts/Work"]
+  }
+}

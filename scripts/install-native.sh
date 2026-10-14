@@ -4,6 +4,7 @@ set -eu
 REPO="kemiller2002/praxis"
 VERSION=""
 INSTALL_BASE="${ECHELON_HOME:-$HOME/.echelon}"
+ACTIVATE=1
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -15,8 +16,12 @@ while [ "$#" -gt 0 ]; do
       INSTALL_BASE="${2:-}"
       shift 2
       ;;
+    --no-activate)
+      ACTIVATE=0
+      shift
+      ;;
     -h|--help)
-      echo "Usage: install-native.sh [--version X.Y.Z] [--install-base PATH]"
+      echo "Usage: install-native.sh [--version X.Y.Z] [--install-base PATH] [--no-activate]"
       exit 0
       ;;
     *)
@@ -95,6 +100,13 @@ else
   chmod +x "$target/praxis" "$target/praxis-bin" "$target/echelon"
 fi
 
+if [ "$ACTIVATE" -eq 0 ]; then
+  # A project's pinned ./praxis launcher installs its version side by side
+  # without changing which version the user's global commands run.
+  printf '%s\n' "Installed Praxis $VERSION to $target (not activated)"
+  exit 0
+fi
+
 if [ -e "$current" ] && [ ! -L "$current" ]; then
   echo "Cannot activate $VERSION because $current exists and is not a symlink." >&2
   exit 1
@@ -102,6 +114,8 @@ fi
 rm -f "$current"
 ln -s "$target" "$current"
 
+# `praxis` is the command; `ros` is its pre-rename compatibility alias
+# (DF-ROS-2026-A050), the same program.
 for command_name in praxis ros; do
   cat > "$bin_dir/$command_name" <<EOF
 #!/usr/bin/env sh
@@ -123,7 +137,7 @@ EOF
 chmod +x "$bin_dir/echelon"
 
 printf '%s\n' "Installed Praxis $VERSION to $target"
-printf '%s\n' "Commands: $bin_dir/praxis, $bin_dir/ros, and $bin_dir/echelon"
+printf '%s\n' "Commands: $bin_dir/praxis (with the legacy $bin_dir/ros compatibility alias) and $bin_dir/echelon"
 case ":$PATH:" in
   *":$bin_dir:"*) ;;
   *) printf '%s\n' "Add $bin_dir to PATH to invoke Echelon tools from any directory." ;;

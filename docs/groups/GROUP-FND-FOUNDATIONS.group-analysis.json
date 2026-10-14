@@ -1,0 +1,113 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-FND-FOUNDATIONS",
+  "groupExecutionId": null,
+  "groupExecutionNote": "Work-group commands (PRAXIS-GROUP-07..10) are not on main; grouping is recorded in item tags and this document.",
+  "baseCommit": "f242aae6",
+  "members": [
+    {
+      "id": "PRAXIS-FND-03",
+      "acceptanceCriteria": [
+        "foundations.json declares aegis, forma and ordo pinned; limen and folio not applicable with reasons",
+        "aegis-boundaries.json declares every Praxis boundary code",
+        "Verifier accepts a checksum-pinned Forma tarball lock and an Ordo.Core package pin",
+        "A test runs foundations verify against this repository and fails on any finding",
+        "Requirement status recorded"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "PRAXIS-FND-04",
+      "acceptanceCriteria": [
+        "Boundary module classifies escaped failures into per-boundary codes equal to aegis-boundaries.json",
+        "Web and hub handlers capture per request and answer 500 with a safe message and reference",
+        "Redaction rules extend Aegis defaults; a test proves secrets, tokens and work content never reach a sink",
+        "Collector-sink tests: success and refusals record nothing; each code recorded; defects and cancellation not disguised",
+        "Expected outcomes stay typed exit codes",
+        "Aegis pin remains a released version"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "PRAXIS-FND-05",
+      "acceptanceCriteria": [
+        "Forma lock pins the release tarball by version, URL and sha256; digest test",
+        "Web and hub serve Forma dist/all.css from the tarball and pages link it; local CSS removed",
+        "Markup uses Forma classes and patterns with native HTML semantics",
+        "Faults and errors render with Forma fault/alert presentation",
+        "Tests assert stylesheet served, linked, no local stylesheet, Forma classes present",
+        "PRX-UI-031 Limen decision recorded and limen declared not applicable",
+        "docs/web-interface.md and requirement status updated"
+      ],
+      "dependsOn": []
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "Foundations.verify",
+      "location": "src/Praxis.Cli/Foundations.fs:447",
+      "disposition": "reused",
+      "reason": "Self-verify guard."
+    },
+    {
+      "element": "verifyForma",
+      "location": "src/Praxis.Cli/Foundations.fs:304",
+      "disposition": "extended",
+      "reason": "Accepts the release-tarball lock."
+    },
+    {
+      "element": "verifyAegis",
+      "location": "src/Praxis.Cli/Foundations.fs:284",
+      "disposition": "reused",
+      "reason": "Package, usage and manifest checks already fit."
+    },
+    {
+      "element": "LimenPin",
+      "location": "src/Praxis.Domain/Foundations/LimenPin.fs:1",
+      "disposition": "not-reused",
+      "reason": "Limen-specific manifest fields; its pure-decision pattern is followed by FormaPin."
+    },
+    {
+      "element": "Top-level Aegis capture",
+      "location": "src/Praxis.Cli/Program.fs:3084",
+      "disposition": "extended",
+      "reason": "Kept as outermost capture, classification moves to the boundary module."
+    },
+    {
+      "element": "Payload.embeddedText",
+      "location": "src/Praxis.Infrastructure/Lifecycle/Payload.fs:103",
+      "disposition": "not-reused",
+      "reason": "Text resources only; the Forma artifact is a binary tarball."
+    },
+    {
+      "element": "WebInterface.stylesheet",
+      "location": "src/Praxis.Cli/WebInterface.fs:738",
+      "disposition": "not-reused",
+      "reason": "Serves Praxis-local CSS, which the requirement removes."
+    },
+    {
+      "element": "Html.page",
+      "location": "src/Praxis.Cli/WebHttp.fs:98",
+      "disposition": "extended",
+      "reason": "Links Forma and uses Forma shell classes."
+    }
+  ],
+  "searches": [
+    "grep -rn Aegis src",
+    "grep -rn styles.css src",
+    "grep -rn foundations.json src tests",
+    "ls */.echelon/foundations.json (sibling repositories)"
+  ],
+  "newAbstractions": [
+    {
+      "name": "Praxis.Infrastructure.Boundary",
+      "consideredExisting": "Inline classifier in src/Praxis.Cli/Program.fs:3097",
+      "whyNotReused": "Must be shared by CLI, web and hub and testable with a collector sink."
+    },
+    {
+      "name": "FormaPin and FormaRelease",
+      "consideredExisting": "LimenPin and Payload.embeddedText",
+      "whyNotReused": "Different pin evidence (tarball lock) and a binary tar artifact."
+    }
+  ]
+}

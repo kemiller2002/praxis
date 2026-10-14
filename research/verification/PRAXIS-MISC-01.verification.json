@@ -1,0 +1,22 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "rows": [
+    { "member": "PRAXIS-MISC-01", "criterion": "inbox claim PATH moves an input from .praxis/inbox/documents (or legacy input-documents) into .praxis/processing/<claim-id>/ with a praxis.inbox-claim/1 record holding source path, SHA-256, size, claimant identity, execution and claim time; the source bytes are never modified", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests: 'input inbox CLI: claim, derive, complete after commit, with list and recover on a Git repository'; 'the claim record round-trips through praxis.inbox-claim/1'", "result": "passed" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "claiming is crash-safe and idempotent: record written before the source moves, a repeated claim returns the existing claim, and an interrupted claim is completed by inbox recover without losing or duplicating the source", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests: 'claiming is write-ahead and recovers from a crash at every step without losing the input'; 'a repeated claim returns the existing claim and creates nothing'; CLI test recovery of a 'claiming' record with the inbox copy still present", "result": "passed (crash at each of 4 steps)" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "inbox derive records each derived artifact with provenance back to the input (claim ID, source path and digest, locator); classification stays advisory", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests: 'derivations are recorded with provenance and are idempotent'", "result": "passed; derivation carries kind, target, summary, locator, actor, execution; the claim carries source path and digest" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "inbox complete refuses while any derived artifact is missing or not committed in HEAD, then archives with provenance; inbox release returns an unfinished claim", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests: 'completion is refused until every derived change is durably reconciled'; 'completing with nothing derived needs a stated reason, and an artifact must name the input in its lineage'; CLI test exit 2 before commit; release in the CLI test", "result": "passed" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "rejected inputs move to .praxis/rejected with a machine-readable reason", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests CLI test: reject moves to .praxis/rejected/documents/<claim-id>/ whose claim.json holds rejectionReason", "result": "passed" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "inbox list reports pending, claimed and rejected inputs and still works without a runtime by reading the directories", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests CLI test: 'inbox list' text and '--json' (pending and claims with location); docs/fallback-reconciliation.md 'Input documents' table of plain-file locations", "result": "passed" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "tests: happy path; crash after claim record before move, after move before completion, during completion, each recovered with no source lost or duplicated; idempotent repeated claim; completion refused before commit; release; reject", "status": "met",
+      "evidence": { "kind": "test", "reference": "InputInboxTests (11 tests) incl. 'complete, release and reject each recover from a crash at every step without losing the input'", "result": "11 passed" } },
+    { "member": "PRAXIS-MISC-01", "criterion": "docs/fallback-reconciliation.md, the inbox README and docs/cli.md describe the lifecycle; the DER status in docs is updated", "status": "met",
+      "evidence": { "kind": "location", "reference": "docs/fallback-reconciliation.md ('Input documents'); docs/cli.md; .praxis/inbox/documents/README.md; requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md ('Implementation status (inbox, 2026-10-06)')", "result": "present" } }
+  ]
+}

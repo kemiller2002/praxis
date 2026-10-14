@@ -1,6 +1,7 @@
 param(
     [string]$Version,
-    [string]$InstallBase = $(if ($env:ECHELON_HOME) { $env:ECHELON_HOME } else { Join-Path $HOME ".echelon" })
+    [string]$InstallBase = $(if ($env:ECHELON_HOME) { $env:ECHELON_HOME } else { Join-Path $HOME ".echelon" }),
+    [switch]$NoActivate
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,6 +48,14 @@ try {
     else {
         Copy-Item -Recurse -Force $sourceRoot $target
     }
+
+    if ($NoActivate) {
+        # A project's pinned praxis launcher installs its version side by side
+        # without changing which version the user's global commands run.
+        Write-Host "Installed Praxis $Version to $target (not activated)"
+        return
+    }
+
     foreach ($name in @("praxis", "ros")) {
         $cmd = Join-Path $binDir "$name.cmd"
         $cmdContent = "@echo off" + [Environment]::NewLine + 'call "' + $nativeCmd + '" %*' + [Environment]::NewLine
@@ -61,7 +70,7 @@ try {
     Set-Content -Encoding Ascii -Path (Join-Path $toolRoot "current-version") -Value $Version
 
     Write-Host "Installed Praxis $Version to $target"
-    Write-Host "Commands: praxis, ros, and echelon under $binDir"
+    Write-Host "Commands: praxis (with the legacy ros compatibility alias) and echelon under $binDir"
     Write-Host "Add $binDir to PATH if it is not already present."
 }
 finally {

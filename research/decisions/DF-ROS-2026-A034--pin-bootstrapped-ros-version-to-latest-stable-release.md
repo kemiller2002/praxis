@@ -1,12 +1,12 @@
 ---
 id: DF-ROS-2026-A034
 title: "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version"
-status: accepted
+status: superseded
 version: 1.0.0
 owners:
   - repository-governance
 created: 2026-09-11
-updated: 2026-09-11
+updated: 2026-09-29
 research_area: repository-operating-system
 decision_type: architecture
 supports: []
@@ -17,9 +17,33 @@ related_documents:
   - lib/bootstrap.mjs
   - .github/workflows/publish.yml
 supersedes: []
-superseded_by: []
+superseded_by:
+  - DF-ROS-2026-A049
+  - DF-ROS-2026-A044
 tags: [ros-fs, bootstrap, launcher, npm, release]
 confidence: high
+provenance:
+  contributions:
+    EXE-20260928T090915352Z-fb23943c:
+      operations: [superseded]
+      at: 2026-09-28T10:18:56.865Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+    EXE-20260929T163720115Z-f381906c:
+      operations: [modified]
+      at: 2026-09-29T16:37:22.365Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Superseded by DF-ROS-2026-A044: npm snapshot releases retired (PRAXIS-DIST-NATIVE-DOTNET-TOOL)"
 ---
 
 # Decision

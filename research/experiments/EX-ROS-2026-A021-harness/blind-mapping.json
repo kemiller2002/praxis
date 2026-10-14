@@ -1,0 +1,9 @@
+{
+  "arm-x": "grouped",
+  "arm-y": "control",
+  "drawnAt": "2026-09-30T16:52Z",
+  "method": "secrets.randbelow(2)",
+  "unsealedAt": "2026-09-30T17:20Z",
+  "verifiedBy": "arm-x branch parent 5face88 = experiment/a021-grouped head; arm-y parent 8ea9be2 = experiment/a021-control head",
+  "evaluationCommit": "758724b"
+}

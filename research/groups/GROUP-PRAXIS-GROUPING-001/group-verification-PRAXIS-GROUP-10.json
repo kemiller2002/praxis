@@ -1,0 +1,74 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": "GROUP-PRAXIS-GROUPING-001",
+  "groupExecutionId": null,
+  "member": "PRAXIS-GROUP-10",
+  "rows": [
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "praxis.group-analysis/1 is a documented schema holding the group and group execution IDs, members with enumerated acceptance criteria, reuseInventory, searches (required when the inventory is empty) and newAbstractions, and it is parsed by one decoder (PRX-GRP-133)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group gates: the documents decode, and this repository's own group analysis is a valid praxis.group-analysis/1",
+        "result": "passed; schemas/praxis-group-analysis.schema.json documents the shape, GroupEvidenceJson.decodeAnalysis is the one decoder"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "praxis.group-verification/1 is a documented schema with one row per member criterion carrying status, evidence {kind, reference, result} and optional deferredTo, parsed by one decoder (PRX-GRP-134)",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "schemas/praxis-group-verification.schema.json",
+        "result": "documents praxis.group-verification/1; GroupEvidenceJson.decodeVerification decodes it (test 'the documents decode...' passed)"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "a member of a grouped-mode group execution completes only with --evidence group-analysis=PATH and --evidence group-verification=PATH, judged as a group-verified facet of the completion-readiness record (PRX-GRP-135)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group gates: cli a grouped-mode member completes with a committed analysis made before its change and a consistent verification",
+        "result": "passed: completionReadiness.facets.groupVerified.status = satisfied on the completed item"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "completion is refused with exit 3, the refusal document and no state change when evidence is missing, malformed or names another group or execution, a new abstraction names no considered element, the analysis was not committed in an ancestor of the member's first attributed commit, the criteria differ from the analysis, a non-met row has no deferredTo naming a recorded non-terminal item, or a location reference does not exist at the completion commit (PRX-GRP-133..135)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group gates: cli a grouped-mode member without group evidence is refused with exit 3 and no state change",
+        "result": "passed, with 'cli an analysis committed after the member's first change is refused' and the domain tests for foreign IDs, unconsidered abstractions, differing criteria, undeferred non-met rows and missing locations"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "a member that executes independently or was opted out completes under the normal policy without the group gates (PRX-GRP-135)",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "group gates: cli a member that executes independently completes under the normal policy without the group gates",
+        "result": "passed"
+      },
+      "deferredTo": null
+    },
+    {
+      "member": "PRAXIS-GROUP-10",
+      "criterion": "docs/group-analysis-template.md documents the JSON companion forms (PRX-GRP-040, PRX-GRP-045)",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "docs/group-analysis-template.md",
+        "result": "section 'Machine-checkable companions (PRX-GRP-133..135)' documents both JSON forms and the work complete evidence"
+      },
+      "deferredTo": null
+    }
+  ]
+}

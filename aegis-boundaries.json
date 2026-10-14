@@ -1,0 +1,59 @@
+{
+  "$comment": "Praxis operational failure boundaries (SAF-AEGIS-1). Expected outcomes (refused transitions, failed verification, stale installation state, user-owned-file conflicts, unsupported commands, policy refusals) stay typed Praxis/Ordo results with documented exit codes and are not Aegis faults (SAF-AEGIS-2). Classification lives in src/Praxis.Infrastructure/Boundary/AegisBoundary.fs; tests/Praxis.Tests/AegisBoundaryTests.fs asserts these codes equal the module's.",
+  "schema": "aegis/boundaries/v1",
+  "application": "Praxis",
+  "boundaries": [
+    {
+      "name": "Command line",
+      "kind": "process-entry",
+      "owner": "Praxis.Cli",
+      "codes": [
+        "PRAXIS.GIT.FAILURE",
+        "PRAXIS.PROCESS.FAILURE",
+        "PRAXIS.FILES.FAILURE",
+        "PRAXIS.NETWORK.FAILURE",
+        "PRAXIS.STATE.FAILURE",
+        "PRAXIS.CLI.UNEXPECTED"
+      ],
+      "guarded": true,
+      "$comment": "Every command runs inside one Aegis capture. A failure that escapes is attributed to the adapter boundary that raised it: thrown from Praxis.Infrastructure.Git is GIT; network, process, filesystem and repository-state failures by type; anything else is CLI.UNEXPECTED. Programming defects and cancellation are re-raised."
+    },
+    {
+      "name": "Web and hub request handling",
+      "kind": "http-request",
+      "owner": "Praxis.Cli.HttpHost",
+      "codes": [
+        "PRAXIS.GIT.FAILURE",
+        "PRAXIS.PROCESS.FAILURE",
+        "PRAXIS.FILES.FAILURE",
+        "PRAXIS.NETWORK.FAILURE",
+        "PRAXIS.STATE.FAILURE",
+        "PRAXIS.WEB.FAILURE"
+      ],
+      "guarded": true,
+      "$comment": "praxis web serve and praxis hub serve capture each request and each connection. A fault is answered with HTTP 500, the safe message and an AG- reference; the exception text never reaches the browser."
+    }
+  ],
+  "redaction": {
+    "rules": [
+      "aegis default credentials",
+      "praxis-repository-data (remote, url, origin, repository)",
+      "praxis-work-content (description, content, prompt, transcript, body, title, attachment, note, evidence)"
+    ],
+    "technicalDetails": "Credentials in exception text (URL user-info, GitHub tokens, bearer/basic headers, token=/password=/secret= values) are replaced with [redacted] before the fault is recorded.",
+    "context": "Only the command words are public; the repository root is sensitive and masked."
+  },
+  "persistence": {
+    "sinks": [
+      {
+        "name": "stderr",
+        "kind": "console",
+        "level": "optional",
+        "durable": false
+      }
+    ],
+    "requiredDurableStorage": false,
+    "fallbackBehaviour": "Delivery is awaited (Blocking) so a record cannot lose the race with process exit; a sink failure is written to standard error.",
+    "retentionPolicy": "No durable Aegis sink is configured; the standard-error sink is the record."
+  }
+}

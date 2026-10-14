@@ -118,6 +118,11 @@ it.
 
 ## 5. Continue someone else's work, and what to do when you cannot reach Praxis
 
+- **Name work items unambiguously (protocol 1.4).** A bare work-item ID
+  means this repository. To be explicit, send
+  `{"repositoryId": "...", "repository": "OWNER/REPO", "localId": "ID"}`
+  (copy `repositoryIdentity` from `praxis.describe`). A reference to any
+  other repository is refused; there are no cross-repository remote requests.
 - **Make your work durable (protocol 1.3).** Push your commits through
   GitHub, then send `work.checkpoint` with `{workItemId, summary,
   nextAction, stepId?}` and your own `execution.id`. Praxis verifies that
@@ -131,7 +136,10 @@ it.
   was completed, the next action, and whether the remote still carries it.
   Then send `work.continue` with `{workItemId}`. You get your own execution,
   with the predecessor as its parent; the predecessor is recorded as
-  interrupted. No block and resume are needed.
+  interrupted. No block and resume are needed. Continue before you
+  complete: `work.complete` is refused as `domain-rejected` while the item
+  still has an active execution that is not yours, whether or not you name
+  an execution.
 - **Handing off intentionally.** Checkpoint, then send `work.block` with a
   reason that says it is a handoff. If work that no checkpoint covers must be
   left behind, add `unrecoverableReason` stating truthfully why it cannot be

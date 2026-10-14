@@ -34,8 +34,9 @@
     {
       "source": "templates/echelon-toolchain.json",
       "destination": ".echelon/toolchain.json",
-      "template": false,
-      "ownership": "shared"
+      "template": true,
+      "ownership": "shared",
+      "versionPin": "praxis"
     },
     {
       "source": "starter/greenfield/editorconfig.template",
@@ -47,13 +48,31 @@
       "source": "starter/greenfield/gitattributes.template",
       "destination": ".gitattributes",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": ["praxis.cmd text eol=crlf", "ros.cmd text eol=crlf"]
     },
     {
       "source": "starter/greenfield/gitignore.template",
       "destination": ".gitignore",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": [".ros/locks/"]
+    },
+    {
+      "source": "starter/greenfield/praxis",
+      "destination": "praxis",
+      "template": false,
+      "executable": true
+    },
+    {
+      "source": "starter/greenfield/praxis.ps1",
+      "destination": "praxis.ps1",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/praxis.cmd",
+      "destination": "praxis.cmd",
+      "template": false
     },
     {
       "source": "starter/greenfield/ros",
@@ -62,13 +81,19 @@
       "executable": true
     },
     {
-      "source": "starter/greenfield/tools/ros_fs_launcher.mjs",
-      "destination": "tools/ros_fs_launcher.mjs",
+      "source": "starter/greenfield/ros.ps1",
+      "destination": "ros.ps1",
       "template": false
     },
     {
-      "source": "starter/greenfield/.github/workflows/ros-validation.yml",
-      "destination": ".github/workflows/ros-validation.yml",
+      "source": "starter/greenfield/ros.cmd",
+      "destination": "ros.cmd",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/.github/workflows/praxis-validation.yml",
+      "destination": ".github/workflows/praxis-validation.yml",
+      "replaces": ".github/workflows/ros-validation.yml",
       "template": false,
       "integration": "github-actions",
       "ownership": "shared"
@@ -361,6 +386,26 @@
       "template": false
     },
     {
+      "source": "schemas/ecir-approval-v1.schema.json",
+      "destination": "schemas/ecir-approval-v1.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-completion-readiness.schema.json",
+      "destination": "schemas/praxis-completion-readiness.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-group-analysis.schema.json",
+      "destination": "schemas/praxis-group-analysis.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-group-verification.schema.json",
+      "destination": "schemas/praxis-group-verification.schema.json",
+      "template": false
+    },
+    {
       "source": "schemas/execution-telemetry.schema.json",
       "destination": "schemas/execution-telemetry.schema.json",
       "template": false
@@ -438,6 +483,11 @@
     {
       "source": "docs/development-telemetry.md",
       "destination": "docs/development-telemetry.md",
+      "template": false
+    },
+    {
+      "source": "docs/fallback-reconciliation.md",
+      "destination": "docs/fallback-reconciliation.md",
       "template": false
     },
     {

@@ -1,8 +1,8 @@
 # Native Praxis installation
 
-Praxis is the product name for the repository operating system previously exposed as ROS. Native installation does not require npm, Node.js, or a machine-wide .NET runtime.
+Praxis is Echelon Foundry's repository operating system; it was previously exposed as ROS (`DF-ROS-2026-A050`). Native installation does not require npm, Node.js, or a machine-wide .NET runtime.
 
-Each stable release contains a self-contained F# executable plus the exact versioned package payload needed by lifecycle commands such as init, verify, doctor, and upgrade. The native wrapper supplies that payload to the executable explicitly. Existing repository-local ROS installations remain compatible.
+Each stable release contains a self-contained F# executable plus the exact versioned package payload needed by lifecycle commands such as init, verify, doctor, and upgrade. The native wrapper supplies that payload to the executable explicitly. Existing repository-local installations made under the ROS name remain compatible.
 
 ## Install the complete Echelon toolchain
 
@@ -97,9 +97,11 @@ On macOS and Linux:
 
 Versions are immutable directories. The bin entries point at the active version, so upgrading a tool does not rewrite an older release.
 
+A project's own `./praxis` (or its compatibility alias `./ros`) runs the Praxis version that project pins from `tools/praxis/<version>/`. If that version is missing it installs it with `install-native.sh --no-activate` (`install-native.ps1 -NoActivate` on Windows), which adds the version directory without changing the active version or the bin entries.
+
 ## Compatibility
 
-The existing npm package remains supported as a compatibility distribution channel. Existing ros and sde command names and repository installation manifests are not removed by this change.
+The native bundles need no runtime; npm is no longer a distribution channel and the npm package is retired (`DF-ROS-2026-A044`, `DF-ROS-2026-A049`); versions already published there stay installable but receive no updates. With .NET 10 installed, `dotnet tool install -g EchelonFoundry.Praxis` provides the same `praxis` command from NuGet. Existing ros and sde command names and repository installation manifests are not removed. Each bundle is the self-contained binary plus its launchers; the binary embeds the scaffold it installs.
 
 ## Verified bootstrap for CI and remote execution
 

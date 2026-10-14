@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="JsonRendering.fs" />
+    <Compile Include="Identity/IdentityJson.fs" />
+    <Compile Include="Git/StatusJson.fs" />
+    <Compile Include="Git/SyncJson.fs" />
+    <Compile Include="Work/DecisionJson.fs" />
+    <Compile Include="Work/PlanJson.fs" />
+    <Compile Include="Work/ContextPlanJson.fs" />
+    <Compile Include="Work/QualityEvidenceJson.fs" />
+    <Compile Include="Work/GroupEvidenceJson.fs" />
+    <Compile Include="Work/BacklogJson.fs" />
+    <Compile Include="Work/AttributionJson.fs" />
+    <Compile Include="Work/QueueValidationJson.fs" />
+    <Compile Include="Work/BacklogTransitionJson.fs" />
+    <Compile Include="Work/TelemetryValidationJson.fs" />
+    <Compile Include="Artifacts/RegistryJson.fs" />
+    <Compile Include="Cli/FindingJson.fs" />
+    <Compile Include="Provenance/ActorJson.fs" />
+    <Compile Include="Ordo/ObservationJson.fs" />
+    <Compile Include="Lifecycle/LifecycleJson.fs" />
+    <Compile Include="Work/ReconciliationJson.fs" />
+    <Compile Include="Work/InputInboxJson.fs" />
+    <Compile Include="Work/CheckpointJson.fs" />
+    <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
+    <Compile Include="Provenance/ProvenanceReportJson.fs" />
+    <Compile Include="Remote/RemoteJson.fs" />
+    <Compile Include="Execution/ExecutionJson.fs" />
+    <Compile Include="Installation/InstallationJson.fs" />
+    <Compile Include="Planning/PlanningJson.fs" />
+    <Compile Include="Work/WorkGroupJson.fs" />
+    <Compile Include="Work/LocalAgentHandoffJson.fs" />
+    <Compile Include="Work/LocalHandoffExplanationJson.fs" />
+    <Compile Include="Work/LocalDispatchJournalJson.fs" />
+    <Compile Include="Work/LocalWorkerSubmissionJson.fs" />
+    <Compile Include="Work/LocalIntegrationJournalJson.fs" />
+    <Compile Include="Work/LocalContainmentJson.fs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,47 @@
+Repository repository-operating-system at fb6a0f9d6c8e (unknown); planned 2026-09-30T11:48:04.000Z by planner 3.6.0
+Work-state fingerprint aad6d72c6fbc43f3
+Advisory shadow plan: nothing was started, completed, reprioritized or otherwise changed. No single schedule is optimal across cost, duration and collision risk. The frontier lists the non-dominated alternatives; choose the tradeoff that matters.
+
+GROUP-PRAXIS-WORK-GROUP-001 (PRAXIS-GROUP-01, PRAXIS-GROUP-02, PRAXIS-GROUP-03, PRAXIS-GROUP-04, PRAXIS-GROUP-05)
+  independent: 5 executions, 5 context acquisitions, 5 design owners, peak 1, up to approximately 50 min
+  grouped:     1 execution, 1 context acquisition, 1 design owner, peak 1, up to approximately 50 min
+  context: 4 cold start(s) avoided by construction; their token and time value is unknown (unmeasured)
+  architecture: independent execution gives 5 separate design owner(s) over shared context (one declared-group record in Praxis state, read by the planner as grouping.groups; one CLI command family: praxis work group create|show|add|remove|checkpoint; PRX-GRP-041..044: per-member identity, attribution, partial completion and checkpoints); grouped execution gives one, which must still keep per-item attribution
+  context pressure: no context-pressure evidence yet
+
+GROUP-REPOSITORY-OPERATING-SYSTEM-ATTRIBUTION-001 (ATTR-COMPLETE-BASE-REF-SWEEP, ATTR-RECONCILE-SYMLINK-SUBMODULE)
+  hypothetical until triaged: ATTR-COMPLETE-BASE-REF-SWEEP, ATTR-RECONCILE-SYMLINK-SUBMODULE cannot run yet
+  independent: 2 executions, 2 context acquisitions, 2 design owners, peak 2, up to approximately 10 min
+  grouped:     1 execution, 1 context acquisition, 1 design owner, peak 1, up to approximately 20 min
+  context: 1 cold start(s) avoided by construction; their token and time value is unknown (unmeasured)
+  architecture: independent execution gives 2 separate design owner(s) over shared context (same area 'attribution'; same area 'reconciliation'; both cite requirement DF-ROS-2026-A040); grouped execution gives one, which must still keep per-item attribution
+  context pressure: no context-pressure evidence yet
+
+GROUP-REPOSITORY-OPERATING-SYSTEM-WORK-PROTOCOL-001 (PRAXIS-STATE-MERGE-01, WORK-CAPTURE-ID-COLLISION)
+  hypothetical until triaged: PRAXIS-STATE-MERGE-01, WORK-CAPTURE-ID-COLLISION cannot run yet
+  independent: 2 executions, 2 context acquisitions, 2 design owners, peak 2, up to approximately 10 min
+  grouped:     1 execution, 1 context acquisition, 1 design owner, peak 1, up to approximately 20 min
+  context: 1 cold start(s) avoided by construction; their token and time value is unknown (unmeasured)
+  architecture: independent execution gives 2 separate design owner(s) over shared context (same area 'work-protocol'); grouped execution gives one, which must still keep per-item attribution
+  context pressure: no context-pressure evidence yet
+
+Item-level speed plan: up to approximately 58 min; 3 context acquisitions
+Group schedule (max concurrency 3, cross-unit policy accept-elevated): up to approximately 58 min
+Context acquisitions: 3 as scheduled, 7 if every item ran independently
+
+Wave 1: up to approximately 50 min
+  GROUP-PRAXIS-WORK-GROUP-001 [PRAXIS-GROUP-01 -> PRAXIS-GROUP-02 -> PRAXIS-GROUP-03 -> PRAXIS-GROUP-04 -> PRAXIS-GROUP-05] (up to approximately 50 min)
+    - one owner executes 5 member(s) in required sequence after one group-level reasoning pass
+    - contains critical-path work
+    - runs alongside 1 other unit(s): no ordering dependency and every cross pair admitted by accept-elevated
+  PRAXIS-REMOTE-12 (up to approximately 10 min)
+    - ungrouped item: its own execution
+    - runs alongside 1 other unit(s): no ordering dependency and every cross pair admitted by accept-elevated
+
+Wave 2: up to approximately 8 min
+  WI-READY (up to approximately 8 min)
+    - ungrouped item: its own execution
+
+portfolio -> groups -> items: each group is one reasoning owner; units co-run only under the accept-elevated policy. Durations are the members' item estimates summed; the context reuse that grouping might add is not modelled because it is unmeasured.
+
+Grouping is compared, not assumed: it replaces cold starts with one shared context and serializes members under one owner. Whether that saves tokens or time, or improves architecture, is what the grouping experiment measures (PRX-GRP-080); no strategy is universally better.

@@ -1,0 +1,289 @@
+{
+  "home": "home",
+  "legacy": [
+    {
+      "name": "legacy-1",
+      "params": {
+        "id": "{id}"
+      },
+      "pattern": "/bills/{id:int}",
+      "to": "invoices.invoice"
+    },
+    {
+      "name": "legacy-2",
+      "params": {
+        "period": "{period}"
+      },
+      "pattern": "/old-reports/{period:month}",
+      "to": "reports"
+    }
+  ],
+  "mode": "hash",
+  "notFound": "notFound",
+  "routes": [
+    {
+      "guards": [],
+      "name": "home",
+      "params": [],
+      "pattern": "/",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "invoices.list",
+      "params": [
+        {
+          "default": null,
+          "in": "query",
+          "name": "status",
+          "required": false,
+          "type": "set",
+          "values": [
+            "draft",
+            "open",
+            "overdue",
+            "paid"
+          ]
+        },
+        {
+          "default": "due",
+          "in": "query",
+          "name": "sort",
+          "required": false,
+          "type": "enum",
+          "values": [
+            "due",
+            "amount",
+            "number"
+          ]
+        },
+        {
+          "default": 1,
+          "in": "query",
+          "name": "page",
+          "required": false,
+          "type": "int",
+          "values": null
+        },
+        {
+          "default": false,
+          "in": "query",
+          "name": "archived",
+          "required": false,
+          "type": "bool",
+          "values": null
+        },
+        {
+          "default": null,
+          "in": "query",
+          "name": "q",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/invoices",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "invoices.invoice",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "type": "int",
+          "values": null
+        },
+        {
+          "default": null,
+          "in": "query",
+          "name": "status",
+          "required": false,
+          "type": "set",
+          "values": [
+            "draft",
+            "open",
+            "overdue",
+            "paid"
+          ]
+        },
+        {
+          "default": "due",
+          "in": "query",
+          "name": "sort",
+          "required": false,
+          "type": "enum",
+          "values": [
+            "due",
+            "amount",
+            "number"
+          ]
+        },
+        {
+          "default": 1,
+          "in": "query",
+          "name": "page",
+          "required": false,
+          "type": "int",
+          "values": null
+        },
+        {
+          "default": false,
+          "in": "query",
+          "name": "archived",
+          "required": false,
+          "type": "bool",
+          "values": null
+        },
+        {
+          "default": null,
+          "in": "query",
+          "name": "q",
+          "required": false,
+          "type": "string",
+          "values": null
+        },
+        {
+          "default": "summary",
+          "in": "query",
+          "name": "tab",
+          "required": false,
+          "type": "enum",
+          "values": [
+            "summary",
+            "history",
+            "lines"
+          ]
+        }
+      ],
+      "pattern": "/invoices/{id:int}",
+      "requires": [
+        "invoice"
+      ],
+      "returnTarget": true
+    },
+    {
+      "guards": [
+        "signedIn"
+      ],
+      "name": "reports",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "period",
+          "required": true,
+          "type": "month",
+          "values": null
+        },
+        {
+          "default": null,
+          "in": "query",
+          "name": "on",
+          "required": false,
+          "type": "date",
+          "values": null
+        },
+        {
+          "default": null,
+          "in": "query",
+          "name": "tags",
+          "required": false,
+          "type": "set",
+          "values": null
+        }
+      ],
+      "pattern": "/reports/{period:month}",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "day",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "on",
+          "required": true,
+          "type": "date",
+          "values": null
+        }
+      ],
+      "pattern": "/days/{on:date}",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "board",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "view",
+          "required": true,
+          "type": "enum",
+          "values": [
+            "week",
+            "month"
+          ]
+        }
+      ],
+      "pattern": "/boards/{view:enum}",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "signIn",
+      "params": [
+        {
+          "default": null,
+          "in": "query",
+          "name": "returnTo",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/sign-in",
+      "requires": [],
+      "returnTarget": false
+    },
+    {
+      "guards": [
+        "adminOnly"
+      ],
+      "name": "admin",
+      "params": [],
+      "pattern": "/admin",
+      "requires": [],
+      "returnTarget": true
+    },
+    {
+      "guards": [],
+      "name": "notFound",
+      "params": [
+        {
+          "default": null,
+          "in": "path",
+          "name": "rest",
+          "required": false,
+          "type": "string",
+          "values": null
+        }
+      ],
+      "pattern": "/{*rest}",
+      "requires": [],
+      "returnTarget": false
+    }
+  ],
+  "schema": "echelon.routes/v1",
+  "signIn": "signIn"
+}

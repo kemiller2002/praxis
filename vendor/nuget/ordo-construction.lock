@@ -1,0 +1,10 @@
+# Ordo.Construction pin (Praxis #242, Ordo #69). The .nupkg beside this file
+# is the unmodified `ordo-construction.nupkg` asset of the Ordo release named
+# here; its sha256 is the one in that release's native-checksums.txt. It
+# depends only on EchelonFoundry.Ordo.Core of the same version (ordo-core.lock).
+# NuGet restores EchelonFoundry.Ordo.Construction only from this folder
+# (NuGet.config package source mapping). Upgrade together with ordo-core.lock.
+ordo 1.8.2
+package EchelonFoundry.Ordo.Construction
+url https://github.com/kemiller2002/ordo/releases/download/v1.8.2/ordo-construction.nupkg
+sha256 957eb37bb49b5a094b058a271896b15507d033147820397b87f144e3d1a817c8

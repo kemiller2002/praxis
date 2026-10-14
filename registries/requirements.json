@@ -22,6 +22,34 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:57.631Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:39.377Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -38,7 +66,7 @@
       "provider-neutral"
     ],
     "title": "Actor identity is explicit, structured, and provider-neutral",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -64,6 +92,34 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:58.429Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:40.078Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -80,7 +136,7 @@
       "telemetry"
     ],
     "title": "Every execution has its own identity, separate from the actor's stable identity",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -106,6 +162,48 @@
             "created"
           ],
           "reason": "Captured from the agent identity and provenance objective (work item FEAT-AGENT-PROVENANCE)"
+        },
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:59.082Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Verification references moved from removed Node tests to their F# ports (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.208Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Decision reference renumbered to DF-ROS-2026-A049 after merging main (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:40.826Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -122,7 +220,7 @@
       "attribution"
     ],
     "title": "Work events and captured work items record the acting actor",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -535,6 +633,315 @@
   },
   {
     "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A013",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A013--execution-step-model.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:33.976Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "execution",
+      "steps",
+      "provenance"
+    ],
+    "title": "Executions contain ordered, attributable steps",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A014",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A014--step-lifecycle.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.188Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "steps",
+      "lifecycle",
+      "validation"
+    ],
+    "title": "Step lifecycle is explicit and state directed",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A015",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A015--step-usage-telemetry.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.399Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "tokens",
+      "checkpoints",
+      "quality"
+    ],
+    "title": "Step usage telemetry preserves availability and derivation",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A016",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A016--step-cost-attribution.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.610Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A015"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "telemetry",
+      "cost",
+      "pricing",
+      "provenance"
+    ],
+    "title": "Step cost retains method and pricing provenance",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A017",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A017--step-engineering-evidence.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:34.823Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A036",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "evidence",
+      "provenance",
+      "engineering"
+    ],
+    "title": "Step evidence uses references with contribution-safe provenance",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A018",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A018--step-aggregation-and-analysis.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.035Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "aggregation",
+      "metrics",
+      "research"
+    ],
+    "title": "Step aggregation is non-overlapping and analysis ready",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A019",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A019--step-portability-and-fallback.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.246Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "fallback",
+      "reconciliation",
+      "instance-identity",
+      "compatibility"
+    ],
+    "title": "Steps remain backward compatible and portable through fallback execution",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
     "id": "RQ-ROS-2026-A020",
     "owners": [
       "repository-governance"
@@ -559,6 +966,20 @@
             "created"
           ],
           "reason": "Captured from GitHub issue #80 (work item GH-80): post-hoc Git-evidenced attribution reconciliation"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:41.536Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
         }
       }
     },
@@ -653,6 +1074,37 @@
             "modified"
           ],
           "reason": "PRX-REMOTE-001/011/029/042 demonstrated live (PRAXIS-REMOTE-11); gaps recorded as PRAXIS-REMOTE-15 and PRAXIS-REMOTE-16"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:43.202Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261007T053405002Z-37591719": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T05:34:26.023Z",
+          "evidence": [
+            "docs/identity.md"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Adopt PRX-REMOTE-045..050 and the order amendment; record their implementation (GROUP-PRAXIS-IDENTITY-001); correct the deleted Node test citations and the abandoned PRAXIS-NPM-BIN deferral"
         }
       }
     },
@@ -677,8 +1129,8 @@
       "gh-90"
     ],
     "title": "Praxis governance is independent of the execution environment; remote/cloud-agent execution is a first-class capability",
-    "updated": "2026-09-29",
-    "version": "1.3.0"
+    "updated": "2026-10-07",
+    "version": "1.4.0"
   },
   {
     "created": "2026-09-29",
@@ -744,6 +1196,54 @@
             "modified"
           ],
           "reason": "Add CONT-080..086 effective-current telemetry requirements dropped from 1.1.0 (PRAXIS-CONT-11-SEGMENTATION)"
+        },
+        "EXE-20261001T112010850Z-0bbe08ef": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T11:20:30Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/actions/runs/36826902106/job/110254499248"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Post-merge correction: PR #79 normalized the file's EOF whitespace during integration; record that responsible contribution so base-aware validation remains truthful."
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:43.996Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:24.471Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },
@@ -790,7 +1290,7 @@
     "priority": "high",
     "provenance": {
       "contributions": {
-        "EXE-20260929T130548213Z-63fe94ae": {
+        "EXE-20260929T162324008Z-39bbe593": {
           "actor": {
             "id": "anthropic/claude-code",
             "kind": "agent",
@@ -798,11 +1298,42 @@
             "provider": "anthropic",
             "runtime": "claude-code"
           },
-          "at": "2026-09-29T13:06:08.060Z",
+          "at": "2026-09-29T16:23:38.263Z",
           "operations": [
             "created"
           ],
-          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from branch claude/remote-inbox-relay)"
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:44.700Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: replace citations of deleted Node tests with the F# tests that cover the behaviour; keep the Node result as history"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:23.740Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },
@@ -823,6 +1354,502 @@
     ],
     "title": "A remote agent that can write to the repository but cannot dispatch GitHub Actions can still send praxis.remote requests, with no change to trust, validation or identity",
     "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A024",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.294Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Captured the F#/.NET-only repository rule from the user's objective (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:29.586Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from RQ-ROS-2026-A021 (taken on main by remote execution) (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.538Z",
+          "operations": [
+            "modified"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A022 on this branch to resolve a collision with a different main record; content unchanged"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:45.363Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: fix the tests/Praxis.Tests path and correct the status to accepted while Python automation remains (PRAXIS-MISC-08)"
+        },
+        "EXE-20261006T213719240Z-8ddc5e25": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T21:37:46.958Z",
+          "evidence": [
+            "DF-ROS-2026-A054"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-08: Python acceptance criterion added; status implemented with recorded exceptions"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A033",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "tooling",
+      "node-removal",
+      "invariant"
+    ],
+    "title": "Repository-owned implementation and automation are F#/.NET only",
+    "updated": "2026-10-06",
+    "version": "1.1.0"
+  },
+  {
+    "created": "2026-09-28",
+    "id": "RQ-ROS-2026-A025",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A025--praxis-canonical-name.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.274Z",
+          "operations": [
+            "created"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:08.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A023 on this branch to resolve a collision with a different main record; content unchanged"
+        },
+        "EXE-20261006T203816433Z-d8de3cb4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:40:42.388Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A050",
+      "AGENTS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros is compatibility only",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "created": "2026-09-27",
+    "id": "RQ-ROS-2026-A026",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A026--runtime-free-reconciliation.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:43.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Runtime-free canonical reconciliation requirement"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:46:05Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Update fallback decision reference after resolving the canonical ID collision with main"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A022"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A051",
+      "RQ-ROS-2026-A019",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "protocol/praxis-envelope-v1.schema.json",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "fallback",
+      "reconciliation",
+      "offline",
+      "telemetry",
+      "provenance",
+      "instance-identity"
+    ],
+    "title": "Runtime-free envelopes reconcile into canonical work and execution state",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-09-27",
+    "derived_from": [
+      "RQ-ROS-2026-A020"
+    ],
+    "id": "RQ-ROS-2026-A027",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A027--step-cli-and-query.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.455Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:46.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Resolve requirement identifier collision introduced by main integration"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:21Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical step-telemetry requirement after integrating main's independently assigned RQ-ROS-2026-A021"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned RQ-ROS-2026-A023"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "verified",
+    "tags": [
+      "steps",
+      "cli",
+      "query",
+      "json"
+    ],
+    "title": "Step lifecycle and evidence have deterministic CLI inspection",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-10",
+    "id": "RQ-ROS-2026-A028",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A028--local-coordinator-and-worker-handoffs.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261010T091205536Z-2fa1bdc8": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-10T12:33:03.712Z",
+          "last": "2026-10-11T07:11:20.219Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "User requires one local coordinator delegating to workers with no external services; record acceptance before implementation"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "RQ-ROS-2026-A022",
+      "docs/local-agent-coordination.md",
+      "docs/ecir-host-integration.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "ecir",
+      "agents",
+      "local",
+      "coordination",
+      "handoff",
+      "offline",
+      "recovery"
+    ],
+    "title": "One local coordinator delegates bounded work to local agents without required external services",
+    "updated": "2026-10-10",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-11",
+    "derived_from": [
+      "RQ-ROS-2026-A028"
+    ],
+    "id": "RQ-ROS-2026-A029",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A029--enforced-worker-checklists.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T204811145Z-23f864b2": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T20:57:54.792Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "User-authorized enforced worker checklists; record acceptance and remaining host qualification"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A028",
+      "DF-ROS-2026-A067",
+      "docs/worker-checklists.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "agents",
+      "checklist",
+      "quality",
+      "evidence",
+      "prevention"
+    ],
+    "title": "Worker checklists require independently verified current evidence before accepted handoff",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-13",
+    "id": "RQ-ROS-2026-A030",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A030--work-reclassification-and-external-evidence.md",
+    "priority": "medium",
+    "provenance": {
+      "contributions": {
+        "EXE-20261013T162326019Z-fed260ae": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-13T16:23:59Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Program-lead-directed requirements capture: work-type reclassification and external evidence references (echelon-registry WI-0039/WI-0040 blocked)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "docs/work-protocol.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "work-protocol",
+      "evidence",
+      "completion",
+      "work-type",
+      "audit"
+    ],
+    "title": "Reclassify a work item's type and accept external evidence references at completion",
+    "updated": "2026-10-13",
     "version": "1.0.0"
   }
 ]

@@ -33,7 +33,7 @@ inspected as a full-page render.
   150px of text. It now uses two columns from 48rem and three from 72rem.
 - The tablet render exposed a garbled sentence in the reconciliation
   introduction, left by an earlier shell edit in which `sed` treated `&` as
-  the match. The sentence was repaired, and `tests/site/content.test.mjs` now
+  the match. The sentence was repaired, and the content tests (now `tests/Site.Tests/ContentTests.fs`)
   fails on entities missing their ampersand, duplicated sentences and
   run-together words.
 
@@ -42,5 +42,5 @@ inspected as a full-page render.
 Two elements are allowed to be wider than a phone: the record-location tree
 and the GH-84 ledger table (min-width 34rem). Each scrolls inside its own
 focusable, named region; the page itself never scrolls sideways.
-`tests/site/responsive.test.mjs` fails if any other fixed width over 320px
+`tests/Site.Tests/ResponsiveTests.fs` fails if any other fixed width over 320px
 appears.

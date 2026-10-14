@@ -1,0 +1,122 @@
+EX-ROS-2026-A021-R2 — POST-UNBLINDING METRICS COMPARISON
+==========================================================
+
+Unblinded mapping
+-----------------
+Arm N = grouped execution.
+Arm M = independent/control execution.
+
+The mapping was established after the blind report was durable by comparing
+implementation file blob identities against the now-permitted original R2 arm
+trees. Arm N blobs exactly match experiment/a021-r2-grouped; Arm M blobs
+exactly match experiment/a021-r2-control.
+
+Commitment verification
+-----------------------
+Pre-evaluation commitment:
+  b5873a54f001bbeebdfa90d3080c2e1c41f068168d650ca1acfa7ecf99ac8436
+
+The owner-only salt/reveal string was not committed and was not recoverable
+from available prior context. The mapping is established by exact tree
+identity, but this evaluator cannot independently recompute the commitment.
+
+R2 platform metrics
+-------------------
+Grouped:
+- sessions: 1 implementing session
+- elapsed: 55m53s
+- input: 262
+- output: 132,902
+- cache-read: 27,911,832
+- cache-write: 314,024
+- cost: $10.7536464
+
+Independent/control:
+- sessions: 5 implementing sessions + 1 control orchestrator
+- elapsed: 2h23m35s
+- input: 956
+- output: 262,893
+- cache-read: 62,960,709
+- cache-write: 1,074,120
+- cost: $26.0492768
+
+Control/grouped:
+- cost: 2.4224x
+- elapsed: 2.5693x
+- output tokens: 1.9781x
+- cache-read tokens: 2.2557x
+
+Grouped reductions relative to control:
+- cost: 58.72%
+- elapsed: 61.08%
+
+R2 blind implementation quality
+-------------------------------
+The blind evaluator found two confirmed acceptance defects in each arm.
+
+Grouped (Arm N) was stronger on:
+- one reused create/add member-admission rule;
+- execution-repository default/enforcement;
+- one locked read-decide-write mutation path;
+- one group store;
+- one common JSON command envelope.
+
+Independent/control (Arm M) was stronger on:
+- checkpoint ownership/attribution validation;
+- explicit abandoned-member checkpoint classification;
+- blank shared-decision rejection;
+- deeper checkpoint-corruption tests.
+
+This is a mixed quality result, not a quality sweep. Grouped did not have fewer
+confirmed defects by count, but it did show stronger cross-item architectural
+cohesion in the dimensions the experiment was designed to test.
+
+Replication against original A021
+---------------------------------
+The original blind evaluation mapped Arm X to grouped execution and Arm Y to
+independent/control after its evaluation. Grouped X used one store, one
+member-validation rule, one member classification, one error/JSON style and
+one mutation pipeline. Independent Y fragmented the feature across three
+stores, two admission rules, two group-ID rules, three member classifications
+and multiple rejection/JSON patterns, while retaining stronger fidelity in
+several local details.
+
+R2 reproduces that qualitative pattern:
+- grouped again produced the more unified cross-item model;
+- independent execution again produced stronger detail in some localized
+  checkpoint concerns;
+- grouped did not show a general loss of acceptance quality;
+- R2 additionally measured a large resource advantage.
+
+Original A021 resource telemetry points in the same direction, though platform
+cost was unavailable:
+- grouped: 114 model requests, 110,627 output, 23,872,205 cache-read, 52 file
+  reads, 53 searches, 16 builds, 13 test runs.
+- control aggregate: 237 model requests, 176,304 output, 32,211,852 cache-read,
+  134 file reads, 159 searches, 34 builds, 15 test runs.
+
+Threats to validity
+-------------------
+- Same repository, baseline and feature family as the original run. This is an
+  execution replication, not an independent-domain replication.
+- R2 control deviation C2 matters: GROUP-02 started from a stale baseline and
+  initially designed without GROUP-01 before merging it. GROUP-03 also started
+  stale but merged prior work before implementation. This can amplify the
+  cross-item inconsistency the experiment measures.
+- One run per arm does not establish a universal causal law.
+- The blind evaluator could not run its own local .NET build/probe/concurrency
+  matrix; exact-SHA CI and static review were used as documented.
+
+Classification
+--------------
+R2 SUPPORTS HY-ROS-2026-A028 for high-affinity work.
+
+The supported mechanism is narrower than "waterfall is better than iterative
+development": for a tightly coupled cohort sharing domain invariants and
+mutation infrastructure, one context that reasons across the cohort can avoid
+repeated context acquisition and reduce cross-item architectural drift.
+
+Next falsification step
+-----------------------
+Repeat on a high-affinity cohort in another subsystem/repository and on a
+deliberately low-affinity cohort to test whether there is a cohesion threshold.

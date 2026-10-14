@@ -2,7 +2,7 @@
 
 ## Repository status
 
-Newly initialized with Repository Operating System {{ROS_VERSION}}.
+Newly initialized with Praxis {{ROS_VERSION}}.
 
 ## Observed facts
 
@@ -25,5 +25,5 @@ communication constraints?
 
 ## Baseline
 
-Not yet recorded. Define how the same slice would be approached without ROS and
+Not yet recorded. Define how the same slice would be approached without Praxis and
 which comparison measures are feasible.

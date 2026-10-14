@@ -1,4 +1,4 @@
-# Praxis remote protocol (`praxis.remote` 1.3)
+# Praxis remote protocol (`praxis.remote` 1.4)
 
 This page specifies the typed request/response contract that lets an agent
 with **no local .NET or Praxis runtime** ask a trusted executor to run an
@@ -9,8 +9,8 @@ explicit Praxis operation.
 - **How it was designed:** [`DF-ROS-2026-A041`](../research/decisions/DF-ROS-2026-A041--remote-execution-protocol-and-adapter-architecture.md).
 - **Schemas:** [`schemas/praxis-remote-request.schema.json`](../schemas/praxis-remote-request.schema.json)
   and [`schemas/praxis-remote-response.schema.json`](../schemas/praxis-remote-response.schema.json).
-- **Typed model:** `Ros.Domain.Remote` (`src/Ros.Domain/Remote/Protocol.fs`).
-- **JSON contract:** `Ros.Contracts.Remote.RemoteJson`.
+- **Typed model:** `Praxis.Domain.Remote` (`src/Praxis.Domain/Remote/Protocol.fs`).
+- **JSON contract:** `Praxis.Contracts.Remote.RemoteJson`.
 - **Operating it** (installation, permissions, upgrades, troubleshooting):
   [`remote-execution-operations.md`](remote-execution-operations.md).
 
@@ -122,6 +122,17 @@ request cannot use them.
 must be named in `execution.id`, and it must be one the requester may
 continue.
 
+**Completion finalizes only the requester's own executions (GH-113).**
+`work.complete` finalizes every active execution of each item it completes,
+so every one of them must be an execution the requester may continue,
+whether or not the request names one in `execution.id`. If any belongs to
+another actor or run -- including another session of the same agent -- the
+request is refused as `domain-rejected` on `arguments.workItemIds`, and
+nothing is persisted. The successor takes the work over with `work.continue`
+first (which records the predecessor as interrupted), then completes it in
+its own execution. The owner of the only active execution may still omit
+`execution.id`.
+
 **Batches (version 1.2).** The `batch` operation carries ordered
 constituents in `arguments.requests`. Each constituent has the form
 `{requestId, operation, execution?, arguments?}`. Batching saves runner
@@ -172,6 +183,35 @@ start-ups without weakening any guarantee.
 - **Reading state.** `work.context` returns the `continuity` block. A remote
   reader sees the historical checkpoint and its current recoverability
   separately.
+
+**Structured work-item references (version 1.4, PRX-REMOTE-047).**
+
+- Wherever a request takes `workItemId` or `workItemIds` (including inside
+  batch constituents), a 1.4 request may send the canonical reference
+  `{"repositoryId": "github:1309152643", "repository": "kemiller2002/praxis", "localId": "WI-0042"}`
+  instead of a bare ID. A reference without `repositoryId` must name its
+  `provider` and is a legacy, locator-only reference. See
+  [`identity.md`](identity.md).
+- A bare ID still means the executing repository, so 1.0-1.3 requests behave
+  exactly as before and fingerprint byte-for-byte as before: every journalled
+  request still replays. A structured reference adds its repository to the
+  fingerprint.
+- The reference must name the repository the executor governs (its
+  `ros.json` `repository.identity`, verified against `GITHUB_REPOSITORY_ID`).
+  Another repository, an unverifiable legacy locator, or an executor whose
+  repository identity is not established, is refused with `invalid-request`
+  before anything runs. Remote requests never act across repositories.
+- A display string such as `owner/repo:WI-0042` is not a reference; it fails
+  the work-item ID rule.
+- **Old peers.** A structured reference in a 1.0-1.3 request is
+  `invalid-request` and names 1.4. A 1.4 request to a 1.3 executor is
+  `unsupported-protocol` under the version rule below, so it never
+  half-runs.
+- **Responses** to 1.4 requests add `repository.identity` and a top-level
+  `workItems` array with the canonical reference of every work item the
+  request named. Responses to earlier versions keep their exact shape.
+- **Discovery.** `praxis.describe` publishes `repositoryIdentity` and
+  `workItemReference` (shape, fields, rule, `introducedIn`).
 
 The `admin` capability is reserved.
 
@@ -330,13 +370,21 @@ unchanged. A `requestId` that fails validation is never echoed back.
 
 | `failure.code` | `decidedBy` | `outcome` | `retry` |
 |---|---|---|---|
-| `invalid-request`, `secret-detected`, `unsupported-operation`, `unsupported-protocol`, `unauthorized`, `idempotency-conflict`, `domain-rejected` | praxis | rejected | `never` |
+| `invalid-request`, `secret-detected`, `unsupported-operation`, `unsupported-protocol`, `unauthorized`, `idempotency-conflict`, `domain-rejected`, `incompatible-state` | praxis | rejected | `never` |
 | `stale-ref` | praxis | rejected | `after-refresh` |
 | `validation-failed` | praxis | failed | `never` |
 | `internal` | praxis | failed | `same-request` |
 | `concurrency-conflict` | executor | failed | `after-refresh` |
 | `bootstrap-failed` | executor | failed | `same-request` |
 | `repository-write-failed`, `transport-failed`, `rate-limited`, `timeout`, `cancelled` | executor | unknown | `same-request` |
+
+`incompatible-state` (PRX-QUAL-010) is decided before a mutation: the
+executor reads the schema version of each gating state document
+(`.ros/work/queue.json`, `.ros/context/current.json`, `.ros/work/groups.json`,
+`.ros/events/events.jsonl`) and refuses when it does not read one of them.
+Each release declares the versions it reads and writes in its `release.json`
+(`compatibility.stateSchemas`, with `compatibility.remoteProtocol`). Reads are
+not gated.
 
 The retry values mean:
 

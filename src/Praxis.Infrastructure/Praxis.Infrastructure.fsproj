@@ -1,0 +1,197 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../Praxis.Contracts/Praxis.Contracts.fsproj" />
+    <ProjectReference Include="../Praxis.Application/Praxis.Application.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Released, pinned Aegis (SAF-AEGIS-6); the boundary lives here so the CLI, web and hub share it. -->
+    <PackageReference Include="EchelonFoundry.Aegis.Core" Version="1.0.0" />
+    <!-- Ordo's deterministic constructor, consumed as the pinned release asset
+         (vendor/nuget/ordo-construction.lock; Praxis #242, Ordo #69). -->
+    <PackageReference Include="EchelonFoundry.Ordo.Construction" Version="1.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Boundary/AegisBoundary.fs" />
+    <Compile Include="Pacing/Json.fs" />
+    <Compile Include="Pacing/AdapterRules.fs" />
+    <Compile Include="Pacing/Normalization.fs" />
+    <Compile Include="Pacing/Providers.fs" />
+    <Compile Include="Pacing/Persistence.fs" />
+    <Compile Include="Pacing/EventLog.fs" />
+    <Compile Include="Pacing/Context.fs" />
+    <Compile Include="Pacing/Runtime.fs" />
+    <Compile Include="Git/GitRepository.fs" />
+    <Compile Include="Git/UpstreamSynchronization.fs" />
+    <Compile Include="Identity/FileIdentityStore.fs" />
+    <Compile Include="Architecture/FileImplementationPolicyRepository.fs" />
+    <Compile Include="Work/WorkStateTransaction.fs" />
+    <Compile Include="Work/FileLocalHandoffInspection.fs" />
+    <Compile Include="Work/LocalHostJournalFiles.fs" />
+    <Compile Include="Work/LocalHostFileAccess.fs" />
+    <Compile Include="Work/FileLocalDispatchJournal.fs" />
+    <Compile Include="Work/FileLocalWorkerSubmissions.fs" />
+    <Compile Include="Work/FileLocalWorkerOutputSpool.fs" />
+    <Compile Include="Work/FileLocalIntegrationJournal.fs" />
+    <Compile Include="Work/LocalWorkerProcessPlatform.fs" />
+    <Compile Include="Work/LocalWorkerProcess.fs" />
+    <Compile Include="Work/LinuxContainmentHost.fs" />
+    <Compile Include="Work/LocalContainmentQualification.fs" />
+    <Compile Include="Work/FileLocalValidator.fs" />
+    <Compile Include="Work/FileWorkerChecklist.fs" />
+    <Compile Include="Work/FileLocalGitCandidates.fs" />
+    <Compile Include="Work/LocalWorkerBridge.fs" />
+    <Compile Include="Work/BacklogStateTransaction.fs" />
+    <Compile Include="Work/FileEvidenceRepository.fs" />
+    <Compile Include="Work/FileTelemetryStateRepository.fs" />
+    <Compile Include="Work/FileWorkConfigRepository.fs" />
+    <Compile Include="Work/EcirMemberGuard.fs" />
+    <Compile Include="Work/FileEventLogRepository.fs" />
+    <Compile Include="Work/RawTelemetrySanitizer.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationTransaction.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationStore.fs" />
+    <Compile Include="Work/ReconciliationEnvelopeJson.fs" />
+    <Compile Include="Work/FileBacklogQueueRepository.fs" />
+    <Compile Include="Work/FileWorkListRepository.fs" />
+    <Compile Include="Artifacts/FrontMatter.fs" />
+    <Compile Include="Artifacts/RegistryLock.fs" />
+    <Compile Include="Artifacts/RegistryTransaction.fs" />
+    <Compile Include="Artifacts/FileArtifactRepository.fs" />
+    <Compile Include="Json/CanonicalJson.fs" />
+    <Compile Include="Work/FileWorkHistoryMerge.fs" />
+    <Compile Include="Work/FileCompletionReadiness.fs" />
+    <Compile Include="Work/FileWorkContextRepository.fs" />
+    <Compile Include="Work/FileMetricRegistryRepository.fs" />
+    <Compile Include="Work/FileEnvelopeExecutionRepository.fs" />
+    <Compile Include="Work/FileEnvelopeReconciliationDispatcher.fs" />
+    <Compile Include="Work/FileReconciliationRepository.fs" />
+    <Compile Include="Work/FileTelemetryExecutionRepository.fs" />
+    <Compile Include="Work/ClaudeSessionTranscriptReader.fs" />
+    <Compile Include="Work/FileTelemetryQueryRepository.fs" />
+    <Compile Include="Work/FileStepRepository.fs" />
+    <Compile Include="Work/FileTelemetryFinalizationRepository.fs" />
+    <Compile Include="Work/FileNativeCompletionEffects.fs" />
+    <Compile Include="Work/FileLocalIntegratedCompletion.fs" />
+    <Compile Include="Work/PriceTableReader.fs" />
+    <Compile Include="Work/FileTelemetryUsageRepository.fs" />
+    <Compile Include="Work/FileTelemetryValidationRepository.fs" />
+    <Compile Include="Work/FileAdapterRepository.fs" />
+    <Compile Include="Provenance/FileProvenanceRepository.fs" />
+    <Compile Include="Work/FileCheckpointRepository.fs" />
+    <Compile Include="Ordo/FileObservationRepository.fs" />
+    <Compile Include="Lifecycle/Payload.fs" />
+    <Compile Include="Lifecycle/Installation.fs" />
+    <Compile Include="Remote/GitHubActionsExecutor.fs" />
+    <Compile Include="Remote/FileStateCompatibility.fs" />
+    <Compile Include="Remote/FileRemoteRepository.fs" />
+    <Compile Include="Execution/ExecutionStore.fs" />
+    <Compile Include="Execution/ExecutionLifecycleLease.fs" />
+    <Compile Include="Tutela/TutelaStore.fs" />
+    <Compile Include="Execution/ExecutionContracts.fs" />
+    <Compile Include="Execution/FileExecutionPorts.fs" />
+    <Compile Include="Installation/AdministrationClient.fs" />
+    <Compile Include="Identity/FileInstanceProjection.fs" />
+    <Compile Include="Work/FileWorkGroupRepository.fs" />
+    <Compile Include="Planning/FilePacingCapacity.fs" />
+    <Compile Include="Work/FileInputInbox.fs" />
+    <Compile Include="Planning/FilePlanningRepository.fs" />
+    <Compile Include="Planning/FileGroupObservation.fs" />
+    <Compile Include="Planning/FileWorkGroupFacts.fs" />
+    <Compile Include="Planning/FileGroupGates.fs" />
+    <Compile Include="Planning/FileEcirPreflight.fs" />
+    <Compile Include="Planning/EcirApprovals.fs" />
+    <Compile Include="Planning/FileEcirValidator.fs" />
+    <Compile Include="Planning/FileEcirAuthorization.fs" />
+    <Compile Include="Planning/EcirHostPolicy.fs" />
+    <Compile Include="Planning/EcirDispatchTransaction.fs" />
+    <Compile Include="Planning/EcirHostAdministration.fs" />
+    <Compile Include="Planning/FileGroupExecution.fs" />
+    <Compile Include="Planning/EcirNativeStage.fs" />
+    <Compile Include="Planning/LocalEcirPolicyJson.fs" />
+    <Compile Include="Planning/FileLocalEcirAuthority.fs" />
+    <Compile Include="Planning/LocalWorkerDelegation.fs" />
+    <Compile Include="Planning/FileLocalWorkerAssignment.fs" />
+    <Compile Include="Planning/FileLocalWorkerHost.fs" />
+    <Compile Include="Planning/ConstructionExtensionSlot.fs" />
+    <Compile Include="Planning/LocalHostConfiguration.fs" />
+    <Compile Include="Planning/LocalHostContainment.fs" />
+    <!-- Construction precedes the local runtime, which composes the host
+         construction-scope check into worker checklists (GH-234). -->
+    <Compile Include="Construction/ConstructionTree.fs" />
+    <Compile Include="Construction/ConstructionDecisions.fs" />
+    <Compile Include="Construction/ConstructionAdmission.fs" />
+    <Compile Include="Construction/DefaultPlanSeam.fs" />
+    <Compile Include="Construction/ConstructionApplication.fs" />
+    <Compile Include="Construction/ConstructionRouting.fs" />
+    <Compile Include="Construction/ConstructionHandoff.fs" />
+    <Compile Include="Construction/ConstructionExtension.fs" />
+    <Compile Include="Construction/ConstructionPrepared.fs" />
+    <Compile Include="Construction/ConstructionWorkspace.fs" />
+    <Compile Include="Construction/ConstructionTelemetry.fs" />
+    <Compile Include="Construction/ConstructionScope.fs" />
+    <Compile Include="Planning/FileLocalRuntime.fs" />
+    <Compile Include="Planning/LocalOperator.fs" />
+    <Compile Include="Planning/LocalRuntimeService.fs" />
+    <Compile Include="Planning/LocalContainmentService.fs" />
+    <Compile Include="Planning/FileGroupTelemetry.fs" />
+    <Compile Include="Construction/ConstructionCheck.fs" />
+    <Compile Include="Construction/ConstructionService.fs" />
+    <Compile Include="Foundations/LimenManifestReader.fs" />
+    <Compile Include="Foundations/FormaRelease.fs" />
+    <Compile Include="Foundations/RouteInventoryReader.fs" />
+    <Compile Include="Foundations/RoutingFoundation.fs" />
+  </ItemGroup>
+
+  <!-- The scaffold this CLI installs, compiled into the assembly so a released
+       binary can run `init` and `upgrade` inside a repository that has only the
+       executable: no package directory on disk, no network, and no explicitly supplied
+       package root. A
+       directory payload still wins when one is present (Payload.resolveSource),
+       so a source checkout installs the files being edited.
+
+       These items must cover exactly the `source` paths in both starter
+       manifests. LifecycleTests asserts that set equality, so adding a manifest
+       entry outside these rules fails the tests rather than shipping a binary
+       that cannot install itself. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)release.json" LogicalName="praxis.payload/release.json" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)AGENTS.md" LogicalName="praxis.payload/AGENTS.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)BOOTSTRAP.md" LogicalName="praxis.payload/BOOTSTRAP.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)CLAUDE.md" LogicalName="praxis.payload/CLAUDE.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)GEMINI.md" LogicalName="praxis.payload/GEMINI.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot).github/copilot-instructions.md" LogicalName="praxis.payload/.github/copilot-instructions.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)telemetry/metrics.json" LogicalName="praxis.payload/telemetry/metrics.json" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/development-telemetry.md" LogicalName="praxis.payload/docs/development-telemetry.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/fallback-reconciliation.md" LogicalName="praxis.payload/docs/fallback-reconciliation.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/ordo-observation.md" LogicalName="praxis.payload/docs/ordo-observation.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-protocol.md" LogicalName="praxis.payload/docs/remote-protocol.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/remote-agent-contract.md" LogicalName="praxis.payload/docs/remote-agent-contract.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/project-administration-hub.md" LogicalName="praxis.payload/docs/project-administration-hub.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/web-interface.md" LogicalName="praxis.payload/docs/web-interface.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-adapter-contract.md" LogicalName="praxis.payload/docs/work-adapter-contract.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-backlog-guide.md" LogicalName="praxis.payload/docs/work-backlog-guide.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/work-protocol.md" LogicalName="praxis.payload/docs/work-protocol.md" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/agent-provenance.md" LogicalName="praxis.payload/docs/agent-provenance.md" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)docs/00-governance/**/*.*" LogicalName="praxis.payload/docs/00-governance/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)framework/**/*.*" LogicalName="praxis.payload/framework/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)schemas/**/*.*" Exclude="$(PraxisRepositoryRoot)schemas/provenance-actor.schema.json;$(PraxisRepositoryRoot)schemas/artifact-provenance.schema.json;$(PraxisRepositoryRoot)schemas/echelon-doctor-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-inventory-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-foundations-v1.schema.json;$(PraxisRepositoryRoot)schemas/echelon-routes-v1.schema.json" LogicalName="praxis.payload/schemas/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)templates/**/*.*" Exclude="$(PraxisRepositoryRoot)templates/application-foundations.json;$(PraxisRepositoryRoot)templates/application-routes.json" LogicalName="praxis.payload/templates/%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- The web interface and hub pages are rendered by the CLI itself; only
+         their stylesheets ship, and `praxis web serve`/`praxis hub serve` fall back
+         to these embedded copies when a repository has none on disk. -->
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)web/styles.css" LogicalName="praxis.payload/web/styles.css" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)web-hub/styles.css" LogicalName="praxis.payload/web-hub/styles.css" />
+
+    <!-- The pinned Forma release (SAF-FORMA-1): the unmodified release tarball and its lock. -->
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/forma/forma.lock" LogicalName="praxis.forma/forma.lock" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/forma/echelon-foundry-design-system-*.tgz" LogicalName="praxis.forma/forma.tgz" />
+
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)starter/**/*.*" LogicalName="praxis.payload/starter/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

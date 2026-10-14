@@ -1,0 +1,69 @@
+PENDING FORMAL EVIDENCE RECORD — EX-ROS-2026-A021-R2 BLIND EVALUATION
+====================================================================
+
+Status: pending evidence ID assignment after owner unblinding
+Reason for temporary filename:
+The permitted blind-kit branch currently contains evidence IDs through
+EV-ROS-2026-A059. The blind README explicitly identifies EV-ROS-2026-A060,
+EV-ROS-2026-A061 and EV-ROS-2026-A062 as prohibited non-blind material.
+Assigning A060 on the blind branch would therefore create a foreseeable
+post-unblinding collision. Per the evaluation protocol, this record remains
+under the blind output directory until the owner can assign the next safe ID.
+
+Experiment:
+  EX-ROS-2026-A021-R2
+
+Evaluator:
+  OpenAI ChatGPT, GPT-5.6 Sol
+
+Permitted inputs:
+  baseline 8b4ffa392e93b19bf39f6672a608954c934cb815
+  blind kit 6f82f671e955f67afb40bfe73cf1b93840c67d47
+  arm M 72a6c0408140bce1b9c1b60fe174e7080d3f3c05
+  arm N f6d0b5c49a2c592d3d8791dc819518578116a1cc
+
+Blinding:
+  mappingKnown=false
+  compromised=false
+  leaks=none
+
+Primary evaluation artifacts:
+  research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt
+  research/experiments/EX-ROS-2026-A021-R2-blind/output/findings.json
+
+Evidence summary:
+- Blind-kit checksums for both patches and the acceptance criteria matched.
+- Both exact blind arm SHAs passed their available GitHub Actions validation
+  runs under .NET 10.0.401; logged solution builds reported 0 warnings and
+  0 errors.
+- Arm M test evidence: 839 F# PASS / 0 FAIL; Node 104/104 and 257/257; Python
+  7 OK; ./ros validate passed.
+- Arm N test evidence: 819 F# PASS / 0 FAIL; Node 104/104 and 257/257; Python
+  7 OK; ./ros validate passed.
+- Arm M confirmed acceptance defects:
+  M-D1: create can persist no execution repository.
+  M-D2: create does not enforce the cross-repository admission invariant that
+        add enforces.
+- Arm N confirmed acceptance defects:
+  N-D1: blank shared decisions are silently discarded instead of refused.
+  N-D2: stored checkpoint validation cannot verify that a referenced
+        checkpoint belongs to the named member.
+- Arm M has an additional concurrency design risk because create/add/remove do
+  not lock the read-decide-write cycle.
+- Arm N has stronger single-store/single-lock/single-admission cohesion, while
+  Arm M has stronger checkpoint ownership/attribution validation.
+
+Threats/protocol deviations:
+- Evaluator-local .NET was unavailable and local GitHub DNS access failed, so
+  no clean local worktrees, exact requested build invocation, fresh symmetric
+  fixture suite or concurrency stress test could be run.
+- Exact-SHA GitHub Actions evidence was used instead; its build command did not
+  include -p:FSharpCoreImplicitPackageVersion=10.1.400.
+- No execution metrics or non-blind material was accessed.
+
+Qualitative conclusion:
+Both implementations substantially implement the requested command surface.
+Arm M is stronger on checkpoint integrity; Arm N is stronger on repository
+admission consistency and transactional mutation. Both have localized
+criterion failures. This evidence does not identify an overall winner,
+development methodology, or hidden arm mapping.

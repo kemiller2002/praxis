@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Public-site tooling (docs/public-site.md): check, evidence, assemble,
+       serve and verify. BCL only; no package dependencies. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>praxis-site</AssemblyName>
+    <RootNamespace>Praxis.Site</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Json.fs" />
+    <Compile Include="Repository.fs" />
+    <Compile Include="Html.fs" />
+    <Compile Include="Site.fs" />
+    <Compile Include="Evidence.fs" />
+    <Compile Include="Assemble.fs" />
+    <Compile Include="Serve.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+</Project>

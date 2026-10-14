@@ -28,6 +28,11 @@
     "praxis": {
       "required": true,
       "version": "3.1.4"
+    },
+    "routing": {
+      "required": true,
+      "hosting": "static",
+      "inventory": ".echelon/routes.json"
     }
   }
 }

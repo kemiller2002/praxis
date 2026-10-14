@@ -1,0 +1,2483 @@
+{
+  "schema": "praxis.plan/1.0.0",
+  "kind": "groups",
+  "snapshot": {
+    "repository": "echelon-signal",
+    "commit": "637218a14179c9ac4f1ab1333c75d03f9df6d797",
+    "branch": "main",
+    "plannedAt": "2026-10-02T12:30:00Z",
+    "plannerVersion": "3.6.0",
+    "workStateFingerprint": "aaa4b792bdbfd979d94d9319f15ac013445cf20c600776477741e8180466bcf5",
+    "inputFingerprint": "7b3b8a2896cf7ba10c7e931f670ff04d874f1a6748e50a0aa7764dc8a148b2e5",
+    "collisionFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "items": [
+      {
+        "workItem": "ECHELON-UPGRADE-2026-09-21",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2f33bc85f71295e572c977fba268f26a4a51b7af0337e53dc59197d911b12088"
+      },
+      {
+        "workItem": "GH-5",
+        "lifecycleState": "active",
+        "planningState": "active",
+        "checkpointId": null,
+        "digest": "4bce349f4594c98fc1a0acd6219b40016ca6cabedb33149a2a268488f2b8e248"
+      },
+      {
+        "workItem": "ROS-INSTALL-1-2-1-main-16-1",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "38e802a126eff3a5459f83f094f5cda35fe6d893affe3f3c40f35eb4aaee4e46"
+      },
+      {
+        "workItem": "SIGNAL-FRAMEWORK-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "bb7ce376f7011e8e4900288bb7c84e238776d5785c3bb61a04eed6f3ea69a2c1"
+      },
+      {
+        "workItem": "SIGNAL-SCORING-SELECTORS-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "563ff08577d32b1625da615484cc0163656d30f584138874e634396b331dcbd7"
+      },
+      {
+        "workItem": "SIGNAL-SCORING-SELECTORS-ATTRIBUTION-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "53e1df6dd09be077dbb81ec5542adb4db9ba7210847f538cb22cc09b94a0b5cf"
+      },
+      {
+        "workItem": "SIGNAL-VERIFY-2026-09-21",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "92f7e094481ecced654bced765483cd8b9d76c2a2534b8571be2dfdb76d386f9"
+      },
+      {
+        "workItem": "WI-0001",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1700ad076b26ec5dc06a1c655a7863308ce7fb9b51980df489b8417a5526571b"
+      },
+      {
+        "workItem": "WI-0002",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "85c439613be7e872576202ed8e9ea7f87823b8208779e76026c6d5b10f426ae3"
+      },
+      {
+        "workItem": "WI-0003",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "2cb3b112aea548959a0e835b3e3f1188178770134f717c022fdad3b5d41fddb8"
+      },
+      {
+        "workItem": "WI-0004",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "3a0ff00441ddd59206e3ecaf363a9fac41cd6649748cc2506d6bec4102baa3e6"
+      },
+      {
+        "workItem": "WI-0005",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "c4a592c59e35ad1b79cae9b12d5adf3623e2813146323d273a4afb7874d67a71"
+      },
+      {
+        "workItem": "WI-0006",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "49ed3dfdd46e22820eea5a78007d6f8f04e4a8d91f07df86f8d9afd94b6529ef"
+      },
+      {
+        "workItem": "WI-0007",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "1b67f45f5ccd623243bbc1768a983994efd7211140f740876cd00a8b7fd664ea"
+      },
+      {
+        "workItem": "WI-0008",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "60c52475c9216c7cc5629d0dc0775b495ed6947010ea9a7368606a0376a1e791"
+      },
+      {
+        "workItem": "WI-0009",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "f15eb68361c008808b41128e35b5de40289a2a6abbc4a4de4c761a9236a1deb8"
+      },
+      {
+        "workItem": "WI-0010",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "4fd3a54e4df7ca914b3e72236917fc0f09c0051df1f7c694561196acae4a00c0"
+      },
+      {
+        "workItem": "WI-0011",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "89b61f214edb904f6580f915438ae55f4d5dc271d62d242c9541d3adf9aaa3d1"
+      },
+      {
+        "workItem": "WI-0012",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "b712e2cc9cbf98257d4f79f3caf300f30b504133a058f053ad22a28a30648877"
+      },
+      {
+        "workItem": "WI-0013",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "cff9384a84b44e47e14b07cb8ee38214aeb6db26074a1870c2d16829778c25e8"
+      },
+      {
+        "workItem": "WI-0014",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "102d6de3f1e4ae3a23302e62fac4b6c30b297e48fe60f902d8a199f50c07c28f"
+      },
+      {
+        "workItem": "WI-0015",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "4327c5a967c1b16e9c0d88a01ef5a17b55945cceb197929a22895ade444fb861"
+      },
+      {
+        "workItem": "WI-0016",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "3f8136c28f07853ff1e87b35914114a36a98544d0ec4bc4a9ab4eaa99171a33f"
+      },
+      {
+        "workItem": "WI-0017",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "7766ddb42f7998fa87d351fe1bb432c8020e772fdec0d0c4ce31bf37bc9f4794"
+      },
+      {
+        "workItem": "WI-0018",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "727c935076bfc7dd1d58c1182d6c95815cfc0c5c67e9f047a5d38a51933a4e7e"
+      },
+      {
+        "workItem": "WI-0019",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "1c986b6b271c20f47593f282a705de4928230b9cc762ecb18204b78ffec1167c"
+      },
+      {
+        "workItem": "WI-0020",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "fa60900a60b638598eade9c6203cc2fdd7a5ac8a280be8a473849ea9b808d6d7"
+      }
+    ]
+  },
+  "statement": "Advisory grouping: a group is a recommendation to reason about these items together. It changes no work item's state, attribution, evidence or identity, and nothing was started.",
+  "settings": {
+    "preferredSize": [
+      3,
+      10
+    ],
+    "maximumAutomaticSize": 12,
+    "minimumAffinity": "medium",
+    "riskPolicy": "accept-elevated"
+  },
+  "groups": [
+    {
+      "id": "GROUP-ECHELON-SIGNAL-ADMIN-001",
+      "kind": "shared-area",
+      "origin": "planner-recommended",
+      "area": "admin",
+      "executionRepository": "echelon-signal",
+      "crossRepository": false,
+      "affinity": "medium",
+      "confidence": "high",
+      "members": [
+        {
+          "workItem": "WI-0008",
+          "reason": "with WI-0013: high: same area 'admin'; same area 'import'; similar titles (administrator, aggregation, import)",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0011",
+          "reason": "with WI-0012: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0012",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0013",
+          "reason": "with WI-0008: high: same area 'admin'; same area 'import'; similar titles (administrator, aggregation, import)",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0014",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0015",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0018",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0019",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0020",
+          "reason": "with WI-0008: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        }
+      ],
+      "cohesion": [
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "admin",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'admin'"
+          },
+          "members": [
+            "WI-0008",
+            "WI-0011",
+            "WI-0012",
+            "WI-0013",
+            "WI-0014",
+            "WI-0015",
+            "WI-0018",
+            "WI-0019",
+            "WI-0020"
+          ],
+          "covered": 9,
+          "total": 9,
+          "statement": "9/9 same area 'admin' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "import",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'import'"
+          },
+          "members": [
+            "WI-0008",
+            "WI-0013"
+          ],
+          "covered": 2,
+          "total": 9,
+          "statement": "2/9 same area 'import' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "administrator,aggregation,import",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (administrator, aggregation, import)"
+          },
+          "members": [
+            "WI-0008",
+            "WI-0013"
+          ],
+          "covered": 2,
+          "total": 9,
+          "statement": "2/9 similar titles (administrator, aggregation, import) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "administrator,analytics",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (administrator, analytics)"
+          },
+          "members": [
+            "WI-0014",
+            "WI-0019"
+          ],
+          "covered": 2,
+          "total": 9,
+          "statement": "2/9 similar titles (administrator, analytics) [inferred]"
+        },
+        {
+          "signal": {
+            "code": "similar-title",
+            "detail": "administrator,state",
+            "basis": "inferred",
+            "level": "low",
+            "confidence": "low",
+            "description": "similar titles (administrator, state)"
+          },
+          "members": [
+            "WI-0008",
+            "WI-0011"
+          ],
+          "covered": 2,
+          "total": 9,
+          "statement": "2/9 similar titles (administrator, state) [inferred]"
+        }
+      ],
+      "sharedContext": [
+        "same area 'admin'"
+      ],
+      "requiredSequence": [
+        "WI-0008",
+        "WI-0011",
+        "WI-0012",
+        "WI-0013",
+        "WI-0014",
+        "WI-0015",
+        "WI-0018",
+        "WI-0019",
+        "WI-0020"
+      ],
+      "collisionRisk": "elevated",
+      "collisions": [
+        {
+          "left": "WI-0008",
+          "right": "WI-0011",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0012",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0013",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "shared-area",
+              "detail": "import",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0014",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0015",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0008",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0012",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0013",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0014",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0015",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0011",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0013",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0014",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0015",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0012",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0013",
+          "right": "WI-0014",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0013",
+          "right": "WI-0015",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0013",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0013",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0013",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0014",
+          "right": "WI-0015",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0014",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0014",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0014",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0015",
+          "right": "WI-0018",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0015",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0015",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0018",
+          "right": "WI-0019",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0018",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0019",
+          "right": "WI-0020",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        }
+      ],
+      "parallelSafe": false,
+      "recommendedExecution": "one-sequential-agent",
+      "executionReasons": [
+        "one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design",
+        "intra-group collision risk is elevated: parallel subtasks are not proven independent",
+        "triage WI-0008, WI-0011, WI-0012, WI-0013, WI-0014, WI-0015, WI-0018, WI-0019, WI-0020 first: a planning group may hold captured work, but only triaged members can execute"
+      ],
+      "contextCost": {
+        "independentAcquisitions": 9,
+        "groupedAcquisitions": 1,
+        "coldStart": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "sharedContext": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "memberIncremental": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "estimatedReuse": "unknown",
+        "statement": "grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 9 x (coldStart + itemCost) = 9 acquisitions; context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+      },
+      "progress": {
+        "total": 9,
+        "complete": 0,
+        "inProgress": 0,
+        "runnable": 0,
+        "blocked": 0,
+        "notRunnable": 9,
+        "statement": "0 of 9 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)"
+      },
+      "architectureNotes": [],
+      "notes": []
+    },
+    {
+      "id": "GROUP-ECHELON-SIGNAL-PRIVACY-001",
+      "kind": "shared-area",
+      "origin": "planner-recommended",
+      "area": "privacy",
+      "executionRepository": "echelon-signal",
+      "crossRepository": false,
+      "affinity": "medium",
+      "confidence": "high",
+      "members": [
+        {
+          "workItem": "WI-0005",
+          "reason": "with WI-0009: medium: same area 'privacy'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0009",
+          "reason": "with WI-0005: medium: same area 'privacy'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0016",
+          "reason": "with WI-0017: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        },
+        {
+          "workItem": "WI-0017",
+          "reason": "with WI-0016: medium: same area 'admin'",
+          "confidence": "high",
+          "recordedState": "captured",
+          "planningState": "captured",
+          "status": "not-runnable",
+          "gatedBy": []
+        }
+      ],
+      "cohesion": [
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "privacy",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'privacy'"
+          },
+          "members": [
+            "WI-0005",
+            "WI-0009",
+            "WI-0017"
+          ],
+          "covered": 3,
+          "total": 4,
+          "statement": "3/4 same area 'privacy' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "admin",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'admin'"
+          },
+          "members": [
+            "WI-0016",
+            "WI-0017"
+          ],
+          "covered": 2,
+          "total": 4,
+          "statement": "2/4 same area 'admin' [explicit]"
+        },
+        {
+          "signal": {
+            "code": "shared-area",
+            "detail": "reporting",
+            "basis": "explicit",
+            "level": "medium",
+            "confidence": "high",
+            "description": "same area 'reporting'"
+          },
+          "members": [
+            "WI-0009",
+            "WI-0016"
+          ],
+          "covered": 2,
+          "total": 4,
+          "statement": "2/4 same area 'reporting' [explicit]"
+        }
+      ],
+      "sharedContext": [
+        "same area 'privacy'",
+        "same area 'admin'",
+        "same area 'reporting'"
+      ],
+      "requiredSequence": [
+        "WI-0005",
+        "WI-0009",
+        "WI-0016",
+        "WI-0017"
+      ],
+      "collisionRisk": "elevated",
+      "collisions": [
+        {
+          "left": "WI-0005",
+          "right": "WI-0009",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "privacy",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0005",
+          "right": "WI-0016",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0005",
+          "right": "WI-0017",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "privacy",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0009",
+          "right": "WI-0016",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "reporting",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0009",
+          "right": "WI-0017",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "privacy",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        },
+        {
+          "left": "WI-0016",
+          "right": "WI-0017",
+          "risk": "elevated",
+          "signals": [
+            {
+              "code": "shared-area",
+              "detail": "admin",
+              "risk": "elevated"
+            },
+            {
+              "code": "praxis-state-files",
+              "detail": ".ros/context/current.json, .ros/work/queue.json, .ros/events/events.jsonl",
+              "risk": "elevated"
+            }
+          ]
+        }
+      ],
+      "parallelSafe": false,
+      "recommendedExecution": "one-sequential-agent",
+      "executionReasons": [
+        "one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design",
+        "intra-group collision risk is elevated: parallel subtasks are not proven independent",
+        "triage WI-0005, WI-0009, WI-0016, WI-0017 first: a planning group may hold captured work, but only triaged members can execute"
+      ],
+      "contextCost": {
+        "independentAcquisitions": 4,
+        "groupedAcquisitions": 1,
+        "coldStart": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "sharedContext": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "memberIncremental": {
+          "lowerMs": null,
+          "expectedMs": null,
+          "upperMs": null,
+          "confidence": "unknown",
+          "display": "unknown"
+        },
+        "estimatedReuse": "unknown",
+        "statement": "grouped: coldStart + sharedContext + sum(memberIncremental) = 1 context acquisition; independent: 4 x (coldStart + itemCost) = 4 acquisitions; context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)"
+      },
+      "progress": {
+        "total": 4,
+        "complete": 0,
+        "inProgress": 0,
+        "runnable": 0,
+        "blocked": 0,
+        "notRunnable": 4,
+        "statement": "0 of 4 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042)"
+      },
+      "architectureNotes": [],
+      "notes": []
+    }
+  ],
+  "ungrouped": [
+    {
+      "workItem": "GH-5",
+      "planningState": "active",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0002",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0003",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0004",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0006",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0007",
+      "planningState": "captured",
+      "affinity": "none",
+      "reason": "no shared context with any other open item"
+    },
+    {
+      "workItem": "WI-0010",
+      "planningState": "captured",
+      "affinity": "medium",
+      "reason": "related to WI-0017 (medium: same area 'security') but not cohesive with any formed group: grouping needs medium affinity with at least two thirds of a group's members"
+    }
+  ],
+  "dependencies": [],
+  "cycles": [],
+  "relations": [
+    {
+      "left": "GROUP-ECHELON-SIGNAL-ADMIN-001",
+      "right": "GROUP-ECHELON-SIGNAL-PRIVACY-001",
+      "collisionRisk": "elevated",
+      "dependent": false,
+      "mayRunConcurrently": true,
+      "reason": "no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently"
+    }
+  ],
+  "affinities": [
+    {
+      "left": "WI-0005",
+      "right": "WI-0009",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "privacy",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'privacy'"
+        }
+      ],
+      "statement": "medium: same area 'privacy'"
+    },
+    {
+      "left": "WI-0005",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "privacy",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'privacy'"
+        }
+      ],
+      "statement": "medium: same area 'privacy'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0011",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        },
+        {
+          "code": "similar-title",
+          "detail": "administrator,state",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (administrator, state)"
+        }
+      ],
+      "statement": "medium: same area 'admin'; similar titles (administrator, state)"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0012",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0013",
+      "affinity": "high",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        },
+        {
+          "code": "shared-area",
+          "detail": "import",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'import'"
+        },
+        {
+          "code": "similar-title",
+          "detail": "administrator,aggregation,import",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (administrator, aggregation, import)"
+        }
+      ],
+      "statement": "high: same area 'admin'; same area 'import'; similar titles (administrator, aggregation, import)"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0014",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0015",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0008",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0009",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "reporting",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'reporting'"
+        }
+      ],
+      "statement": "medium: same area 'reporting'"
+    },
+    {
+      "left": "WI-0009",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "privacy",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'privacy'"
+        }
+      ],
+      "statement": "medium: same area 'privacy'"
+    },
+    {
+      "left": "WI-0010",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "security",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'security'"
+        }
+      ],
+      "statement": "medium: same area 'security'"
+    },
+    {
+      "left": "WI-0010",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "performance",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'performance'"
+        },
+        {
+          "code": "similar-title",
+          "detail": "acceptance,cross,cutting,performance,program",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (acceptance, cross, cutting, performance, program)"
+        }
+      ],
+      "statement": "medium: same area 'performance'; similar titles (acceptance, cross, cutting, performance, program)"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0012",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0013",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0014",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0015",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0011",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0013",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0014",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0015",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0012",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0014",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0015",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0013",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0015",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        },
+        {
+          "code": "similar-title",
+          "detail": "administrator,analytics",
+          "basis": "inferred",
+          "level": "low",
+          "confidence": "low",
+          "description": "similar titles (administrator, analytics)"
+        }
+      ],
+      "statement": "medium: same area 'admin'; similar titles (administrator, analytics)"
+    },
+    {
+      "left": "WI-0014",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0015",
+      "right": "WI-0016",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0015",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0015",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0015",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0015",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0016",
+      "right": "WI-0017",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0016",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0016",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0016",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0017",
+      "right": "WI-0018",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0017",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0017",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0018",
+      "right": "WI-0019",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0018",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    },
+    {
+      "left": "WI-0019",
+      "right": "WI-0020",
+      "affinity": "medium",
+      "confidence": "high",
+      "signals": [
+        {
+          "code": "shared-area",
+          "detail": "admin",
+          "basis": "explicit",
+          "level": "medium",
+          "confidence": "high",
+          "description": "same area 'admin'"
+        }
+      ],
+      "statement": "medium: same area 'admin'"
+    }
+  ],
+  "unknownEvidence": [
+    "context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)",
+    "historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item",
+    "no declared paths (planner configuration 'areas'): file and module overlap is unknown, only tags are compared",
+    "no human-declared groups",
+    "monetary cost is unknown"
+  ]
+}

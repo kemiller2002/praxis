@@ -1,0 +1,110 @@
+{
+  "schema": "praxis.group-analysis/1",
+  "groupId": "GROUP-FND-ORDO",
+  "groupExecutionId": null,
+  "groupExecutionNote": "Work-group commands (PRAXIS-GROUP-07..10) are not on main; grouping is recorded in item tags and this document.",
+  "baseCommit": "f242aae6",
+  "members": [
+    {
+      "id": "PRAXIS-FND-01",
+      "acceptanceCriteria": [
+        "Ordo release carries the Ordo.Core package with a published sha256",
+        "Praxis references that exact version from an immutable checksum-verified artifact",
+        "Role capability sets come from Ordo.Core; no role-to-capability table remains in Praxis",
+        "Mutation-boundary classification and evaluator fingerprinting delegate to Ordo.Core",
+        "Vocabulary-divergence test and vendored-package digest test",
+        "foundations.json and foundations verify evidence the Ordo.Core pin",
+        "Governance header, docs/execution-runtime.md and requirement status updated"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "PRAXIS-FND-02",
+      "acceptanceCriteria": [
+        "execution start --contract FILE (ordo.execution-contract/1 parsed by Ordo.Core) supplies role, boundary and evaluator closure",
+        "Envelope records the contract source path and sha256",
+        "Flags contradicting a supplied contract are refused with exit 2",
+        "Without --contract the flags are assembled into the Ordo contract shape, validated by Ordo, and recorded as operator-supplied",
+        "Tests cover acceptance, digest, invalid contract and flag conflict",
+        "docs/execution-runtime.md and requirement status updated"
+      ],
+      "dependsOn": [
+        "PRAXIS-FND-01"
+      ]
+    }
+  ],
+  "reuseInventory": [
+    {
+      "element": "RoleAuthority.defaultFor",
+      "location": "src/Praxis.Domain/Execution/Governance.fs:119",
+      "disposition": "extended",
+      "reason": "Becomes a delegation to Ordo.Core's role authority through the wire vocabulary."
+    },
+    {
+      "element": "Capability.toWire",
+      "location": "src/Praxis.Domain/Execution/Governance.fs:79",
+      "disposition": "reused",
+      "reason": "Translation key to Ordo's ExecutionCapability wire names."
+    },
+    {
+      "element": "EvaluatorIdentity.create",
+      "location": "src/Praxis.Domain/Execution/Governance.fs:242",
+      "disposition": "extended",
+      "reason": "Fingerprint computed by Ordo.Core.Evaluator."
+    },
+    {
+      "element": "MutationBoundary.classify",
+      "location": "src/Praxis.Domain/Execution/Governance.fs:556",
+      "disposition": "extended",
+      "reason": "Delegates to Ordo.Core.MutationBoundary."
+    },
+    {
+      "element": "ExecutionEnvelope.create",
+      "location": "src/Praxis.Domain/Execution/Governance.fs:676",
+      "disposition": "extended",
+      "reason": "Gains the contract source."
+    },
+    {
+      "element": "ExecutionStore.saveEnvelope",
+      "location": "src/Praxis.Infrastructure/Execution/ExecutionStore.fs:39",
+      "disposition": "reused",
+      "reason": "Persistence unchanged."
+    },
+    {
+      "element": "execution start flag parsing",
+      "location": "src/Praxis.Cli/ExecutionCommands.fs:68",
+      "disposition": "reused",
+      "reason": "Routed through the Ordo contract shape."
+    },
+    {
+      "element": "Ordo conformance vectors",
+      "location": "tests/Praxis.Tests/ExecutionGovernanceTests.fs:43",
+      "disposition": "reused",
+      "reason": "Still asserted; equality becomes structural."
+    },
+    {
+      "element": "Foundations verifyOrdo",
+      "location": "src/Praxis.Cli/Foundations.fs:358",
+      "disposition": "extended",
+      "reason": "Recognises the Ordo.Core package pin."
+    }
+  ],
+  "searches": [
+    "grep -rn 'defaultFor\\|RoleAuthority' src",
+    "grep -rn 'ORDO-CORE-PACKAGE' .",
+    "grep -rn IsPackable ordo/src",
+    "grep -n FromJson ordo/src/Ordo.Core/ExecutionWire.fs"
+  ],
+  "newAbstractions": [
+    {
+      "name": "Ordo.Core.ExecutionContract (in Ordo)",
+      "consideredExisting": "Ordo.Core.ExecutionWire.envelopeToJson",
+      "whyNotReused": "An envelope describes a running execution, not the contract that authorizes one; its boundary and evaluator shapes are reused as the contract's parts."
+    },
+    {
+      "name": "Praxis OrdoSemantics translation",
+      "consideredExisting": "Using Ordo.Core types throughout Praxis",
+      "whyNotReused": "The execution track is changing the same envelope code concurrently; a wire-name translation removes every copied rule with a small change."
+    }
+  ]
+}

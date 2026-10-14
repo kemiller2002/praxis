@@ -1,0 +1,952 @@
+EX-ROS-2026-A021-R2 BLINDED IMPLEMENTATION EVALUATION
+=======================================================
+
+1. Evaluator identity/runtime/model
+-----------------------------------
+Evaluator: OpenAI ChatGPT
+Model: GPT-5.6 Sol
+Role: independent blind evaluator
+Runtime used for repository access: GitHub connector plus a local container.
+Local-container limitation: the container had git 2.47.3, Node 22.16.0 and
+Python 3.13.5, but no .NET SDK. Outbound DNS to github.com was unavailable
+from the container. Exact-SHA GitHub Actions evidence was therefore used for
+build/test evidence, while implementation behavior was assessed from the
+permitted blind trees and their tests.
+
+No execution metrics, token/cost data, session counts, wall-time comparisons,
+agent identities, original branch history, pull requests or non-blind A021
+materials were inspected.
+
+2. Exact baseline and blind SHAs
+--------------------------------
+Baseline:
+  8b4ffa392e93b19bf39f6672a608954c934cb815
+
+Blind kit:
+  branch: blind/a021-r2/kit
+  SHA:    6f82f671e955f67afb40bfe73cf1b93840c67d47
+
+Arm M:
+  branch: blind/a021-r2/arm-M
+  SHA:    72a6c0408140bce1b9c1b60fe174e7080d3f3c05
+
+Arm N:
+  branch: blind/a021-r2/arm-N
+  SHA:    f6d0b5c49a2c592d3d8791dc819518578116a1cc
+
+Evaluation branch:
+  blind/a021-r2/evaluation
+  created from the blind-kit SHA above.
+
+3. Blinding statement
+---------------------
+The mapping between arm-M/arm-N and the underlying execution modes was not
+known, inferred, searched for, or used. No prohibited branches, prior A021
+evaluation/result records, A021 pull requests, hidden run records, or mapping
+material were read.
+
+The arm source itself contains normal implementation comments and stylistic
+choices. Those can distinguish implementations but did not disclose which
+execution mode produced either arm. Blinding is therefore not considered
+compromised.
+
+The mapping commitment was not reversed or inspected beyond the value supplied
+by the owner.
+
+4. Sources accessed
+-------------------
+Permitted blind-kit sources:
+- AGENTS.md
+- research/experiments/EX-ROS-2026-A021-R2-blind/README.txt
+- research/experiments/EX-ROS-2026-A021-R2-blind/acceptance-criteria.txt
+- research/experiments/EX-ROS-2026-A021-R2-blind/SHA256SUMS
+- arm-M.patch and arm-N.patch only to verify SHA-256 and summarize changed
+  paths.
+
+Permitted baseline source:
+- requirements/PLANNING-WORK-GROUPS.md at the exact baseline SHA, limited to
+  the group invariants relevant to the stated criteria, especially
+  PRX-GRP-001/003/010/043/044/051/073.
+
+Permitted arm sources:
+- changed production files in the two blind arms, particularly the work-group
+  domain/application/contract/infrastructure/CLI files;
+- changed F# tests in the two blind arms;
+- exact-SHA GitHub Actions status, job steps and job logs attached to the two
+  permitted blind commits.
+
+No source outside the allowlist was used.
+
+Checksum verification:
+- arm-M.patch:
+  8a275ee42f0a63f06a510da1819844e4da51b138c692afde8447665230a39c00
+  MATCH
+- arm-N.patch:
+  ca35f3d46432b048f2e0f786e31145863de9f499bb4901db622a5fcbae33f541
+  MATCH
+- acceptance-criteria.txt:
+  98c8e5903fe98add5cdfa3ec94ba7c625800ed77255bc5d9736340af17a8a137
+  MATCH
+
+5. Build/test procedure
+-----------------------
+The requested local procedure was to use clean arm worktrees/clones and run:
+
+  dotnet build Ros.slnx -c Release \
+    -p:FSharpCoreImplicitPackageVersion=10.1.400
+
+followed by the F# test assembly, supported Node differential tests and Python
+tests, plus symmetric independent CLI fixtures.
+
+That exact local procedure could not be executed because the available local
+container had no .NET SDK and could not resolve github.com to fetch exact-SHA
+worktrees.
+
+To avoid weakening the blind or fabricating results, I used existing GitHub
+Actions runs attached directly to the permitted exact arm SHAs. Both runs were
+push-triggered on the permitted blind branches. Both installed .NET 10.0.x
+(SDK 10.0.401) and ran the repository's validation job, including
+npm run test:all and ./ros validate.
+
+The CI build command visible in the logs was:
+
+  dotnet build Ros.slnx --configuration Release --disable-build-servers
+    --maxcpucount:1 -p:UseSharedCompilation=false -p:BuildInParallel=false
+
+It did NOT include the requested
+-p:FSharpCoreImplicitPackageVersion=10.1.400 override. Consequently, the exact
+requested build invocation is not independently confirmed by this evaluator.
+
+The repository CI also ran packaged-lifecycle jobs on Ubuntu 24, Ubuntu 20,
+macOS 22 and Windows 22; all succeeded for both exact arm SHAs.
+
+Independent acceptance-probe limitation:
+I could not run a new, evaluator-authored fixture matrix or a multi-process
+concurrency stress probe. Existing arm tests do run real CLI fixtures in
+temporary repositories/clones and cover most requested scenarios, but those
+tests are implementation-supplied rather than an independently authored
+symmetric probe suite. Findings that depend specifically on concurrent runtime
+interleavings are therefore classified as design risks rather than asserted as
+observed runtime failures.
+
+6. Build/test results
+---------------------
+ARM M
+- Exact blind SHA CI: PASS.
+- .NET: 10.0.401.
+- Build: PASS, 0 warnings, 0 errors in both logged solution builds.
+- F# Ros.Tests harness: 839 PASS lines, 0 FAIL lines.
+- Node suite: 104/104 passed, 0 failed, 0 skipped.
+- Python unittest suite: 7 tests, OK.
+- Node F# differential/remote suite: 257/257 passed, 0 failed, 0 skipped.
+- ./ros validate: PASS.
+- Packaged lifecycle matrix: PASS on all four listed OS jobs.
+- Environment warning unrelated to implementation: GitHub Actions reported
+  Node 20 action-runtime deprecation while forcing those actions onto Node 24.
+- Exact requested FSharpCore override build: NOT independently run.
+
+ARM N
+- Exact blind SHA CI: PASS.
+- .NET: 10.0.401.
+- Build: PASS, 0 warnings, 0 errors in both logged solution builds.
+- F# Ros.Tests harness: 819 PASS lines, 0 FAIL lines.
+- Node suite: 104/104 passed, 0 failed, 0 skipped.
+- Python unittest suite: 7 tests, OK.
+- Node F# differential/remote suite: 257/257 passed, 0 failed, 0 skipped.
+- ./ros validate: PASS.
+- Packaged lifecycle matrix: PASS on all four listed OS jobs.
+- Same unrelated GitHub Actions Node-runtime deprecation warning.
+- Exact requested FSharpCore override build: NOT independently run.
+
+The different F# test counts are not treated as a score. Test meaning and gaps
+are evaluated below.
+
+7. Acceptance-criteria matrix
+-----------------------------
+Legend:
+  confirmed      evidence supports the criterion
+  partial        core behavior works but a stated requirement/probe is missing
+  defect         concrete behavior contradicts a requirement
+  design-risk    plausible architectural failure mode not runtime-observed here
+  not-confirmed  insufficient evidence
+
+PRAXIS-GROUP-01 CREATE
+Arm M: PARTIAL / DEFECT
+- Confirmed: valid creation, duplicate-ID refusal, duplicate-member refusal,
+  unknown/terminal refusal, --dry-run, --json, lifecycle non-mutation, planner
+  consumption, stored-state validation.
+- Defect M-D1: a created group can persist no execution repository at all.
+- Defect M-D2: create does not apply the repository-compatibility admission
+  rule that add applies, so a non-cross-repository group can be initially
+  created with a foreign-repository member.
+Arm N: CONFIRMED
+- Valid creation, unknown/terminal/duplicate rejection, repository compatibility,
+  local-repository default, cross-repository admission, dry-run, JSON,
+  lifecycle non-mutation, planner projection and validation are all directly
+  implemented and exercised.
+
+PRAXIS-GROUP-02 SHOW
+Arm M: CONFIRMED
+- Text/JSON, unknown exit 1, recorded/planning state, partial progress, blocked
+  members and gates, execution repository and architecture notes are covered.
+- A repository fingerprint test confirms read-only behavior.
+Arm N: CONFIRMED
+- Text/JSON, unknown exit 1, recorded/planning state, progress, blocked/gates,
+  execution repository, architecture notes and read-only behavior are covered.
+
+PRAXIS-GROUP-03 ADD
+Arm M: CONFIRMED, with concurrency design risk
+- Unknown/terminal/already-present refusal, repository mismatch unless
+  cross-repository, provenance, dry-run/JSON, and lifecycle non-mutation are
+  implemented and tested.
+Arm N: CONFIRMED
+- The same central admission function used by create is reused by add.
+- Refusals, cross-repository behavior, structured actor provenance, dry-run,
+  JSON, planner visibility and member non-mutation are tested.
+
+PRAXIS-GROUP-04 REMOVE
+Arm M: CONFIRMED, with concurrency design risk
+- Non-member refusal, provenance, lifecycle/evidence/attribution preservation
+  and explicit minimum-size behavior are tested.
+- M is stricter than the minimum acceptance rule: it refuses a removal that
+  would leave fewer than two members.
+Arm N: CONFIRMED
+- Non-member and last-member refusal, provenance, dry-run and preservation of
+  completed member lifecycle/evidence/attribution are tested.
+
+PRAXIS-GROUP-05 CHECKPOINT
+Arm M: CONFIRMED
+- Reuses work-checkpoint durability verification; uncommitted/unpushed work is
+  refused with the same durability codes.
+- Requires an active member and this executor's own active execution.
+- References members' own checkpoints; keeps uncheckpointed members explicit.
+- Preserves active/completed/abandoned/remaining distinctions.
+- Rejects blank summary, blank next action and blank shared decisions.
+- Validation detects a member reference to another member's checkpoint.
+- Group checkpoint write is under work-protocol lock.
+Arm N: PARTIAL / DEFECT
+- Core durable Git verification, member checkpoint references, branch/commit,
+  next action, shared decisions, no claimed paths, uncommitted/unpushed refusal
+  and member-history preservation are confirmed.
+- Defect N-D1: blank shared decisions are silently trimmed/filter-dropped rather
+  than refused.
+- Defect N-D2: stored checkpoint validation does not verify that a referenced
+  checkpoint belongs to the named member, so a constructed attribution-
+  laundering representation is not detectable by validate.
+- Design risk N-R2: an abandoned member can fall outside all three serialized
+  active/completed/remaining lists because planner status classifies abandoned
+  as complete while CompletedMembers checks recordedState == "complete".
+  The baseline does not state an explicit abandoned serialization rule, so
+  this is not counted as a confirmed acceptance defect.
+
+8. Arm M detailed findings
+--------------------------
+M-F01
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-01
+Requirement: create a durable human-declared group and preserve member
+lifecycle.
+Observed: GroupDeclaration.decide validates ID, duplicate ID, minimum distinct
+members, duplicate members, unknown/terminal members, timestamp and blank
+context/repository values. It returns a StoredGroup containing the existing
+planner DeclaredGroup. WorkGroupOperations.create only writes the group store.
+Evidence:
+- src/Ros.Domain/Planning/GroupDeclaration.fs:125-164
+- src/Ros.Application/Planning/WorkGroups.fs:39-50
+- tests/Ros.Tests/WorkGroupTests.fs, create tests
+Result: confirmed
+
+M-F02
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-01
+Requirement: every group identifies where implementation occurs; the create
+acceptance also names execution repository as persisted group state.
+Observed: the CLI maps --execution-repository to string option and leaves it
+None when omitted. GroupDeclaration.decide stores that None unchanged.
+Text output describes it as "unspecified".
+Expected: a created execution group identifies its execution repository,
+normally defaulting to this repository if no explicit repository is supplied.
+Evidence:
+- src/Ros.Cli/WorkGroupCommands.fs:180-188, 190-201
+- src/Ros.Domain/Planning/GroupDeclaration.fs:151-159
+- baseline requirements/PLANNING-WORK-GROUPS.md:114-118 (PRX-GRP-051)
+Result: defect
+Identifier: M-D1
+
+M-F03
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-01 / cross-item repository invariant
+Requirement: a group containing work from different repositories must be
+explicitly cross-repository or split.
+Observed: create's decision receives only lifecycle state and never receives a
+member location function or repository. No repository compatibility rejection
+is possible at create. By contrast, decideAddition explicitly compares the
+member location with the group repository and returns RepositoryMismatch.
+Expected: the same repository invariant applies at initial admission and later
+admission.
+Evidence:
+- src/Ros.Domain/Planning/GroupDeclaration.fs:125-164
+- src/Ros.Domain/Planning/GroupDeclaration.fs:184-229
+- baseline requirements/PLANNING-WORK-GROUPS.md:114-118
+Result: defect
+Identifier: M-D2
+
+M-F04
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-01
+Requirement: planner consumes stored declaration as grouping.groups; validate
+checks stored groups.
+Observed: mergeInto projects StoredGroup.Declaration directly into the planner
+configuration and refuses an ID declared both in stored state and config.
+Validation checks ID, member cardinality/duplicates/known members, origin,
+creation metadata and membership-history consistency.
+Evidence:
+- src/Ros.Domain/Planning/GroupDeclaration.fs:316-376
+- exact-SHA tests named "the planner reads a stored group exactly as a
+  configured grouping.groups entry" and "validate checks stored groups"
+Result: confirmed
+
+M-F05
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-02
+Requirement: read-only show with states, progress, blockers/gating, repository,
+architecture notes, text/JSON and unknown exit 1.
+Observed: show is implemented through the existing planner analysis and
+Grouping.show path. Tests assert recorded/planning states, progress,
+executionRepository, architectureNotes, gating and unknown exit 1, and a
+fingerprint before/after proves no writes.
+Evidence:
+- src/Ros.Cli/PlanCommands.fs:630-647
+- tests/Ros.Tests/PlanningCliTests.fs:194-233
+- tests/Ros.Tests/GroupingTests.fs:425-469
+Result: confirmed
+
+M-F06
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-03
+Requirement: valid add, refusal cases, repository compatibility, provenance,
+lifecycle untouched.
+Observed: decideAddition checks unknown group, already member, unknown/terminal
+member and repository mismatch unless cross-repository. The accepted group
+appends MemberAddition with member, time and adder. CLI tests verify that only
+the group file changes.
+Evidence:
+- src/Ros.Domain/Planning/GroupDeclaration.fs:166-229
+- src/Ros.Application/Planning/WorkGroups.fs:52-63
+- exact-SHA arm tests
+Result: confirmed
+
+M-F07
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-04
+Requirement: non-member refusal, explicit last-member behavior, preservation of
+member lifecycle/evidence/attribution and provenance.
+Observed: removal refuses unknown group/non-member and refuses a removal leaving
+fewer than two members. It appends a removal provenance entry and does not read
+or write the member lifecycle/evidence/attribution stores.
+Evidence:
+- src/Ros.Domain/Planning/GroupDeclaration.fs:231-289
+- src/Ros.Application/Planning/WorkGroups.fs:65-73
+- exact-SHA arm tests
+Result: confirmed
+
+M-F08
+FACT
+Arm: M
+Work item: PRAXIS-GROUP-05
+Requirement: same durable verification as work checkpoint; own checkpoint
+references; no attribution laundering; branch/commit/next action/shared
+decisions and progress.
+Observed: GroupCheckpoints.decide consumes the work-checkpoint durability
+verdict, requires an active member and an execution belonging to this process,
+records GitDurableLocation, partitions abandoned separately, references each
+member's latest own checkpoint, rejects blank decision text, and validates
+checkpoint-reference ownership.
+Evidence:
+- src/Ros.Domain/Planning/GroupCheckpoint.fs:6-95, 153-246, 248-294
+- src/Ros.Infrastructure/Planning/FileGroupCheckpointRepository.fs:48-80
+- tests/Ros.Tests/GroupCheckpointTests.fs:136-283
+Result: confirmed
+
+M-F09
+FACT
+Arm: M
+Cross-item concern: concurrency/locking.
+Observed: create/add/remove perform read-decide-write using FileWorkGroupStore
+and an atomic temp-file replacement, but no lock spans the read-modify-write
+cycle. The checkpoint CLI separately acquires the existing work-protocol lock.
+Expected: simultaneous successful group mutations should not overwrite each
+other, and lifecycle transitions should not race admission decisions.
+Evidence:
+- src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:31-43, 66-80
+- src/Ros.Cli/WorkGroupCommands.fs:393-450
+INFERENCE
+Two create/add/remove processes can read the same old groups.json and each
+atomically replace it with a different successor, causing a lost update even
+though both processes can exit successfully. Group mutation can also interleave
+with checkpoint despite checkpoint taking a lock, because the group mutation
+does not participate in that lock.
+DESIGN JUDGMENT
+Atomic replacement prevents torn files but is not an atomic read-modify-write
+transaction.
+Result: design-risk
+Identifier: M-R1
+Runtime concurrency probe: not-confirmed due evaluator environment limitation.
+
+M-F10
+FACT
+Arm: M
+Cross-item concern: persistence and representation.
+Observed: declarations/membership live in .ros/work/groups.json while group
+checkpoints live in .ros/work/group-checkpoints.json. The declaration model
+reuses the planner's DeclaredGroup, while checkpoint is a separate typed model.
+Mutation JSON uses the work-groups schema, checkpoint uses a distinct
+work-group-checkpoints schema, and show uses the existing planner
+declared-group document.
+INFERENCE
+This is legitimate separation of declaration/history from milestone history,
+but a sixth command spanning both concerns would need orchestration across more
+ports/contracts than Arm N.
+DESIGN JUDGMENT
+This is separation, not proven duplication. The concurrency asymmetry is more
+important than the number of files.
+Result: partial / design-risk
+
+9. Arm N detailed findings
+--------------------------
+N-F01
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-01
+Requirement: create, refusals, repository compatibility, persisted declaration,
+dry-run/JSON, lifecycle preservation, planner use and validation.
+Observed: one WorkGroups.admit function validates work-item ID, known state,
+terminal state and execution repository. create reuses it for every member.
+The CLI defaults the group's execution repository to the current repository if
+not explicitly supplied. Stored groups include kind, repository, cross flag,
+shared context and architecture notes.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:298-354
+- src/Ros.Cli/WorkGroupCommands.fs:170-227
+- exact-SHA arm tests
+Result: confirmed
+
+N-F02
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-02
+Requirement: read-only show with recorded/planning states, progress,
+blocked/gating, repository, architecture notes, text/JSON.
+Observed: WorkGroups.view combines member facts with the planner's group for
+the same ID, computes reverse Gates from GatedBy, and builds progress. The CLI
+show path only reads store/planner state. Text and JSON render repository,
+shared context, architecture notes, states, progress and latest checkpoint.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:595-651
+- src/Ros.Cli/WorkGroupCommands.fs:301-369
+- src/Ros.Contracts/Work/WorkGroupJson.fs:235-283
+- tests/Ros.Tests/WorkGroupTests.fs:303-341
+Result: confirmed
+
+N-F03
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-03
+Requirement: refusal cases, repository compatibility, provenance and lifecycle
+preservation.
+Observed: addMember reuses WorkGroups.admit, then appends one structured
+GroupHistoryEntry with Actor. CLI read-decide-write occurs under the repository
+work-protocol lock.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:356-396
+- src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs:34-57
+- exact-SHA arm tests
+Result: confirmed
+
+N-F04
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-04
+Requirement: refusal, preservation and provenance.
+Observed: removeMember rejects non-members and the sole last member, modifies
+only Members plus append-only history, and records the structured Actor. CLI
+tests remove a completed member and compare lifecycle/evidence/attribution.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:398-411
+- exact-SHA arm tests
+Result: confirmed
+
+N-F05
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-05
+Requirement: durable location and member-checkpoint references without
+replacement or claimed paths.
+Observed: checkpoint receives the same GitDurableLocation result as work
+checkpoint, stores branch/commit/remote information, records decisions and
+next action, and maps current member IDs to their latest checkpoint summaries.
+CLI JSON emits an empty claimedPaths array. Existing CLI tests prove the
+member's own checkpoint remains unchanged.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:451-516
+- src/Ros.Cli/WorkGroupCommands.fs:386-471
+- exact-SHA arm tests
+Result: confirmed for core checkpoint path
+
+N-F06
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-05
+Requirement/probe: blank/invalid checkpoint fields are refused.
+Observed: summary/next-action blank values are rejected indirectly through the
+shared work-checkpoint durability validation, and the tests prove blank summary
+exit 2. However shared decisions are transformed with Trim() and then blank
+decisions are silently removed rather than producing a rejection.
+Expected: a supplied blank shared decision is an invalid field and is refused,
+not silently discarded.
+Evidence:
+- src/Ros.Domain/Work/WorkGroups.fs:479-510, especially line 485
+- src/Ros.Cli/WorkGroupCommands.fs:386-408
+- tests/Ros.Tests/WorkGroupTests.fs:656-679 covers blank summary but not blank
+  shared decision
+Result: defect
+Identifier: N-D1
+
+N-F07
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-05 / validation
+Requirement: no attribution laundering; validate detects invalid stored group
+state.
+Observed: the JSON parser accepts member-checkpoint records containing an
+arbitrary workItemId/checkpointId pair. WorkGroups.validate checks checkpoint
+content address, commit syntax, time, summary and next action, but never
+compares a referenced checkpoint ID with the work item that owns it.
+Expected: a stored group checkpoint in which member A points at member B's
+checkpoint must be reported invalid.
+Evidence:
+- src/Ros.Contracts/Work/WorkGroupJson.fs:77-98
+- src/Ros.Domain/Work/WorkGroups.fs:553-593
+- baseline requirements/PLANNING-WORK-GROUPS.md:98-106
+Result: defect
+Identifier: N-D2
+
+N-F08
+FACT
+Arm: N
+Work item: PRAXIS-GROUP-05
+Concern: active/completed/remaining classification for abandoned members.
+Observed: planner MemberStatus treats abandoned as Complete. checkpoint derives
+RemainingMembers from status <> complete, but derives CompletedMembers only
+from recordedState == "complete". An abandoned member can therefore appear in
+none of active/completed/remaining.
+Evidence:
+- baseline src/Ros.Domain/Planning/Grouping.fs:201-212
+- src/Ros.Domain/Work/WorkGroups.fs:465-510
+INFERENCE
+A consumer reconstructing group membership from the required checkpoint
+progress lists can lose the fact that an abandoned member existed.
+DESIGN JUDGMENT
+PRX-GRP-042 says a group must not imply every member succeeded, so mapping an
+abandoned member to completed would also be misleading. A separate abandoned
+list, as in Arm M, is clearer. Because the baseline does not prescribe the
+serialized abandoned category explicitly, this is classified as a design risk,
+not a confirmed acceptance defect.
+Result: design-risk
+Identifier: N-R2
+
+N-F09
+FACT
+Arm: N
+Cross-item concern: concurrency/locking.
+Observed: every create/add/remove mutation goes through
+FileWorkGroupRepository.mutate, which acquires the repository's work-protocol
+lock and keeps read-decide-write inside the lease. The write itself uses
+RegistryTransaction.writeAtomic. Checkpoint uses that same mutation path.
+Evidence:
+- src/Ros.Infrastructure/Work/FileWorkGroupRepository.fs:30-57
+- src/Ros.Cli/WorkGroupCommands.fs:194-210, 266-269, 421-441
+Result: confirmed by static design; independent concurrent runtime stress test
+not-confirmed due evaluator environment limitation.
+
+N-F10
+FACT
+Arm: N
+Cross-item concern: cohesion/monolith.
+Observed: the 651-line WorkGroups.fs owns stored group/history/checkpoint/view
+types plus admission, create/add/remove/checkpoint, validation and show-view
+decisions. One WorkGroupJson module owns persistence and command envelopes.
+DESIGN JUDGMENT
+This is broad, but the concepts share a single invariant boundary and the file
+does demonstrably reuse admission/history/view logic. It is not currently
+proven to be an incoherent monolith. A sixth/seventh command should preserve
+that separation between pure decisions, JSON and repository mutation rather
+than continue expanding one file indefinitely.
+Result: design-risk (maintainability), low-to-moderate
+
+10. Cross-item architecture comparison
+--------------------------------------
+GROUP MODELS
+Arm M:
+- persistent StoredGroup wrapping the existing planner DeclaredGroup;
+- existing planner WorkGroup as analyzed runtime view;
+- separate GroupCheckpoint model and progress/reference records.
+The main declaration model is reused rather than copied, but checkpoint state
+is deliberately separate.
+
+Arm N:
+- persistent StoredGroup with membership history and checkpoint history;
+- request/view records around it;
+- existing planner DeclaredGroup/WorkGroup reached through projection.
+The persistent concept is more centralized; request/view models are normal
+boundary representations, not competing persistence models.
+
+PERSISTENCE STORES
+Arm M: two group-related files:
+  .ros/work/groups.json
+  .ros/work/group-checkpoints.json
+Arm N: one:
+  .ros/work/groups.json
+with checkpoints embedded per group.
+
+MEMBER-ADMISSION RULES
+Arm M: create and add have separate admission logic. This causes the concrete
+repository-invariant drift in M-D2.
+Arm N: one WorkGroups.admit rule reused by create and add.
+
+GROUP-ID GRAMMARS
+Arm M: one new regex requiring GROUP- plus at least two hyphen-separated
+segments after GROUP.
+Arm N: one new regex allowing GROUP- plus one or more segments.
+Baseline PRX-GRP-010 gives a suggested grammar and explicitly permits existing
+Praxis identity conventions, so the difference is indeterminate rather than a
+proven defect.
+
+MEMBER STATE / PROGRESS CLASSIFICATION
+Arm M:
+- membership admission uses effective lifecycle strings;
+- show uses the existing planner classification;
+- checkpoint has an explicit active/completed/abandoned/remaining partition.
+Arm N:
+- GroupMemberFacts centralizes recorded state;
+- show uses planner status;
+- checkpoint reuses show but recomputes active/completed/remaining from a mix
+  of planner status and recorded state, producing N-R2 for abandoned members.
+
+JSON ENVELOPES
+Arm M:
+- one work-groups persistence schema for create/add/remove;
+- a distinct work-group-checkpoints schema;
+- show uses the existing planner declared-group schema;
+- mutation commands have command-specific result shapes/kinds.
+Arm N:
+- one WorkGroupJson persistence codec and one common command envelope
+  (command/schemaVersion/groupId/status), with verb-specific payload fields.
+Arm N is more uniform at the CLI JSON boundary.
+
+CLI PARSING / MUTATION PIPELINES
+Arm M:
+- create/add/remove share local parser helpers but call separate application
+  operations; show lives in PlanCommands; checkpoint has its own lock wrapper
+  and repository.
+Arm N:
+- create is one path;
+- add/remove explicitly share membershipChange;
+- show and checkpoint remain separate where semantics differ;
+- all group writes funnel through one locked repository mutation function.
+Arm N has fewer independent mutation pipelines.
+
+CHECKPOINT REPRESENTATIONS
+Arm M: group checkpoint is separate from declaration state and has explicit
+abandoned/uncheckpointed/execution-reference fields plus GitDurableLocation.
+Arm N: group checkpoint is embedded in StoredGroup and content-addressed. It
+has active/completed/remaining and optional member checkpoint fields, but no
+separate abandoned category.
+
+RULE REUSE VS COPYING
+Arm M reuses planner DeclaredGroup and work-checkpoint durability but duplicates
+member-admission logic between create and add.
+Arm N reuses WorkGroups.admit, group history, view, one JSON codec and one
+transaction path. Its main validation gap is not duplication but missing
+cross-record ownership validation.
+
+CREATE/ADD/REMOVE INVARIANTS
+Arm N is internally more consistent because create and add share admission.
+Arm M disagrees with itself on repository admission: add enforces it, create
+does not.
+Both preserve member lifecycle/evidence/attribution on membership mutation.
+
+SHOW/CHECKPOINT CLASSIFICATION
+Arm M show uses planner status while checkpoint independently partitions
+effective lifecycle and explicitly preserves abandoned.
+Arm N checkpoint reuses the show view but mixes view.Status and RecordedState,
+which is mostly cohesive but creates the abandoned-classification risk.
+
+PLANNER / MUTATION AGREEMENT
+Both project persisted groups into the planner.
+Arm M refuses a stored/configured duplicate ID as ambiguous.
+Arm N gives explicit per-run configuration precedence over stored state.
+The acceptance criteria do not specify duplicate-source precedence; neither
+choice is scored as a defect.
+
+EXISTING PARSER/RULE REUSE
+Both reuse existing PlanningJson/planner/work-checkpoint machinery.
+M reuses the existing planner DeclaredGroup directly.
+N adds a focused WorkGroupJson codec but reuses planner Grouping and existing
+checkpoint verification.
+
+DEPENDENCIES
+Neither arm introduces a new external package dependency in the patch.
+
+LOCKING / ATOMICITY / LOST UPDATE
+Arm N: lock + atomic write around all group mutations.
+Arm M: atomic file replacement but no lock around declaration/member
+read-modify-write. Lost-update risk remains and checkpoint's lock does not
+serialize against those unlocked mutations.
+
+STALE / ORPHANED RECORDS
+Arm M's second checkpoint file increases cross-file referential surface, but
+validation checks checkpoint group IDs and member checkpoint ownership.
+Arm N keeps checkpoint history embedded, eliminating cross-file group/checkpoint
+orphaning but misses external member-checkpoint ownership validation.
+
+ERROR HANDLING
+Both consistently distinguish argument/usage errors from semantic refusals in
+tested paths. Arm N has a single machine-readable rejection-code family.
+Arm M show uses planner error output while mutation commands use work-group
+renderers, so its JSON/error surface is less uniform.
+
+MAINTAINABILITY FOR COMMAND SIX/SEVEN
+Arm M has clearer layer separation but more plumbing and two persistence
+surfaces. A cross-cutting command can require updates in domain, application,
+contract, infrastructure and possibly PlanCommands.
+Arm N has a simpler vertical path and shared transaction/envelope behavior,
+but WorkGroups.fs is already broad and should be split by pure subdomain if
+future command count grows.
+
+MONOLITH VS OVER-FRAGMENTATION
+Arm M: no individual module is monolithic; the risk is over-fragmentation at
+the CLI/store boundary, especially show living in PlanCommands and checkpoint
+living in a separate store while other mutations do not share checkpoint's
+lock.
+Arm N: WorkGroups.fs is large, but current internal concepts are coherent and
+shared; it is a maintainability risk rather than a demonstrated monolith
+defect.
+
+11. Test-quality comparison
+---------------------------
+Both arms use meaningful tests rather than only implementation mirrors:
+- pure decision tests;
+- JSON round trips;
+- actual CLI execution;
+- temporary repository/clone fixtures;
+- Git durability scenarios;
+- lifecycle/evidence preservation checks;
+- planner integration and validation.
+
+Arm M's test suite is broader around checkpoint integrity:
+- explicit blank shared-decision rejection;
+- sequential checkpoint IDs;
+- executor-ownership checks;
+- cross-member checkpoint laundering validation;
+- bad/backdated timestamps;
+- checkpoint dry-run;
+- separate validation of group-checkpoint storage.
+This breadth is directly useful because it catches a class of error Arm N's
+suite does not test.
+
+Arm N's test suite is stronger around one end-to-end group surface:
+- structured Actor provenance in append-only history;
+- architecture-note create/show round trip;
+- one shared create/add repository-admission rule;
+- single-store show/checkpoint integration;
+- completed-member removal preserving lifecycle/evidence/attribution.
+
+Meaningful gaps:
+- Neither arm contains a multi-process lost-update/concurrency stress test.
+- Arm M lacks a create-time foreign-repository test, allowing M-D2 through.
+- Arm N lacks a blank-shared-decision test and a validator test for a member
+  referencing another member's checkpoint, allowing N-D1/N-D2 through.
+- Neither test count is treated as evidence by itself.
+
+12. Confirmed defects
+---------------------
+ARM M
+M-D1 [PRAXIS-GROUP-01 / PRX-GRP-051]
+Create can persist a group with no identified execution repository.
+
+M-D2 [PRAXIS-GROUP-01 / repository compatibility]
+Create can initially admit a foreign-repository member into a
+non-cross-repository group because create does not use the repository
+admission rule that add uses.
+
+Confirmed acceptance defects in Arm M: 2.
+
+ARM N
+N-D1 [PRAXIS-GROUP-05 / explicit checkpoint probe]
+A blank --decision value is silently removed instead of refused.
+
+N-D2 [PRAXIS-GROUP-05 + validate / PRX-GRP-043]
+Stored group-checkpoint validation does not verify checkpoint ownership, so it
+cannot detect a member claiming another member's checkpoint in a constructed
+stored representation.
+
+Confirmed acceptance defects in Arm N: 2.
+
+13. Design risks
+----------------
+ARM M
+M-R1: unlocked read-modify-write on groups.json can lose concurrent successful
+create/add/remove mutations and can race a group checkpoint/lifecycle
+transition. Atomic replacement protects file integrity, not transaction
+integrity. Runtime reproduction was not possible in this evaluator environment.
+
+M-R2: two persistence stores and multiple JSON/schema families increase
+cross-command integration surface. This separation also has benefits, so it is
+not itself a defect.
+
+ARM N
+N-R1: WorkGroups.fs is a broad domain module. Current reuse is coherent, but
+continued command growth could turn it into a monolith unless split by pure
+concern.
+
+N-R2: abandoned member state can disappear from all serialized
+active/completed/remaining checkpoint lists. The baseline does not prescribe an
+abandoned field, so this remains a design risk rather than a confirmed defect.
+
+14. Areas where M is stronger
+-----------------------------
+- Checkpoint integrity and validation are more explicit.
+- Validation can detect cross-member checkpoint-reference laundering.
+- Group checkpoint progress preserves abandoned separately instead of silently
+  folding or dropping it.
+- Checkpointing requires the evaluator/executor to own an active execution of
+  an active member, an additional attribution safeguard.
+- Blank shared decisions are explicitly rejected.
+- Group checkpoint supports dry-run even though the minimum acceptance text
+  does not require it.
+- Test coverage is materially deeper around checkpoint corruption and
+  attribution boundaries.
+- Domain/application/infrastructure separation is clearer for pure decisions
+  and ports.
+
+15. Areas where N is stronger
+-----------------------------
+- One reusable member-admission rule keeps create/add repository invariants
+  aligned.
+- Every group has an execution repository; create defaults to the local
+  repository.
+- One work-protocol lock protects every group read-modify-write transaction.
+- One group store avoids declaration/checkpoint cross-file update surface.
+- One JSON codec and common command envelope make JSON behavior more uniform.
+- Structured Actor provenance retains more identity structure than a bare
+  actor ID string.
+- Architecture notes are accepted at create and shown through the same stored
+  model.
+- add/remove share one mutation pipeline, reducing parser/behavior drift.
+
+16. Areas equivalent/indeterminate
+----------------------------------
+Equivalent or effectively equivalent:
+- basic valid create;
+- unknown/terminal/duplicate create refusals;
+- duplicate member handling;
+- lifecycle non-mutation;
+- create/add/remove JSON and dry-run where required;
+- add already-present refusal;
+- remove non-member/last-member explicit behavior;
+- text/JSON show and unknown exit 1;
+- planner visibility of stored declarations;
+- work-checkpoint Git durability reuse;
+- branch/commit/next-action/shared-decision persistence;
+- member checkpoint history is referenced rather than replaced;
+- no new external dependencies;
+- successful exact-SHA CI validation.
+
+Indeterminate by authoritative criteria:
+- M's stricter minimum of two group members versus N allowing a one-member
+  group. The baseline describes groups as several items but does not state a
+  normative minimum cardinality in the cited requirements.
+- M refusing a stored/configured duplicate group ID versus N allowing explicit
+  config to shadow stored state. Precedence is not specified.
+- M's stricter group-ID regex versus N's broader regex. PRX-GRP-010 says the
+  exact form may follow existing conventions.
+- Relative performance/cost/speed. Those metrics were deliberately excluded
+  from this blind implementation-quality evaluation.
+
+17. Threats to validity
+-----------------------
+1. The evaluator could not run the required exact local build command because
+   .NET was unavailable locally. The exact-SHA CI build used .NET 10.0.401 but
+   did not pass FSharpCoreImplicitPackageVersion=10.1.400.
+2. The evaluator could not create clean local worktrees because the local
+   container could not resolve github.com.
+3. A fresh evaluator-authored symmetric CLI probe matrix was not executable.
+   Existing exact-SHA CLI tests are substantial but were authored by each arm.
+4. Concurrency behavior was inspected statically. Arm M's lost-update mechanism
+   is technically clear, but no simultaneous-mutation runtime reproduction was
+   performed, so it is a design risk rather than an observed defect.
+5. Source-code comments and organization can reveal implementation style.
+   They did not reveal execution-mode mapping.
+6. CI success demonstrates the committed arm tree passed its repository suite;
+   it does not prove every acceptance criterion, which is why static semantic
+   review and gap analysis were also performed.
+
+18. Whether blinding was compromised
+-------------------------------------
+No.
+
+Leaks encountered: none.
+
+No source revealed, and no attempt was made to infer, which blinded arm was the
+grouped execution versus the independent-control execution.
+
+19. Final qualitative synthesis
+-------------------------------
+Both arms implement the five-command work-group surface substantially and both
+pass the permitted exact-SHA repository CI. Their core create/show/add/remove
+and durable-checkpoint paths are not superficial: each has real CLI fixtures,
+planner integration, JSON contracts and non-mutation checks.
+
+Arm M is stronger on checkpoint integrity. Its group-checkpoint model makes
+member checkpoint ownership, abandoned members, executor ownership and
+durability explicit, and its validator directly detects attribution
+laundering. Its main weakness is earlier in the lifecycle: create does not
+establish the execution-repository invariant that add establishes, and its
+unlocked group read-modify-write path creates a credible concurrency/lost-
+update risk.
+
+Arm N is stronger on cross-command cohesion. One admission rule, one locked
+mutation path, one group store and one command envelope reduce drift, and that
+cohesion is visible in correct repository enforcement at both create and add.
+Its main weakness is checkpoint validation depth: blank shared decisions are
+silently discarded, and validate cannot prove that persisted member checkpoint
+references actually belong to the named members.
+
+The evidence therefore supports specific, localized comparative statements:
+Arm M has the more defensive checkpoint integrity model; Arm N has the more
+consistent repository-admission and transactional mutation model. Both have
+confirmed acceptance defects, and the available blind evidence does not justify
+a numeric score, an overall winner, a methodology conclusion, or any inference
+about which execution mode produced either implementation.
+
+PROTOCOL DEVIATIONS
+-------------------
+- No evaluator-local clean worktrees/clones or exact requested build invocation:
+  local .NET was absent and local GitHub DNS access was unavailable.
+- No fresh evaluator-authored symmetric fixture/concurrency probe run for the
+  same reason.
+- Build/test evidence therefore uses exact-SHA permitted GitHub Actions logs.
+- The formal evidence record was NOT assigned EV-ROS-2026-A060 even though the
+  blind-kit branch itself ends at A059. The blind README explicitly identifies
+  A060-A062 as prohibited non-blind material, so assigning an overlapping
+  number could create a post-unblinding collision. A neutral temporary evidence
+  record is written under the blind output directory and must be numbered/moved
+  by the owner after unblinding.

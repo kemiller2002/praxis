@@ -1,0 +1,67 @@
+{
+  "schema": "ordo.boundary-amplification/1",
+  "workItem": "WI-QUALITY",
+  "requirement": "Contained application change",
+  "policy": {
+    "source": "default",
+    "maxBoundaries": 3,
+    "maxModules": 4,
+    "moduleDepth": 2,
+    "coreLayers": [
+      "cli",
+      "persistence",
+      "provider",
+      "domain",
+      "rendering"
+    ],
+    "coreLayerSpan": 3,
+    "hotspotWorkItems": 3,
+    "orchestrationChurn": 3,
+    "concentrationBoundaries": 2,
+    "maxExpansionRatio": 2,
+    "elevatedScore": 2,
+    "highScore": 4
+  },
+  "expected": [
+    "application"
+  ],
+  "observed": [
+    {
+      "boundary": "application",
+      "layer": "application",
+      "sources": [
+        {
+          "kind": "path",
+          "path": "src/Praxis.Application/Correlation.fs"
+        }
+      ]
+    }
+  ],
+  "supporting": [],
+  "unclassified": [],
+  "unexpectedCrossings": [],
+  "unexercised": [],
+  "amplificationRatio": 1,
+  "signals": [],
+  "risk": {
+    "level": "low",
+    "score": 0,
+    "evidence": []
+  },
+  "recommendation": {
+    "kind": "no-action",
+    "splitAlong": []
+  },
+  "exception": {
+    "coverage": "not-applicable",
+    "applied": [],
+    "rejected": [],
+    "approvedCrossings": [],
+    "unapprovedCrossings": [],
+    "downgradedFrom": null
+  },
+  "generator": {
+    "tool": "ordo",
+    "version": "1.4.0"
+  }
+}

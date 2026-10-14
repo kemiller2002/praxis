@@ -1,0 +1,263 @@
+{
+  "assembled": "after unblinding",
+  "mapping": {
+    "continuous": "snapshot-P",
+    "code-only": "snapshot-K",
+    "handoff": "snapshot-W"
+  },
+  "arms": {
+    "A": {
+      "condition": "continuous",
+      "snapshot": "snapshot-P",
+      "valid": true,
+      "invalidReasons": [],
+      "sessions": [
+        "arm-1"
+      ],
+      "excludedOrchestrationFailures": [],
+      "acceptance": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 2
+      },
+      "architecture": {
+        "composite": 5,
+        "dimensions": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "divergencePoints": 8
+      },
+      "discovery": {
+        "fileReads": 46,
+        "searches": 66,
+        "mainOnlyFileReads": 46,
+        "mainOnlySearches": 66,
+        "repeatedReadExcessWithinSessions": 15,
+        "crossSessionRepeatedPaths": 0,
+        "governanceReads": 6
+      },
+      "resources": {
+        "costUsd": 8.2724554,
+        "outputTokens": 102006,
+        "inputTokens": 192,
+        "cacheReadTokens": 19876197,
+        "cacheWriteTokens": 282041,
+        "elapsedMs": 3072134,
+        "telemetryWallMs": 3032337,
+        "modelRequests": 94,
+        "toolCalls": 96,
+        "builds": 20,
+        "testRuns": 10,
+        "compactions": 0,
+        "sessions": 1,
+        "msToFirstCodeMutation": [
+          372291
+        ],
+        "peakContextTokens": 306524
+      },
+      "includingOrchestrationFailures": {
+        "costUsd": 8.2724554,
+        "outputTokens": 102006,
+        "elapsedMs": 3072134
+      },
+      "handoffOverhead": null
+    },
+    "B": {
+      "condition": "code-only",
+      "snapshot": "snapshot-K",
+      "valid": true,
+      "invalidReasons": [],
+      "sessions": [
+        "arm-2-01",
+        "arm-2-02r",
+        "arm-2-03",
+        "arm-2-04",
+        "arm-2-05"
+      ],
+      "excludedOrchestrationFailures": [
+        "arm-2-02"
+      ],
+      "acceptance": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 1
+      },
+      "architecture": {
+        "composite": 10,
+        "dimensions": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "divergencePoints": 5
+      },
+      "discovery": {
+        "fileReads": 129,
+        "searches": 134,
+        "mainOnlyFileReads": 129,
+        "mainOnlySearches": 134,
+        "repeatedReadExcessWithinSessions": 55,
+        "crossSessionRepeatedPaths": 18,
+        "governanceReads": 16
+      },
+      "resources": {
+        "costUsd": 15.3004888,
+        "outputTokens": 163797,
+        "inputTokens": 1522,
+        "cacheReadTokens": 33224664,
+        "cacheWriteTokens": 671691,
+        "elapsedMs": 7723072,
+        "telemetryWallMs": 7511791,
+        "modelRequests": 231,
+        "toolCalls": 240,
+        "builds": 26,
+        "testRuns": 12,
+        "compactions": 0,
+        "sessions": 5,
+        "msToFirstCodeMutation": [
+          278663,
+          885137,
+          null,
+          667917,
+          577161
+        ],
+        "peakContextTokens": 205070
+      },
+      "includingOrchestrationFailures": {
+        "costUsd": 15.6885564,
+        "outputTokens": 164639,
+        "elapsedMs": 7740488
+      },
+      "handoffOverhead": null
+    },
+    "C": {
+      "condition": "handoff",
+      "snapshot": "snapshot-W",
+      "valid": true,
+      "invalidReasons": [],
+      "sessions": [
+        "arm-3-01",
+        "arm-3-02r2",
+        "arm-3-03",
+        "arm-3-04",
+        "arm-3-05"
+      ],
+      "excludedOrchestrationFailures": [
+        "arm-3-02",
+        "arm-3-02r"
+      ],
+      "acceptance": {
+        "passed": 36,
+        "failed": 0,
+        "indeterminate": 0,
+        "confirmedDefects": 1
+      },
+      "architecture": {
+        "composite": 8,
+        "dimensions": [
+          2,
+          2,
+          2,
+          1,
+          1
+        ],
+        "divergencePoints": 6
+      },
+      "discovery": {
+        "fileReads": 154,
+        "searches": 122,
+        "mainOnlyFileReads": 154,
+        "mainOnlySearches": 122,
+        "repeatedReadExcessWithinSessions": 60,
+        "crossSessionRepeatedPaths": 20,
+        "governanceReads": 21
+      },
+      "resources": {
+        "costUsd": 17.430628,
+        "outputTokens": 204253,
+        "inputTokens": 516,
+        "cacheReadTokens": 36673760,
+        "cacheWriteTokens": 751094,
+        "elapsedMs": 4675728,
+        "telemetryWallMs": 4466886,
+        "modelRequests": 236,
+        "toolCalls": 248,
+        "builds": 26,
+        "testRuns": 18,
+        "compactions": 0,
+        "sessions": 5,
+        "msToFirstCodeMutation": [
+          239694,
+          317886,
+          469588,
+          381338,
+          203995
+        ],
+        "peakContextTokens": 241112
+      },
+      "includingOrchestrationFailures": {
+        "costUsd": 18.2431838,
+        "outputTokens": 207370,
+        "elapsedMs": 4915800
+      },
+      "handoffOverhead": {
+        "arm-3-01": {
+          "firstAt": "2026-10-07T17:04:40.598000+00:00",
+          "lastAt": "2026-10-07T17:17:58.522000+00:00",
+          "paths": [],
+          "reads": 1,
+          "toolCalls": 2,
+          "writes": 1
+        },
+        "arm-3-02r2": {
+          "firstAt": "2026-10-07T20:49:29.878000+00:00",
+          "lastAt": "2026-10-07T21:01:42.692000+00:00",
+          "paths": [
+            "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-01.json"
+          ],
+          "reads": 1,
+          "toolCalls": 3,
+          "writes": 1
+        },
+        "arm-3-03": {
+          "firstAt": "2026-10-07T21:03:14.908000+00:00",
+          "lastAt": "2026-10-07T21:19:07.399000+00:00",
+          "paths": [
+            "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-02.json"
+          ],
+          "reads": 1,
+          "toolCalls": 3,
+          "writes": 1
+        },
+        "arm-3-04": {
+          "firstAt": "2026-10-07T21:20:34.915000+00:00",
+          "lastAt": "2026-10-07T21:32:03.129000+00:00",
+          "paths": [
+            "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-03.json"
+          ],
+          "reads": 1,
+          "toolCalls": 4,
+          "writes": 1
+        },
+        "arm-3-05": {
+          "firstAt": "2026-10-07T21:33:54.429000+00:00",
+          "lastAt": "2026-10-07T21:54:43.906000+00:00",
+          "paths": [
+            "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-04.json"
+          ],
+          "reads": 2,
+          "toolCalls": 5,
+          "writes": 1
+        }
+      }
+    }
+  }
+}

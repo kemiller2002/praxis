@@ -1,0 +1,199 @@
+{
+  "rubric": "inputs/rubric.txt",
+  "snapshots": [
+    {
+      "label": "K",
+      "dimensions": [
+        {
+          "dimension": 1,
+          "score": 2,
+          "evidence": [
+            "K/tree/src/Ros.Contracts/Planning/PlanningJson.fs:702 extracts readDeclaredGroup; :766 grouping.groups and :1401 the stored store both read through it (one parser for the declared-group concept)",
+            "K/tree/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs:266 single groupStorePath; :269 readStoredGroups; :280 planner configuration merges stored groups via GroupDeclaration.mergeInto",
+            "K/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:42-44 member states read through FilePlanningRepository.readQueue/readLive; :47,:56,:88 every operation reads/writes the store through the same functions",
+            "K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:82,:102,:108 provenance stored as a bare actor-id string (DeclaredBy/AddedBy: string), not the repository's structured Actor (minor)"
+          ]
+        },
+        {
+          "dimension": 2,
+          "score": 2,
+          "evidence": [
+            "K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:224 shapeRejections is used by create (:241) and by validate findings (:447): one rule set for admission and validation",
+            "K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:228 and :348 the >=2 member invariant is enforced by create, remove and validate alike",
+            "K/tree/src/Ros.Domain/Planning/Grouping.fs:537 planner's execution-location rule extracted as Grouping.locate and reused by add; but K/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:84 feeds it PlannerConfiguration.defaults, so add ignores a --config executionRepositories mapping the planner would honour",
+            "probe: create with NOPE-1 + abandoned WI-0001 -> rejections [unknown-member, terminal-member], rc=1 (evaluation/probes/K.probe.txt)"
+          ]
+        },
+        {
+          "dimension": 3,
+          "score": 2,
+          "evidence": [
+            "K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:89 GroupMemberStatus Open|Terminal built once by memberStatuses (FileWorkGroupRepository.fs:42) and used by create, add, checkpoint, validate and show's recorded state",
+            "K/tree/src/Ros.Domain/Planning/GroupView.fs:74-82 show progress reuses the planner's MemberStatus; K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:364 checkpoint partitions from recorded state (two progress categorisations, each tied to an existing model)",
+            "K/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:194 re-maps LiveWorkState to strings (the base has no shared code function; all three snapshots do this)"
+          ]
+        },
+        {
+          "dimension": 4,
+          "score": 2,
+          "evidence": [
+            "K/tree/src/Ros.Cli/WorkGroupCommands.fs:134 one envelope (schema praxis.work-group/1.0.0, kind, ok) and :170 one emit used by create/add/remove/checkpoint; exits 0/1/2 uniform",
+            "probe: show unknown --json -> {schema, kind: work-group-show, ok:false, error}, rc=1; add/remove/create refusals -> {ok:false, rejections:[{code,message}]}, rc=1 (evaluation/probes/K.probe.txt)",
+            "K/diff.patch ProvenanceCommands.fs hunk: identityFlags made public and reused by WorkGroupCommands instead of copied",
+            "Minor: show's error is an uncoded string (K/tree/src/Ros.Cli/WorkGroupCommands.fs:366,387) duplicating GroupRejection.UnknownGroup's text; GroupCreateFailure name reused for all operations"
+          ]
+        },
+        {
+          "dimension": 5,
+          "score": 2,
+          "evidence": [
+            "K/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:62 one apply (work-protocol lock, decide, atomic write; dry run = same decision without write) for create/add/remove/checkpoint",
+            "K/tree/src/Ros.Domain/Work/Checkpoint.fs:433 durability extracted from verify and :447 locate exposes it; verify itself now calls durability, so work checkpoint and group checkpoint share one verification path; FileWorkGroupRepository.fs:148 uses it",
+            "lockprobe: with work-protocol held by another live process, create wrote nothing (rc=1, GROUP-LOCK-001 absent) (evaluation/probes/lock.probe.txt)",
+            "Minor: FileWorkGroupRepository.fs:24 adds another private atomic-write helper (same pattern exists in 7 base modules; all three snapshots add one)"
+          ]
+        }
+      ],
+      "divergencePoints": [
+        "Execution-location for `work group add` uses PlannerConfiguration.defaults (FileWorkGroupRepository.fs:84) rather than the configuration the planner runs with",
+        "Two member-progress categorisations: GroupDeclaration.progress (checkpoint, recorded state) vs GroupView.progress (show, planner MemberStatus)",
+        "Unknown-group message duplicated as a literal in WorkGroupCommands.fs:366 alongside GroupRejection.UnknownGroup",
+        "Provenance stored as actor-id strings instead of the existing structured Actor/ActorJson model",
+        "Another private atomic-write helper (FileWorkGroupRepository.fs:24)"
+      ],
+      "composite": 10
+    },
+    {
+      "label": "P",
+      "dimensions": [
+        {
+          "dimension": 1,
+          "score": 1,
+          "evidence": [
+            "P/tree/src/Ros.Contracts/Planning/WorkGroupJson.fs:122-155,204,243 a second JSON module with its own private readers and its own declared-group parser; the store shape (members as objects, createdAt/createdBy, history) differs from grouping.groups, which PlanningJson.fs:752-761 still parses inline",
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs:445 declared and :459 declare translate stored groups into DeclaredGroup and inject executionRepositories, rather than reading the stored entry as a grouping.groups entry",
+            "P/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:25-28,95-111 reads queue.json directly with its own readObject/text helpers instead of FilePlanningRepository.readQueue",
+            "P/tree/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs:181 repositoryName moved into FileWorkGroupRepository, so the planner's repository now depends on the group repository",
+            "Positive: provenance uses the structured Actor via ActorJson (WorkGroups.fs:57)"
+          ]
+        },
+        {
+          "dimension": 2,
+          "score": 1,
+          "evidence": [
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs:260 one admit used by create (:287) and add (:329)",
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs:488 validate restates id/duplicate/unknown/repository rules instead of reusing admit",
+            "P/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs:95-104 execution repository = config mapping else local repository, without the planner's external-description inference (Grouping.evidenceFor), so admission and planner can disagree on where an item executes",
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs:181,370 create needs >=1 member, remove can empty a group with --allow-empty, validate does not flag empty groups, checkpoint refuses them (explicit, but the member-count rule lives in four places)"
+          ]
+        },
+        {
+          "dimension": 3,
+          "score": 1,
+          "evidence": [
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs:20,35 RecordedWorkState with isTerminal via string codes; :417-420 checkpoint partitions via string compares; :564-580 show progress defines Active as recorded active AND not blocked, unlike the checkpoint's Active",
+            "P/tree/src/Ros.Domain/Planning/WorkGroups.fs show progress is a new categorisation (StoredGroupProgress), not the planner's MemberStatus that plan groups reports",
+            "Execution-location classification re-implemented (see dimension 2)"
+          ]
+        },
+        {
+          "dimension": 4,
+          "score": 1,
+          "evidence": [
+            "P/tree/src/Ros.Cli/GroupCommands.fs:144-175 one mutate pipeline: document {command, schemaVersion, groupId, status}, coded rejections, persistence-failed coded, argument rejections exit 2",
+            "probe: `work group show GROUP-NOPE-001 --json` -> empty stdout, stderr text 'ERROR no group ... is declared', rc=1 (evaluation/probes/P.probe.txt); GroupCommands.fs:416,421 show errors ignore --json",
+            "P/tree/src/Ros.Contracts/Planning/WorkGroupJson.fs:304 show JSON has command/schemaVersion but no status field, unlike the mutation documents",
+            "P/tree/src/Ros.Cli/GroupCommands.fs:30 copies ProvenanceCommands' identityFlags list"
+          ]
+        },
+        {
+          "dimension": 5,
+          "score": 1,
+          "evidence": [
+            "P/tree/src/Ros.Cli/GroupCommands.fs:128 withLock and :144 mutate cover create/add/remove/checkpoint uniformly; lockprobe: create blocked while work-protocol held, nothing written (evaluation/probes/lock.probe.txt)",
+            "P/tree/src/Ros.Domain/Work/Checkpoint.fs:468-476 verifyDurableLocation copies the location+tree logic that verify keeps at :437-441, so the durability rule now exists twice",
+            "P/tree/src/Ros.Cli/GroupCommands.fs:342-345 Git observation and verification composed in the CLI layer, not behind an application/infrastructure seam",
+            "Positive: content-addressed checkpoint IDs reuse CanonicalJson (FileWorkGroupRepository.fs:89) and validate checks them"
+          ]
+        }
+      ],
+      "divergencePoints": [
+        "Second JSON parser/serialiser module (WorkGroupJson) for the declared-group concept alongside PlanningJson's grouping.groups parser",
+        "Second reader of .ros/work/queue.json (FileWorkGroupRepository.catalog) bypassing FilePlanningRepository.readQueue",
+        "Second execution-location rule (catalog) diverging from Grouping's planner rule",
+        "Durable-checkpoint verification duplicated (Checkpoint.fs verifyDurableLocation vs verify)",
+        "Validation rules restated in WorkGroups.validate instead of reusing admit",
+        "repositoryName ownership moved from FilePlanningRepository to FileWorkGroupRepository (dependency inversion of the planner on the group store)",
+        "Copied identityFlags list in GroupCommands.fs:30",
+        "show's --json error path diverges from the mutation commands' JSON contract"
+      ],
+      "composite": 5
+    },
+    {
+      "label": "W",
+      "dimensions": [
+        {
+          "dimension": 1,
+          "score": 2,
+          "evidence": [
+            "W/tree/src/Ros.Contracts/Planning/PlanningJson.fs:702 readDeclaredGroup shared by grouping.groups (:1005) and the store (:853); :716 declaredGroupFields writes the same shape",
+            "W/tree/src/Ros.Application/Planning/Operations.fs:26,42-43 PlanningReadPort gains DeclaredGroups, merged by GroupDeclaration.mergeInto; W/tree/src/Ros.Infrastructure/Planning/FilePlanningRepository.fs:273",
+            "W/tree/src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs (W/diff.patch, 13 lines) WorkGroupPort reads queue/live through FilePlanningRepository.readQueue/readLive; FileWorkGroupStore.fs:13 single store path",
+            "Provenance via structured Actor/ActorJson (PlanningJson.fs actorNode/readActor hunk in W/diff.patch)"
+          ]
+        },
+        {
+          "dimension": 2,
+          "score": 2,
+          "evidence": [
+            "W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:215 memberRejections shared by create rejections (:226) and addRejections (:286)",
+            "W/tree/src/Ros.Domain/Planning/Grouping.fs:541 planner rule extracted as executionLocation; W/tree/src/Ros.Application/Planning/WorkGroups.fs:128-131 add gathers the planner's own input (incl. --config) and uses it",
+            "W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:336 and :449 >=1 member invariant enforced by create, remove and validate alike",
+            "probe: create refusals and add/remove refusals rc=1 (evaluation/probes/W.probe.txt)"
+          ]
+        },
+        {
+          "dimension": 3,
+          "score": 2,
+          "evidence": [
+            "W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:190 memberStates (Open|Terminal) built once and used by create, add, remove, checkpoint, validate, show",
+            "W/tree/src/Ros.Domain/Planning/GroupDeclaration.fs:71 typed GroupMemberPartition.ofState is the single checkpoint partition, serialised and parsed by code",
+            "W/tree/src/Ros.Domain/Planning/GroupView.fs:51,60 show progress reuses the planner's MemberStatus (plus abandoned); two progress categorisations, each tied to an existing model, as in K"
+          ]
+        },
+        {
+          "dimension": 4,
+          "score": 1,
+          "evidence": [
+            "W/tree/src/Ros.Contracts/Planning/PlanningJson.fs:874,906,930,943,1220 one renderer per outcome with distinct kinds (group-rejected, member-rejected, member-removal-rejected, group-checkpoint-rejected, group-not-found)",
+            "probe: create/add/remove refusals carry only `errors: [string]`, no codes (evaluation/probes/W.probe.txt); GroupRejection has message but no code function (GroupDeclaration.fs:145)",
+            "W/tree/src/Ros.Cli/WorkGroupCommands.fs:471 group-level checkpoint rejections get a placeholder code 'group-rejected', while durability ones carry CheckpointRejection codes; only checkpoint text output prints ERROR [code]",
+            "Unknown-group message literal in three places: GroupDeclaration.fs:154, WorkGroupCommands.fs:616, PlanningJson.fs:1221",
+            "W/tree/src/Ros.Cli/WorkGroupCommands.fs:32 copies ProvenanceCommands' identityFlags list"
+          ]
+        },
+        {
+          "dimension": 5,
+          "score": 1,
+          "evidence": [
+            "W/tree/src/Ros.Application/Planning/WorkGroups.fs:105,125,150,187 each operation repeats read -> decide -> dry-run branch -> WriteStore through a shared port (no shared apply)",
+            "W/tree/src/Ros.Cli/WorkGroupCommands.fs:522 the work-protocol lock is taken only for checkpoint; create/add/remove (:190,:308,:374) write groups.json unlocked, although base Praxis state writers lock (e.g. K/tree/src/Ros.Cli/Program.fs:609, identical base)",
+            "lockprobe: with work-protocol held by another live process, W's create returned rc=0 in 0s and wrote GROUP-LOCK-001; K and P refused (evaluation/probes/lock.probe.txt)",
+            "W/tree/src/Ros.Domain/Work/Checkpoint.fs:434 durability extracted, used by verify (:463) and durableLocation (:449): checkpoint verification shared",
+            "W/tree/src/Ros.Infrastructure/Planning/FileWorkGroupStore.fs:28 fixed temporary name groups.json.tmp, not cleaned up on failure (base helpers use unique temp names)"
+          ]
+        }
+      ],
+      "divergencePoints": [
+        "Two mutation paths: checkpoint runs under the work-protocol lock, create/add/remove do not",
+        "Per-command JSON refusal shapes; refusal codes present only for checkpoint",
+        "Unknown-group message duplicated in three places",
+        "Two member-progress categorisations: GroupMemberPartition (checkpoint) vs GroupView.statusCode (show)",
+        "Copied identityFlags list in WorkGroupCommands.fs:32",
+        "Store writer uses a fixed temp-file name unlike the base atomic-write helpers"
+      ],
+      "composite": 8
+    }
+  ],
+  "blinding": "Only this checkout (branch experiment/a024-blind-eval) was used. No other branch, tag or ref was fetched, listed, read or diffed, and no GitHub search, API or web page was used. I made no attempt to infer which condition produced which snapshot and do not believe I learned it. Commit subjects differ in wording between snapshots, and the trees carry the same base agent-instruction files (CLAUDE.md, AGENTS.md); I treated neither as a signal and read neither as instructions."
+}

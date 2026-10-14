@@ -27,6 +27,16 @@ provenance:
         runtime: claude-code
       reason: "Captured from GitHub issue #80 (work item GH-80): post-hoc Git-evidenced attribution reconciliation"
       evidence: [https://github.com/kemiller2002/praxis/issues/80]
+    EXE-20261006T203816433Z-d8de3cb4:
+      operations: [modified]
+      at: 2026-10-06T20:40:41.536Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "PRAXIS-MISC-09: cited test paths moved from tests/Ros.Tests to tests/Praxis.Tests; content unchanged"
 ---
 
 # Requirement
@@ -79,5 +89,5 @@ it.
 
 ## Verification
 
-- tests/Ros.Tests/WorkReconciliationTests.fs
-- tests/Ros.Tests/WorkReconciliationEffectTests.fs
+- tests/Praxis.Tests/WorkReconciliationTests.fs
+- tests/Praxis.Tests/WorkReconciliationEffectTests.fs

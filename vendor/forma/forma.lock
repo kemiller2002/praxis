@@ -1,0 +1,8 @@
+# Forma presentation pin for praxis web serve and praxis hub serve
+# (SAF-FORMA-1, PRX-UI-030). The tarball beside this file is the unmodified
+# release artifact, verified against this digest at build-time tests and at
+# runtime before any stylesheet is served. Upgrade by replacing both, never by
+# editing Forma CSS (docs/web-interface.md, "Forma").
+forma 0.4.1
+url https://github.com/kemiller2002/forma/releases/download/v0.4.1/echelon-foundry-design-system-0.4.1.tgz
+sha256 32685421a759bdacf48943c8906ba2b2f57ae0218ea0a3c4f4de5d780a72ed76

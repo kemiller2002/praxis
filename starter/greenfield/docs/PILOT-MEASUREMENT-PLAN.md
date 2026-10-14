@@ -1,17 +1,17 @@
 ---
 id: PILOT-MEASUREMENT-{{PROJECT_SLUG}}
-title: {{PROJECT_NAME}} ROS Pilot Measurement Plan
+title: {{PROJECT_NAME}} Praxis Pilot Measurement Plan
 status: draft
 version: 0.1.0
 created: {{CREATED_DATE}}
 updated: {{CREATED_DATE}}
 ---
 
-# {{PROJECT_NAME}} ROS pilot measurement plan
+# {{PROJECT_NAME}} Praxis pilot measurement plan
 
 ## Evaluation question
 
-Does the ROS greenfield profile improve decision quality, traceability,
+Does the Praxis greenfield profile improve decision quality, traceability,
 handoff continuity, and avoidable rework enough to justify its operating cost?
 
 ## Baseline
@@ -29,7 +29,7 @@ differences that prevent direct comparison.
 | Assumption escape count | Material assumptions discovered only after implementation began | continuous |
 | Rework | Time spent reversing avoidable decisions or recreating missing context | continuous |
 | Handoff reconstruction | Time and missing questions for a new operator to continue | handoff test |
-| Operating overhead | Time spent maintaining ROS-specific artifacts and checks | continuous |
+| Operating overhead | Time spent maintaining Praxis-specific artifacts and checks | continuous |
 | Outcome quality | Slice-specific user or system acceptance measures | milestone |
 
 ## Falsification conditions

@@ -1,0 +1,1385 @@
+{
+  "schema": "praxis.plan/1.0.0",
+  "kind": "analysis",
+  "snapshot": {
+    "repository": "echelon-signal",
+    "commit": "637218a14179c9ac4f1ab1333c75d03f9df6d797",
+    "branch": "main",
+    "plannedAt": "2026-10-02T12:30:00Z",
+    "plannerVersion": "3.6.0",
+    "workStateFingerprint": "aaa4b792bdbfd979d94d9319f15ac013445cf20c600776477741e8180466bcf5",
+    "inputFingerprint": "7b3b8a2896cf7ba10c7e931f670ff04d874f1a6748e50a0aa7764dc8a148b2e5",
+    "collisionFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "items": [
+      {
+        "workItem": "ECHELON-UPGRADE-2026-09-21",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "2f33bc85f71295e572c977fba268f26a4a51b7af0337e53dc59197d911b12088"
+      },
+      {
+        "workItem": "GH-5",
+        "lifecycleState": "active",
+        "planningState": "active",
+        "checkpointId": null,
+        "digest": "4bce349f4594c98fc1a0acd6219b40016ca6cabedb33149a2a268488f2b8e248"
+      },
+      {
+        "workItem": "ROS-INSTALL-1-2-1-main-16-1",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "38e802a126eff3a5459f83f094f5cda35fe6d893affe3f3c40f35eb4aaee4e46"
+      },
+      {
+        "workItem": "SIGNAL-FRAMEWORK-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "bb7ce376f7011e8e4900288bb7c84e238776d5785c3bb61a04eed6f3ea69a2c1"
+      },
+      {
+        "workItem": "SIGNAL-SCORING-SELECTORS-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "563ff08577d32b1625da615484cc0163656d30f584138874e634396b331dcbd7"
+      },
+      {
+        "workItem": "SIGNAL-SCORING-SELECTORS-ATTRIBUTION-2026-09-22",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "53e1df6dd09be077dbb81ec5542adb4db9ba7210847f538cb22cc09b94a0b5cf"
+      },
+      {
+        "workItem": "SIGNAL-VERIFY-2026-09-21",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "92f7e094481ecced654bced765483cd8b9d76c2a2534b8571be2dfdb76d386f9"
+      },
+      {
+        "workItem": "WI-0001",
+        "lifecycleState": "complete",
+        "planningState": "complete",
+        "checkpointId": null,
+        "digest": "1700ad076b26ec5dc06a1c655a7863308ce7fb9b51980df489b8417a5526571b"
+      },
+      {
+        "workItem": "WI-0002",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "85c439613be7e872576202ed8e9ea7f87823b8208779e76026c6d5b10f426ae3"
+      },
+      {
+        "workItem": "WI-0003",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "2cb3b112aea548959a0e835b3e3f1188178770134f717c022fdad3b5d41fddb8"
+      },
+      {
+        "workItem": "WI-0004",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "3a0ff00441ddd59206e3ecaf363a9fac41cd6649748cc2506d6bec4102baa3e6"
+      },
+      {
+        "workItem": "WI-0005",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "c4a592c59e35ad1b79cae9b12d5adf3623e2813146323d273a4afb7874d67a71"
+      },
+      {
+        "workItem": "WI-0006",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "49ed3dfdd46e22820eea5a78007d6f8f04e4a8d91f07df86f8d9afd94b6529ef"
+      },
+      {
+        "workItem": "WI-0007",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "1b67f45f5ccd623243bbc1768a983994efd7211140f740876cd00a8b7fd664ea"
+      },
+      {
+        "workItem": "WI-0008",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "60c52475c9216c7cc5629d0dc0775b495ed6947010ea9a7368606a0376a1e791"
+      },
+      {
+        "workItem": "WI-0009",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "f15eb68361c008808b41128e35b5de40289a2a6abbc4a4de4c761a9236a1deb8"
+      },
+      {
+        "workItem": "WI-0010",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "4fd3a54e4df7ca914b3e72236917fc0f09c0051df1f7c694561196acae4a00c0"
+      },
+      {
+        "workItem": "WI-0011",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "89b61f214edb904f6580f915438ae55f4d5dc271d62d242c9541d3adf9aaa3d1"
+      },
+      {
+        "workItem": "WI-0012",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "b712e2cc9cbf98257d4f79f3caf300f30b504133a058f053ad22a28a30648877"
+      },
+      {
+        "workItem": "WI-0013",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "cff9384a84b44e47e14b07cb8ee38214aeb6db26074a1870c2d16829778c25e8"
+      },
+      {
+        "workItem": "WI-0014",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "102d6de3f1e4ae3a23302e62fac4b6c30b297e48fe60f902d8a199f50c07c28f"
+      },
+      {
+        "workItem": "WI-0015",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "4327c5a967c1b16e9c0d88a01ef5a17b55945cceb197929a22895ade444fb861"
+      },
+      {
+        "workItem": "WI-0016",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "3f8136c28f07853ff1e87b35914114a36a98544d0ec4bc4a9ab4eaa99171a33f"
+      },
+      {
+        "workItem": "WI-0017",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "7766ddb42f7998fa87d351fe1bb432c8020e772fdec0d0c4ce31bf37bc9f4794"
+      },
+      {
+        "workItem": "WI-0018",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "727c935076bfc7dd1d58c1182d6c95815cfc0c5c67e9f047a5d38a51933a4e7e"
+      },
+      {
+        "workItem": "WI-0019",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "1c986b6b271c20f47593f282a705de4928230b9cc762ecb18204b78ffec1167c"
+      },
+      {
+        "workItem": "WI-0020",
+        "lifecycleState": "captured",
+        "planningState": "captured",
+        "checkpointId": null,
+        "digest": "fa60900a60b638598eade9c6203cc2fdd7a5ac8a280be8a473849ea9b808d6d7"
+      }
+    ]
+  },
+  "statement": "Advisory shadow plan: nothing was started, completed, reprioritized or otherwise changed. No single schedule is optimal across cost, duration and collision risk. The frontier lists the non-dominated alternatives; choose the tradeoff that matters.",
+  "confidence": "low",
+  "confidenceStatement": "limited by: duration evidence is low confidence (5 samples); no usable monetary cost evidence",
+  "planningStates": {
+    "captured": 19,
+    "ready": 0,
+    "active": 1,
+    "blocked": 0,
+    "partially-complete": 0,
+    "awaiting-evidence": 0,
+    "awaiting-human": 0,
+    "stale-state-candidate": 0,
+    "complete": 7,
+    "abandoned": 0
+  },
+  "items": [
+    {
+      "id": "GH-5",
+      "title": "Prepare Signal implementation baseline",
+      "recordedState": "active",
+      "planningState": "active",
+      "inQueue": true,
+      "inContext": true,
+      "tags": [
+        "readiness,bootstrap"
+      ],
+      "createdAt": "2026-09-22T22:12:02.000Z",
+      "taskClass": "development",
+      "taskClassOrigin": "telemetry",
+      "triage": [],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "unclassified-continuation",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#GH-5"
+        },
+        {
+          "source": "live-context",
+          "reference": ".ros/context/current.json#GH-5"
+        },
+        {
+          "source": "telemetry",
+          "reference": ".ros/telemetry/executions (work item GH-5)"
+        }
+      ]
+    },
+    {
+      "id": "WI-0002",
+      "title": "Canonical survey domain contracts and F# module boundaries",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "domain",
+        "architecture",
+        "survey"
+      ],
+      "createdAt": "2026-08-31T19:10:58.921Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0002"
+        }
+      ]
+    },
+    {
+      "id": "WI-0003",
+      "title": "Template authoring, publication, versioning, and compatibility",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "authoring",
+        "publication",
+        "versioning"
+      ],
+      "createdAt": "2026-08-31T19:10:59.031Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0003"
+        }
+      ]
+    },
+    {
+      "id": "WI-0004",
+      "title": "Answer model, URL encoding, and live respondent lifecycle",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "answers",
+        "encoding",
+        "url-state"
+      ],
+      "createdAt": "2026-08-31T19:10:59.138Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0004"
+        }
+      ]
+    },
+    {
+      "id": "WI-0005",
+      "title": "Identity, anonymity, roles, and group semantics",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "identity",
+        "privacy",
+        "groups"
+      ],
+      "createdAt": "2026-08-31T19:10:59.243Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0005"
+        }
+      ]
+    },
+    {
+      "id": "WI-0006",
+      "title": "Deterministic rules, validation, flow, completion, and recommendations",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "rules",
+        "validation",
+        "flow"
+      ],
+      "createdAt": "2026-08-31T19:10:59.350Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0006"
+        }
+      ]
+    },
+    {
+      "id": "WI-0007",
+      "title": "Scoring engine, result semantics, and explainability",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "scoring",
+        "results",
+        "expressions"
+      ],
+      "createdAt": "2026-08-31T19:10:59.456Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0007"
+        }
+      ]
+    },
+    {
+      "id": "WI-0008",
+      "title": "Administrator import, aggregation, and report-state persistence",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "import",
+        "persistence"
+      ],
+      "createdAt": "2026-08-31T19:10:59.561Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0008"
+        }
+      ]
+    },
+    {
+      "id": "WI-0009",
+      "title": "Reporting contract, privacy, comparisons, and renderers",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "reporting",
+        "privacy",
+        "exports"
+      ],
+      "createdAt": "2026-08-31T19:10:59.668Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0009"
+        }
+      ]
+    },
+    {
+      "id": "WI-0010",
+      "title": "Cross-cutting test, performance, security, migration, and acceptance program",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "testing",
+        "performance",
+        "security"
+      ],
+      "createdAt": "2026-08-31T19:10:59.772Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0010"
+        }
+      ]
+    },
+    {
+      "id": "WI-0011",
+      "title": "Administrator application state, group management, and Limen UX",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "ordo",
+        "limen",
+        "ux"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0011"
+        }
+      ]
+    },
+    {
+      "id": "WI-0012",
+      "title": "Storage provider contract and GitHub repository provider",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "storage",
+        "github",
+        "provider"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0012"
+        }
+      ]
+    },
+    {
+      "id": "WI-0013",
+      "title": "Administrator import, concurrency, durable aggregation, and indexes",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "import",
+        "aggregation",
+        "concurrency"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0013"
+        }
+      ]
+    },
+    {
+      "id": "WI-0014",
+      "title": "Administrator analytics, comparisons, lineage, and dependency invalidation",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "analytics",
+        "lineage",
+        "dependencies"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0014"
+        }
+      ]
+    },
+    {
+      "id": "WI-0015",
+      "title": "Typed visualization grammar, dashboards, and accessibility",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "visualization",
+        "accessibility",
+        "dashboard"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0015"
+        }
+      ]
+    },
+    {
+      "id": "WI-0016",
+      "title": "Report builder, snapshots, exports, configuration packages, and policy packs",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "reporting",
+        "snapshots",
+        "configuration"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0016"
+        }
+      ]
+    },
+    {
+      "id": "WI-0017",
+      "title": "Administrator privacy, security, audit, retention, and deletion lifecycle",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "privacy",
+        "security",
+        "lifecycle"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0017"
+        }
+      ]
+    },
+    {
+      "id": "WI-0018",
+      "title": "Storage migration, backup, schema evolution, and operational recovery",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "migration",
+        "backup",
+        "recovery"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0018"
+        }
+      ]
+    },
+    {
+      "id": "WI-0019",
+      "title": "Administrator sandbox, synthetic data, advanced analytics extensions, and phase boundary",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "sandbox",
+        "synthetic-data",
+        "experiments"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0019"
+        }
+      ]
+    },
+    {
+      "id": "WI-0020",
+      "title": "Administrator cross-cutting verification, performance, and acceptance program",
+      "recordedState": "captured",
+      "planningState": "captured",
+      "inQueue": true,
+      "inContext": false,
+      "tags": [
+        "admin",
+        "testing",
+        "performance",
+        "acceptance"
+      ],
+      "createdAt": "2026-09-22T01:04:51.105Z",
+      "taskClass": "all",
+      "taskClassOrigin": "pooled",
+      "triage": [
+        "needs-triage",
+        "lacks-dependency-information"
+      ],
+      "blockReason": null,
+      "dependencies": [],
+      "checkpoint": null,
+      "remainingBasis": "from-scratch",
+      "fullDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingDuration": {
+        "lowerMs": 0,
+        "expectedMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown",
+        "display": "under 1 min"
+      },
+      "remainingCost": {
+        "lower": null,
+        "expected": null,
+        "upper": null,
+        "confidence": "unknown"
+      },
+      "costEvidence": "unavailable",
+      "provenance": [
+        {
+          "source": "backlog-queue",
+          "reference": ".ros/work/queue.json#WI-0020"
+        }
+      ]
+    }
+  ],
+  "terminalItems": 7,
+  "findings": [
+    {
+      "code": "monetary-optimization-unavailable",
+      "severity": "advisory",
+      "workItems": [],
+      "message": "Monetary optimization unavailable: 0 of 5 sampled executions contain usable cost evidence (at least 5 required).",
+      "recommendedAction": "record cost.execution_total (platform-reported cost with --quality observed, or token usage with pricing) for future executions",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "telemetry",
+          "reference": ".ros/telemetry/executions"
+        }
+      ]
+    },
+    {
+      "code": "duration-evidence-sparse",
+      "severity": "advisory",
+      "workItems": [],
+      "message": "only 5 finalized executions carry duration evidence; duration estimates are low confidence",
+      "recommendedAction": "finalize executions so their wall and blocked time are recorded",
+      "confidence": "low",
+      "evidence": [
+        {
+          "source": "telemetry",
+          "reference": ".ros/telemetry/executions"
+        }
+      ]
+    }
+  ],
+  "criticalPath": {
+    "workItems": [],
+    "expectedDuration": {
+      "lowerMs": 0,
+      "expectedMs": 0,
+      "upperMs": 0,
+      "confidence": "high",
+      "display": "under 1 min"
+    },
+    "explanation": "no pending work item waits on another through a hard dependency"
+  },
+  "unlocks": [],
+  "collisions": [],
+  "history": {
+    "sampledExecutions": 6,
+    "finalizedExecutions": 5,
+    "activeExecutionsExcluded": 1,
+    "durationSamples": 5,
+    "durations": [
+      {
+        "taskClass": "all",
+        "samples": 5,
+        "sessionMeasured": 0,
+        "lowerMs": 0,
+        "medianMs": 0,
+        "upperMs": 0,
+        "confidence": "low"
+      },
+      {
+        "taskClass": "administrative-process",
+        "samples": 2,
+        "sessionMeasured": 0,
+        "lowerMs": 0,
+        "medianMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown"
+      },
+      {
+        "taskClass": "development",
+        "samples": 2,
+        "sessionMeasured": 0,
+        "lowerMs": 0,
+        "medianMs": 0,
+        "upperMs": 660000,
+        "confidence": "unknown"
+      },
+      {
+        "taskClass": "maintenance",
+        "samples": 1,
+        "sessionMeasured": 0,
+        "lowerMs": 0,
+        "medianMs": 0,
+        "upperMs": 0,
+        "confidence": "unknown"
+      }
+    ],
+    "cost": {
+      "sampledExecutions": 5,
+      "withUsableCost": 0,
+      "withTokenUsage": 0,
+      "currency": null,
+      "sufficient": false,
+      "statement": "Monetary optimization unavailable: 0 of 5 sampled executions contain usable cost evidence (at least 5 required)."
+    },
+    "contextOverhead": {
+      "sampledSessions": 0,
+      "coldStart": {
+        "lowerMs": null,
+        "expectedMs": null,
+        "upperMs": null,
+        "confidence": "unknown",
+        "display": "unknown"
+      },
+      "medianGovernanceReads": null,
+      "medianRepeatedReads": null,
+      "sufficient": false,
+      "statement": "context reuse is unmeasured: 0 finalized executions record session metrics (time.first_code_change_ms), at least 3 are needed; ingest session transcripts with the anthropic-claude-session adapter (PRX-GRP-061)"
+    },
+    "segments": [
+      {
+        "dimension": "provider",
+        "value": "github",
+        "samples": 5,
+        "medianMs": 0
+      },
+      {
+        "dimension": "runtime",
+        "value": "github-actions",
+        "samples": 5,
+        "medianMs": 0
+      }
+    ],
+    "drift": null
+  },
+  "evidenceRecommendations": [
+    "Collect cost.execution_total for future executions (0 of 5 carry usable cost evidence); it enables the minimum-cost strategy.",
+    "Ingest session transcripts with the anthropic-claude-session adapter (0 of at least 3 sessions measured); measured cold starts replace unknown context-reuse value and runtime-measured session time improves implementation duration estimates.",
+    "Resolve PRAXIS-STATE-MERGE-01 to remove elevated collision risk from every parallel pair."
+  ]
+}

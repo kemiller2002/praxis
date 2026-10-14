@@ -1,7 +1,8 @@
 # {{PROJECT_NAME}}
 
-This repository is a greenfield pilot running Repository Operating System
-{{ROS_VERSION}}.
+This repository is a greenfield pilot running Praxis {{ROS_VERSION}}, Echelon Foundry's
+repository operating system. An older installation may also have `./ros`, a
+compatibility alias of `./praxis`.
 
 ## Start here
 
@@ -14,17 +15,17 @@ This repository is a greenfield pilot running Repository Operating System
 ## Local operating commands
 
 ```bash
-./ros work begin TASK-001 --type task
-./ros work context TASK-001
-./ros status
-./ros registry check
-./ros registry build
-./ros validate
+./praxis work begin --id TASK-001 --occurred-at TIMESTAMP --type task
+./praxis work context TASK-001
+./praxis status
+./praxis registry check
+./praxis registry build
+./praxis validate
 ```
 
-`work context` reports legal actions and completion evidence. Validation errors include repair instructions; use `./ros validate --json` for machine-readable output. Complete work with explicit evidence paths as described in `docs/work-protocol.md`.
+`work context` reports legal actions and completion evidence. Validation errors include repair instructions; use `./praxis validate --json` for machine-readable output. Complete work with explicit evidence paths as described in `docs/work-protocol.md`.
 
-The installed snapshot is self-contained. It does not read from the source ROS
+The installed snapshot is self-contained. It does not read from the source Praxis
 repository. `.ros/installation.json` records the package version and checksums
 of installed files.
 

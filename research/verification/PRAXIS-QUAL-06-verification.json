@@ -1,0 +1,57 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "groupExecutionId": null,
+  "rows": [
+    {
+      "member": "PRAXIS-QUAL-06",
+      "criterion": "release.json declares the remote protocol range and the state-schema versions this release reads and writes.",
+      "status": "met",
+      "evidence": {
+        "kind": "location",
+        "reference": "release.json",
+        "result": "compatibility.remoteProtocol and stateSchemas reads/writes; fence 'release.json declares the state compatibility this build reads and writes' passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-06",
+      "criterion": "Repository state declares the state-schema versions it needs; the remote executor refuses a repository whose declared state schema it does not support, before any mutation, with a typed failure.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "remote execute: state this executor does not read is refused before any mutation (PRX-QUAL-010)",
+        "result": "passed: incompatible-state, rejected, retry never, no working-tree change, HEAD unchanged"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-06",
+      "criterion": "The self-hosting pin may name an older attested release as long as it is compatible with the repository state; source may advance release.json to an unpublished version.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "fence release: the self-hosting pin names a published release compatible with the repository state",
+        "result": "passed (pin 3.7.2 <= source; reads covered or excepted by QX-COMPAT-1)"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-06",
+      "criterion": "The release bump no longer rewrites the pin; a post-release step advances the pin only after the release assets and attestations exist.",
+      "status": "met",
+      "evidence": {
+        "kind": "test",
+        "reference": "fence release: the version bump never moves the pin; the pin advances only after assets and attestations verify",
+        "result": "passed"
+      }
+    },
+    {
+      "member": "PRAXIS-QUAL-06",
+      "criterion": "The equality fence test is replaced by a compatibility fence; tests prove an incompatible executor/state combination is refused before mutation.",
+      "status": "met",
+      "evidence": {
+        "kind": "command",
+        "reference": "dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll",
+        "result": "full suite on qual/release-compatibility; equality fence replaced by compatibility fences"
+      }
+    }
+  ]
+}

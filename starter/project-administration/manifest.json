@@ -34,8 +34,9 @@
     {
       "source": "templates/echelon-toolchain.json",
       "destination": ".echelon/toolchain.json",
-      "template": false,
-      "ownership": "shared"
+      "template": true,
+      "ownership": "shared",
+      "versionPin": "praxis"
     },
     {
       "source": "starter/greenfield/editorconfig.template",
@@ -47,13 +48,31 @@
       "source": "starter/greenfield/gitattributes.template",
       "destination": ".gitattributes",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": ["praxis.cmd text eol=crlf", "ros.cmd text eol=crlf"]
     },
     {
       "source": "starter/project-administration/gitignore.template",
       "destination": ".gitignore",
       "template": false,
-      "policy": "preserve-existing"
+      "policy": "preserve-existing",
+      "ensureLines": [".ros/locks/"]
+    },
+    {
+      "source": "starter/greenfield/praxis",
+      "destination": "praxis",
+      "template": false,
+      "executable": true
+    },
+    {
+      "source": "starter/greenfield/praxis.ps1",
+      "destination": "praxis.ps1",
+      "template": false
+    },
+    {
+      "source": "starter/greenfield/praxis.cmd",
+      "destination": "praxis.cmd",
+      "template": false
     },
     {
       "source": "starter/greenfield/ros",
@@ -62,9 +81,20 @@
       "executable": true
     },
     {
-      "source": "starter/greenfield/tools/ros_fs_launcher.mjs",
-      "destination": "tools/ros_fs_launcher.mjs",
+      "source": "starter/greenfield/ros.ps1",
+      "destination": "ros.ps1",
       "template": false
+    },
+    {
+      "source": "starter/greenfield/ros.cmd",
+      "destination": "ros.cmd",
+      "template": false
+    },
+    {
+      "source": "starter/project-administration/praxis-hub",
+      "destination": "praxis-hub",
+      "template": false,
+      "executable": true
     },
     {
       "source": "starter/project-administration/ros-hub",
@@ -73,8 +103,9 @@
       "executable": true
     },
     {
-      "source": "starter/greenfield/.github/workflows/ros-validation.yml",
-      "destination": ".github/workflows/ros-validation.yml",
+      "source": "starter/greenfield/.github/workflows/praxis-validation.yml",
+      "destination": ".github/workflows/praxis-validation.yml",
+      "replaces": ".github/workflows/ros-validation.yml",
       "template": false,
       "integration": "github-actions",
       "ownership": "shared"
@@ -83,12 +114,6 @@
       "source": "starter/project-administration/ros.json",
       "destination": "ros.json",
       "template": true
-    },
-    {
-      "source": "starter/project-administration/package.json",
-      "destination": "package.json",
-      "template": true,
-      "policy": "preserve-existing"
     },
     {
       "source": "starter/project-administration/README.md",
@@ -174,6 +199,16 @@
     {
       "source": "schemas/work-protocol.schema.json",
       "destination": "schemas/work-protocol.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/ecir-approval-v1.schema.json",
+      "destination": "schemas/ecir-approval-v1.schema.json",
+      "template": false
+    },
+    {
+      "source": "schemas/praxis-completion-readiness.schema.json",
+      "destination": "schemas/praxis-completion-readiness.schema.json",
       "template": false
     },
     {
@@ -277,55 +312,10 @@
       "template": false
     },
     {
-      "source": "tools/ros_cli.mjs",
-      "destination": "tools/ros_cli.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_telemetry.mjs",
-      "destination": "tools/ros_telemetry.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_git.mjs",
-      "destination": "tools/ros_git.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_persistence.mjs",
-      "destination": "tools/ros_persistence.mjs",
-      "template": false
-    },
-    {
       "source": "telemetry/metrics.json",
       "destination": "telemetry/metrics.json",
       "template": false,
       "ownership": "shared"
-    },
-    {
-      "source": "tools/http_body.mjs",
-      "destination": "tools/http_body.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_server.mjs",
-      "destination": "tools/ros_server.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_hub_cli.mjs",
-      "destination": "tools/ros_hub_cli.mjs",
-      "template": false
-    },
-    {
-      "source": "tools/ros_hub_server.mjs",
-      "destination": "tools/ros_hub_server.mjs",
-      "template": false
-    },
-    {
-      "source": "web/index.html",
-      "destination": "web/index.html",
-      "template": false
     },
     {
       "source": "web/styles.css",
@@ -333,33 +323,8 @@
       "template": false
     },
     {
-      "source": "web/app.ts",
-      "destination": "web/app.ts",
-      "template": false
-    },
-    {
-      "source": "web/tsconfig.json",
-      "destination": "web/tsconfig.json",
-      "template": false
-    },
-    {
-      "source": "web-hub/index.html",
-      "destination": "web-hub/index.html",
-      "template": false
-    },
-    {
       "source": "web-hub/styles.css",
       "destination": "web-hub/styles.css",
-      "template": false
-    },
-    {
-      "source": "web-hub/app.ts",
-      "destination": "web-hub/app.ts",
-      "template": false
-    },
-    {
-      "source": "web-hub/tsconfig.json",
-      "destination": "web-hub/tsconfig.json",
       "template": false
     },
     {

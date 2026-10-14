@@ -1,0 +1,847 @@
+PASS production project references point inward
+PASS architecture guard rejects an outward Domain dependency
+PASS legacy research-package identifiers remain valid without widening other artifact kinds
+PASS valid fixture passes typed artifact validation
+PASS invalid fixture preserves characterized finding identities
+PASS registry build preserves golden bytes and canonical inputs
+PASS registry check detects stale outputs and dry run does not write
+PASS front-matter parser rejects missing close and preserves inline list values
+PASS partial registry write reports an indeterminate incomplete outcome
+PASS registry lock path matches the Node SHA-256 lease layout
+PASS registry lock reclaims an expired dead-owner lease
+PASS registry lock rejects a current-process owner without deleting it
+PASS registry lock reports ownership change on release
+PASS registry transaction replays a pending generated-registry write set
+PASS registry build does not load or write when lease acquisition fails
+PASS registry build does not load when pending transaction recovery fails
+PASS registry build exposes an indeterminate release after successful writes
+PASS work-state recovery completes an interrupted event-then-context write
+PASS work-state recovery preflights every target before replay
+PASS work-state transaction rejects incomplete or reordered targets
+PASS work-state transaction never overwrites an unrecovered journal
+PASS work-state recovery rejects a corrupt journal without touching targets
+PASS F# recovers a Node-shaped work-state journal
+PASS backlog-state recovery completes an interrupted queue-then-projection write
+PASS backlog-state recovery rejects projection divergence before replay
+PASS F# recovers a Node-shaped backlog-state journal
+PASS git parser retains both rename and copy paths
+PASS git parser rejects a rename without an origin path
+PASS git repository distinguishes clean from changed
+PASS git repository reports a non-repository as unavailable
+PASS git repository reports a missing executable as unavailable
+PASS base comparison is not configured when no ref is supplied
+PASS base comparison returns the committed range for a resolvable ref
+PASS base comparison silently reports an unresolvable ref rather than failing
+PASS live work transition matrix allows only characterized edges
+PASS block requires a non-empty reason
+PASS completion rejects sorted missing evidence types
+PASS completion accepts every required evidence type
+PASS work completion plan replaces evidence and carries changed paths
+PASS work plans ordered caller-specific telemetry intents
+PASS work plan rejection produces no item event or telemetry plan
+PASS work plan preserves configured local-state mapping
+PASS verified work plan reports every evidence issue in request order
+PASS filesystem evidence adapter distinguishes present files directories and missing paths
+PASS context plan retains context order and request event order
+PASS context plan rejects atomically when a later item transition is illegal
+PASS context plan creates absent items only for begin
+PASS context plan rejects empty and malformed work item selections
+PASS context JSON contract rejects an unknown semantic state
+PASS verified context plan performs no evidence IO before a complete semantic plan exists
+PASS verified context plan observes command evidence once in request order
+PASS backlog transition matrix permits only characterized edges
+PASS backlog decision distinguishes state changes from live promotion
+PASS backlog block guard preserves production empty versus whitespace behavior
+PASS backlog promotion preflights the complete selection without mutating queue state
+PASS execution-link recovery starts new when no detached candidate exists
+PASS execution-link recovery adopts one detached active record
+PASS execution-link recovery can include finalized evidence for transition repair
+PASS execution-link recovery rejects ambiguous detached evidence
+PASS execution-link recovery selects an explicitly requested detached record
+PASS execution-link recovery rejects a new requested ID while detached evidence exists
+PASS continuation: begin never adopts another actor's detached execution
+PASS continuation: a successor's resume links its own active execution, never a predecessor's
+PASS continuation: a successor with no execution of its own gets a new one instead of the predecessor's
+PASS continuation: completing the item still finalizes every active execution, foreign ones included
+PASS begin recovers the single detached active execution
+PASS begin with no candidates requires a new execution and halts
+PASS begin rejects ambiguous detached active candidates
+PASS resume links every active execution without rejecting on multiple candidates
+PASS resume with an already-linked active execution appends nothing new
+PASS resume with no active execution requires a new one
+PASS completion with a linked execution skips ensure and finalizes it
+PASS completion finalizes an orphaned active execution never explicitly linked
+PASS completion with no linked or candidate execution requires a new one before finalizing
+PASS block records lifecycle only and never changes execution IDs
+PASS resolving a planned transition freezes the item and event telemetry IDs together
+PASS resolving a plan pending a new execution reports the work item without a frozen plan
+PASS resolving a whole context plan updates every item in request order and stops at the first rejection
+PASS file telemetry state repository reads only the requested work item's real execution records
+PASS file telemetry state repository reports no candidates when the executions directory is absent
+PASS parseNameStatus splits a rename's two-column payload and keeps only the destination path
+PASS parseNameStatus keeps the single-column payload for add/modify/delete codes
+PASS parseNameStatus drops entries matching an ignored pattern and tolerates empty input
+PASS parseNumstat keeps the binary sentinel as a string and reads the final tab-separated field as the file
+PASS parseNumstat drops malformed lines with fewer than three columns and tolerates empty input
+PASS parseUntracked splits on NUL and drops empty segments, tolerating empty input
+PASS isTestFile matches a tests directory or a .test./.spec. suffix, case-insensitively
+PASS isDocumentation matches a docs directory, a README, or a doc-like extension, case-insensitively
+PASS compute aggregates name-status, numstat, and untracked entries into counts, line totals, tests, and docs
+PASS compute treats an untracked path already reported by name-status as already-known, not double-counted
+PASS compute filters untracked paths matching an ignored pattern before counting them
+PASS BlockedDuration.compute is zero with no lifecycle events at all
+PASS BlockedDuration.compute sums a closed blocked/resumed interval
+PASS BlockedDuration.compute closes a still-open blocked interval against finalizedAt
+PASS BlockedDuration.compute ignores a resumed event with no matching prior blocked event
+PASS BlockedDuration.compute sums multiple non-overlapping blocked intervals regardless of input order
+PASS glob match mirrors production's escape/double-star/single-star semantics
+PASS default config marks a path meaningful only outside every ignored pattern
+PASS custom configured patterns override the defaults entirely
+PASS file work config repository falls back to defaults field by field
+PASS disabled enforcement yields no findings regardless of other fields
+PASS no meaningful paths yields no findings
+PASS meaningful paths already in the baseline are excluded
+PASS unattributed meaningful change with no active or blocked work yields a finding
+PASS a path recorded in the event log is treated as attributed
+PASS active or blocked work in context excuses every meaningful change
+PASS file work config repository reads enforceAttribution field by field
+PASS file event log repository collects attributed paths from every recorded event
+PASS unavailable-reason codes match production's exact gitFailure.reason literals
+PASS the CLI's synthetic .git finding message matches production's workFindings catch template
+PASS an empty queue yields no findings
+PASS a well-formed item yields no findings
+PASS a missing priority is not a finding
+PASS a duplicate id is flagged on its second occurrence, not its first
+PASS an invalid id is flagged
+PASS an invalid status is flagged with the offending id
+PASS an invalid priority is flagged with the offending id
+PASS every valid semantic status and priority passes
+PASS a 'complete' status is valid, since work complete writes it for a promoted item (EV-ROS-2026-A052)
+PASS file backlog queue repository reads real items and defaults to empty when the file is absent
+PASS effective status prefers an active or blocked live item over the backlog's own status
+PASS effective status falls back to the backlog's own status when the live item is merely ready
+PASS effective status uses the live item's own state when there is no backlog entry at all
+PASS effective status is absent with neither a backlog entry nor a live item
+PASS merged rows include every id from either source, ordinal-sorted, defaulting absent backlog fields
+PASS an empty row set renders only the markdown header, with no trailing newline
+PASS rows render as a pipe-delimited table matching production's column order and blank-cell defaults
+PASS applying a state change preserves every unrelated field and item verbatim
+PASS clearing a reason removes the field entirely rather than nulling it
+PASS a merged live-context item is reflected in the regenerated markdown even though it is untouched by the effect
+PASS an unknown id is rejected without touching either file
+PASS a missing queue file is rejected the same way as an unknown id
+PASS an empty or whitespace-only title is rejected
+PASS the title is trimmed before being stored
+PASS an unrecognized priority is rejected, but only when provided
+PASS an explicit id must match the shared work-item id pattern
+PASS an explicit id already in the queue is rejected before checking the live context
+PASS an explicit id already live in the context (but not the queue) is rejected
+PASS an explicit id is used verbatim and never advances nextSeq
+PASS an omitted id is generated sequentially from nextSeq, skipping any collision
+PASS a generated id never checks the live context, only the queue
+PASS an empty or whitespace-only description is stored as absent, matching production's falsy check
+PASS source, actor, and priority all fall back to production's own defaults
+PASS readNextSeq defaults to 1 when the file is absent, matching production's loadQueue default
+PASS readNextSeq reads the persisted value
+PASS capturing on an absent queue file synthesizes production's own default document, then appends
+PASS capturing on an existing queue preserves every prior item and field verbatim
+PASS a live-context-only item is reflected in the regenerated markdown alongside a fresh capture
+PASS an id already in the queue is updated in place, never upserted
+PASS an id absent from the queue but present in the live context is upserted
+PASS an id in neither the queue nor the live context, but shaped like a valid id, is 'not found'
+PASS an id absent from the queue and shaped invalidly is rejected before checking the live context
+PASS no fields provided means every change is Keep
+PASS a provided title is trimmed and set, but empty after trimming is rejected
+PASS a provided description trims to a value, or to an explicit clear when only whitespace
+PASS provided tags replace verbatim, including an explicit empty list
+PASS an unrecognized priority is rejected; a recognized one is set
+PASS title is validated before priority, matching production's own check order
+PASS an update preserves every unrelated field and item verbatim, changing only what was decided
+PASS setting a description to whitespace clears it to null rather than an empty string
+PASS an id absent from the queue is upserted with production's exact minimal-record defaults, then the requested fields applied
+PASS an update on a completely absent queue.json synthesizes production's own default document
+PASS sanitizeFileComponent strips any path segments, keeping only the last one
+PASS sanitizeFileComponent trims and collapses every run of disallowed characters to a single underscore
+PASS sanitizeFileComponent collapses an entirely-disallowed name to a single underscore, not 'file'
+PASS sanitizeFileComponent falls back to 'file' only when basename-then-trim leaves nothing at all
+PASS an id already in the queue attaches in place, never upserting
+PASS an id absent from the queue but present in the live context is upserted
+PASS an id in neither the queue nor the live context, but shaped like a valid id, is 'not found'
+PASS an id shaped invalidly is rejected before checking the live context
+PASS the first attachment for an item is sequence 1, matching production's zero-based fallback plus one
+PASS the next attachment's sequence is one past the highest existing sequence, not the count
+PASS the display name is preserved verbatim in the record even though the stored filename is sanitized
+PASS contentType is always absent, matching production's own CLI path (never threaded through)
+PASS size and the uploaded/updated timestamps pass through unchanged
+PASS readAttachmentSequences defaults to empty when the file is absent, the id is absent, or the item has none
+PASS readAttachmentSequences reads real seq values, treating a missing seq as zero
+PASS attaching to an existing item writes the file bytes, appends the record, and preserves every unrelated field verbatim
+PASS attaching to an id known only to the live context upserts the minimal default record first
+PASS identity discovery with no override and no whitelisted environment stays fully unknown
+PASS an explicit provider/runtime override always wins over a whitelisted environment variable
+PASS CLAUDE_CODE_SESSION_ID alone whitelists anthropic/claude-code and supplies the session id
+PASS CODEX_THREAD_ID alone (without CODEX_SESSION_ID) still whitelists openai/codex
+PASS GITHUB_ACTIONS whitelists github but keeps an already-explicit runtime rather than overwriting it
+PASS GITHUB_ACTIONS with no explicit runtime defaults the runtime to github-actions
+PASS the session id fallback prefers an explicit value, then ROS_TELEMETRY_SESSION_ID, then the whitelisted provider's own variable
+PASS capability seeding marks a ros-derived metric as derived when Git is available
+PASS capability seeding marks a git.* ros-derived metric supported-unavailable when Git is unavailable
+PASS capability seeding marks a non-git ros-derived metric derived even when Git is unavailable
+PASS capability seeding marks a runtime-known metric supported-unavailable before any observation
+PASS capability seeding marks an unmapped metric unknown
+PASS upserting a capability for the first time always adds lastAssessedAt/recordedAt, matching it Touched even without a status change
+PASS upserting a capability with a changed reason moves the previous status into history
+PASS history is capped at maxHistoryEntries, keeping the oldest entry plus the most recent tail and counting the rest as omitted
+PASS default classification maps every known work type, and falls back to development for an unmapped one
+PASS applying a begin plan for a brand-new item writes it with telemetryExecutionIds when non-empty
+PASS applying a begin plan preserves an unrelated existing item's unmodeled fields verbatim (a research item's conclusion)
+PASS applying a begin plan with no telemetry execution ids omits the field entirely, matching production's own never-set key
+PASS re-applying the same event twice does not duplicate the events.jsonl line, matching production's own eventId dedup
+PASS applying a block plan writes blockReason onto the item, matching production's persisted (never-cleared) field
+PASS createExecution returns None without writing anything when telemetry is disabled
+PASS createExecution threads a supplied ParentExecutionId into the created record's identity
+PASS createExecution leaves identity.parentExecutionId absent-valued (null) when none is supplied
+PASS createExecution uses a supplied ExecutionId verbatim instead of generating a fresh one
+PASS readContextView with no requested ID returns every item, each carrying allowedActions and requiredEvidenceForCompletion computed fresh
+PASS readContextView filters to the requested ID, preserving unmodeled fields verbatim
+PASS readContextView rejects a requested ID not present in context with production's exact message
+PASS readContextView synthesizes an empty view when no context file exists yet
+PASS a backlog-only item exposes backlogActions computed from its status and carries no liveWorkItem
+PASS a live-only item defaults title to its id, carries no backlogActions, and exposes a full liveWorkItem summary
+PASS a blocked live item overrides status and blockedReason, even when the backlog record disagrees
+PASS blockedReason is genuinely absent (not merely null) when neither source names one
+PASS attachments carry through verbatim, including a null content type
+PASS every id from either source is present, ordinal-sorted
+PASS the hand-verified baseline record produces zero findings
+PASS a limit below the configured minimum rejects before any execution is read
+PASS disabled telemetry with no reason is the only finding, and enabled-with-a-reason produces none
+PASS a missing metric registry file is the only finding, with production's exact message
+PASS a duplicate registry metric id is reported once, over the first entry with a valid definition
+PASS an unsupported schema version is reported with the raw value, or 'missing' when absent
+PASS a missing or empty executionId is required; an invalid shape and a filename mismatch are each their own finding
+PASS an empty workItemId is treated the same as absent
+PASS identity requires truthy provider and runtime; a present-but-non-string-non-null field among the 11 is its own finding
+PASS provenance requires collector 'ros', a truthy collectorVersion, and a valid discoveredAt timestamp
+PASS status must be active or finalized; a finalized status without a valid finalizedAt is its own finding
+PASS a finalizedAt before startedAt is its own finding
+PASS each required-array field reports itself when the raw JSON key was not an array
+PASS missing repository or links objects are each their own finding
+PASS classification requires at least one type, unique types, and each type from the known vocabulary or the x- extension pattern
+PASS research-development classification requires at least one factual-uncertainty flag
+PASS a capability requires a valid status, a truthy metricId or providerField, and a valid discoveredAt
+PASS an unrecognized capability metricId is a finding, and a providerField-only capability is accepted
+PASS duplicate capability identity (same metricId/providerField pair) is a finding on the second occurrence
+PASS capability history exceeding the configured retention limit, and a malformed entry, are each their own finding
+PASS a metric requires a truthy measurementId, a finite non-negative value, and a known metric quality
+PASS an unrecognized metric id is reported, and unit/aggregation must match the registry's own definition
+PASS an estimated metric requires a valid confidence; confidence (any shape, present) is only valid for an estimated metric
+PASS a cost metric requires unit currency and an ISO three-letter code, and pricing provenance when calculated
+PASS a ratio metric cannot exceed one
+PASS a metric present while its capability is unsupported, or in the same snapshot marking it unavailable, is a finding
+PASS a quality signal requires a recognized detector (or an x- extension) and source provenance
+PASS a raw snapshot requires identity/adapter/source/timestamp; a null payload is valid, an absent payload is not
+PASS an unredacted sensitive raw field is its own finding, one per path
+PASS an event requires type/timestamp/source, and rawRetention.status must be retained or omitted when present
+PASS a linked work item that does not exist, or does not link back, is its own finding
+PASS a parentExecutionId that names no known execution is its own finding
+PASS a work item linking a missing execution id is its own finding, over the context path
+PASS a completed work item with an unfinalized linked execution is its own finding, only when finalization is required
+PASS a duplicate execution id across two files is reported against the first file's own relative path
+PASS an unreadable execution file's message passes through verbatim, at its own relative path
+PASS a stale-registry finding repairs with 'registry build', regardless of field
+PASS a work_items-fielded finding repairs with production's own work-begin instruction
+PASS any other finding repairs with the generic correct-and-revalidate instruction
+PASS readAll returns an empty list when the executions directory does not exist yet
+PASS readAll returns every record in ascending filename order
+PASS readByWorkItemId filters to matching records only, never rejecting an id matching nothing
+PASS readByExecutionId rejects an unknown id with production's exact message
+PASS readByExecutionId resolves a known id
+PASS readLatestExecutionId returns the most recently created execution's id, in ascending-filename (chronological) order
+PASS readLatestExecutionId returns None for a work item with no executions at all
+PASS telemetry adapters is production's exact static catalog, in production's exact order
+PASS recordLifecycle appends a work.blocked event and its agent.interruptions metric to an active execution
+PASS recordLifecycle appends a work.resumed event with a null reason and its agent.resumes metric
+PASS recordLifecycle is a no-op when the linked execution is already finalized
+PASS recordLifecycle is a no-op when no execution is linked to the work item at all
+PASS recordLifecycle deduplicates an identical event rather than appending it twice
+PASS TimingSummary.compute with no executions reports zero active/finalized and every timing figure null
+PASS TimingSummary.compute with a still-active execution nulls every finalized-only figure but still reports earliestStartedAt
+PASS TimingSummary.compute over two non-overlapping finalized spans sums wall time equal to the calendar span, with zero overlap
+PASS TimingSummary.compute over two overlapping finalized spans reports overlap as the excess of total wall time over the union
+PASS MetricAggregation.compute sums a 'sum' metric across samples and flags time.wall_ms with its own note
+PASS MetricAggregation.compute takes the maximum for a 'maximum' metric, with no note
+PASS MetricAggregation.compute for 'none' never aggregates, reporting no value and its fixed note
+PASS MetricAggregation.compute for an unmapped/default aggregation takes the value with the latest collectedAt
+PASS MetricAggregation.compute for 'latest-per-session' sums only the latest measurement per unique provider/runtime/session, keyed by execution id when no session is set
+PASS MetricAggregation.compute for 'latest-per-session' keeps the first-seen sample on an exact collectedAt tie
+PASS TelemetrySummary.summarize resolves each group's aggregation from the registry when known, else falls back to the sample's own aggregation field
+PASS TelemetrySummary.summarize groups distinct metric ids separately and sorts the output by id
+PASS TelemetrySummary.summarize reports distinct sorted providers/runtimes and passes the workItemId filter through verbatim
+PASS Tutela metrics preserve missing measurements as missing rather than zero
+PASS Tutela trend reports regressions without inventing missing measurements
+PASS finalizeTarget with an EXE-prefixed target resolves by exact execution id
+PASS finalizeTarget with a work-item target matches by workItemId regardless of status, taking the latest startedAt
+PASS finalizeTarget with no target and exactly one active-or-blocked work item resolves that item's latest execution
+PASS finalizeTarget with no target and zero active-or-blocked work items rejects with production's exact ambiguity message
+PASS finalizeTarget with no target and multiple active-or-blocked work items rejects with the same ambiguity message
+PASS finalizeTarget rejects an unknown target with production's exact message
+PASS finalizeTarget returns an already-finalized resolved execution untouched
+PASS recordMetric with an EXE-prefixed target records a new metric and creates a fresh capability entry
+PASS recordMetric with a work-item target matches only the currently-active execution, ignoring a finalized one
+PASS recordMetric with no target and exactly one active-or-blocked work item resolves that item's active execution
+PASS recordMetric with no target and zero active-or-blocked work items rejects with production's exact ambiguity message
+PASS recordMetric with no target and multiple active-or-blocked work items rejects with the same ambiguity message
+PASS recordMetric rejects a target whose only matching execution is not active, matching production's exact 'was not found or is already finalized' message
+PASS recordMetric rejects an unregistered metric id with production's exact message
+PASS recordMetric rejects a non-finite value with production's exact message
+PASS recordMetric deduplicates an identical repeated call by its content-addressed measurementId rather than appending twice
+PASS recordMetric upserts an existing capability entry into history rather than discarding its previous status
+PASS recordMetric honors explicit --unit/--currency overrides of the registry's own defaults
+PASS recordMetric stores a numeric --confidence as a number and a non-numeric one as text, matching production's permissive parsing
+PASS ingestTarget merges identity, normalizes metrics with capability upsert, appends a custom event, redacts sensitive raw fields, and records derived quality metrics
+PASS ingestTarget deduplicates a repeated identical snapshot, leaving metrics/rawTelemetry untouched
+PASS ingestTarget merges a directly-declared capability, preserving the prior status in history
+PASS ingestTarget rejects a snapshot that reports a metric value while declaring every capability for it unavailable
+PASS ingestTarget shallow-merges classification/scope (an explicit null overwrites, unlike identity's skip-null merge) and union-dedups links arrays
+PASS ingestTarget dedups quality signals by signalId and rejects an unregistered metric with production's exact message
+PASS ingestTarget rejects a target whose only matching execution is not active, and rejects an unknown adapter before touching anything
+PASS ingestTarget omits raw retention when disabled by config, still records the omission metric and unknown-field capabilities
+PASS ingestTarget omits raw retention when a single snapshot exceeds the configured byte budget
+PASS ingestTarget omits raw retention once the configured snapshot count per execution is reached
+PASS ingestTarget with an EXE-prefixed target resolves by exact execution id, and with no target resolves the single active work item
+PASS parseIngestInput accepts a single JSON value or JSON Lines, and rejects empty or malformed input
+PASS ingestTarget with the openai-codex adapter declares a capability for all six usage fields, but only a metric for the ones actually present, per completed entry
+PASS ingestTarget with the openai-codex adapter records context.window_size as a metric, matching production's own adapter-level omission of an explicit capability for it (the shared metric-recording pipeline still upserts one)
+PASS ingestTarget with the openai-codex adapter assigns a distinct turnIndex per completed entry, in encounter order
+PASS ingestTarget with the openai-codex adapter resolves identity.model from the last record carrying one, in reverse order, even if it is not itself completed
+PASS ingestTarget with the openai-codex adapter filters to completed entries only (type turn.completed, or any usage object), ignoring plain records
+PASS ingestTarget with the openai-codex adapter wraps a single non-array object as one record
+PASS ingestTarget with the anthropic-claude-hook adapter maps a PostToolUse hook into tool.calls, its tool-category metric, and identity, all deriving their capabilities 1:1 from what fired
+PASS ingestTarget with the anthropic-claude-hook adapter records tool.failures only when the tool_response carries an error, a truthy error field, or success is explicitly false
+PASS ingestTarget with the anthropic-claude-hook adapter does not record tool.failures when nothing indicates an error
+PASS ingestTarget with the google-gemini-hook adapter maps SubagentStart into agent.subagents_spawned and an execution-scoped identity
+PASS ingestTarget with the github-copilot-hook adapter maps PostCompact, PermissionRequest, and PermissionDenied hook names to their own distinct metrics
+PASS ingestTarget with a hook adapter emits exactly one runtime event per call, typed from the hook name, alongside the shared snapshot-ingested bookkeeping event
+PASS ingestTarget with the anthropic-claude-statusline adapter maps context/cost fields, computing utilization as used_percentage/100
+PASS ingestTarget with the anthropic-claude-statusline adapter marks a present cost.session_cumulative capability as estimated, not supported-observed
+PASS ingestTarget with the anthropic-claude-statusline adapter declares every capability even when nothing is present, recording no metrics
+PASS ingestTarget with the anthropic-claude-statusline adapter emits no events at all
+PASS ingestTarget with the anthropic-claude-otel adapter maps a direct field (duration_ms) into a scoped, dimensioned metric, with a capability derived from it
+PASS ingestTarget with the anthropic-claude-otel adapter looks up fields across nested candidates (resource.attributes), updating identity per record
+PASS ingestTarget with the anthropic-claude-otel adapter maps claude_code.api_request, recording model.request_failures only when success is false
+PASS ingestTarget with the google-gemini-otel adapter maps claude_code.tool_result / gemini_cli.tool.call.count into tool.calls, and a string "false" success into tool.failures
+PASS ingestTarget with the github-copilot-otel adapter maps gemini_cli.agent.turns / gemini_cli.chat_compression / gemini_cli.memory.usage(rss)
+PASS ingestTarget with the otel-json adapter seeds identity as unknown/unknown when nothing overrides it, and wraps a records-carrying object as its own record list
+PASS ingestTarget with the anthropic-claude-otel adapter emits no events of its own at all
+PASS classifyTarget builds a classification with types/rationale/evidence, no rd, and the CLI-visible shape production prints
+PASS classifyTarget rejects an empty classification list with production's exact message
+PASS classifyTarget merges a supplied rd context object verbatim
+PASS classifyTarget does not deduplicate a repeated call, matching production's real-clock (not content-addressed) snapshotId
+PASS classifyTarget resolves an EXE-prefixed target by exact execution id
+PASS startTarget creates a fresh execution and links it when the work item is active with no candidates
+PASS startTarget recovers a detached (unlinked) execution instead of creating a new one
+PASS startTarget creates a new execution when the only candidate is already linked
+PASS startTarget rejects ambiguous detached candidates with production's exact rerun message
+PASS startTarget rejects a work item that is not active or blocked with production's exact message
+PASS startTarget rejects a work item that does not exist in context, with the same message as an inactive item
+PASS startTarget returns None without mutating context when telemetry is disabled and there is no candidate
+PASS startTarget with --execution-id recovers a matching detached candidate instead of creating a new one
+PASS startTarget with --execution-id rejects a non-matching id when other detached candidates exist, with production's exact rerun message
+PASS startTarget with --execution-id becomes the newly created execution's own id when no detached candidate exists
+PASS startTarget threads all 11 identity-override fields into the created record's identity
+PASS firstMissingField finds the first missing required field in production's own checked order
+PASS firstMissingField is None when every required field is present and non-empty
+PASS decide rejects a protocol-version mismatch before checking anything else
+PASS decide rejects an unsupported operation before checking anything else
+PASS decide replays a cached request before checking repository authorization
+PASS decide rejects an unauthorized repository before fault injection or operation checks
+PASS decide honors simulateOutcome=unknown regardless of operation or scope
+PASS decide rejects getWorkItem without work:read scope
+PASS decide reports a missing work item for getWorkItem
+PASS decide succeeds reading an existing work item with the read scope
+PASS decide rejects transitionWorkItem without work:transition scope, even before checking the work item exists
+PASS decide reports a missing work item for transitionWorkItem
+PASS decide rejects an expected-state precondition mismatch as a state conflict
+PASS decide succeeds transitioning a work item whose current state matches the expected precondition
+PASS decide succeeds transitioning a work item with no expected-state precondition at all
+PASS decide rejects publishRepositoryEvent without event:publish scope, before checking the event's shape
+PASS decide rejects an event with no eventId
+PASS decide succeeds publishing an event that carries an eventId
+PASS call rejects a request missing a required field without touching a nonexistent store file
+PASS call rejects a protocol-version mismatch without creating or touching the store file
+PASS call reads an existing work item verbatim with the read scope
+PASS call transitions a work item, persists the mutation, and replays the cached result on a retry
+PASS call rejects an expected-state conflict and leaves the work item untouched
+PASS call publishes a new event and deduplicates a repeated eventId under a different requestId
+PASS call rejects an event with no eventId, leaving the events array untouched
+PASS call reports a remote_outcome_unknown result and exit code 2, without mutating the work item
+PASS call treats a missing store file as an empty store, rejecting an unauthorized repository
+PASS publish appends every event with no destination file yet, reporting zero duplicates
+PASS publish deduplicates by eventId, appending nothing on a repeated call
+PASS publish refreshes every source event's receipt on every call, even an already-published one
+PASS publish creates an empty publications.json and the destination directory even with zero events
+PASS publish fails without writing the destination or publications.json when the target's directory cannot be created
+PASS every ownership round-trips through its wire form
+PASS only tool-owned files have their integrity asserted
+PASS an absent file is created whatever its ownership
+PASS a file already byte-identical to the payload plans no change
+PASS user-owned, shared and generated files that differ are preserved, never rewritten
+PASS a tool-owned file untouched since installation is replaced
+PASS a locally modified tool-owned file blocks instead of being overwritten
+PASS a legacy recorded tool-owned file can upgrade when it still matches its old snapshot
+PASS a legacy tool-owned file edited after installation still blocks upgrade
+PASS an unrecorded file in the way of a tool-owned file blocks installation
+PASS planning is idempotent: re-planning against a plan's own result asks for nothing
+PASS the manifest records a preserved file at the hash it actually has
+PASS shared ownership can adopt a previously tool-owned file without overwriting sibling capability regions
+PASS an installation already at the current configuration version needs no migration
+PASS a legacy installation migrates through one declared step
+PASS a configuration version newer than this CLI is an error, not a silent no-op
+PASS an empty repository is not installed rather than invalid
+PASS a legacy installation reports as one upgrade behind
+PASS a current installation reports as installed, an older one as upgradable
+PASS a missing or modified tool-owned artifact makes the installation invalid
+PASS a drifted user-owned artifact never makes the installation invalid
+PASS doctor separates errors, warnings and information
+PASS strict verification fails on warnings; plain verification does not
+PASS an upgrade from a legacy installation runs its migration and preserves every file
+PASS a migration with an unmet precondition blocks before anything is planned
+PASS the embedded scaffold is exactly what the starter manifests reference
+PASS every exit code has exactly one documented meaning
+PASS foundation verifier accepts pinned Forma with canonical usage
+PASS foundation verifier rejects dependency that is installed but unused
+PASS foundation verifier requires Aegis boundary evidence
+PASS Ordo v2 observation preserves state view and scoped coverage
+PASS future Ordo observation schema fails closed
+PASS Ordo v2 ingestion tolerates unknown additive fields
+PASS unavailable provider usage remains unavailable rather than synthetic zero
+PASS missing required Ordo semantic fields fail closed rather than being guessed
+PASS resolution ingestion retains the exact raw payload separately from normalization
+PASS effective current requires explicit authority and never infers latest as current
+PASS search observation keeps searched-not-found separate from absence
+PASS unknown external effect remains unknown and can require reconciliation
+PASS file observation ingestion is idempotent and conflicts on changed identity
+PASS assessment requires an ingested resolution and becomes effective current assessment
+PASS effect reconciliation records measurable time to resolution
+PASS handoff carries explicit authority artifacts history verification and selected resolution
+PASS actor kinds round-trip, accept namespaced extensions, and reject everything else
+PASS agent identity is resolved from a known agent runtime without fabricating the model
+PASS identity resolution is provider-neutral: codex, CI automation, local, and a future provider
+PASS explicit declarations win: stable agent id, human kind, and environment actor kind
+PASS nothing known resolves to an explicit unknown actor, never a guess
+PASS legacy execution records without actorKind project from their recorded discovery mechanism
+PASS continuation: only the same actor in the same run may continue an execution
+PASS a process with no identity is undeclared; a session or CI run mismatch is a different run
+PASS two executions of the same agent share a stable identity but remain distinct contributions
+PASS requirement creation records its originator and a later modifier never replaces it
+PASS a second creation, or a creation after existing history, is refused
+PASS re-recording within one execution merges operations, tracks the latest one, and is idempotent for an identical call
+PASS structural problems: agent without execution, bad timestamp, agent without model field, duplicate creation
+PASS unknown provider and model are representable and valid
+PASS involvement distinguishes agent-created, human-created, approvals, and agent-to-agent revision
+PASS lineage is separate from authorship: a derived artifact names its source, not the source's author
+PASS actor JSON is canonical, omits not-applicable fields for humans, and round-trips
+PASS front-matter writer creates the provenance block without touching any other byte
+PASS front-matter writer appends a second contributor and never rewrites the first contributor's entry
+PASS front-matter writer merges into an existing entry, handles CRLF and block-style lists
+PASS derived_from lineage merges into inline, scalar, block, and absent fields
+PASS front-matter writer preserves the document body byte for byte, including mixed line endings
+PASS policy: new artifacts must be attributed, requirements must name their originator
+PASS policy: legacy artifacts stay valid, are reported honestly, and later edits are flagged
+PASS policy: an unattributed later modification of a new artifact is an error
+PASS policy: execution cross-check rejects impersonation and warns on unknown executions and broken evidence
+PASS malformed provenance is an error, never silently treated as absent
+PASS change detection: content changed since base without a new contribution is unattributed
+PASS events: legacy events without actors are informational; malformed actors are errors
+PASS metrics index: collaboration aggregates agent-to-agent revisions, human corrections and approvals, and hotspots
+PASS integration: an Ordo handoff names its producing actor and execution
+PASS installer: bookkeeping events are attributed to a well-formed automation actor
+PASS metrics index: contributions by actor across artifacts
+PASS property: recording never loses, reorders, or re-attributes earlier contributions
+PASS property: every recorded history serializes to front matter and reads back identically
+PASS recording inherits the execution's identity, writes front matter, and emits an attributed event
+PASS re-recording the same operation is idempotent and writes no second event
+PASS a second agent's modification accumulates and the originator is preserved
+PASS an agent cannot record into another agent's execution
+PASS an agent with no execution is refused; a declared human contributes under a CTB key
+PASS a human approval alongside an active agent execution is recorded separately, never merged into it
+PASS another session of the same agent cannot record into this session's execution
+PASS a human contribution outside any execution is idempotent for an identical recording
+PASS a multi-line or padded reason is normalized and recorded, and a blank reason is none
+PASS derived-from lineage is recorded on the artifact and in the event
+PASS malformed existing provenance is never overwritten
+PASS legacy execution records without actorKind project from their preserved discovery mechanism
+PASS policy configuration: absent is not enforced; enforced without a date is an error
+PASS adapter publication exports the attributed event verbatim (provenance survives the boundary)
+PASS generated registries carry artifact provenance for downstream consumers
+PASS the base-revision reader returns an artifact as committed, and nothing for a path that did not exist
+PASS an optional registry kind with no documents is not stale and is not created
+PASS reconciliation selectors accept a revision and a two-dot range
+PASS reconciliation selectors refuse option-like, ranged, symmetric, and half-open input
+PASS diff-tree parser reads added, modified, deleted, type-changed, renamed, and copied entries
+PASS diff-tree parser fails closed on an unmerged entry or a rename without both paths
+PASS reconciliation attributes added, modified, and deleted paths from one commit
+PASS reconciliation attributes both sides of a rename but only the destination of a copy
+PASS reconciliation never records non-meaningful paths and reports nothing to do for an ignored-only commit
+PASS reconciliation across several commits records only the commits that justify a path
+PASS reconciliation of a partially attributed range skips already-attributed paths
+PASS reconciliation rejects a missing, invalid, or abandoned work item and never creates one
+PASS reconciliation accepts active, blocked, complete, and ready backlog work items
+PASS reconciliation requires a reason and Git evidence
+PASS reconciliation rejects a merge commit as ambiguous evidence
+PASS a path restriction narrows Git evidence and rejects any path Git does not prove
+PASS repeating a reconciliation for the same work item is a no-op
+PASS a change another work item already reconciled is a conflict, never overwritten
+PASS the reconciliation event separates change author, work item, and reconciliation actor and reads back
+PASS a valid recorded reconciliation attributes its paths
+PASS an edited, unjustified, contemporaneous-labelled, or actorless reconciliation attributes nothing
+PASS two recorded reconciliations claiming one change for different work items are both invalid
+PASS reconciled attribution covers a path only while its content matches the recorded evidence
+PASS a reconciliation dated before the commits it reconciles is rejected and, if recorded, invalid
+PASS reconcile: an unattributed committed file is detected, reconciled, and then validates
+PASS reconcile: a later invocation of the unified validate recognizes the reconciled path
+PASS reconcile: an unrelated unattributed path in another commit still fails validation
+PASS reconcile: ignored and generated paths create no reconciliation requirement and no event
+PASS reconcile: added, modified, deleted, and renamed files are all attributed, renames on both sides
+PASS reconcile: a range reconciles several commits and several --commit selectors combine
+PASS reconcile: a partially attributed commit reconciles only the unattributed paths
+PASS reconcile: a nonexistent or abandoned work item is rejected and nothing is recorded
+PASS reconcile: invalid refs and ranges fail closed; malformed arguments are argument errors
+PASS reconcile: Git being unavailable fails closed
+PASS reconcile: ambiguous evidence (ambiguous ref, merge, foreign branch, unrelated base) fails closed
+PASS reconcile: repeating a reconciliation records nothing new
+PASS reconcile: another work item claiming the same change is a conflict and is not recorded
+PASS reconcile: a dry run reports the plan and records nothing
+PASS reconcile: the reconciliation actor is recorded separately from the Git change author
+PASS reconcile: post-hoc attribution stays distinguishable and the original history is untouched
+PASS reconcile: an edited reconciliation event attributes nothing and is reported
+PASS reconcile: reconciling a change never pre-authorizes a later change to the same path
+PASS reconcile: a shallow-clone boundary commit is refused rather than read as adding the whole tree
+PASS reconcile: work show lists a work item's post-hoc reconciliations and omits the field otherwise
+PASS remote: a well-formed work.start request parses into typed arguments
+PASS remote: every committed request fixture parses and passes value validation
+PASS remote: a different protocol is unsupported, not merely invalid
+PASS remote: a newer major or newer minor protocol version fails closed with the supported versions
+PASS remote: a future-version document with unknown fields is reported as unsupported, not as unknown fields
+PASS remote: a malformed or missing protocol version is an invalid request
+PASS remote: non-JSON and non-object documents are invalid requests
+PASS remote: the operation catalog is an allow-list; shell-like operations do not exist
+PASS remote: unknown fields fail safely at every level while x- extensions are tolerated
+PASS remote: every structural problem is reported in one response, not just the first
+PASS remote: arguments are typed per operation and cannot be borrowed from another operation
+PASS remote: hostile values are rejected before anything could reach a command line
+PASS remote: a request carrying credential material is refused without echoing the secret
+PASS remote: an absent actor stays absent and missing actor fields are unknown, never guessed
+PASS remote: a human actor has no provider/model/runtime and extension kinds stay provider-neutral
+PASS remote: the actor is taken only from the request, never from the executor's context
+PASS remote: telemetry.record values keep their asserted quality and cannot claim executor observation
+PASS remote: a mutation must be bound to a ref and an expected SHA; a read need not be
+PASS remote: capabilities are required per operation class and read never implies write
+PASS remote: authorization precedes replay so an unauthorized caller cannot read a recorded outcome
+PASS remote: a duplicate retry replays even after its own commit moved the ref
+PASS remote: the same request ID with a different semantic payload fails closed
+PASS remote: a stale, delayed, or out-of-order mutation is refused rather than applied to another commit
+PASS remote: the fingerprint ignores expectedSha, requestedAt and extensions but covers intent
+PASS remote: the fingerprint encoding is unambiguous across field boundaries
+PASS remote: reads are never journalled, so a replay lookup cannot change a read's decision
+PASS remote: failures decided by Praxis are distinct from executor and transport failures
+PASS remote: a rejected document still yields a correlatable, schema-shaped response
+PASS remote: a hostile request ID is never echoed back into the response
+PASS remote: a success embeds the command's own structured result and a replay is flagged
+PASS remote: the committed schemas agree with the typed operation and failure catalogs
+PASS remote: the request schema's per-operation arguments are exactly the typed catalog
+PASS remote 1.2: a batch is validated constituent by constituent and authorized for all of them
+PASS remote: mutating operations and capability classes are exactly as documented
+PASS remote 1.3: work.block keeps its 1.0-1.2 fingerprint unless unrecoverableReason is supplied
+PASS remote 1.3: work.checkpoint maps to the local command in the requester's own execution; work.continue creates one
+PASS remote identity: the child environment drops every credential and host identity marker
+PASS remote identity: the asserted actor replaces anything a previous agent left in the environment
+PASS remote identity: an absent actor is explicitly unknown, never the runner
+PASS remote identity: executor facts are observed from the adapter and round-trip through the child
+PASS remote identity: a runner executing an agent's request records the agent as actor and the runner as executor
+PASS remote identity: an unidentified requester stays unknown even on a GitHub runner
+PASS remote identity: a local execution keeps its historical shape, with no executor or assurance field
+PASS remote identity: the scrubbed variables are exactly the ones identity discovery reads
+PASS remote identity: no credential-bearing name is on the operational allow-list
+PASS remote execution: every mutating operation maps onto the local command with the executor's clock
+PASS remote execution: read operations map onto their machine-readable local commands
+PASS remote execution: unlabelled remote telemetry is recorded as agent-reported and targets the requester's execution
+PASS remote execution: validated values can never be read as an option by the command
+PASS remote execution: remote mutation is opt-in and grants only ever narrow
+PASS remote execution: only Praxis-owned, non-transient state may be persisted
+PASS remote execution: command exit codes map to Praxis outcomes without blaming the caller for executor defects
+PASS remote execution: a mutation may not introduce validation errors, but pre-existing findings are not its doing
+PASS remote execution: a journal entry round-trips its fingerprint and response and replays flagged
+PASS remote execution: an unreadable journal entry fails closed instead of reading as absent
+PASS remote execution: non-JSON command output is preserved as text rather than dropped
+PASS remote execution: a batch stopped by a same-request-retryable failure is not journalled as a whole
+PASS steps: a step runs until it completes or fails, and its lifecycle is projected from events
+PASS steps: repeating a transition is an idempotent no-op; an illegal one is refused, never coerced
+PASS evidence quality: the #90 vocabulary is projected from quality and source, never upgraded
+PASS usage: totals keep their evidence, and executions that reported nothing stay unavailable, never zero
+PASS remote 1.1: step operations need the requester's execution and are unknown to a 1.0 request
+PASS checkpoint: HEAD == candidate == remote head on a clean tree is a verified checkpoint with typed location
+PASS checkpoint: a missing or inactive work item is refused with a distinct cause
+PASS checkpoint: no execution of the caller, or an ambiguous one, is refused
+PASS checkpoint: detached HEAD, unborn HEAD, no upstream and a missing remote are distinct rejections
+PASS checkpoint: an unpushed local commit (local ahead) is refused and never treated as durable
+PASS checkpoint: a remote ahead of local, and diverged histories, are refused
+PASS checkpoint: a remote head that is not present locally is not remotely visible, not success
+PASS checkpoint: an unreachable remote and a deleted remote branch are refused
+PASS checkpoint: Git unavailable, not a repository, malformed output and unknown state stay distinct
+PASS checkpoint: meaningful uncommitted changes are refused and named
+PASS checkpoint: ignored and Praxis-owned paths never fail a checkpoint
+PASS checkpoint: a pre-existing baseline dirty path is neither attributed nor a false rejection
+PASS checkpoint: a step never started in the caller's execution is refused; a started one is linked
+PASS checkpoint: blank or whitespace summary and next action are refused together
+PASS checkpoint: independent problems are all reported (remote and tree), never only the first
+PASS checkpoint: every rejection has a remedy that never recommends discarding work
+PASS checkpoint: a stored checkpoint round-trips, and rehydration re-checks every invariant
+PASS commit id: only full lowercase hexadecimal ids parse
+PASS freshness: no checkpoint on active work is 'none' with a warning; a checkpoint at HEAD and remote head is current
+PASS freshness: commits after the checkpoint are surfaced with their count
+PASS freshness: commits that only carry Praxis state do not move past the checkpoint
+PASS freshness: uncommitted meaningful work after the checkpoint is distinct from commits after it
+PASS freshness: an unreachable remote, a moved remote, a rewritten remote and a deleted branch are distinct
+PASS history: a later force-push changes current recoverability, never the historical checkpoint
+PASS mutation: no committed or uncommitted meaningful change is 'no change'; an unknown start is never 'no change'
+PASS completion guard: meaningful work without a checkpoint is refused
+PASS completion guard: a stale checkpoint (commits after it) is refused
+PASS completion guard: a final HEAD that is not pushed (remote no longer the checkpoint) is refused
+PASS completion guard: a dirty final state is refused even with a current checkpoint
+PASS completion guard: no-change work completes without any commit or checkpoint
+PASS completion guard: a current, re-verified checkpoint satisfies completion
+PASS block guard: no new work blocks normally; new work needs a checkpoint or a recorded unrecoverable reason
+PASS continuation: a new executor continues active work, naming the checkpoint's execution as interrupted predecessor
+PASS continuation: refused for non-active work, for the caller's own run, and over local changes
+PASS continuation: a finalized-only history names the latest execution as an ended predecessor
+PASS recovery: instructions derive from the checkpoint and never reset, stash or discard
+PASS git durability: HEAD on a branch, detached HEAD, unborn HEAD and a non-repository are observed as such
+PASS git durability: upstream tracking, no upstream, and an upstream naming a missing remote
+PASS git durability: the remote branch head is read from the remote itself, and a missing branch is Missing
+PASS git durability: an unreachable remote is Unreachable, never Missing and never success
+PASS git durability: commit relations are same, ahead, behind, diverged, or object-missing
+PASS git durability: changed paths between commits include both sides of a rename
+PASS git durability: parsers accept exact output and refuse malformed output
+PASS git durability: remote URLs never carry credentials
+PASS checkpoint verification (real Git): a pushed clean HEAD verifies with the exact remote commit
+PASS checkpoint verification (real Git): an unpushed commit is refused as local-ahead
+PASS checkpoint verification (real Git): a remote ahead is refused, and so is a remote commit not fetched
+PASS checkpoint verification (real Git): diverged histories are refused
+PASS checkpoint verification (real Git): a deleted remote branch and no upstream are distinct refusals
+PASS checkpoint verification (real Git): an unreachable remote and a detached HEAD are refused
+PASS checkpoint verification (real Git): dirty meaningful work is refused; Praxis state and registries are not
+PASS recoverability (real Git): a later force-push is observed as not-contained while the checkpoint is kept
+PASS checkpoint persistence: recording appends one work.checkpointed event and sets the latestCheckpoint projection
+PASS checkpoint persistence: a newer checkpoint never erases history; the projection is the latest only
+PASS checkpoint persistence: recording the identical checkpoint twice writes one event
+PASS compatibility: work context without checkpoint fields loads as 'no checkpoint' and validates cleanly
+PASS validation: an event whose content no longer matches its eventId is a finding
+PASS validation: a projection that is not derivable from history is a finding
+PASS validation: a duplicated checkpoint identity, a backdated checkpoint and an unsupported schema are findings
+PASS validation: missing work item, missing execution and a step the execution never started are findings
+PASS validation: an execution of another work item, a checkpoint before its execution and an unparseable time are findings
+PASS validation: a missing schemaVersion and a projection whose content differs from its event are findings
+PASS validation: a metric attributed to a step its execution never started is a finding; unsegmented metrics never are
+PASS cli checkpoint: a pushed clean HEAD is recorded with the exact remote commit and a stable JSON contract
+PASS cli checkpoint: a missing work item, a blocked item and an executor with no execution are distinct refusals
+PASS cli checkpoint: blank text is an argument error (exit 2); a missing flag is a usage error
+PASS cli checkpoint: an unpushed commit and dirty work are refused; nothing is recorded
+PASS cli checkpoint: a step never started is refused; a started step of the caller's execution is linked
+PASS cli context/status: commits after the checkpoint and uncommitted work after it are reported as distinct facts
+PASS cli context: a later force-push leaves the historical checkpoint intact and reports it no longer verifiable
+PASS cli status --offline never contacts the remote and reports its state as unknown, not current
+PASS cli context --text shows the latest recoverable checkpoint block for people
+PASS completion guard: meaningful pushed work without a checkpoint cannot complete
+PASS completion guard: a stale checkpoint (a later meaningful commit, pushed or not) cannot complete
+PASS completion guard: a dirty final state cannot complete even with a current checkpoint
+PASS completion guard: the remote is re-verified at completion; a checkpoint whose branch was deleted cannot complete
+PASS completion guard: a current checkpoint completes, also after the Praxis state was committed on top
+PASS completion guard: no-change work completes without any commit or checkpoint
+PASS completion guard: a repository that has not opted in keeps its completion semantics
+PASS block guard: new work without a checkpoint needs a checkpoint or a recorded unrecoverable reason
+PASS block guard: with no work after the latest checkpoint, blocking is ordinary and records nothing extra
+PASS starter: a new installation enforces durable checkpoints; an upgrade never imposes it on existing configuration
+PASS continue: a successor gets a new execution whose parent is the predecessor, which stays untouched
+PASS continue: an agent can hand off to a human, each keeping its own identity
+PASS continue: the predecessor's own run, a dirty checkout, blocked work and an undeclared process are refused
+PASS continue: validation reports a successor whose recorded parent is not the named predecessor
+PASS segmentation: an execution that never recorded a step is execution-level, with step attribution unavailable
+PASS segmentation: adoption mid-execution leaves earlier activity execution-scoped and starts step-level at the first step
+PASS segmentation: a measurement is never moved into a step it was not recorded against
+PASS segmentation: unavailable pre-adoption step usage is unknown, never zero, and never redistributed
+PASS segmentation: a step-scoped metric must name a step its own execution started
+PASS cli segmentation: A adopts steps mid-execution without restart; B continues with its own steps; usage stays separately attributable
+PASS recovery proof: B recovers A's exact checkpoint from an independent clone after A is lost, continues and completes
+PASS evaluator fingerprint matches Ordo.Core byte for byte (conformance vector)
+PASS evaluator: direct, indirect and generated changes are neither pass nor fail
+PASS evaluator: a stale verdict is invalidated
+PASS receipts: match, mismatch, indeterminate and composite partial match
+PASS receipts: self-reported success is never a match; narrative is ignored
+PASS roles: verification cannot implement; implementation has no evaluator authority
+PASS boundary: explanations do not widen; expansion is explicit and never reaches the evaluator
+PASS envelope: evaluator closure is excluded and a worktree is not a sandbox
+PASS ledger: resume reuses matched steps; unknown effects refuse retry until reconciled
+PASS legal actions: completion needs matching receipts; human-only is refused to agents
+PASS execution: worktree-per-execution with repository-qualified work identity
+PASS execution: the same work item gets two independent executions
+REFUSED step write cannot start now (legal action: Reuse)
+REFUSED execution.complete is not legal now: out-of-boundary mutations are unresolved; the workspace has uncommitted changes; commit them so the candidate revision captures the execution's output
+REFUSED execution.complete is not legal now: the workspace has uncommitted changes; commit them so the candidate revision captures the execution's output
+PASS execution: bounded step, receipt, out-of-bound effect, completion and cleanup
+REFUSED workspace.cleanup is not a legal action for this execution
+PASS execution: cleanup is refused before a terminal state
+PASS execution: evaluator change during candidate evaluation is not reported as pass
+REFUSED scope.expand is not legal now: role verification may not expand its mutation boundary
+PASS execution: scope expansion is a legal transition; verification may not expand
+PASS installation: repository target is inferred from the Git remote
+PASS installation: explicit environment target uses the configured logical id, never the hostname
+PASS installation: an environment target without an explicit id is refused
+PASS installation: malformed system and version are refused before sending
+PASS installation: unavailable Project Administration is optional unless required
+PASS installation: artifact, digest and execution provenance are sent as given
+PASS installation: a retry at the same instant reuses the operation id
+PASS installation: provider refusal is surfaced with its own exit code
+PASS installation: remote URL forms map to a stable repository identity
+PASS ownership: a commit another item claimed in full is not this item's
+PASS ownership: a path no covering item claimed stays with this item
+PASS ownership: claims only count from items whose evidence contains the commit
+PASS ownership: paths split across several covering items are owned together; merges carry no own change
+PASS ownership scope: without evidence, or with only this item's own claims, the raw difference is used
+PASS ownership scope: when no other claim covers the range, behaviour is exactly the raw difference
+PASS ownership scope: another item's covered commits are removed; unreadable history falls back to the raw difference
+PASS CONT-12: another item's checkpointed commit after a checkpoint neither blocks completion nor is re-attributed
+PASS CONT-12: completion no longer demands a checkpoint that would claim another item's commits
+PASS CONT-12: blocking after another item's checkpointed work needs no checkpoint or unrecoverable reason
+PASS CONT-12: unowned work after a checkpoint is still this item's and still refused
+PASS CONT-12: this item's own later work is never excused by another item's checkpoint
+PASS abandon: ready, active and blocked work can be abandoned; it needs a reason; abandoned is terminal
+PASS abandon: blocked live work with a backlog row is abandoned in both, with a recorded reason and finalized telemetry
+PASS abandon: active work with pushed changes needs no checkpoint, and claims no paths
+PASS abandon: a backlog-only item is abandoned in the backlog
+PASS abandon: refused without a reason, for complete or unknown work, and nothing moves out of abandoned
+PASS abandon: the planner treats abandoned live work as terminal
+PASS planning: 1 deterministic output
+PASS planning: 2 inventory is the union of queue and live context
+PASS planning: 3 a live-only item is planned, not lost
+PASS planning: 4 completed items are excluded
+PASS planning: 5 abandoned items are excluded
+PASS planning: 6 captured items are not runnable and land in triage
+PASS planning: 7 blocked items are not scheduled
+PASS planning: 8 a completed dependency no longer blocks
+PASS planning: 9 unresolved hard dependencies are enforced
+PASS planning: 10 dependency cycles are findings, not arbitrary order
+PASS planning: 11 stale blockers need evidence; age alone is not enough
+PASS planning: 12 a verified checkpoint reduces remaining work
+PASS planning: 13 missing cost stays unknown, never zero
+PASS planning: 14 missing duration stays unknown
+PASS planning: 15 historical durations inform estimates by class
+PASS planning: 16 critical path follows the longest hard-dependency chain
+PASS planning: 17 independent scoped items form safe parallel waves
+PASS planning: 18 known collisions prevent parallel execution
+PASS planning: 19 unknown overlap is treated conservatively
+PASS planning: 20 maximum concurrency is respected
+PASS planning: 21 FIFO baseline runs oldest first, one at a time
+PASS planning: 22 balanced strategy reports explicit weights and scores
+PASS planning: 23 speed strategy prioritises the critical path
+PASS planning: 24 cost strategy is unavailable without cost evidence
+PASS planning: 25 compare reports a Pareto frontier, never one optimum
+PASS planning: 26 identical input renders a byte-identical logical plan
+PASS planning: 27 stale plans are detected
+PASS planning: 28 explain covers every strategy and the estimate evidence
+PASS planning: 29 plan JSON round-trips
+PASS planning: A sparse cost: duration optimisation available, money unavailable
+PASS planning: B completed prerequisite from free text is satisfied
+PASS planning: C checkpoint says little remains
+PASS planning: D merged work still recorded active is a stale-state candidate
+PASS planning: E stale blocker naming a completed prerequisite
+PASS planning: F live item missing from the queue is in the inventory
+PASS planning: G parallel Praxis-state mutations carry elevated risk
+PASS planning: narrative text is not a dependency
+PASS planning: structured dependencies outrank inferred ones for the same target
+PASS planning: active execution elapsed time is never a duration sample
+PASS planning: deadline is only satisfiable with evidence
+PASS planning: replay predicts only from earlier executions
+PASS planning: drift is detected when recent work stops resembling history
+PASS planning: configuration and observation files parse
+PASS planning cli: every command emits the versioned JSON contract
+PASS planning cli: Git evidence surfaces merged work and resolved blockers
+PASS planning cli: a checkpoint on the integration branch itself is not merge evidence
+PASS planning cli: freshness detects a changed work state
+PASS planning cli: invalid arguments are refused
+PASS planning cli: groups: a dependency pair forms a group that explain-group explains
+PASS planning cli: 30 no plan command mutates repository state
+PASS grouping: 1 high-affinity items form a candidate group
+PASS grouping: 2 unrelated items are not grouped to reach a size
+PASS grouping: 3 explicit human grouping outranks inferred grouping
+PASS grouping: 4 hard dependency order is kept inside a group
+PASS grouping: 5 external-repository work is not scheduled into the wrong checkout
+PASS grouping: 5b a declared group mixing repositories must be split or declared cross-repository
+PASS grouping: 6 blocked items remain blocked within a group
+PASS grouping: 7 completed items are excluded
+PASS grouping: 8 group membership does not alter lifecycle state
+PASS grouping: 9 group membership does not merge attribution
+PASS grouping: 10 partial completion is supported
+PASS grouping: 11 unknown affinity remains unknown
+PASS grouping: 12 title similarity alone is insufficient
+PASS grouping: 13 shared files raise affinity and collision risk separately
+PASS grouping: 14 high affinity does not imply parallel safety
+PASS grouping: 15 deterministic input produces deterministic groups
+PASS grouping: 16 group recommendation JSON round-trips
+PASS grouping: 17 a group explanation names its evidence
+PASS grouping: 18 oversized groups produce warnings, automatic ones split
+PASS grouping: 19 context-pressure evidence can trigger a split
+PASS grouping: group dependencies derive from member dependencies and cycles stay detectable
+PASS grouping: a common architecture decision merges candidate groups, explained
+PASS grouping: captured members make a planning group that must be triaged before execution
+PASS grouping: compare --groups counts context acquisitions and never claims unmeasured savings
+PASS work group: create records a valid declaration and sorts the store by ID
+PASS work group: create refuses unknown and terminal members
+PASS work group: live context outranks the backlog status
+PASS work group: create refuses a duplicate group ID
+PASS work group: create refuses malformed declarations
+PASS work group: the store round-trips and each entry parses as a grouping.groups entry
+PASS work group: a store with another schema is refused
+PASS work group: the planner reads a stored declaration exactly as a configured one
+PASS work group: a configured group outranks a stored group with the same ID
+PASS work group: validate findings: unknown members and duplicate IDs, not partial completion
+PASS work group: cli: create records the group and changes no member's state
+PASS work group: cli: --dry-run writes nothing
+PASS work group: cli: refusals exit 1 and leave the store unchanged
+PASS work group: cli: invalid arguments exit 2
+PASS work group: cli: plan groups reports the stored declaration
+PASS work group: cli: validate reports a stored group with an unknown member
+PASS work group: show: members carry their own recorded state beside the planner's
+PASS work group: show: partial-completion progress counts every declared member
+PASS work group: show: a blocked member lists the members it gates
+PASS work group: show: declaration, repository and planner notes are reported; nothing is written
+PASS work group: show: an unknown group is NotFound and nothing is written
+PASS work group: cli: show renders text and --json and never writes
+PASS work group: cli: show reports partial completion from members' own states
+PASS work group: cli: show of an unknown group exits 1; a missing ID exits 2
+PASS work group: add: appends the member and records who added it, leaving the declaration otherwise unchanged
+PASS work group: add: refuses unknown and terminal items
+PASS work group: add: refuses an item already present and an unknown group
+PASS work group: add: refuses another repository's item unless the group is cross-repository
+PASS work group: add: the membership history round-trips and the planner still reads the plain declaration
+PASS work group: add: validate reports membership history that contradicts the members
+PASS work group: add operation: repositories come from the planner configuration and only the store is written
+PASS work group: cli: add records the member with provenance and changes no member's state
+PASS work group: cli: add refusals and --dry-run write nothing; argument errors exit 2
+PASS work group: remove: drops the member, keeps the others in order and records who removed it
+PASS work group: remove: refuses non-members and unknown groups
+PASS work group: remove: refuses the last member
+PASS work group: remove: terminal and unknown members may leave; member state is not an input
+PASS work group: remove: history round-trips, a re-added member is valid and validate reports a contradiction
+PASS work group: remove operation: reports the item's own state and writes only the store, never on dry run
+PASS work group: cli: remove records provenance and changes no member's state
+PASS work group: cli: remove refusals and --dry-run write nothing; argument errors exit 2
+PASS work group: checkpoint: partitions members, references their own checkpoints and appends to the group
+PASS work group: checkpoint: an unknown group is refused; earlier group checkpoints are never rewritten
+PASS work group: checkpoint: the store round-trips with group checkpoints and a store without them still parses
+PASS work group: checkpoint: validate accepts a recorded group checkpoint and reports a tampered one
+PASS work group: checkpoint: durability uses work checkpoint's own Git rules without a work item or execution
+PASS work group: checkpoint operation: unknown groups skip Git, refusals and dry runs write nothing
+PASS work group: cli: checkpoint records a verified group checkpoint that references members' own checkpoints
+PASS work group: cli: checkpoint refuses unknown groups, unpushed and dirty work; argument errors exit 2
+841 test(s); 841 passed; 0 failed

@@ -1,0 +1,116 @@
+{
+  "test1Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "work-block-differential",
+    "nextSeq": 1,
+    "items": [
+      {
+        "id": "WI-BACKLOG",
+        "title": "Backlog-only item",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "blocked",
+        "attachments": [],
+        "createdBy": "unknown",
+        "createdByActor": {
+          "kind": "unknown",
+          "id": "unknown",
+          "provider": "unknown",
+          "model": "unknown",
+          "runtime": "unknown"
+        },
+        "source": "manual",
+        "sourceReference": null,
+        "blockedReason": "waiting on design"
+      }
+    ]
+  },
+  "test2Context": {
+    "schemaVersion": "1.0.0",
+    "protocolVersion": "1.0.0",
+    "repository": "work-block-differential",
+    "actor": "ros-bootstrap",
+    "baselineDirtyPaths": [],
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "evidence": [
+          {
+            "type": "installation",
+            "path": ".ros/installation.json"
+          }
+        ]
+      },
+      {
+        "id": "WI-LIVE",
+        "type": "task",
+        "state": "blocked",
+        "semanticState": "blocked",
+        "evidence": [],
+        "blockReason": "blocked on review"
+      }
+    ]
+  },
+  "test3Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "work-block-differential",
+    "nextSeq": 1,
+    "items": [
+      {
+        "id": "WI-SPLIT-BACKLOG",
+        "title": "Backlog item",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "blocked",
+        "attachments": [],
+        "createdBy": "unknown",
+        "createdByActor": {
+          "kind": "unknown",
+          "id": "unknown",
+          "provider": "unknown",
+          "model": "unknown",
+          "runtime": "unknown"
+        },
+        "source": "manual",
+        "sourceReference": null,
+        "blockedReason": "batch block"
+      }
+    ]
+  },
+  "test3Context": {
+    "schemaVersion": "1.0.0",
+    "protocolVersion": "1.0.0",
+    "repository": "work-block-differential",
+    "actor": "ros-bootstrap",
+    "baselineDirtyPaths": [],
+    "workItems": [
+      {
+        "id": "{install}",
+        "type": "mechanical",
+        "state": "complete",
+        "semanticState": "complete",
+        "evidence": [
+          {
+            "type": "installation",
+            "path": ".ros/installation.json"
+          }
+        ]
+      },
+      {
+        "id": "WI-SPLIT-LIVE",
+        "type": "task",
+        "state": "blocked",
+        "semanticState": "blocked",
+        "evidence": [],
+        "blockReason": "batch block"
+      }
+    ]
+  },
+  "test4Message": "block requires --reason",
+  "test5Message": "work item 'WI-GHOST' is not in repository context"
+}

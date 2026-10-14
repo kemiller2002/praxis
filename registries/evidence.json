@@ -1282,7 +1282,7 @@
     "path": "research/evidence/EV-ROS-2026-A057--openai-successor-attempt-could-not-invoke-praxis.md",
     "provenance": {
       "contributions": {
-        "EXE-20260929T130548213Z-63fe94ae": {
+        "EXE-20260929T162324008Z-39bbe593": {
           "actor": {
             "id": "anthropic/claude-code",
             "kind": "agent",
@@ -1290,11 +1290,11 @@
             "provider": "anthropic",
             "runtime": "claude-code"
           },
-          "at": "2026-09-29T13:06:07.548Z",
+          "at": "2026-09-29T16:23:37.680Z",
           "operations": [
             "created"
           ],
-          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from branch claude/remote-inbox-relay)"
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
         }
       }
     },
@@ -1319,6 +1319,1024 @@
     ],
     "title": "Cross-provider continuation attempt 1: an OpenAI successor reconstructed the handoff from repository state but could not invoke Praxis",
     "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A058--planner-shadow-experiment-on-praxis.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A046",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A046"
+    ],
+    "tags": [
+      "planning",
+      "telemetry",
+      "shadow-experiment",
+      "replay"
+    ],
+    "title": "Advisory planner shadow experiment 1: Praxis's own nonterminal work and a no-hindsight replay of 155 executions",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A059",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A059--grouping-planner-baseline-and-cohort.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:11.207Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:15.195Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A047",
+      "HY-ROS-2026-A027"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "shadow-experiment",
+      "baseline"
+    ],
+    "title": "Work-group planner baseline on Praxis: no pre-existing cohort, a captured phase-two cohort, and frozen predictions for EX-ROS-2026-A021",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "test-result",
+    "id": "EV-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A060--pr92-premerge-semantic-conflict-matrix-and-reconciliation-manifest.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T162437557Z-40b62e08": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:08:11.000Z",
+          "evidence": [
+            "tests/Ros.Tests/PremergeFence.fs"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PR92-PREMERGE-REGRESSION-FENCE: semantic conflict matrix, baselines and reconciliation manifest for PR #92"
+        },
+        "EXE-20260930T181403532Z-5fd55718": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T19:16:06.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PR92-RECONCILE: record the reconciliation outcome and the resolution of each section 9 decision"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/remote-agent-contract.md",
+      "DF-ROS-2026-A042",
+      "DF-ROS-2026-A044",
+      "DF-ROS-2026-A045"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "pr92",
+      "reconciliation",
+      "regression",
+      "characterization",
+      "praxis-rename"
+    ],
+    "title": "PR #92 pre-merge regression fence: semantic conflict matrix, baselines, and the reconciliation manifest",
+    "updated": "2026-09-30",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "derived_from": [
+      "3aef2bd"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A063",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A063--a021-preliminary-plan-globally-execute-incrementally.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T175751373Z-7eb9c757": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:56.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-07: authored by the repository owner in commit 3aef2bd without a provenance entry; this agent records the migration only and did not create or change the content"
+        },
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:04.870Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Authored outside a Praxis execution (commit 3aef2bd); its creation was never recorded (DF-ROS-2026-A055)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "context",
+      "ai-execution",
+      "preliminary"
+    ],
+    "title": "Preliminary A021 observation: plan globally, execute incrementally may reduce AI context reacquisition",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-09-30",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A064",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A064--grouping-experiment-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T114749635Z-ba7301df": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:18:10.317Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-EXP-01: results of the grouping experiment EX-ROS-2026-A021"
+        },
+        "EXE-20260930T172030686Z-71d403ef": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:20:31.714Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-06: renumber the A021 results record to EV-ROS-2026-A064 and relate it to the parallel evaluation kit and EV-ROS-2026-A063"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-08: refer to the evaluation kit by its renumbered IDs and record the second blind evaluation's outcome (EV-ROS-2026-A067)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A059",
+      "HY-ROS-2026-A027",
+      "HY-ROS-2026-A028",
+      "DF-ROS-2026-A047",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "context",
+      "evaluation"
+    ],
+    "title": "Grouping experiment EX-ROS-2026-A021: one grouped execution versus five independent executions of the work-group commands",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A065",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A065--a021-blind-evaluation-kit.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:12.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation",
+      "blinding"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation kit: method, owner procedure and tooling validation",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A066",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A066--a021-control-02-session-record.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T144206630Z-1e149d71": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T14:42:13.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-A021-EVAL-KIT: blind evaluation kit for EX-ROS-2026-A021"
+        },
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/evaluator-prompt.txt",
+      "research/experiments/EX-ROS-2026-A021-evaluation-kit/prepare-blind-bundle.sh"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "control-arm",
+      "deviation"
+    ],
+    "title": "EX-ROS-2026-A021 control arm, PRAXIS-GROUP-02: session record and stale-clone deviation (names an arm; read only after unblinding)",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A067",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A067--a021-blind-evaluation-report.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T230548914Z-bb6a60fd": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T23:06:18.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PLAN-08: renumbered from EV-ROS-2026-A060..A062 on experiment/a021-evaluation-kit, which collided with main's EV-ROS-2026-A060; content unchanged apart from the IDs"
+        },
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:02:05.523Z",
+          "operations": [
+            "origin-unrecorded"
+          ],
+          "reason": "Written by a blinded evaluator session that had no Praxis execution (originally EV-ROS-2026-A062, commit f3bad01c); its creation was never recorded (DF-ROS-2026-A055)"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "EV-ROS-2026-A065"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "EX-ROS-2026-A021"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "experiment",
+      "evaluation"
+    ],
+    "title": "EX-ROS-2026-A021 blind evaluation report (arm-X / arm-Y)",
+    "updated": "2026-09-30",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A068",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A068--fallback-reconciliation-and-final-fsharp-validation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T07:03:10Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "last": "2026-09-28T07:03:52Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Final F# validation and adversarial evidence for journaled fallback step reconciliation"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "last": "2026-10-01T06:45:44Z",
+          "operations": [
+            "migrated",
+            "modified"
+          ],
+          "reason": "Renumber after latest main independently assigned EV-ROS-2026-A054"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/fallback-reconciliation.md",
+      "protocol/praxis-envelope-v1.schema.json",
+      "research/evidence/EV-ROS-2026-A069--step-level-execution-telemetry-validation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A037",
+      "DF-ROS-2026-A051",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "tags": [
+      "telemetry",
+      "steps",
+      "fallback",
+      "reconciliation",
+      "fsharp",
+      "validation"
+    ],
+    "title": "Runtime-free step reconciliation and final F# validation",
+    "updated": "2026-09-28",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A069",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A069--step-level-execution-telemetry-validation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Implementation and validation evidence for first-class step telemetry"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T02:12:55Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Migrate step CLI requirement reference after main integration"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:23Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical step-telemetry evidence after integrating main's independently assigned EV-ROS-2026-A053"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "last": "2026-10-01T06:45:44Z",
+          "operations": [
+            "migrated",
+            "modified"
+          ],
+          "reason": "Renumber after latest main independently assigned EV-ROS-2026-A055"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/development-telemetry.md",
+      "docs/cli.md",
+      "docs/work-protocol.md",
+      "schemas/execution-telemetry.schema.json",
+      "protocol/praxis-envelope-v1.schema.json"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "DF-ROS-2026-A037",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "RQ-ROS-2026-A016",
+      "RQ-ROS-2026-A017",
+      "RQ-ROS-2026-A018",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A027"
+    ],
+    "tags": [
+      "telemetry",
+      "execution",
+      "steps",
+      "validation",
+      "provenance"
+    ],
+    "title": "First-class step-level execution telemetry implementation and validation",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-10-01",
+    "derived_from": [
+      "EX-ROS-2026-A021"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A070",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A070--a021-r2-blind-evaluation-and-replication.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261001T160615840Z-adece80d": {
+          "actor": {
+            "id": "openai/chatgpt",
+            "kind": "agent",
+            "model": "gpt-5.6-sol",
+            "provider": "openai",
+            "runtime": "chatgpt"
+          },
+          "at": "2026-10-01T16:06:16.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Created by OpenAI ChatGPT during the R2 integration; the source-Praxis execution was established after the pinned remote runtime failed, with the preceding commits reconciled post-hoc."
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A021",
+      "HY-ROS-2026-A028",
+      "EX-ROS-2026-A022",
+      "research/experiments/EX-ROS-2026-A021-R2-blind/output/EVALUATION.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "replication",
+      "blind-evaluation",
+      "context",
+      "cost"
+    ],
+    "title": "A021 R2 blind evaluation, unblinding, and replication comparison",
+    "updated": "2026-10-01",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-02",
+    "derived_from": [
+      "EX-ROS-2026-A022"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A072",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A072--a022-target-repository-gate-outcome.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261002T122339366Z-b15d6ac8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-02T12:32:11.000Z",
+          "last": "2026-10-02T12:47:35.000Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A022 target-repository gate outcome (no eligible target across 14 inspected repositories, Signal analysed) without changing the gate"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A022",
+      "EX-ROS-2026-A023",
+      "HY-ROS-2026-A028",
+      "HY-ROS-2026-A029",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A022-target-gate/README.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "affinity",
+      "experiment",
+      "target-selection",
+      "feasibility"
+    ],
+    "title": "EX-ROS-2026-A022 target-repository gate outcome",
+    "updated": "2026-10-02",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-06",
+    "derived_from": [
+      "EV-ROS-2026-A057"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A073",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A073--cross-provider-continuation-completed-through-the-inbox.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:22.721Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-MISC-07: record the completed cross-provider continuation proof from branch proof/chatgpt-continuation"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A022",
+      "RQ-ROS-2026-A023",
+      "DF-ROS-2026-A045",
+      "EV-ROS-2026-A057",
+      "docs/remote-agent-contract.md",
+      ".github/workflows/praxis-remote-inbox.yml",
+      ".github/workflows/praxis-remote.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A023",
+      "RQ-ROS-2026-A022"
+    ],
+    "tags": [
+      "continuity",
+      "cross-provider",
+      "remote-execution",
+      "inbox",
+      "openai"
+    ],
+    "title": "Cross-provider continuation attempt 2: an OpenAI/ChatGPT successor continued and completed PRAXIS-XPROVIDER-PROOF-01 through the remote inbox",
+    "updated": "2026-10-06",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A024"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A074",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A074--a024-partial-execution-and-launcher-blocker.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T18:47:24.444Z",
+          "last": "2026-10-07T22:37:02.532Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A024 partial execution and the platform launcher blocker without changing the frozen protocol"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028",
+      "research/experiments/EX-ROS-2026-A024-harness/manifest.json",
+      "research/experiments/EX-ROS-2026-A024-run/sessions.json",
+      "research/experiments/EX-ROS-2026-A024-run/deviations.txt",
+      "research/experiments/EX-ROS-2026-A024-run/BLOCKER.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "experiment",
+      "feasibility",
+      "orchestration"
+    ],
+    "title": "EX-ROS-2026-A024 partial execution and platform launcher blocker",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "contradicts": [
+      "HY-ROS-2026-A030"
+    ],
+    "created": "2026-10-07",
+    "derived_from": [
+      "EX-ROS-2026-A024",
+      "EV-ROS-2026-A074"
+    ],
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A075",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A075--a024-context-continuity-results.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:36:58.379Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Recorded the EX-ROS-2026-A024 results under the frozen analysis"
+        }
+      }
+    },
+    "related_documents": [
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "HY-ROS-2026-A028",
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A064",
+      "research/experiments/EX-ROS-2026-A024-run/analysis/summary.txt",
+      "research/experiments/EX-ROS-2026-A024-run/evaluation/report.txt"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [
+      "HY-ROS-2026-A028"
+    ],
+    "tags": [
+      "claude",
+      "agents",
+      "context",
+      "handoff",
+      "continuity",
+      "experiment",
+      "blind-evaluation"
+    ],
+    "title": "EX-ROS-2026-A024 results — continuous context, code-only resets and structured handoffs",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-13",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A076",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A076--cumulative-transcript-usage-matches-harness.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261013T224241801Z-4b33865b": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-13T22:42:51.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Recorded the WI-0102 validation of cumulative transcript usage against the CONSTRUCT-008 harness"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A064",
+      "docs/development-telemetry.md",
+      "tests/Praxis.Tests/TelemetryUsageAttributionTests.fs",
+      "tests/Praxis.Tests/Fixtures/construct-008-A1-usage-only.jsonl"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "telemetry",
+      "tokens",
+      "cost",
+      "attribution",
+      "claude",
+      "construct-010"
+    ],
+    "title": "Cumulative transcript usage in Praxis equals the CONSTRUCT-008 harness on six recorded runs",
+    "updated": "2026-10-13",
     "version": "1.0.0"
   }
 ]

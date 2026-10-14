@@ -1,0 +1,12 @@
+# Limen.Routing pin (WI-0078; SAF-URL-1..10, DF-ROS-2026-A057).
+# The .nupkg beside this file is the unmodified EchelonFoundry.Limen.Routing
+# release asset of the Limen release named here; its sha256 is the one in that
+# release's checksums.txt and in the echelon-registry limen-fsharp 0.9.0
+# record, and its build-provenance attestation names Limen's publish workflow.
+# NuGet restores EchelonFoundry.Limen.Routing only from this folder (NuGet.config
+# package source mapping). Upgrade by replacing the package and this lock
+# together with the PackageReference version.
+limen 0.9.0
+package EchelonFoundry.Limen.Routing
+url https://github.com/kemiller2002/limen/releases/download/v0.9.0/EchelonFoundry.Limen.Routing.0.9.0.nupkg
+sha256 278e3f221cd98aaec3bf0b3069bc222a1554eababaf66931e8baa6c2fb7561a0

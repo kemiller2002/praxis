@@ -2,9 +2,9 @@ name: Deploy Site
 
 # Mirrors kemiller2002/echelon-foundry .github/workflows/deploy-pages.yml.
 # The Praxis site has no build step of its own: "Build site" runs the site
-# checks and assembles site/ into dist/. It deliberately does not use npm
-# scripts, so no site change touches package.json (which native-release.yml
-# watches on main). See docs/site/site-deployment.md.
+# checks and assembles site/ into dist/ with the F# site tooling
+# (site-tools/SiteTools.fsproj), which lives outside every path
+# native-release.yml watches on main. See docs/site/site-deployment.md.
 
 on:
   push:
@@ -32,13 +32,13 @@ jobs:
           # The case-study tests compare the page's claims with Git history.
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
         with:
-          node-version: 22
+          dotnet-version: "10.0.x"
 
       - name: Build site
-        run: node site-tools/verify.mjs && node site-tools/assemble.mjs dist
+        run: dotnet run --project site-tools/SiteTools.fsproj -c Release -- verify && dotnet run --project site-tools/SiteTools.fsproj -c Release -- assemble dist
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

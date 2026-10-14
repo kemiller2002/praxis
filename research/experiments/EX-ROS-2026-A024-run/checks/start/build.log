@@ -1,0 +1,23 @@
+
+> @echelon-foundry/repository-operating-system@3.6.0 build:fsharp
+> dotnet build Ros.slnx --configuration Release --disable-build-servers --maxcpucount:1 -p:UseSharedCompilation=false -p:BuildInParallel=false -p:FSharpCoreImplicitPackageVersion=10.1.400
+
+  Determining projects to restore...
+  Restored /tmp/tmp.EUBamxeZza/tree/src/Ros.Contracts/Ros.Contracts.fsproj (in 1.2 sec).
+  Restored /tmp/tmp.EUBamxeZza/tree/src/Ros.Domain/Ros.Domain.fsproj (in 1.2 sec).
+  Restored /tmp/tmp.EUBamxeZza/tree/tests/Ros.Tests/Ros.Tests.fsproj (in 1.2 sec).
+  Restored /tmp/tmp.EUBamxeZza/tree/src/Ros.Application/Ros.Application.fsproj (in 1.2 sec).
+  Restored /tmp/tmp.EUBamxeZza/tree/src/Ros.Infrastructure/Ros.Infrastructure.fsproj (in 7 ms).
+  Restored /tmp/tmp.EUBamxeZza/tree/src/Ros.Cli/Ros.Cli.fsproj (in 9 ms).
+  Ros.Domain -> /tmp/tmp.EUBamxeZza/tree/src/Ros.Domain/bin/Release/net10.0/Ros.Domain.dll
+  Ros.Contracts -> /tmp/tmp.EUBamxeZza/tree/src/Ros.Contracts/bin/Release/net10.0/Ros.Contracts.dll
+  Ros.Application -> /tmp/tmp.EUBamxeZza/tree/src/Ros.Application/bin/Release/net10.0/Ros.Application.dll
+  Ros.Infrastructure -> /tmp/tmp.EUBamxeZza/tree/src/Ros.Infrastructure/bin/Release/net10.0/Ros.Infrastructure.dll
+  Ros.Cli -> /tmp/tmp.EUBamxeZza/tree/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll
+  Ros.Tests -> /tmp/tmp.EUBamxeZza/tree/tests/Ros.Tests/bin/Release/net10.0/Ros.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:21.10

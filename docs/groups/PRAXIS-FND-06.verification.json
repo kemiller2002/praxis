@@ -1,0 +1,19 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "note": "PRAXIS-FND-06 executes independently; per-criterion verification recorded as PRX-GRP-045 asks of every member.",
+  "rows": [
+    { "member": "PRAXIS-FND-06", "criterion": "praxis tutela ingest stores an append-only snapshot with repository, ref (resolved to a commit), collectedAt and source digest", "status": "met",
+      "evidence": { "kind": "test", "reference": "tutela metrics: an assessment keeps repository, ref, time and source provenance; tutela metrics: ingest resolves the ref, measures sensitive churn and hotspots, and is idempotent", "result": "passed" } },
+    { "member": "PRAXIS-FND-06", "criterion": "praxis tutela metrics projects every listed metric per snapshot and over time", "status": "met",
+      "evidence": { "kind": "test", "reference": "tutela metrics: every listed metric is derived over time, and missing is unknown; tutela metrics: Praxis scope expansions count as boundary changes in their window", "result": "passed" } },
+    { "member": "PRAXIS-FND-06", "criterion": "No single score; output says decision support, not certification", "status": "met",
+      "evidence": { "kind": "test", "reference": "tutela metrics: ingest resolves the ref, measures sensitive churn and hotspots, and is idempotent (disclaimer present, no score field)", "result": "passed" } },
+    { "member": "PRAXIS-FND-06", "criterion": "A measurement that cannot be derived is unknown, never zero", "status": "met",
+      "evidence": { "kind": "test", "reference": "tutela metrics: every listed metric is derived over time, and missing is unknown (status unknown, value null)", "result": "passed" } },
+    { "member": "PRAXIS-FND-06", "criterion": "Tests cover ingest, provenance, each derived metric and missing-as-unknown", "status": "met",
+      "evidence": { "kind": "location", "reference": "tests/Praxis.Tests/TutelaMetricsTests.fs", "result": "five tests; full suite 1475/1475" } },
+    { "member": "PRAXIS-FND-06", "criterion": "Docs and requirement status updated", "status": "met",
+      "evidence": { "kind": "location", "reference": "docs/tutela-security-metrics.md", "result": "plus docs/cli.md and requirements/TUTELA-SECURITY-METRICS.md status table" } }
+  ]
+}

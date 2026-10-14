@@ -1,0 +1,45 @@
+{
+ "schemaVersion": "1.0.0",
+ "experimentId": "EX-ROS-2026-A024",
+ "arm": "code-only",
+ "completedItem": "PRAXIS-GROUP-01",
+ "baselineCommit": "8b4ffa392e93b19bf39f6672a608954c934cb815",
+ "headCommit": "0000000000000000000000000000000000000000",
+ "decisions": [
+  {
+   "topic": "t",
+   "decision": "d",
+   "evidencePaths": [
+    "src/a.fs"
+   ]
+  }
+ ],
+ "reusableAbstractions": [
+  {
+   "name": "n",
+   "path": "p",
+   "purpose": "q"
+  }
+ ],
+ "changedPaths": [
+  "a",
+  "a"
+ ],
+ "verification": {
+  "acceptanceStatus": [
+   {
+    "criterion": "c",
+    "status": "ok",
+    "evidence": ""
+   }
+  ],
+  "testsRun": []
+ },
+ "unresolvedRisks": [],
+ "nextItemContext": {
+  "constraints": [],
+  "likelyReuse": [],
+  "openQuestions": []
+ },
+ "extra": 1
+}

@@ -1,0 +1,167 @@
+{
+  "test1Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 3,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code",
+          "testing"
+        ],
+        "priority": "high",
+        "status": "blocked",
+        "attachments": [
+          {
+            "id": "att-1",
+            "name": "x.txt",
+            "size": 12,
+            "contentType": "text/plain",
+            "uploadedAt": "2026-01-01T00:00:00.000Z"
+          }
+        ],
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null,
+        "blockedReason": "needs review"
+      },
+      {
+        "id": "WI-0002",
+        "title": "Second",
+        "tags": [],
+        "priority": null,
+        "status": "ready",
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  },
+  "test1Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | blocked | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n",
+  "test2HasBlockedReason": false,
+  "test2Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 3,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code",
+          "testing"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1",
+            "name": "x.txt",
+            "size": 12,
+            "contentType": "text/plain",
+            "uploadedAt": "2026-01-01T00:00:00.000Z"
+          }
+        ],
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      },
+      {
+        "id": "WI-0002",
+        "title": "Second",
+        "tags": [],
+        "priority": null,
+        "status": "ready",
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  },
+  "test2Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code, testing | high |\n| WI-0002 | Second | ready |  |  |\n",
+  "test3Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 3,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code",
+          "testing"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "att-1",
+            "name": "x.txt",
+            "size": 12,
+            "contentType": "text/plain",
+            "uploadedAt": "2026-01-01T00:00:00.000Z"
+          }
+        ],
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      },
+      {
+        "id": "WI-0002",
+        "title": "Second",
+        "tags": [],
+        "priority": null,
+        "status": "abandoned",
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "abandonedReason": "no longer needed"
+      }
+    ]
+  },
+  "test3Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code, testing | high |\n| WI-0002 | Second | abandoned |  |  |\n",
+  "test4Message": "cannot ready backlog item 'WI-0001' from 'abandoned'",
+  "test4Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 3,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code",
+          "testing"
+        ],
+        "priority": "high",
+        "status": "abandoned",
+        "attachments": [
+          {
+            "id": "att-1",
+            "name": "x.txt",
+            "size": 12,
+            "contentType": "text/plain",
+            "uploadedAt": "2026-01-01T00:00:00.000Z"
+          }
+        ],
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null
+      },
+      {
+        "id": "WI-0002",
+        "title": "Second",
+        "tags": [],
+        "priority": null,
+        "status": "ready",
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  },
+  "test5Message": "block requires --reason",
+  "test6Message": "'WI-9999' is not a captured local work item"
+}

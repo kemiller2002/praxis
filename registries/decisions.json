@@ -285,6 +285,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A029--fsharp-npm-binary-distribution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:54.616Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A027",
       "DF-ROS-2026-A028",
@@ -292,8 +310,10 @@
       "docs/migrations/fsharp/STATUS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -309,7 +329,7 @@
       "decision"
     ],
     "title": "Distribute ros-fs via npm as a self-contained single-file binary fetched from GitHub Releases",
-    "updated": "2026-09-10",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -394,6 +414,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A032--fsharp-full-node-replacement.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:55.363Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A029",
@@ -402,8 +440,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [
       "DF-ROS-2026-A031"
     ],
@@ -420,7 +460,7 @@
       "decision"
     ],
     "title": "Full Node replacement is the accepted end-state; starter template ./ros becomes F#",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -432,6 +472,24 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A033--node-internal-library-only-golden-master-tests.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.141Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        }
+      }
+    },
     "related_documents": [
       "DF-ROS-2026-A028",
       "DF-ROS-2026-A030",
@@ -440,8 +498,10 @@
       "AGENTS.md",
       "PACKAGE-USAGE.md"
     ],
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049"
+    ],
     "supersedes": [],
     "supporting_evidence": [
       "EV-ROS-2026-A047",
@@ -456,7 +516,7 @@
       "decision"
     ],
     "title": "Node retained as internal-library-only; test suite stops treating it as a live CLI oracle",
-    "updated": "2026-09-11",
+    "updated": "2026-09-28",
     "version": "1.0.0"
   },
   {
@@ -468,6 +528,38 @@
       "repository-governance"
     ],
     "path": "research/decisions/DF-ROS-2026-A034--pin-bootstrapped-ros-version-to-latest-stable-release.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:56.865Z",
+          "operations": [
+            "superseded"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A049 (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260929T163720115Z-f381906c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:37:22.365Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Superseded by DF-ROS-2026-A044: npm snapshot releases retired (PRAXIS-DIST-NATIVE-DOTNET-TOOL)"
+        }
+      }
+    },
     "related_documents": [
       "EV-ROS-2026-A051",
       "DF-ROS-2026-A029",
@@ -476,8 +568,11 @@
       ".github/workflows/publish.yml"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
-    "superseded_by": [],
+    "status": "superseded",
+    "superseded_by": [
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A044"
+    ],
     "supersedes": [],
     "supports": [],
     "tags": [
@@ -488,7 +583,7 @@
       "release"
     ],
     "title": "ros-bootstrap init pins a scaffolded project's ros.json to the latest stable release, not the installed package's own version",
-    "updated": "2026-09-11",
+    "updated": "2026-09-29",
     "version": "1.0.0"
   },
   {
@@ -588,6 +683,86 @@
     ],
     "title": "Agent identity and provenance as a first-class, execution-keyed extension of existing ROS records",
     "updated": "2026-09-25",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036"
+    ],
+    "id": "DF-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A037--execution-step-telemetry.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T013711437Z-b3dfcbfc": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-27T01:55:35.666Z",
+          "last": "2026-09-27T07:23:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "First-class step-level execution telemetry requirements and architecture"
+        },
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:45.000Z",
+          "evidence": [
+            "DF-ROS-2026-A051"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "Record closure of the fallback dispatcher follow-up"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A010",
+      "DF-ROS-2026-A036",
+      "RQ-ROS-2026-A013",
+      "RQ-ROS-2026-A014",
+      "RQ-ROS-2026-A015",
+      "RQ-ROS-2026-A016",
+      "RQ-ROS-2026-A017",
+      "RQ-ROS-2026-A018",
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A027",
+      "DF-ROS-2026-A051",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "architecture",
+      "execution",
+      "steps",
+      "telemetry",
+      "provenance"
+    ],
+    "title": "Execution-owned step ledger with referenced canonical telemetry",
+    "updated": "2026-09-27",
     "version": "1.0.0"
   },
   {
@@ -705,6 +880,20 @@
             "modified"
           ],
           "reason": "Amendment 1.2.0: successor continuation never links a foreign execution (PRAXIS-REMOTE-09)"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:30.270Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Validation references point at the F# port of tests/remote-execute.test.mjs (DF-ROS-2026-A049) (work item FSHARP-ONLY-MAIN-MERGE)"
         }
       }
     },
@@ -859,6 +1048,64 @@
     "version": "1.0.0"
   },
   {
+    "confidence": "high",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A044",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A044--retire-npm-distribute-native-bundles-and-dotnet-tool.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T163720115Z-f381906c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T16:37:21.814Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Owner decision to retire npm distribution; native bundles plus .NET global tool (PRAXIS-DIST-NATIVE-DOTNET-TOOL; re-landed from PR #108)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A034",
+      "DF-ROS-2026-A041",
+      "PACKAGE-USAGE.md",
+      "docs/installation.md",
+      "docs/native-installation.md",
+      ".github/workflows/native-release.yml",
+      ".github/workflows/ros-fs-assets.yml",
+      ".github/workflows/release.yml"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A034"
+    ],
+    "supporting_evidence": [],
+    "supports": [],
+    "tags": [
+      "distribution",
+      "release",
+      "npm",
+      "nuget",
+      "dotnet-tool",
+      "native"
+    ],
+    "title": "Retire npm distribution; distribute Praxis as self-contained native bundles and a .NET global tool",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
     "confidence": "medium",
     "created": "2026-09-29",
     "decision_type": "architecture",
@@ -873,7 +1120,7 @@
     "path": "research/decisions/DF-ROS-2026-A045--remote-request-inbox-relay.md",
     "provenance": {
       "contributions": {
-        "EXE-20260929T130548213Z-63fe94ae": {
+        "EXE-20260929T162324008Z-39bbe593": {
           "actor": {
             "id": "anthropic/claude-code",
             "kind": "agent",
@@ -881,11 +1128,28 @@
             "provider": "anthropic",
             "runtime": "claude-code"
           },
-          "at": "2026-09-29T13:06:08.640Z",
+          "at": "2026-09-29T16:23:38.842Z",
           "operations": [
             "created"
           ],
-          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from branch claude/remote-inbox-relay)"
+          "reason": "PRAXIS-REMOTE-INBOX-01: capture the cross-provider continuation gap and its remedy (re-landed from claude/remote-inbox-relay-v3)"
+        },
+        "EXE-20261006T204120763Z-b0001e2e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T20:42:25.165Z",
+          "evidence": [
+            "EV-ROS-2026-A073"
+          ],
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-MISC-07: cite the completed cross-provider continuation proof (EV-ROS-2026-A073)"
         }
       }
     },
@@ -915,6 +1179,1620 @@
     ],
     "title": "A push-triggered inbox relay routes praxis.remote requests committed to praxis-inbox/** branches to praxis-remote.yml, unchanged",
     "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-29",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A046",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A046--deterministic-advisory-planner.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260929T172554288Z-0f639674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T18:08:50.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-01: advisory planner and its first shadow experiment"
+        },
+        "EXE-20260929T222935210Z-1813973a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-29T22:29:44.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-02: status review -> accepted on the repository owner's explicit approval (the owner approved; this agent only recorded it)"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A058",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A058"
+    ],
+    "tags": [
+      "planning",
+      "scheduling",
+      "telemetry",
+      "determinism"
+    ],
+    "title": "A deterministic, read-only F# planner recommends evidence-backed execution waves; unknown stays unknown and parallelism is conservative",
+    "updated": "2026-09-29",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-09-30",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A047",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A047--advisory-evidence-based-work-groups.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260930T102847967Z-f42c2262": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:17:12.025Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0064: evidence-based work groups and the frozen grouping experiment"
+        },
+        "EXE-20260930T112849252Z-4c58aae8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T11:34:14.614Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-03: status review -> accepted on the repository owner's explicit approval of all PR #126 recommendations (the owner approved; this agent only recorded it)"
+        },
+        "EXE-20261006T194308568Z-5a1b95e5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T19:48:13.000Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "PRAXIS-PLAN-09: mark points 6 and the title clause as amended by DF-ROS-2026-A053"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A059",
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "DF-ROS-2026-A046",
+      "docs/planning.md",
+      "DF-ROS-2026-A053"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A059"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "determinism",
+      "attribution"
+    ],
+    "title": "Work groups are advisory, evidence-based recommendations over unchanged work items; grouped execution waits for experimental evidence",
+    "updated": "2026-10-06",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A024"
+    ],
+    "id": "DF-ROS-2026-A049",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A049--fsharp-dotnet-only-repository.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T090915352Z-fb23943c": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T10:18:53.922Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Architecture decision removing repository-owned Node and enforcing the invariant (F#/.NET-only repository cleanup (work item FSHARP-ONLY-REPOSITORY))"
+        },
+        "EXE-20260928T103758056Z-43f11e6e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T11:23:28.913Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Renumbered from DF-ROS-2026-A041 (taken on main by remote execution); records that remote execution fits the rule (work item FSHARP-ONLY-MAIN-MERGE)"
+        },
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:36.088Z",
+          "operations": [
+            "modified"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A042 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A024",
+      "DF-ROS-2026-A009",
+      "DF-ROS-2026-A030",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [
+      "DF-ROS-2026-A029",
+      "DF-ROS-2026-A032",
+      "DF-ROS-2026-A033",
+      "DF-ROS-2026-A034"
+    ],
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "node-removal",
+      "distribution",
+      "invariant",
+      "decision"
+    ],
+    "title": "The repository is F#/.NET only; repository-owned Node/JavaScript/TypeScript is removed and prohibited by an automated invariant",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-28",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A025"
+    ],
+    "id": "DF-ROS-2026-A050",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A050--praxis-canonical-name-ros-compatibility.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260928T134520493Z-befb2bfe": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-28T14:30:35.702Z",
+          "operations": [
+            "created"
+          ]
+        },
+        "EXE-20260930T175640720Z-98771e24": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-09-30T17:57:07.000Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "PRAXIS-PR92-ID-RENUMBER: renumbered from A043 on this branch to resolve a collision with a different main record; content unchanged"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A025",
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A041",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/native-installation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A025"
+    ],
+    "tags": [
+      "naming",
+      "rename",
+      "praxis",
+      "cli",
+      "compatibility",
+      "decision"
+    ],
+    "title": "Praxis is the canonical product and CLI name; ros remains only for compatibility, persisted state and history",
+    "updated": "2026-09-30",
+    "version": "1.0.1"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-09-27",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "id": "DF-ROS-2026-A051",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A051--journaled-fallback-reconciliation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20260927T145842499Z-f1b40c22": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T01:07:44.000Z",
+          "last": "2026-09-28T02:12:55Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Journaled fallback reconciliation architecture"
+        },
+        "EXE-20260928T122823444Z-e1fc1859": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-09-28T12:45:22Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber canonical fallback decision after integrating main's independently assigned DF-ROS-2026-A041"
+        },
+        "EXE-20260928T134154662Z-5c00e767": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-01T06:26:26Z",
+          "operations": [
+            "migrated"
+          ],
+          "reason": "Renumber after latest main independently assigned DF-ROS-2026-A042"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A037",
+      "requirements/PRAXIS-DUAL-ENTRY-RECONCILIATION.md",
+      "docs/fallback-reconciliation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [
+      "RQ-ROS-2026-A019",
+      "RQ-ROS-2026-A026"
+    ],
+    "tags": [
+      "architecture",
+      "fallback",
+      "reconciliation",
+      "transaction",
+      "checkpoint",
+      "provenance"
+    ],
+    "title": "Journaled exact-path fallback reconciliation with Git checkpoint",
+    "updated": "2026-09-27",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-05",
+    "decision_type": "architecture",
+    "id": "DF-ROS-2026-A052",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A052--consume-quality-evidence-at-completion.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261005T105949929Z-9c503655": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-05T11:14:34.000Z",
+          "evidence": [
+            "https://github.com/kemiller2002/praxis/issues/167"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Consume Dokimos and Ordo quality evidence at completion (PRX-QUAL-023)"
+        },
+        "EXE-20261007T001212751Z-17f1cf28": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T00:12:14.018Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Amend with risk obligations, evidence digests and release readiness (PRX-QUAL-020..023, PRAXIS-QUAL-07..10)"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/CODE-QUALITY-HARDENING.md",
+      "docs/work-protocol.md",
+      "schemas/praxis-completion-readiness.schema.json",
+      "schemas/work-protocol.schema.json"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supports": [],
+    "tags": [
+      "architecture",
+      "work-protocol",
+      "completion",
+      "quality",
+      "dokimos",
+      "ordo"
+    ],
+    "title": "Consume Dokimos and Ordo quality evidence at work completion",
+    "updated": "2026-10-06",
+    "version": "1.1.0"
+  },
+  {
+    "confidence": "low",
+    "created": "2026-10-06",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A047"
+    ],
+    "id": "DF-ROS-2026-A053",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A053--grouped-work-cross-repository-and-default-execution.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T194308568Z-5a1b95e5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T19:48:13.000Z",
+          "evidence": [
+            "EV-ROS-2026-A064",
+            "EV-ROS-2026-A070"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-PLAN-09: record the repository owner's four accepted grouped-work decisions (the owner approved; this agent only recorded them)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A047",
+      "DF-ROS-2026-A046",
+      "DF-ROS-2026-A052",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EX-ROS-2026-A021",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "requirements/PLANNING-OPTIMIZATION.md",
+      "docs/planning.md",
+      "docs/development-telemetry.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "superseded_by": [],
+    "supersedes": [],
+    "supporting_evidence": [
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070"
+    ],
+    "tags": [
+      "planning",
+      "grouping",
+      "cross-repository",
+      "execution",
+      "telemetry",
+      "cost",
+      "attribution"
+    ],
+    "title": "Grouped work v2 - first-class cross-repository groups, the full group command surface, grouped execution by default for high-affinity groups behind enforced gates, and measured context reuse and cost",
+    "updated": "2026-10-06",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-06",
+    "decision_type": "architecture",
+    "derived_from": [
+      "RQ-ROS-2026-A024"
+    ],
+    "id": "DF-ROS-2026-A054",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A054--python-automation-prohibited-with-approved-exceptions.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261006T213719240Z-8ddc5e25": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-06T21:37:44.731Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-MISC-08: prohibit Python automation and record the owner-approved exceptions"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A024",
+      "DF-ROS-2026-A049",
+      "DF-ROS-2026-A041",
+      "DF-ROS-2026-A045",
+      "EX-ROS-2026-A021",
+      "EX-ROS-2026-A022",
+      "EX-ROS-2026-A023"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "fsharp",
+      "dotnet",
+      "python",
+      "invariant",
+      "exception",
+      "decision"
+    ],
+    "title": "Python automation is prohibited by the F#/.NET-only invariant; frozen research instruments, the runtime-free bootstrap and the pinned remote adapter are approved exceptions",
+    "updated": "2026-10-06",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-07",
+    "decision_type": "governance",
+    "derived_from": [
+      "RQ-ROS-2026-A007"
+    ],
+    "id": "DF-ROS-2026-A055",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A055--origin-unrecorded-provenance-acknowledgement.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T185521101Z-d60238bc": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T19:01:58.401Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "PRAXIS-HYG-03: define the owner-approved origin-unrecorded acknowledgement"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A007",
+      "DF-ROS-2026-A054",
+      "EX-ROS-2026-A024",
+      "HY-ROS-2026-A030",
+      "EV-ROS-2026-A063",
+      "EV-ROS-2026-A067"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A004",
+      "RQ-ROS-2026-A007"
+    ],
+    "tags": [
+      "governance",
+      "provenance",
+      "validation",
+      "decision"
+    ],
+    "title": "An \"origin unrecorded\" provenance acknowledgement satisfies the creation rule for records whose creating process left no Praxis execution, without naming or inferring a creator",
+    "updated": "2026-10-07",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-07",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A054"
+    ],
+    "id": "DF-ROS-2026-A056",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A056--a024-frozen-research-instruments-python-exception.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261007T162653169Z-f15a70b7": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-07T22:41:56.936Z",
+          "last": "2026-10-08T11:21:40.328Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Approved Python exceptions for the EX-ROS-2026-A024 frozen research instruments under DF-ROS-2026-A054's class"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A054",
+      "RQ-ROS-2026-A024",
+      "EX-ROS-2026-A024",
+      "EV-ROS-2026-A074",
+      "EV-ROS-2026-A075"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "architecture",
+      "python",
+      "invariant",
+      "exception",
+      "decision",
+      "experiment"
+    ],
+    "title": "The EX-ROS-2026-A024 frozen research instruments are approved Python exceptions under DF-ROS-2026-A054's frozen-instrument class",
+    "updated": "2026-10-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-08",
+    "decision_type": "architecture",
+    "derived_from": [],
+    "id": "DF-ROS-2026-A057",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A057--praxis-ui-url-state-through-limen-routing.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261008T231313875Z-08e02d5e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "claude-opus-5-5",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-08T23:33:41.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0078: Praxis UI URL state through Limen.Routing; script-dependent SAF-URL behaviours escalated"
+        }
+      }
+    },
+    "related_documents": [
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md",
+      "docs/application-foundations.md",
+      "docs/web-interface.md",
+      "docs/project-administration-hub.md",
+      "RQ-ROS-2026-A024"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "foundations",
+      "deep-linking",
+      "routing",
+      "web",
+      "decision"
+    ],
+    "title": "Praxis's web and hub UIs keep their URL state through the pinned Limen.Routing engine library, stay script-free, and escalate the two SAF-URL behaviours that need browser script",
+    "updated": "2026-10-08",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-10-09",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A057"
+    ],
+    "id": "DF-ROS-2026-A058",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A058--url-state-script-exception-for-praxis-ui.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261009T012610078Z-26160b5b": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "claude-opus-5-5",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-09T01:37:15.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0082: records the owner's approval (relayed by the coordinating session) of the url-state.js exception and its limits"
+        }
+      }
+    },
+    "related_documents": [
+      "research/decisions/DF-ROS-2026-A057--praxis-ui-url-state-through-limen-routing.md",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md",
+      "docs/web-interface.md",
+      "docs/application-foundations.md",
+      "RQ-ROS-2026-A024"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "foundations",
+      "deep-linking",
+      "web",
+      "security",
+      "exception",
+      "decision"
+    ],
+    "title": "Praxis's web and hub UIs may load one approved browser script, url-state.js, for replace-on-refine and one-action Copy link, as a progressive enhancement under a strict CSP",
+    "updated": "2026-10-09",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-10",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A042"
+    ],
+    "id": "DF-ROS-2026-A059",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A059--ecir-host-authority-and-dispatch.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261010T091205536Z-2fa1bdc8": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-10T09:50:15.033Z",
+          "last": "2026-10-10T10:12:10.716Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "GH-220 protected host authority and recoverable dispatch proposal; activation remains gated"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/ecir-execution.md",
+      "docs/ecir-host-integration.md",
+      "docs/ecir-receipt-handoff.md",
+      "DF-ROS-2026-A042"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A024"
+    ],
+    "tags": [
+      "ecir",
+      "authorization",
+      "security",
+      "recovery",
+      "decision"
+    ],
+    "title": "ECIR approval belongs to a protected host authority and dispatch commits one recoverable member transaction",
+    "updated": "2026-10-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-10",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A059",
+      "DF-ROS-2026-A042"
+    ],
+    "id": "DF-ROS-2026-A060",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A060--local-coordinator-with-embedded-authority.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261010T091205536Z-2fa1bdc8": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-10T12:33:04.114Z",
+          "last": "2026-10-11T07:11:20.648Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Propose embedded local controller and artifact handoffs without required hosted services"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A059",
+      "DF-ROS-2026-A042",
+      "docs/local-agent-coordination.md",
+      "docs/execution-runtime.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "ecir",
+      "agents",
+      "local",
+      "authority",
+      "handoff"
+    ],
+    "title": "Local agent coordination uses one controller with embedded authority and artifact handoffs",
+    "updated": "2026-10-10",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060"
+    ],
+    "id": "DF-ROS-2026-A061",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A061--typed-admission-before-worker-preparation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T072344502Z-ce2be555": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T07:27:22.167Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record typed admission boundary and prevention roadmap"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "docs/agent-mistake-prevention.md",
+      "docs/local-journaled-dispatch.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "local",
+      "prevention",
+      "admission"
+    ],
+    "title": "Worker preparation requires typed packet admission before effects",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A059",
+      "DF-ROS-2026-A060"
+    ],
+    "id": "DF-ROS-2026-A062",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A062--serialized-local-ecir-policy-and-native-dispatch.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T12:11:00.507Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record concrete serialized local authority and native dispatch boundaries with explicit isolation limits"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A059",
+      "DF-ROS-2026-A060",
+      "docs/local-ecir-host-authority.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "local",
+      "authority",
+      "persistence",
+      "recovery"
+    ],
+    "title": "Serialize local ECIR authority and native dispatch through host-owned storage",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062"
+    ],
+    "id": "DF-ROS-2026-A063",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A063--signed-exact-local-worker-delegation.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T12:54:32.424Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record signed exact worker delegation and current ECIR binding with explicit host qualification limits"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062",
+      "docs/local-worker-delegation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "local",
+      "delegation",
+      "signatures"
+    ],
+    "title": "Bind local worker delegation to a signed complete packet and current ECIR policy",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062",
+      "DF-ROS-2026-A063"
+    ],
+    "id": "DF-ROS-2026-A064",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A064--portable-local-worker-and-host-adapters.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T15:16:51.721Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record user-directed portability priority, worker/OS/file access adapters and explicitly deferred isolation equivalence"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A062",
+      "DF-ROS-2026-A063",
+      "docs/local-worker-portability.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "portability",
+      "adapters",
+      "isolation"
+    ],
+    "title": "Separate portable local worker mechanisms from OS isolation qualification",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A063",
+      "DF-ROS-2026-A064"
+    ],
+    "id": "DF-ROS-2026-A065",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A065--portable-host-dispatch-composition.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T16:25:47.139Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record portable coordinator lease scope, signed dispatch composition, mandatory independent native observations and deferred equivalent isolation"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A063",
+      "DF-ROS-2026-A064",
+      "docs/local-worker-host.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "portability",
+      "coordination",
+      "persistence"
+    ],
+    "title": "Compose portable worker dispatch under native and host policy leases",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A064",
+      "DF-ROS-2026-A065"
+    ],
+    "id": "DF-ROS-2026-A066",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A066--native-local-worker-assignment-checks.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T115701257Z-3ebd7686": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T18:26:30.503Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record concrete native assignment admission, exact current execution/lineage checks and Windows spool sealing correction"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A064",
+      "DF-ROS-2026-A065",
+      "docs/local-worker-host.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "portability",
+      "native-state",
+      "admission"
+    ],
+    "title": "Bind local worker admission to current native assignment records",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A061"
+    ],
+    "id": "DF-ROS-2026-A067",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A067--independent-worker-checklist-gates.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T204811145Z-23f864b2": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T20:57:55.235Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Bind generated checks to independently observed candidates and controller policy"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A060",
+      "DF-ROS-2026-A061",
+      "docs/worker-checklists.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A029"
+    ],
+    "tags": [
+      "agents",
+      "checklist",
+      "evidence",
+      "quality",
+      "handoff"
+    ],
+    "title": "Worker checklists require independent candidate-bound evidence at local admission boundaries",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-11",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A064",
+      "DF-ROS-2026-A066"
+    ],
+    "id": "DF-ROS-2026-A068",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A068--concrete-local-validator-observations.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261011T234058504Z-3b80355e": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-11T23:51:12.439Z",
+          "operations": [
+            "created"
+          ]
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A064",
+      "DF-ROS-2026-A066",
+      "docs/local-validator-runners.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "validators",
+      "portability",
+      "evidence"
+    ],
+    "title": "Observe concrete pinned validator processes on exact Git candidates",
+    "updated": "2026-10-11",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A068"
+    ],
+    "id": "DF-ROS-2026-A070",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A070--concrete-local-coordinator-worker-runtime.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T115318275Z-92ff2d62": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T13:46:55.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record the local coordinator/worker runtime activation decision (GH-234)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A063",
+      "DF-ROS-2026-A065",
+      "DF-ROS-2026-A066",
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A068",
+      "docs/local-runtime.md",
+      "docs/worker-checklists.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "validators",
+      "runtime",
+      "authority",
+      "recovery"
+    ],
+    "title": "Activate the local coordinator/worker runtime through a signed, checklist-enforcing entry point",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A070"
+    ],
+    "id": "DF-ROS-2026-A071",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A071--host-controlled-construction-application.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T163651312Z-c1d5cf88": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T16:43:49.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record the host-controlled construction application decision (GH-242)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A070",
+      "docs/construction.md",
+      "docs/local-runtime.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "construction",
+      "ordo",
+      "authority",
+      "git",
+      "recovery"
+    ],
+    "title": "Apply Ordo construction through host-built Git objects bound to a signed cohort grant",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A071"
+    ],
+    "id": "DF-ROS-2026-A072",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A072--capability-scoped-construction-extensions.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T185257851Z-f0478885": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T19:07:40.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record capability-scoped construction extensions and mechanical-first routing (GH-243)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A071",
+      "docs/construction.md",
+      "docs/cli.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "construction",
+      "ordo",
+      "routing",
+      "extensions",
+      "authority",
+      "containment"
+    ],
+    "title": "Route construction work mechanically first and admit handwritten code only into host-declared slots",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A064"
+    ],
+    "id": "DF-ROS-2026-A073",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A073--probe-qualified-linux-worker-containment.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T185235269Z-42495e91": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T18:53:03.126Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record probe-qualified Linux worker containment and honest refusal on macOS/Windows (WI-0092, re-identified from WI-0089 after an ID collision with PR #246; GH-231/GH-235 phase 6)"
+        },
+        "EXE-20261012T205218071Z-8cccd597": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T20:53:00.741Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Record the owner's CI qualification decision: self-hosted disposable runner only, hosted CI fail-closed, CI status unavailable until provisioned (WI-0095)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A064",
+      "DF-ROS-2026-A070",
+      "docs/containment.md",
+      "docs/local-worker-portability.md",
+      "docs/execution-runtime.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A028"
+    ],
+    "tags": [
+      "agents",
+      "isolation",
+      "containment",
+      "security",
+      "linux",
+      "portability"
+    ],
+    "title": "Qualify local worker containment by real probes; Linux namespaces only, other OSes refuse",
+    "updated": "2026-10-12",
+    "version": "1.0.0"
+  },
+  {
+    "confidence": "medium",
+    "created": "2026-10-12",
+    "decision_type": "architecture",
+    "derived_from": [
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A071",
+      "DF-ROS-2026-A072"
+    ],
+    "id": "DF-ROS-2026-A074",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A074--construction-package-scope-verification.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261012T223108671Z-34b4307a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-12T22:55:31.705Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Record mandatory construction-package scope verification (GH-234)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A067",
+      "DF-ROS-2026-A071",
+      "DF-ROS-2026-A072",
+      "docs/worker-checklists.md",
+      "docs/construction.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "supports": [
+      "RQ-ROS-2026-A029"
+    ],
+    "tags": [
+      "agents",
+      "checklist",
+      "construction",
+      "ordo",
+      "evidence",
+      "provenance"
+    ],
+    "title": "Construction packages owe a mandatory host-observed scope check backed by the construction journal as evidence only",
+    "updated": "2026-10-12",
     "version": "1.0.0"
   }
 ]

@@ -2,7 +2,7 @@
 
 ## Boundary and authority
 
-ROS defines this transport-neutral contract but does not own project-management truth. The external system owns work items and their operational state. A repository owns implementation and evidence. ROS owns validation of repository evidence and the legal protocol connecting them. An inconsistency is returned as a conflict; neither side silently overwrites the other.
+Praxis defines this transport-neutral contract but does not own project-management truth. The external system owns work items and their operational state. A repository owns implementation and evidence. Praxis owns validation of repository evidence and the legal protocol connecting them. An inconsistency is returned as a conflict; neither side silently overwrites the other.
 
 ## Operations
 
@@ -33,7 +33,7 @@ Protocol-version mismatch, unknown repositories, missing authorization, missing 
 The dependency-free file adapter exercises the contract without choosing a project-management vendor:
 
 ```bash
-./ros adapter call \
+./praxis adapter call \
   --store tests/fixtures/work-store.json \
   --request tests/fixtures/transition-request.json
 ```

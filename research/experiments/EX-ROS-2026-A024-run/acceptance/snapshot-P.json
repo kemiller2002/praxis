@@ -1,0 +1,196 @@
+{
+  "label": "snapshot-P",
+  "criteria": [
+    {
+      "id": "01.1",
+      "status": "pass",
+      "evidence": "Fixture: scratch git repo `fx` (bare remote origin) with items FX-A active, FX-B ready (dependsOn FX-E), FX-C complete, FX-D abandoned, FX-E blocked ('waiting'), FX-X captured; CLI = `dotnet <snapshot-P build>/src/Ros.Cli/bin/Release/net10.0/ros-fs.dll --root fx` (shown as `ros`). IDENT = `--actor-kind human --actor tester`. H = sha256 over every non-.git file except .ros/locks plus HEAD. `ros work group create --id GROUP-FX-001 --member FX-A --member FX-E --kind shared-architecture --execution-repository fx --shared-context 'shared ctx one' --architecture-note 'arch note one' --reason why --occurred-at 2026-10-07T11:00:00Z --json IDENT` -> rc 0, status \"recorded\"; .ros/work/groups.json now holds {id GROUP-FX-001, kind shared-architecture, origin human-declared, executionRepository fx, crossRepository false, sharedContext [shared ctx one], architectureNotes [arch note one], members FX-A/FX-E with addedBy/addedAt, history [created]}. Cross-repository flag recorded true for `create --id GROUP-FX-002 --member FX-A --cross-repository` (\"executing in fx (cross-repository)\"). Persistence: src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs (write, atomic temp+rename)."
+    },
+    {
+      "id": "01.2",
+      "status": "pass",
+      "evidence": "`ros work group create --id GROUP-FX-001 --member FX-A --member FX-NOPE ...` -> \"ERROR [unknown-member] work item 'FX-NOPE' is not tracked by this repository ... work group create rejected; nothing was recorded\", rc 1, H unchanged (cc5097c974f6565e before and after; no groups.json created)."
+    },
+    {
+      "id": "01.3",
+      "status": "pass",
+      "evidence": "`create ... --member FX-A --member FX-C` -> \"ERROR [terminal-member] work item 'FX-C' is complete; a terminal item cannot join a group\", rc 1; with FX-D -> \"... 'FX-D' is abandoned ...\", rc 1; H unchanged in both."
+    },
+    {
+      "id": "01.4",
+      "status": "pass",
+      "evidence": "After GROUP-FX-001 exists: `create --id GROUP-FX-001 --member FX-B ...` -> \"ERROR [duplicate-group] a group 'GROUP-FX-001' is already declared\", rc 1, H 5450470a4e8024b5 unchanged; `--json` variant prints {status:\"rejected\", rejections:[{code:\"duplicate-group\"}]}. Also refuses an ID declared only in the --config planner file (GROUP-FX-CFG -> [duplicate-group])."
+    },
+    {
+      "id": "01.5",
+      "status": "pass",
+      "evidence": "Copies of .ros/work/queue.json, .ros/context/current.json, .ros/events/events.jsonl taken before create; after the successful create `cmp` reports all three byte-identical; `git status --short` shows only `?? .ros/work/groups.json`. Domain: WorkGroups.create returns only a StoredWorkGroup (src/Ros.Domain/Planning/WorkGroups.fs, `create`), CLI writes only groups.json (src/Ros.Cli/GroupCommands.fs `mutate`)."
+    },
+    {
+      "id": "01.6",
+      "status": "pass",
+      "evidence": "`ros plan groups --json --as-of 2026-10-07T12:00:00Z` with the stored group, versus a copy of the fixture with groups.json removed and `--config cfg.json` declaring the same group in grouping.groups: python comparison printed \"groups equal: True ungrouped equal: True\"; only `snapshot` (different HEAD commit) differs. Stored group shows origin human-declared, cohesion signal declared-group. `plan explain-group GROUP-FX-001` also resolves it. Wiring: FilePlanningRepository.fs Configuration -> WorkGroups.declare."
+    },
+    {
+      "id": "01.7",
+      "status": "pass",
+      "evidence": "`create --id GROUP-FX-001 --member FX-A --member FX-E --dry-run IDENT` -> prints the would-be group and \"dry run: nothing was recorded\", rc 0; H unchanged (cc5097c974f6565e) and `ls .ros/work` shows no groups.json."
+    },
+    {
+      "id": "01.8",
+      "status": "pass",
+      "evidence": "`create ... --json` emitted a JSON document {command:\"work group create\", schemaVersion:1, groupId, status:\"recorded\", group:{...}}; rejection variant emits status \"rejected\" with coded rejections."
+    },
+    {
+      "id": "01.9",
+      "status": "pass",
+      "evidence": "Copy fx3: edited groups.json to id 'bad id' and member FX-GHOST; `ros validate` printed \"ERROR .ros/work/groups.json:groups.bad id.id: 'bad id' is not a valid group ID\" and \"ERROR .ros/work/groups.json:groups.bad id.members: member 'FX-GHOST' is not a work item this repository tracks\" (absent before tampering). Also an altered group checkpoint is reported (see 05.4). Wiring: src/Ros.Cli/Program.fs computeUnifiedFindings adds FileWorkGroupRepository.validationFindings."
+    },
+    {
+      "id": "02.1",
+      "status": "pass",
+      "evidence": "`ros work group show GROUP-FX-001` -> \"FX-A  recorded active; planning active\", \"FX-E  recorded blocked; planning blocked\"; --json members carry recordedState and planningState."
+    },
+    {
+      "id": "02.2",
+      "status": "pass",
+      "evidence": "show -> \"Progress: 0 of 2 complete, 1 active, 1 blocked, 2 remaining ...\"; JSON progress {members:2, complete:0, abandoned:0, active:1, blocked:1, remaining:2}."
+    },
+    {
+      "id": "02.3",
+      "status": "pass",
+      "evidence": "show -> \"Blocked members:\\n  FX-E (waiting): gates FX-B\" (FX-B dependsOn FX-E); JSON blocked [{workItemId FX-E, blockReason waiting, gates [FX-B]}]."
+    },
+    {
+      "id": "02.4",
+      "status": "pass",
+      "evidence": "show -> \"Execution repository: fx\"; JSON executionRepository \"fx\", crossRepository false."
+    },
+    {
+      "id": "02.5",
+      "status": "pass",
+      "evidence": "show -> \"Architecture notes:\\n  - arch note one\"; JSON architectureNotes [\"arch note one\"]."
+    },
+    {
+      "id": "02.6",
+      "status": "pass",
+      "evidence": "Text output shown above for `ros work group show GROUP-FX-001`, rc 0."
+    },
+    {
+      "id": "02.7",
+      "status": "pass",
+      "evidence": "`ros work group show GROUP-FX-001 --json` -> rc 0, JSON document with command \"work group show\", progress, members, blocked, latestCheckpoint, history."
+    },
+    {
+      "id": "02.8",
+      "status": "pass",
+      "evidence": "`ros work group show GROUP-FX-999` -> \"ERROR no group 'GROUP-FX-999' is declared\", rc 1 (also rc 1 with --json)."
+    },
+    {
+      "id": "02.9",
+      "status": "pass",
+      "evidence": "Full-tree hash over every file and path including .git: before 871469628bd16cfa, after running show (text), show --json and show of an unknown group: 871469628bd16cfa (identical)."
+    },
+    {
+      "id": "03.1",
+      "status": "pass",
+      "evidence": "`ros work group add --id GROUP-FX-001 --member FX-B --reason 'needs it' --occurred-at 2026-10-07T12:01:00Z --actor-kind human --actor adder` -> \"FX-B added to GROUP-FX-001 (now 3 member(s)), executing in fx, by human:adder\", rc 0; groups.json members now end with FX-B."
+    },
+    {
+      "id": "03.2",
+      "status": "pass",
+      "evidence": "`add --member FX-NOPE` -> \"ERROR [unknown-member] ...\", rc 1, H unchanged (5450470a4e8024b5)."
+    },
+    {
+      "id": "03.3",
+      "status": "pass",
+      "evidence": "`add --member FX-C` -> \"[terminal-member] ... is complete\"; `--member FX-D` -> \"... is abandoned\"; rc 1, H unchanged."
+    },
+    {
+      "id": "03.4",
+      "status": "pass",
+      "evidence": "`add --member FX-A` -> \"ERROR [already-member] work item 'FX-A' is already a member of GROUP-FX-001\", rc 1, H unchanged."
+    },
+    {
+      "id": "03.5",
+      "status": "pass",
+      "evidence": "Non-cross group GROUP-FX-001 (fx): `add --member FX-B --execution-repository other-repo` and `add --member FX-B --config cfgrepo.json` (grouping.executionRepositories FX-B: other-repo) both -> \"ERROR [repository-mismatch] work item 'FX-B' executes in other-repo but the group executes in fx ...\", rc 1, H unchanged."
+    },
+    {
+      "id": "03.6",
+      "status": "pass",
+      "evidence": "Cross-repository GROUP-FX-002: `add --member FX-X --execution-repository other-repo` -> \"FX-X added ... executing in other-repo\", rc 0; `add --member FX-B --config cfgrepo.json --json` -> status recorded, members [(FX-A,fx),(FX-X,other-repo),(FX-B,other-repo)]."
+    },
+    {
+      "id": "03.7",
+      "status": "pass",
+      "evidence": "Stored member entry {workItemId FX-B, addedAt 2026-10-07T12:01:00Z, addedBy {kind human, id adder}, reason \"needs it\"} and history entry {change member-added, subject FX-B, actor human:adder, reason \"needs it\"}."
+    },
+    {
+      "id": "03.8",
+      "status": "pass",
+      "evidence": "queue.json, context/current.json and events.jsonl copied before add; `cmp` after add -> all byte-identical; git status shows only ` M .ros/work/groups.json`."
+    },
+    {
+      "id": "04.1",
+      "status": "pass",
+      "evidence": "`ros work group remove --id GROUP-FX-001 --member FX-E --reason 'split off' ... --actor remover --json` -> status recorded, members [FX-A, FX-B]."
+    },
+    {
+      "id": "04.2",
+      "status": "pass",
+      "evidence": "`remove --id GROUP-FX-001 --member FX-X` -> \"ERROR [not-member] work item 'FX-X' is not a member of GROUP-FX-001\", rc 1, H unchanged (ba28a318e5225638)."
+    },
+    {
+      "id": "04.3",
+      "status": "pass",
+      "evidence": "Hash of every .ros file except groups.json/locks (backlog, context, events, telemetry) = ea9f9195f647dfdd before, after removing FX-E, and after removing FX-B and FX-A; `work context` still shows FX-E blocked with its telemetry execution. Code: WorkGroups.remove reads no item data (WorkGroups.fs `remove`)."
+    },
+    {
+      "id": "04.4",
+      "status": "pass",
+      "evidence": "With FX-A the sole member: `remove --member FX-A` -> \"ERROR [last-member] 'FX-A' is the last member of GROUP-FX-001; pass --allow-empty ...\", rc 1, state unchanged; with `--allow-empty` -> rc 0, \"now no members; it stays declared, and its history is kept\"."
+    },
+    {
+      "id": "04.5",
+      "status": "pass",
+      "evidence": "History entry appended: {change member-removed, subject FX-E, occurredAt 2026-10-07T13:01:00Z, actor human:remover, reason \"split off\"}."
+    },
+    {
+      "id": "05.1",
+      "status": "pass",
+      "evidence": "`ros work group checkpoint --id GROUP-FX-003 --summary 'shared model done' --next-action 'finish B' --decision 'use one store' --decision 'pure domain' ...` -> rc 0; stored checkpoint has location {branch main, commit 7cbac37..., remoteCommit 7cbac37...}, summary, nextAction, sharedDecisions, members {active [FX-A], completed [], abandoned [], remaining [FX-A,FX-B,FX-E]}, history entry checkpointed under group GROUP-FX-003. After FX-B was completed, a second group checkpoint recorded completed [FX-B], remaining [FX-A, FX-E]."
+    },
+    {
+      "id": "05.2",
+      "status": "pass",
+      "evidence": "Dirty src/a.txt: group checkpoint -> \"ERROR [uncommitted-changes] meaningful uncommitted changes exist ...: src/a.txt\", rc 1, state unchanged; `work checkpoint` gives the identical code/message. Unpushed commit: -> \"ERROR [local-ahead] local HEAD has 1 commit(s) that origin/main does not\", rc 1, unchanged; identical to `work checkpoint`. Shared code: CheckpointVerification.verifyDurableLocation (src/Ros.Domain/Work/Checkpoint.fs) reuses gitLocation/treeRejections of `verify`."
+    },
+    {
+      "id": "05.3",
+      "status": "pass",
+      "evidence": "Group checkpoint memberCheckpoints [{FX-A: 0e85deb44228ba8176dc0d8a (FX-A's own `work checkpoint` id)}, {FX-B: null}, {FX-E: null}]; later [{FX-A: 0e85...}, {FX-B: ef9bbec2f69a026e998d8960}, ...]. validate flags references that are not that member's recorded checkpoint (FileWorkGroupRepository.validationFindings `dangling`)."
+    },
+    {
+      "id": "05.4",
+      "status": "pass",
+      "evidence": "sha256 of events.jsonl+context/current.json before/after a group checkpoint: cee4920145b41aa2 / cee4920145b41aa2; `ros work checkpoint show FX-A` shows Checkpoint 0e85deb44228ba8176dc0d8a before and after. Rewriting a stored group checkpoint is flagged by validate: \"checkpoint 15c7afcfd2300605111a0913 does not match its content; a recorded group checkpoint is never rewritten\"."
+    },
+    {
+      "id": "05.5",
+      "status": "pass",
+      "evidence": "Stored group checkpoint has \"paths\": [] and the group command writes no member event (event log hash unchanged); text output: \"attributed: no path to any member; each member's changes stay attributed by its own checkpoints\". Each memberCheckpoints entry references only that member's own checkpoint id."
+    }
+  ],
+  "confirmedDefects": [
+    {
+      "summary": "Adding an item to a cross-repository group with a foreign execution repository silently changes the planner's view of a different, repository-local group that already contains the same item, and validate reports nothing. groups.json then records the item as executing in two different repositories.",
+      "reproduction": "In fx: GROUP-FX-001 (repository-local, fx) contains FX-B recorded executionRepository fx. `ros work group create --id GROUP-FX-002 --member FX-A --cross-repository ...` then `ros work group add --id GROUP-FX-002 --member FX-B --config cfgrepo.json ...` (or --execution-repository other-repo for FX-X). `ros plan groups --json` now reports GROUP-FX-001 recommendedExecution \"split-by-repository\" with reason \"members execute in different repositories (fx) and the group is not declared cross-repository\", although GROUP-FX-001 itself was not changed. `ros validate` gives no groups.* finding. Cause: WorkGroups.declare (src/Ros.Domain/Planning/WorkGroups.fs) adds every stored member's non-local executionRepository to grouping.executionRepositories globally (distinctBy item id), and validate does not check one item's executionRepository consistency across groups. `--execution-repository` on `add` also lets a caller assert any location for an item without corroboration."
+    },
+    {
+      "summary": "`--json` is not honoured on some failure paths: `work group show` of an unknown group and argument/usage errors print text to stderr and nothing on stdout.",
+      "reproduction": "`ros work group show GROUP-FX-999 --json 2>/dev/null` -> empty stdout, rc 1. `ros work group add --id GROUP-FX-003 --occurred-at 2026-10-07T15:00:00Z --json 2>/dev/null` (missing --member) -> empty stdout, rc 2. By contrast, domain rejections from create/add/remove/checkpoint with --json do produce a JSON {status:\"rejected\"} document."
+    }
+  ],
+  "blinding": "Used only this checkout (inputs/ and snapshot-P/) and scratch copies. Never fetched, listed, read, checked out or diffed any other branch, tag or ref, and used no GitHub search, API or web pages. I did not try to work out which experimental condition produced this snapshot and have not learned it. The branch name gives only the snapshot label, and commits.txt gives five per-item commit subjects, which carry no condition information. Snapshot's own unit suite (Ros.Tests.dll): 819 tests, 774 pass, 45 fail; 44 failures (including all 9 'work group cli' tests) fail at fixture setup with 'starter manifest references a missing source file: starter/greenfield/[record].md', and the 45th is 'the embedded scaffold is exactly what the starter manifests reference' (missing schemas/ros-[record]-authority.schema.json, starter/greenfield/[record].md). This looks like an artifact of how the evaluation package was sanitized (redacted file names), not snapshot behaviour, so it is not listed as a defect; the 45 'work group' domain/unit tests that do not need that scaffold pass."
+}

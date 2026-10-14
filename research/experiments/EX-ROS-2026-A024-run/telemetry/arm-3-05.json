@@ -1,0 +1,119 @@
+{
+  "branch": "experiment/a024-arm-3",
+  "capturedAt": "2026-10-07T21:54:51.638367+00:00",
+  "headAtCapture": "8f5222e4b49623f51d1d73555775bade39e9f38e",
+  "label": "arm-3-05",
+  "main": {
+    "builds": 6,
+    "compactions": 0,
+    "distinctFilesEdited": 0,
+    "distinctFilesRead": 25,
+    "endedAt": "2026-10-07T21:54:50.533000+00:00",
+    "executor": {
+      "countedPer": "model request",
+      "effort": {
+        "medium": 66
+      },
+      "entrypoint": {
+        "remote": 66
+      },
+      "models": {
+        "claude-opus-5-5": 66
+      },
+      "runtimeVersion": {
+        "2.1.293": 66
+      }
+    },
+    "fileReads": 45,
+    "fileWrites": 13,
+    "governanceReads": {
+      "AGENTS.md": 2,
+      "docs/cli.md": 1,
+      "docs/planning.md": 1,
+      "requirements/PLANNING-WORK-GROUPS.md": 1
+    },
+    "handoff": {
+      "firstAt": "2026-10-07T21:33:54.429000+00:00",
+      "lastAt": "2026-10-07T21:54:43.906000+00:00",
+      "paths": [
+        "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-04.json"
+      ],
+      "reads": 2,
+      "toolCalls": 5,
+      "writes": 1
+    },
+    "isolationAudit": {
+      "count": 0,
+      "events": []
+    },
+    "modelRequests": 66,
+    "msToFirstCodeMutation": 203995,
+    "peakContextTokens": 241112,
+    "readPaths": [
+      "/root/.claude/projects/-home-user-praxis/4279895a-cb44-52bf-98c2-88e3a17b7d2e/tool-results/b8dtkqg29.txt",
+      "/tmp/claude-0/-home-user-praxis/4279895a-cb44-52bf-98c2-88e3a17b7d2e/scratchpad/apt.log",
+      "/tmp/claude-0/-home-user-praxis/4279895a-cb44-52bf-98c2-88e3a17b7d2e/scratchpad/tests.log",
+      "AGENTS.md",
+      "docs/cli.md",
+      "docs/planning.md",
+      "requirements/PLANNING-WORK-GROUPS.md",
+      "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-04.json",
+      "research/experiments/EX-ROS-2026-A024-harness/handoff.schema.json",
+      "research/experiments/EX-ROS-2026-A024-harness/validate_handoff.py",
+      "src/Ros.Application/Planning/WorkGroups.fs",
+      "src/Ros.Application/Work/Checkpoint.fs",
+      "src/Ros.Cli/CheckpointCommands.fs",
+      "src/Ros.Cli/WorkGroupCommands.fs",
+      "src/Ros.Contracts/Planning/PlanningJson.fs",
+      "src/Ros.Contracts/Work/CheckpointJson.fs",
+      "src/Ros.Domain/Planning/GroupDeclaration.fs",
+      "src/Ros.Domain/Work/Checkpoint.fs",
+      "src/Ros.Infrastructure/Planning/FileWorkGroupRepository.fs",
+      "src/Ros.Infrastructure/Planning/FileWorkGroupStore.fs",
+      "tests/Ros.Tests/CheckpointCliTests.fs",
+      "tests/Ros.Tests/CheckpointDomainTests.fs",
+      "tests/Ros.Tests/GitDurabilityTests.fs",
+      "tests/Ros.Tests/PlanningTests.fs",
+      "tests/Ros.Tests/WorkGroupTests.fs"
+    ],
+    "repeatedReadExcess": 20,
+    "repeatedReadPaths": 10,
+    "repeatedReadsTop": {
+      "/tmp/claude-0/-home-user-praxis/4279895a-cb44-52bf-98c2-88e3a17b7d2e/scratchpad/apt.log": 8,
+      "AGENTS.md": 2,
+      "research/experiments/EX-ROS-2026-A024-handoffs/PRAXIS-GROUP-04.json": 2,
+      "src/Ros.Application/Planning/WorkGroups.fs": 2,
+      "src/Ros.Cli/CheckpointCommands.fs": 2,
+      "src/Ros.Contracts/Planning/PlanningJson.fs": 4,
+      "src/Ros.Contracts/Work/CheckpointJson.fs": 2,
+      "tests/Ros.Tests/CheckpointCliTests.fs": 2,
+      "tests/Ros.Tests/PlanningTests.fs": 2,
+      "tests/Ros.Tests/WorkGroupTests.fs": 4
+    },
+    "searches": 28,
+    "startedAt": "2026-10-07T21:33:48.331000+00:00",
+    "syntheticEntries": 0,
+    "testRuns": 5,
+    "tokens": {
+      "cacheCreation": 197347,
+      "cacheRead": 11162253,
+      "input": 132,
+      "output": 52755
+    },
+    "toolCalls": {
+      "Bash": 69,
+      "Monitor": 1,
+      "Read": 1
+    },
+    "toolErrors": 7,
+    "wallMs": 1262202
+  },
+  "notes": "A021 metric definitions; reads include Read calls and cat/head/tail/sed -n in Bash; bash writes are pattern-matched and approximate; isolationAudit lists candidate events for frozen-rule classification, not verdicts; capture precedes the session's final checkpoint, so the tail after capture is covered only by platform usage",
+  "schema": "ex-ros-2026-a024.session-telemetry/1",
+  "sessionId": "4279895a-cb44-52bf-98c2-88e3a17b7d2e",
+  "subagents": [],
+  "transcript": "4279895a-cb44-52bf-98c2-88e3a17b7d2e.jsonl",
+  "transcriptSha256": {
+    "4279895a-cb44-52bf-98c2-88e3a17b7d2e.jsonl": "9984e7d56dd8bb33e20fe40b87deb68f821489f48debb19aa7c784304a50f8f6"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "praxis.group-verification/1",
+  "groupId": null,
+  "rows": [
+    { "member": "PRAXIS-MISC-08", "criterion": "each Python use is ported to F#/.NET, or listed as an exact-path exception in ros.json implementationPolicy.exceptions citing an accepted DF decision that records the owner's approval and the follow-up work item", "status": "met",
+      "evidence": { "kind": "location", "reference": "ros.json implementationPolicy (9 exact-path exceptions, DF-ROS-2026-A054); scripts/praxis-release-bump.sh, scripts/praxis-remote-enable.sh, .github/workflows/native-release.yml, ros-fs-assets.yml, praxis-validation.yml now Python-free; follow-up PRAXIS-MISC-10", "result": "./praxis architecture check passes" } },
+    { "member": "PRAXIS-MISC-08", "criterion": "./praxis architecture check (and validate when the policy is enabled) fails on a tracked *.py file or a python/python3 invocation in a tracked script, workflow or action that no exception covers", "status": "met",
+      "evidence": { "kind": "test", "reference": "ImplementationLanguagePolicyTests: 'architecture check: Python automation fails an opted-in repository with path and line, and an exception passes it'", "result": "passed" } },
+    { "member": "PRAXIS-MISC-08", "criterion": "tests cover the new rule and the exceptions", "status": "met",
+      "evidence": { "kind": "test", "reference": "ImplementationLanguagePolicyTests: 'python policy: invocations are found by command word ...', 'python policy: tracked .py files and Python in automation are violations unless an exact exception covers them', and 'this repository contains no ... unexcepted Python automation'", "result": "passed" } },
+    { "member": "PRAXIS-MISC-08", "criterion": "workflows no longer set up Python unless an exception needs it", "status": "met",
+      "evidence": { "kind": "command", "reference": "grep -n setup-python .github/workflows/*.yml", "result": "no match" } },
+    { "member": "PRAXIS-MISC-08", "criterion": "RQ-A024 states the real status", "status": "met",
+      "evidence": { "kind": "location", "reference": "research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md ('Status (2026-10-06, PRAXIS-MISC-08)')", "result": "implemented with recorded exceptions" } }
+  ]
+}

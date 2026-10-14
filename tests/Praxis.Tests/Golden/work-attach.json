@@ -1,0 +1,134 @@
+{
+  "test1Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "ATT-1",
+            "seq": 1,
+            "name": "old.txt",
+            "file": "1-old.txt",
+            "size": 3,
+            "contentType": null
+          },
+          {
+            "id": "ATT-2",
+            "seq": 2,
+            "name": "My Cool File!.txt",
+            "file": "2-My_Cool_File_.txt",
+            "size": 37,
+            "contentType": null
+          }
+        ]
+      }
+    ]
+  },
+  "test1Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  |  |\n| WI-0001 | It's a \"quoted\" title | ready | code | high |\n",
+  "test1StoredFile": "2-My_Cool_File_.txt",
+  "test1FileBytesBase64": "aGVsbG8gd29ybGQsIHdpdGggYSB3ZWlyZCBuYW1lIGNvbWluZw==",
+  "test2Name": "upload.txt",
+  "test2Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "ATT-1",
+            "seq": 1,
+            "name": "old.txt",
+            "file": "1-old.txt",
+            "size": 3,
+            "contentType": null
+          },
+          {
+            "id": "ATT-2",
+            "seq": 2,
+            "name": "upload.txt",
+            "file": "2-upload.txt",
+            "size": 37,
+            "contentType": null
+          }
+        ]
+      }
+    ]
+  },
+  "test3Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 1,
+    "items": [
+      {
+        "id": "{install}",
+        "title": "{install}",
+        "description": null,
+        "tags": [],
+        "priority": "medium",
+        "status": "captured",
+        "createdBy": "unknown",
+        "source": "manual",
+        "sourceReference": null,
+        "attachments": [
+          {
+            "id": "ATT-1",
+            "seq": 1,
+            "name": "upload.txt",
+            "file": "1-upload.txt",
+            "size": 37,
+            "contentType": null
+          }
+        ]
+      }
+    ]
+  },
+  "test3Markdown": "# Work Queue\n\n| ID | Work | Status | Tags | Priority |\n|---|---|---|---|---|\n| {install} | {install} | complete |  | medium |\n",
+  "test4Queue": {
+    "schemaVersion": "1.0.0",
+    "repository": "repository",
+    "nextSeq": 2,
+    "items": [
+      {
+        "id": "WI-0001",
+        "title": "It's a \"quoted\" title",
+        "description": null,
+        "tags": [
+          "code"
+        ],
+        "priority": "high",
+        "status": "ready",
+        "attachments": [
+          {
+            "id": "ATT-1",
+            "seq": 1,
+            "name": "old.txt",
+            "file": "1-old.txt",
+            "size": 3,
+            "contentType": null
+          }
+        ]
+      }
+    ]
+  },
+  "test4Message": "work item 'WI-9999' was not found",
+  "test5Message": "invalid work-item ID 'not-an-id'"
+}

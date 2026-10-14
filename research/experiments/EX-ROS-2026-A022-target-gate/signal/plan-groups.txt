@@ -1,0 +1,74 @@
+Repository echelon-signal at 637218a14179 (main); planned 2026-10-02T12:30:00Z by planner 3.6.0
+Work-state fingerprint aaa4b792bdbfd979
+Advisory shadow plan: nothing was started, completed, reprioritized or otherwise changed. No single schedule is optimal across cost, duration and collision risk. The frontier lists the non-dominated alternatives; choose the tradeoff that matters.
+Advisory grouping: a group is a recommendation to reason about these items together. It changes no work item's state, attribution, evidence or identity, and nothing was started.
+
+Settings: preferred size 3..10, automatic maximum 12, minimum affinity medium, cross-group policy accept-elevated
+
+GROUP-ECHELON-SIGNAL-ADMIN-001
+Area: admin (shared-area, planner-recommended); executes in echelon-signal
+Members: 9 (0 of 9 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  WI-0008 [not-runnable, captured] high: with WI-0013: high: same area 'admin'; same area 'import'; similar titles (administrator, aggregation, import)
+  WI-0011 [not-runnable, captured] high: with WI-0012: medium: same area 'admin'
+  WI-0012 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+  WI-0013 [not-runnable, captured] high: with WI-0008: high: same area 'admin'; same area 'import'; similar titles (administrator, aggregation, import)
+  WI-0014 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+  WI-0015 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+  WI-0018 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+  WI-0019 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+  WI-0020 [not-runnable, captured] high: with WI-0008: medium: same area 'admin'
+Affinity: medium; confidence high
+Why grouped:
+  - 9/9 same area 'admin' [explicit]
+  - 2/9 same area 'import' [explicit]
+  - 2/9 similar titles (administrator, aggregation, import) [inferred]
+  - 2/9 similar titles (administrator, analytics) [inferred]
+  - 2/9 similar titles (administrator, state) [inferred]
+Sequence: no ordering constraint between members (listed WI-0008, WI-0011, WI-0012, WI-0013, WI-0014, WI-0015, WI-0018, WI-0019, WI-0020)
+Estimated context reuse: unknown (9 independent context acquisitions -> 1)
+Collision risk: elevated; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - intra-group collision risk is elevated: parallel subtasks are not proven independent
+  - triage WI-0008, WI-0011, WI-0012, WI-0013, WI-0014, WI-0015, WI-0018, WI-0019, WI-0020 first: a planning group may hold captured work, but only triaged members can execute
+  may run independently from GROUP-ECHELON-SIGNAL-PRIVACY-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+
+GROUP-ECHELON-SIGNAL-PRIVACY-001
+Area: privacy (shared-area, planner-recommended); executes in echelon-signal
+Members: 4 (0 of 4 complete; each member completes on its own evidence and the group never implies that every member succeeded (PRX-GRP-042))
+  WI-0005 [not-runnable, captured] high: with WI-0009: medium: same area 'privacy'
+  WI-0009 [not-runnable, captured] high: with WI-0005: medium: same area 'privacy'
+  WI-0016 [not-runnable, captured] high: with WI-0017: medium: same area 'admin'
+  WI-0017 [not-runnable, captured] high: with WI-0016: medium: same area 'admin'
+Affinity: medium; confidence high
+Why grouped:
+  - 3/4 same area 'privacy' [explicit]
+  - 2/4 same area 'admin' [explicit]
+  - 2/4 same area 'reporting' [explicit]
+Sequence: no ordering constraint between members (listed WI-0005, WI-0009, WI-0016, WI-0017)
+Estimated context reuse: unknown (4 independent context acquisitions -> 1)
+Collision risk: elevated; parallel-safe: False
+Recommended execution: one sequential agent
+  - one reasoning owner by default (PRX-GRP-063); high affinity usually means shared files, so one warmed agent keeps one design
+  - intra-group collision risk is elevated: parallel subtasks are not proven independent
+  - triage WI-0005, WI-0009, WI-0016, WI-0017 first: a planning group may hold captured work, but only triaged members can execute
+  may run independently from GROUP-ECHELON-SIGNAL-ADMIN-001: no dependency and cross-group collision risk elevated is admitted by the accept-elevated policy; they may run concurrently
+
+Group dependencies:
+  none
+
+Ungrouped (7):
+  GH-5 [active] affinity none: no shared context with any other open item
+  WI-0002 [captured] affinity none: no shared context with any other open item
+  WI-0003 [captured] affinity none: no shared context with any other open item
+  WI-0004 [captured] affinity none: no shared context with any other open item
+  WI-0006 [captured] affinity none: no shared context with any other open item
+  WI-0007 [captured] affinity none: no shared context with any other open item
+  WI-0010 [captured] affinity medium: related to WI-0017 (medium: same area 'security') but not cohesive with any formed group: grouping needs medium affinity with at least two thirds of a group's members
+
+Unknown:
+  - context reuse is unmeasured: too few finalized executions record session metrics (repeated and governance reads, time to first code change; the anthropic-claude-session adapter), so savings in tokens or time are unknown (PRX-GRP-061)
+  - historical co-change is not observable: telemetry does not yet link executions to the files they changed per work item
+  - no declared paths (planner configuration 'areas'): file and module overlap is unknown, only tags are compared
+  - no human-declared groups
+  - monetary cost is unknown
