@@ -30,7 +30,7 @@
 | GH-234 | GH-234 | complete |  |  |
 | GH-235 | GH-235 | active |  |  |
 | GH-242 | GH-242 | complete |  |  |
-| GH-260 | Assess and adopt universal UI layout/action conformance (UI-LAYOUT-INTERACTION@1.0.0) for Praxis web, hub and public site (#260) | ready | ui-conformance, gh-260 | high |
+| GH-260 | Assess and adopt universal UI layout/action conformance (UI-LAYOUT-INTERACTION@1.0.0) for Praxis web, hub and public site (#260) | active | ui-conformance, gh-260 | high |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
@@ -336,6 +336,7 @@
 | WI-0098 | construct preview/apply output reports the admitted plan in canonical form and its canonical binding digests, so independent verifiers never rebuild a host-stamped plan (E2E gap) | complete |  | medium |
 | WI-0099 | Requirement: reclassify a work item's type (auditable event with reason, from active and blocked) and accept non-file evidence references (PR/check-run URLs, validated by form, recorded as external) at work complete | complete |  | medium |
 | WI-0100 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | active |  | medium |
+| WI-0101 | Pin Praxis 3.12.0 and validate with the pinned release binary in CI | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
