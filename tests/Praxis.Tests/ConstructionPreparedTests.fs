@@ -872,6 +872,18 @@ module ConstructionPreparedTests =
                   let openItem = item "OBL-U-OPEN"
                   Assert.equal [ "escalated" ] (dispositions openItem)
                   Assert.isTrue (not (isNull openItem["question"])) (openItem.ToJsonString())))
+          t "a conflict-resolution record is listed with the conflicts it resolves and its decision node's text" (fun () ->
+              let records =
+                """{"schemaVersion":"ordo.construction-decisions/3","blueprintDigest":"x","cohortId":"C","records":[
+                     {"nodeId":"DEC-SAVE-IDEMPOTENCY-DURABLE","content":{"kind":"conflictResolution","conflicts":["CONFLICT-O13"],"requirementKeys":["k"]}}]}"""
+              let node : HandoffNode =
+                  { Id = "DEC-SAVE-IDEMPOTENCY-DURABLE"; Kind = "decision"; RequirementKeys = [ "k" ]; DependsOn = []
+                    Justification = Some "Saves are idempotent by operation id (DF-TE-2026-A006), durably across restart (DF-TE-2026-A009)." }
+              let decided = ConstructionHandoff.decisions records [ node ] [] |> List.exactlyOne
+              Assert.equal "constructionRecord" decided.Source
+              Assert.isTrue (decided.Summary.StartsWith "Resolves CONFLICT-O13.") decided.Summary
+              Assert.isTrue (decided.Summary.Contains "DF-TE-2026-A006" && decided.Summary.Contains "DF-TE-2026-A009") decided.Summary
+              Assert.equal [ "k" ] decided.RequirementKeys)
           t "recognition that finds nothing worth generating refuses prepare before generation and writes nothing" (fun () ->
               withDecisionsHost (fun host ->
                   let generated = ref 0

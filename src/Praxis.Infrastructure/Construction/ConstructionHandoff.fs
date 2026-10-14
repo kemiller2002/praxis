@@ -211,6 +211,7 @@ module ConstructionHandoff =
                         sprintf "%s for %s (%s)" name command failure
                     | None -> name)
             "Ports: " + String.concat "; " ports + "."
+        | Some "conflictResolution" -> "Resolves " + String.concat ", " (texts content "conflicts") + "."
         | Some other -> "Approved " + other + " record."
         | None -> "Approved record."
 
@@ -246,7 +247,12 @@ module ConstructionHandoff =
                 |> List.choose (fun record ->
                     match text record "nodeId", (match record with :? JsonObject as o -> o["content"] | _ -> null) with
                     | Some nodeId, content when not (isNull content) ->
-                        Some { Id = nodeId; Source = "constructionRecord"; Summary = summarize content; RequirementKeys = citedKeys content |> List.distinct }
+                        // A decision node's own justification is the decision's text
+                        // (an accepted decision it cites, a rationale): keep it with the record.
+                        let rationale =
+                            nodes |> List.tryFind (fun n -> n.Id = nodeId && n.Kind = "decision") |> Option.bind _.Justification
+                            |> Option.map (fun text -> " Decision: " + text) |> Option.defaultValue ""
+                        Some { Id = nodeId; Source = "constructionRecord"; Summary = summarize content + rationale; RequirementKeys = citedKeys content |> List.distinct }
                     | _ -> None)
             with _ -> []
         let recorded = records |> List.map _.Id |> Set.ofList
