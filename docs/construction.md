@@ -294,7 +294,7 @@ decided it differently.
 
 ## Ordo pin
 
-Construction runs on the published Ordo 1.15.0 release (pattern recognition, decision records v3 and conflict resolution,
+Construction runs on the published Ordo 1.16.0 release (pattern recognition, conflict resolution and the decision records v3 reader,
 CONSTRUCT-010). `vendor/nuget/ordo-core.lock` and `ordo-construction.lock`
 name its release assets, and their sha256 values are the ones in that
 release's `native-checksums.txt`.
