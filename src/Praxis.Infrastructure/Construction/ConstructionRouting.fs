@@ -73,6 +73,10 @@ module ConstructionRouting =
                 // Ordo 1.7: an effect whose failure meaning the plan left open is a
                 // semantic decision, never custom code.
                 | Artifacts.ResolveEffectFailure _ -> impl, sem @ [ obligation ], ver
+                // Ordo 1.15 (vocabulary 3+): an undecided transition or extension
+                // decision point is a decision, never implementable custom code.
+                | Artifacts.ResolveUndecidedTransition _ -> impl, sem @ [ obligation ], ver
+                | Artifacts.DecideExtension _ -> impl, sem @ [ obligation ], ver
                 | Artifacts.VerifyIndependently _ -> impl, sem, ver @ [ obligation ]) ([], [], [])
         let custom, exceptions =
             implementations |> List.fold (fun (routed, refused) (obligation, contract) ->

@@ -436,7 +436,10 @@ module ConstructionHandoff =
     // -------------------------------------------------------------- build
 
     /// Obligation kinds that ask a question an agent may not settle in code.
-    let QuestionKinds = set [ "undecidedEffectFailure"; "conflict"; "uncoveredRequirement"; "unsupportedVocabulary" ]
+    let QuestionKinds =
+        set [ "undecidedEffectFailure"; "conflict"; "uncoveredRequirement"; "unsupportedVocabulary"
+              // Ordo 1.15 decision obligations (vocabulary 3+): escalate, never implement.
+              "undecidedTransition"; "undecidedExtensionDecision"; "undecidedPersistence" ]
 
     /// Every requirement key the handoff cites: obligations, verification,
     /// the cohort's required nodes and the approved decision records.
@@ -449,8 +452,8 @@ module ConstructionHandoff =
         |> List.distinct
 
     let DispositionRule =
-        "Disposition every obligation in dispositions.json. A conflict, undecidedEffectFailure, uncoveredRequirement or "
-        + "unsupportedVocabulary obligation needs an approved decision the agent cannot make: escalate it, and state any provisional "
+        "Disposition every obligation in dispositions.json. A conflict, undecided (effect failure, transition, extension decision, "
+        + "persistence), uncoveredRequirement or unsupportedVocabulary obligation needs an approved decision the agent cannot make: escalate it, and state any provisional "
         + "code behavior in its note (each `Escalate:` item below). An extensionBehavior obligation is implemented, or escalated when its text leaves a choice open."
 
     /// The behavior text of an uncovered requirement Ordo delegates.

@@ -884,6 +884,17 @@ module ConstructionPreparedTests =
               Assert.isTrue (decided.Summary.StartsWith "Resolves CONFLICT-O13.") decided.Summary
               Assert.isTrue (decided.Summary.Contains "DF-TE-2026-A006" && decided.Summary.Contains "DF-TE-2026-A009") decided.Summary
               Assert.equal [ "k" ] decided.RequirementKeys)
+          t "the decision-record envelope accepts versions 1 to 3 and refuses any other" (fun () ->
+              let envelope version =
+                  sprintf """{"schemaVersion":"ordo.construction-decisions/%s","blueprintDigest":"x","cohortId":"C","records":[{"nodeId":"N"}]}""" version
+                  |> ConstructionDecisions.envelope
+              [ "1"; "2"; "3" ] |> List.iter (fun version ->
+                  match envelope version with
+                  | Ok parsed -> Assert.equal [ "N" ] parsed.NodeIds
+                  | Error reason -> failwithf "version %s refused: %s" version reason)
+              match envelope "4" with
+              | Error reason -> Assert.isTrue (reason.Contains "unsupported schemaVersion") reason
+              | Ok _ -> failwith "version 4 was accepted")
           t "recognition that finds nothing worth generating refuses prepare before generation and writes nothing" (fun () ->
               withDecisionsHost (fun host ->
                   let generated = ref 0
