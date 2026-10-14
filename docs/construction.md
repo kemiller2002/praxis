@@ -292,11 +292,9 @@ handwritten session code silently decided this question, and different runs
 decided it differently.
 
 
-## Known merge gate (CONSTRUCT-008)
+## Ordo pin
 
-Mechanical-first construction (`construct prepare`, `construct apply
---prepared`) runs on Ordo 1.8.2. Ordo has not published that release yet:
-`vendor/nuget/ordo-core.lock` and `ordo-construction.lock` pin local packs of
-Ordo branch `construct/default-plan` (aa991a7), and their URLs name the release
-assets this pin expects. Do not merge until v1.8.2 is published and its assets'
-sha256 values match the locks.
+Construction runs on the published Ordo 1.10.0 release (pattern recognition,
+CONSTRUCT-010). `vendor/nuget/ordo-core.lock` and `ordo-construction.lock`
+name its release assets, and their sha256 values are the ones in that
+release's `native-checksums.txt`.

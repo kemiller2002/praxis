@@ -80,6 +80,10 @@ module ConstructionPrepared =
 
     /// Every host-derived input the artifact depends on, in a fixed order.
     /// Nothing here comes from an agent; all of it is known before generation.
+    /// The host's recognition policy for one cohort (OPT-PC-02): default true.
+    let escalateOpenQuestions (configuration: LocalHostConfiguration) (cohortId: string) =
+        configuration.Recognition.Cohorts |> Map.tryFind cohortId |> Option.defaultValue configuration.Recognition.EscalateOpenQuestions
+
     let hostBinding (generator: DefaultPlanGenerator) (vocabulary: string) (configuration: LocalHostConfiguration) (groupId: string) (cohort: ConstructionAdmission.AdmittedCohort) (decisionsDigest: string) : (string * JsonNode) list =
         let grant = ConstructionAdmission.cohortGrant cohort
         let approval = ConstructionAdmission.cohortApproval cohort
@@ -109,6 +113,10 @@ module ConstructionPrepared =
             "validatorPolicyRevision", str configuration.ValidatorPolicyRevision
             "praxisVersion", str praxisVersion
             "handoffSchema", str ConstructionHandoff.Schema ]
+        // Recognition (CONSTRUCT-010) is bound only when the generator runs it.
+        @ (match generator.Recognition with
+           | Some seam -> [ "recognitionRegistry", str seam.Registry; "escalateOpenQuestions", JsonValue.Create(escalateOpenQuestions configuration grant.CohortId) :> JsonNode ]
+           | None -> [])
 
     /// Every acceptance slot must name an existing regular handwritten file of
     /// the admitted source commit; its content is the frozen adapter stub.
@@ -208,9 +216,28 @@ module ConstructionPrepared =
     let private generate (configuration: LocalHostConfiguration) (policy: EcirHostPolicy) now groupId (generator: DefaultPlanGenerator)
                          (vocabulary: string) (cohort: ConstructionAdmission.AdmittedCohort) (adapters: (ConstructionAcceptanceSlot * string) list)
                          (decisions: string) (binding: (string * JsonNode) list) (key: string) =
-        generator.Generate (ConstructionAdmission.cohortPrepared cohort) decisions vocabulary
-        |> Result.mapError (fun reasons -> "default plan refused: " + String.concat "; " reasons)
-        |> Result.bind (fun output ->
+        let grant = ConstructionAdmission.cohortGrant cohort
+        let recognition =
+            match generator.Recognition with
+            | None -> Ok None
+            | Some seam ->
+                let permitted =
+                    (configuration.ExtensionSlots |> List.map (fun slot -> ConstructionTree.placed configuration.ConstructionMount slot.File))
+                    @ (configuration.AcceptanceSlots |> List.map _.AcceptancePath)
+                seam.Recognize (ConstructionAdmission.cohortPrepared cohort) decisions
+                    (Set.ofList (ConstructionAdmission.cohortApproval cohort).DecisionIds)
+                    (escalateOpenQuestions configuration grant.CohortId) permitted
+                |> Result.mapError (fun reasons -> "recognition refused: " + String.concat "; " reasons)
+                |> Result.bind (fun summary ->
+                    if summary.GenerationWorthwhile then Ok(Some summary)
+                    else Error("recognition: nothing in cohort " + grant.CohortId + " is worth generating (report " + summary.ReportDigest
+                               + "); delegate the cohort in full instead of preparing a construction"))
+        recognition
+        |> Result.bind (fun recognized ->
+            generator.Generate (ConstructionAdmission.cohortPrepared cohort) decisions vocabulary
+            |> Result.mapError (fun reasons -> "default plan refused: " + String.concat "; " reasons)
+            |> Result.map (fun output -> recognized, output))
+        |> Result.bind (fun (recognized, output) ->
             if output.Provenance.GeneratorId <> generator.Id || output.Provenance.GeneratorVersion <> generator.Version then
                 Error "default plan provenance names a different generator than the host pinned"
             elif output.Provenance.VocabularyVersion <> vocabulary then Error "default plan uses a vocabulary the host did not request"
@@ -240,7 +267,7 @@ module ConstructionPrepared =
                                     slot, content, ConstructionHandoff.contractTypes slot.AcceptancePath content (contractSources read files slot.AcceptancePath))
                             let handoff =
                                 ConstructionHandoff.build b.CohortId output.Obligations requirements nodes decisions generated routing typedAdapters
-                                    (configuration.AcceptanceValidators |> Map.keys |> Seq.toList)
+                                    (configuration.AcceptanceValidators |> Map.keys |> Seq.toList) recognized
                             let permitted = ConstructionRouting.usableSlots routing
                             // Dokimos requires blueprint, sourceManifest and decisionRecords;
                             // Ordo's own digests win, host-observed ones fill any gap.
@@ -280,6 +307,14 @@ module ConstructionPrepared =
                                           obj [ "path", str (ConstructionTree.placed configuration.ConstructionMount slot.File); "contracts", strs slot.Contracts
                                                 "maxBytes", JsonValue.Create slot.MaxBytes
                                                 "kind", str (if ConstructionRouting.isAcceptance routing slot then "acceptanceAdapter" else "constructionContract") ] :> JsonNode))
+                                      "recognition",
+                                      (match recognized with
+                                       | None -> null
+                                       | Some r ->
+                                           obj [ "reportDigest", str r.ReportDigest
+                                                 "generationWorthwhile", JsonValue.Create r.GenerationWorthwhile :> JsonNode
+                                                 "measurements", obj (r.Measurements |> List.map (fun (name, value) -> name, JsonValue.Create value :> JsonNode))
+                                                 "report", JsonNode.Parse r.ReportJson ] :> JsonNode)
                                       "handoff", ConstructionHandoff.toJson handoff
                                       "handoffMarkdown", str (ConstructionHandoff.toMarkdown handoff) ]
                             artifact.ToJsonString options + "\n")))

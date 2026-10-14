@@ -906,7 +906,30 @@ difference from the host's validated copy, then applies the generated files
 like `apply` and the handwritten files from `--extensions` only at the
 artifact's `permittedExtensionFiles`, like `extend`. Every handwritten-file check (name, content, slot kind, links, and placement
 on the target tree) runs before any effect, so any refused entry refuses the
-whole apply with the target unchanged. With `prepare --workspace DIR` (CONSTRUCT-010), the host also creates the
+whole apply with the target unchanged. Before generation, `prepare` runs Ordo's pattern recognition (Ordo 1.10.0,
+`PatternRecognitionWire.recognize` with the built-in registry). Its inputs are
+the grant-bound decision records, the grant's signed decision ids (the only
+authorized decisions) and the host-declared slot paths. Its policy is the host
+configuration's optional `recognition` object, `{ "escalateOpenQuestions":
+bool, "cohorts": { "<cohort id>": bool } }`. The default is `true` (OPT-PC-02),
+and a cohort entry overrides it. The registry and the resolved setting are
+bound into the cache key.
+
+When recognition finds nothing worth generating, `prepare` refuses before
+generation and names the report digest, so the cohort is delegated in full. The
+report (digest, measurements and the full `ordo.pattern-recognition/1`
+document) is kept in the prepared artifact under `recognition`. The handoff
+uses recognition in four ways:
+- It lists the approved decisions recognition's delegation packets carry
+  (`recognizedDecision`), keyed to their requirements.
+- An obligation on a requirement recognition marks escalation-required may only
+  be `escalated`.
+- An `uncoveredRequirement` obligation whose requirements recognition delegates
+  and which needs no open decision becomes implementable: its behavior says so,
+  and it may be `implemented` or `escalated`.
+- It states recognition's forbidden paths, placed under the construction mount.
+
+With `prepare --workspace DIR` (CONSTRUCT-010), the host also creates the
 worker workspace: `DIR/HANDOFF.md` (the Markdown handoff) and an empty
 `DIR/outbox/`, and records the binding host-side in `<out>.workspace.json`
 (`praxis.construction-workspace/1`: workspace, cache key, handoff SHA-256).

@@ -447,6 +447,10 @@ module ConstructionHandoff =
         + "unsupportedVocabulary obligation needs an approved decision the agent cannot make: escalate it, and state any provisional "
         + "code behavior in its note (each `Escalate:` item below). An extensionBehavior obligation is implemented, or escalated when its text leaves a choice open."
 
+    /// The behavior text of an uncovered requirement Ordo delegates.
+    let DelegatedBehavior =
+        "Ordo delegates this requirement: implement it in the permitted files under the approved decisions and contracts, and escalate any question it leaves open."
+
     let DispositionFormat =
         """dispositions.json: {"dispositions":[{"obligationId":"OBL-...","disposition":"implemented|escalated","note":"...","files":["<flat file name>"]}]}, one entry per obligation."""
 
@@ -483,8 +487,21 @@ module ConstructionHandoff =
 
     let build (cohortId: string) (obligations: DefaultPlanObligation list) (requirements: HandoffRequirement list) (nodes: HandoffNode list)
               (decisionRecords: string) (generated: (string * string) list) (routing: ConstructionRouting)
-              (adapters: (ConstructionAcceptanceSlot * string * HandoffGeneratedApi list) list) (acceptanceValidators: string list) : ConstructionHandoff =
-        let decided = decisions decisionRecords nodes requirements
+              (adapters: (ConstructionAcceptanceSlot * string * HandoffGeneratedApi list) list) (acceptanceValidators: string list)
+              (recognition: RecognitionSummary option) : ConstructionHandoff =
+        // Ordo recognition adds the approved decisions its delegation packets
+        // carry (keyed by those packets' requirements) when not already listed.
+        let decided =
+            let own = decisions decisionRecords nodes requirements
+            let known = own |> List.map _.Id |> Set.ofList
+            own
+            @ (recognition |> Option.map _.Decisions |> Option.defaultValue []
+               |> List.filter (fun d -> not (known.Contains d.NodeId))
+               |> List.map (fun d -> { Id = d.NodeId; Source = "recognizedDecision"; Summary = defaultArg d.Justification "Approved decision."; RequirementKeys = d.RequirementKeys }))
+        let mustEscalate = recognition |> Option.map _.EscalationRequired |> Option.defaultValue Set.empty
+        let delegated = recognition |> Option.map _.Delegated |> Option.defaultValue Set.empty
+        // Ordo states paths in the construction layout; the agent sees them placed.
+        let forbidden = recognition |> Option.map _.ForbiddenPaths |> Option.defaultValue [] |> List.map (ConstructionTree.placed routing.Mount)
         let usable = ConstructionRouting.usableSlots routing
         let interfaces = interfaces generated routing.Custom
         let permitted =
@@ -495,7 +512,20 @@ module ConstructionHandoff =
         let flat = permitted |> List.map (fun f -> f.Path.Substring(f.Path.LastIndexOf '/' + 1))
         let unavailable = requirements |> List.filter (fun r -> r.Excerpt.IsNone) |> List.map _.Key
         { CohortId = cohortId
-          WorkItems = obligations |> List.map (workItem nodes decided routing)
+          WorkItems =
+            obligations |> List.map (fun o ->
+                let item = workItem nodes decided routing o
+                // An obligation on a requirement Ordo marks escalation-required
+                // cannot be implemented here (its own keys, not supporting ones).
+                if o.RequirementKeys |> List.exists mustEscalate.Contains then { item with Dispositions = [ "escalated" ] }
+                // An uncovered requirement Ordo delegates (and needs no open
+                // decision) is the agent's to implement under the approved decisions.
+                elif o.Kind = "uncoveredRequirement" && not o.RequirementKeys.IsEmpty && o.RequirementKeys |> List.forall delegated.Contains then
+                    { item with
+                        Question = None
+                        RequiredBehavior = Some(DelegatedBehavior + " " + o.Statement)
+                        Dispositions = [ "implemented"; "escalated" ] }
+                else item)
           Requirements = requirements
           Decisions = decided
           Interfaces = interfaces
@@ -512,6 +542,8 @@ module ConstructionHandoff =
               yield "Generated, project and dependency files stay untouched. Every required interface member is implemented in a permitted file; there is no default implementation."
               if not acceptanceValidators.IsEmpty then
                   yield "The host runs acceptance validators " + String.concat ", " acceptanceValidators + "; the agent does not."
+              if not forbidden.IsEmpty then
+                  yield "Never write: " + String.concat ", " forbidden + "."
               if not unavailable.IsEmpty then
                   yield "Requirements without text in the admitted source (" + String.concat ", " unavailable + "): escalate rather than guess." ] }
 
