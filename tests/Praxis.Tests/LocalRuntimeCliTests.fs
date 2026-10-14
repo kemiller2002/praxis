@@ -115,8 +115,8 @@ module LocalRuntimeCliTests =
             settings["workProtocol"].["workerChecklists"] <- JsonNode.Parse """{"delegatedTypes":["delegated-task"]}"""
             File.WriteAllText(rosJson, settings.ToJsonString())
             CliHarness.write clone "docs/spec.md" "R-A: src/a.txt contains alpha\nR-B: src/b.txt contains beta\nR-C: src/c.txt contains gamma\n"
-            // A real Ordo ECIR fixture is required: grant-draft validates committed\n            // source/blueprint semantics, not just their Git blob digests.\n            CliHarness.write clone "docs/manifest.json" (File.ReadAllText(Path.Combine(ConstructionCliTests.fixtures, "source-manifest.json")))
-            CliHarness.write clone "docs/blueprint.json" (File.ReadAllText(Path.Combine(ConstructionCliTests.fixtures, "blueprint.json")))
+            // A real Ordo ECIR fixture is required: grant-draft validates committed\n            // source/blueprint semantics, not just their Git blob digests.\n            CliHarness.write clone "docs/manifest.json" (File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer", "source-manifest.json")))
+            CliHarness.write clone "docs/blueprint.json" (File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "construction", "time-entry-timer", "blueprint.json")))
             for id in [ "A"; "B"; "C" ] do
                 PraxisCli.run clone (Some coordinator) [ "add"; "Deliver " + id; "--id"; "WI-" + id ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "work"; "backlog-transition"; "--id"; "WI-" + id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
