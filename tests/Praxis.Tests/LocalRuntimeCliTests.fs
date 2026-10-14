@@ -115,8 +115,8 @@ module LocalRuntimeCliTests =
             settings["workProtocol"].["workerChecklists"] <- JsonNode.Parse """{"delegatedTypes":["delegated-task"]}"""
             File.WriteAllText(rosJson, settings.ToJsonString())
             CliHarness.write clone "docs/spec.md" "R-A: src/a.txt contains alpha\nR-B: src/b.txt contains beta\nR-C: src/c.txt contains gamma\n"
-            CliHarness.write clone "docs/manifest.json" "{\"source\":\"local runtime fixture\"}"
-            CliHarness.write clone "docs/blueprint.json" "{\"cohorts\":[\"A\",\"B\",\"C\"]}"
+            // A real Ordo ECIR fixture is required: grant-draft validates committed\n            // source/blueprint semantics, not just their Git blob digests.\n            CliHarness.write clone "docs/manifest.json" (File.ReadAllText(Path.Combine(ConstructionCliTests.fixtures, "source-manifest.json")))
+            CliHarness.write clone "docs/blueprint.json" (File.ReadAllText(Path.Combine(ConstructionCliTests.fixtures, "blueprint.json")))
             for id in [ "A"; "B"; "C" ] do
                 PraxisCli.run clone (Some coordinator) [ "add"; "Deliver " + id; "--id"; "WI-" + id ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "work"; "backlog-transition"; "--id"; "WI-" + id; "--action"; "ready"; "--occurred-at"; now () ] |> ok |> ignore
@@ -165,9 +165,9 @@ module LocalRuntimeCliTests =
             for id, revision in [ "A", "rev-2"; "B", "rev-3"; "C", "rev-4" ] do
                 let draft, payload, signature = Path.Combine(parent, id + "-grant.json"), Path.Combine(parent, id + "-grant.bin"), Path.Combine(parent, id + "-grant.sig")
                 run pilot [ "local"; "operator"; "grant-draft"; "--host-config"; config; "--key-id"; "op-1"; "--approver"; "operator"
-                            "--group"; "GROUP-LOCAL-" + groupNumber id; "--cohort"; "C-" + id; "--source"; source; "--manifest"; "docs/manifest.json"
+                            "--group"; "GROUP-LOCAL-" + groupNumber id; "--cohort"; "COH-TIMER"; "--source"; source; "--manifest"; "docs/manifest.json"
                             "--blueprint"; "docs/blueprint.json"; "--member"; "WI-" + id + "=docs/spec.md#R-" + id
-                            "--decision"; "DEC-" + id; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
+                            "--decision"; "DEC-TIMER-STATES"; "--draft"; draft; "--payload"; payload ] |> ok |> ignore
                 sign pilot payload signature
                 run pilot [ "local"; "operator"; "grant"; "--host-config"; config; "--draft"; draft; "--signature"; signature; "--revision"; revision ] |> ok |> ignore
                 PraxisCli.run clone (Some coordinator) [ "plan"; "execute-group"; "GROUP-LOCAL-" + groupNumber id; "--occurred-at"; now (); "--member"; "WI-" + id; "--type"; "delegated-task" ] |> ok |> ignore
@@ -196,7 +196,7 @@ module LocalRuntimeCliTests =
         run pilot ([ "local"; "packet"; "propose"; "--host-config"; pilot.Config; "--group"; "GROUP-LOCAL-" + groupNumber id; "--worker"; "worker-" + lower
                      "--role"; "implementation"; "--dispatch"; "D-" + id; "--attempt"; "1"; "--parent"; execution pilot "WI-COORD"
                      "--child"; child pilot ("worker-" + lower); "--member"; "WI-" + id + "=" + execution pilot ("WI-" + id)
-                     "--decision"; "DEC-" + id; "--allow"; "src/" + lower + ".txt"; "--acceptance"; "OBL-" + id + "=WI-" + id + ":accept-" + lower
+                     "--decision"; "DEC-TIMER-STATES"; "--allow"; "src/" + lower + ".txt"; "--acceptance"; "OBL-" + id + "=WI-" + id + ":accept-" + lower
                      "--timeout-seconds"; "300"; "--out"; packet ] @ (prerequisites |> List.collect (fun item -> [ "--prerequisite"; item ]))) |> ok |> ignore
         run pilot [ "local"; "operator"; "review"; "--host-config"; pilot.Config; "--packet"; packet; "--key-id"; "op-1"; "--approver"; "operator"; "--payload"; payload ] |> ok |> ignore
         sign pilot payload signature
