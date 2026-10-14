@@ -1,0 +1,2443 @@
+{
+  "standardVersion": "1.0.0",
+  "repository": "kemiller2002/praxis",
+  "revision": "96d8013ace573855050c8e784ee67634b9e566ec",
+  "classification": "app-ui",
+  "surfaces": [
+    {
+      "id": "web-queue",
+      "path": "/",
+      "kind": "product",
+      "status": "exception",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [
+        {
+          "id": "filter-actions-top",
+          "relation": "top-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "button",
+              "name": "Filter"
+            },
+            {
+              "role": "link",
+              "name": "Clear"
+            }
+          ],
+          "rationale": "Filter and Clear are the filter form's related actions in one row",
+          "evidence": [
+            "@320px ULI-L10 PASS: group filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=1678.00px |   - link \"Clear\": PASS top=1678.00px",
+            "@390px ULI-L10 PASS: group filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=1614.34px |   - link \"Clear\": PASS top=1614.34px",
+            "@768px ULI-L10 PASS: group filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=1696.84px |   - link \"Clear\": PASS top=1696.84px",
+            "@1280px ULI-L10 PASS: group filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=1858.12px |   - link \"Clear\": PASS top=1858.12px",
+            "group status: pass"
+          ]
+        },
+        {
+          "id": "filter-actions-bottom",
+          "relation": "bottom-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "button",
+              "name": "Filter"
+            },
+            {
+              "role": "link",
+              "name": "Clear"
+            }
+          ],
+          "rationale": "with the top edge, equal bottom edges evidence equal control heights",
+          "evidence": [
+            "@320px ULI-L02 PASS: group filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=1730.00px |   - link \"Clear\": PASS bottom=1730.00px",
+            "@390px ULI-L02 PASS: group filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=1666.34px |   - link \"Clear\": PASS bottom=1666.34px",
+            "@768px ULI-L02 PASS: group filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=1748.84px |   - link \"Clear\": PASS bottom=1748.84px",
+            "@1280px ULI-L02 PASS: group filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=1910.12px |   - link \"Clear\": PASS bottom=1910.12px",
+            "group status: pass"
+          ]
+        },
+        {
+          "id": "primary-navigation",
+          "relation": "centerline",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "link",
+              "name": "Queue"
+            },
+            {
+              "role": "link",
+              "name": "Validate"
+            }
+          ],
+          "rationale": "the primary navigation links share one row",
+          "evidence": [
+            "@320px ULI-L10 PASS: group primary-navigation: center-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Queue\": PASS center=270.00px |   - link \"Validate\": PASS center=270.00px",
+            "@390px ULI-L10 PASS: group primary-navigation: center-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Queue\": PASS center=201.25px |   - link \"Validate\": PASS center=201.25px",
+            "@768px ULI-L10 PASS: group primary-navigation: center-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Queue\": PASS center=221.62px |   - link \"Validate\": PASS center=221.62px",
+            "@1280px ULI-L10 PASS: group primary-navigation: center-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Queue\": PASS center=275.38px |   - link \"Validate\": PASS center=275.38px",
+            "group status: pass"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "queue-ROS-INSTALL-3-13-0-id",
+          "control": {
+            "role": "link",
+            "name": "ROS-INSTALL-3-13-0"
+          },
+          "intent": "open ROS-INSTALL-3-13-0",
+          "expectedOutcome": "/work/ROS-INSTALL-3-13-0 loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"ROS-INSTALL-3-13-0\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/ROS-INSTALL-3-13-0\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-ROS-INSTALL-3-13-0-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show ROS-INSTALL-3-13-0",
+          "expectedOutcome": "/work/ROS-INSTALL-3-13-0 loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/ROS-INSTALL-3-13-0\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-ABANDON-id",
+          "control": {
+            "role": "link",
+            "name": "WI-ABANDON"
+          },
+          "intent": "open WI-ABANDON",
+          "expectedOutcome": "/work/WI-ABANDON loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-ABANDON\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-ABANDON\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-ABANDON-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-ABANDON",
+          "expectedOutcome": "/work/WI-ABANDON loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-ABANDON\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-ABANDON-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-ABANDON (it needs input)",
+          "expectedOutcome": "/work/WI-ABANDON#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-ABANDON#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BBLOCK-id",
+          "control": {
+            "role": "link",
+            "name": "WI-BBLOCK"
+          },
+          "intent": "open WI-BBLOCK",
+          "expectedOutcome": "/work/WI-BBLOCK loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-BBLOCK\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BBLOCK\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BBLOCK-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-BBLOCK",
+          "expectedOutcome": "/work/WI-BBLOCK loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BBLOCK\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BBLOCK-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-BBLOCK (it needs input)",
+          "expectedOutcome": "/work/WI-BBLOCK#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BBLOCK#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BBLOCK-start",
+          "control": {
+            "role": "link",
+            "name": "Start"
+          },
+          "intent": "go to the Start form of WI-BBLOCK (it needs input)",
+          "expectedOutcome": "/work/WI-BBLOCK#start loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Start\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BBLOCK#start\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BBLOCK-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-BBLOCK (it needs input)",
+          "expectedOutcome": "/work/WI-BBLOCK#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BBLOCK#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BLOCK-id",
+          "control": {
+            "role": "link",
+            "name": "WI-BLOCK"
+          },
+          "intent": "open WI-BLOCK",
+          "expectedOutcome": "/work/WI-BLOCK loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-BLOCK\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BLOCK\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BLOCK-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-BLOCK",
+          "expectedOutcome": "/work/WI-BLOCK loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BLOCK\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BLOCK-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-BLOCK (it needs input)",
+          "expectedOutcome": "/work/WI-BLOCK#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BLOCK#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-BLOCK-complete",
+          "control": {
+            "role": "link",
+            "name": "Complete"
+          },
+          "intent": "go to the Complete form of WI-BLOCK (it needs input)",
+          "expectedOutcome": "/work/WI-BLOCK#complete loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Complete\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-BLOCK#complete\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-DONE-id",
+          "control": {
+            "role": "link",
+            "name": "WI-DONE"
+          },
+          "intent": "open WI-DONE",
+          "expectedOutcome": "/work/WI-DONE loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-DONE\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-DONE\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-DONE-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-DONE",
+          "expectedOutcome": "/work/WI-DONE loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-DONE\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-DONE-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-DONE (it needs input)",
+          "expectedOutcome": "/work/WI-DONE#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-DONE#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-DONE-complete",
+          "control": {
+            "role": "link",
+            "name": "Complete"
+          },
+          "intent": "go to the Complete form of WI-DONE (it needs input)",
+          "expectedOutcome": "/work/WI-DONE#complete loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Complete\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-DONE#complete\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EDIT-id",
+          "control": {
+            "role": "link",
+            "name": "WI-EDIT"
+          },
+          "intent": "open WI-EDIT",
+          "expectedOutcome": "/work/WI-EDIT loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-EDIT\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EDIT\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EDIT-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-EDIT",
+          "expectedOutcome": "/work/WI-EDIT loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EDIT\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EDIT-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-EDIT (it needs input)",
+          "expectedOutcome": "/work/WI-EDIT#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EDIT#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC-id",
+          "control": {
+            "role": "link",
+            "name": "WI-EXEC"
+          },
+          "intent": "open WI-EXEC",
+          "expectedOutcome": "/work/WI-EXEC loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-EXEC\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-EXEC",
+          "expectedOutcome": "/work/WI-EXEC loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-EXEC (it needs input)",
+          "expectedOutcome": "/work/WI-EXEC#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC-complete",
+          "control": {
+            "role": "link",
+            "name": "Complete"
+          },
+          "intent": "go to the Complete form of WI-EXEC (it needs input)",
+          "expectedOutcome": "/work/WI-EXEC#complete loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Complete\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC#complete\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC2-id",
+          "control": {
+            "role": "link",
+            "name": "WI-EXEC2"
+          },
+          "intent": "open WI-EXEC2",
+          "expectedOutcome": "/work/WI-EXEC2 loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-EXEC2\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC2\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC2-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-EXEC2",
+          "expectedOutcome": "/work/WI-EXEC2 loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC2\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC2-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-EXEC2 (it needs input)",
+          "expectedOutcome": "/work/WI-EXEC2#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC2#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-EXEC2-complete",
+          "control": {
+            "role": "link",
+            "name": "Complete"
+          },
+          "intent": "go to the Complete form of WI-EXEC2 (it needs input)",
+          "expectedOutcome": "/work/WI-EXEC2#complete loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Complete\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-EXEC2#complete\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-QREADY-id",
+          "control": {
+            "role": "link",
+            "name": "WI-QREADY"
+          },
+          "intent": "open WI-QREADY",
+          "expectedOutcome": "/work/WI-QREADY loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-QREADY\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-QREADY\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-QREADY-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-QREADY",
+          "expectedOutcome": "/work/WI-QREADY loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-QREADY\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-QREADY-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-QREADY (it needs input)",
+          "expectedOutcome": "/work/WI-QREADY#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-QREADY#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-QRESUME-id",
+          "control": {
+            "role": "link",
+            "name": "WI-QRESUME"
+          },
+          "intent": "open WI-QRESUME",
+          "expectedOutcome": "/work/WI-QRESUME loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-QRESUME\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-QRESUME\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-QRESUME-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-QRESUME",
+          "expectedOutcome": "/work/WI-QRESUME loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-QRESUME\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-READY-id",
+          "control": {
+            "role": "link",
+            "name": "WI-READY"
+          },
+          "intent": "open WI-READY",
+          "expectedOutcome": "/work/WI-READY loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-READY\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-READY\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-READY-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-READY",
+          "expectedOutcome": "/work/WI-READY loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-READY\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-READY-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-READY (it needs input)",
+          "expectedOutcome": "/work/WI-READY#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-READY#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-RESUME-id",
+          "control": {
+            "role": "link",
+            "name": "WI-RESUME"
+          },
+          "intent": "open WI-RESUME",
+          "expectedOutcome": "/work/WI-RESUME loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-RESUME\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-RESUME\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-RESUME-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-RESUME",
+          "expectedOutcome": "/work/WI-RESUME loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-RESUME\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-START-id",
+          "control": {
+            "role": "link",
+            "name": "WI-START"
+          },
+          "intent": "open WI-START",
+          "expectedOutcome": "/work/WI-START loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"WI-START\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-START\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-START-show",
+          "control": {
+            "role": "link",
+            "name": "Show"
+          },
+          "intent": "show WI-START",
+          "expectedOutcome": "/work/WI-START loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-START\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-START-block",
+          "control": {
+            "role": "link",
+            "name": "Block"
+          },
+          "intent": "go to the Block form of WI-START (it needs input)",
+          "expectedOutcome": "/work/WI-START#block loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Block\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-START#block\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-START-start",
+          "control": {
+            "role": "link",
+            "name": "Start"
+          },
+          "intent": "go to the Start form of WI-START (it needs input)",
+          "expectedOutcome": "/work/WI-START#start loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Start\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-START#start\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-WI-START-abandon",
+          "control": {
+            "role": "link",
+            "name": "Abandon"
+          },
+          "intent": "go to the Abandon form of WI-START (it needs input)",
+          "expectedOutcome": "/work/WI-START#abandon loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Abandon\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/work/WI-START#abandon\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-nav-validate",
+          "control": {
+            "role": "link",
+            "name": "Validate"
+          },
+          "intent": "open the validation findings",
+          "expectedOutcome": "the validation page loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Validate\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/validate\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-nav-queue",
+          "control": {
+            "role": "link",
+            "name": "Queue"
+          },
+          "intent": "return to the work queue",
+          "expectedOutcome": "the queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Queue\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/#main\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to main content"
+          },
+          "intent": "skip repeated navigation to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to main content\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "queue-permalink",
+          "control": {
+            "role": "link",
+            "name": "http://127.0.0.1:39887/"
+          },
+          "intent": "open this view at its canonical address",
+          "expectedOutcome": "the address bar holds the canonical URL",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"http://127.0.0.1:39887/\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/#main\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-copy-link",
+          "control": {
+            "role": "button",
+            "name": "Copy link"
+          },
+          "intent": "copy the view's address in one action (url-state.js enhancement)",
+          "expectedOutcome": "the status reads \"Link copied.\" and the clipboard holds the address",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Copy link\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "queue-filter",
+          "control": {
+            "role": "button",
+            "name": "Filter"
+          },
+          "intent": "filter the queue by tag",
+          "expectedOutcome": "the canonical filtered URL loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Filter\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/\", post=\"http://127.0.0.1:39887/?tag=fixture\")"
+          ],
+          "resetStrategy": "Clear"
+        },
+        {
+          "id": "queue-clear",
+          "control": {
+            "role": "link",
+            "name": "Clear"
+          },
+          "intent": "remove every filter",
+          "expectedOutcome": "the unfiltered queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Clear\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/?tag=fixture\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "queue-add-refused",
+          "control": {
+            "role": "button",
+            "name": "Add"
+          },
+          "intent": "failure path: capture with a blank title",
+          "expectedOutcome": "the CLI's refusal is shown as an inline fault and nothing is captured",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A07 PASS: button \"Add\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "fill a title and retry (queue-add)"
+        },
+        {
+          "id": "queue-add",
+          "control": {
+            "role": "button",
+            "name": "Add"
+          },
+          "intent": "capture a new work item",
+          "expectedOutcome": "the new item's page loads with \"Captured WI-NNNN.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Add\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "each run captures a new item in a disposable fixture"
+        },
+        {
+          "id": "queue-mark-ready",
+          "control": {
+            "role": "button",
+            "name": "Mark ready"
+          },
+          "intent": "mark a captured item ready in one click",
+          "expectedOutcome": "the item's page reports \"Marked WI-QREADY ready.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Mark ready\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item (terminal for this run)"
+        },
+        {
+          "id": "queue-resume",
+          "control": {
+            "role": "button",
+            "name": "Resume"
+          },
+          "intent": "resume blocked work in one click",
+          "expectedOutcome": "the item's page reports \"Resumed WI-QRESUME.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Resume\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item (terminal for this run)"
+        }
+      ],
+      "evidence": [
+        "ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @320px stacked data grid: 1 stacked grid(s): every cell is labelled and holds one item",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @390px stacked data grid: 1 stacked grid(s): every cell is labelled and holds one item",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 FAIL @768px word integrity in tables: words split across lines: Priority, fixture, medium",
+        "ULI-L09 PASS @768px stacked data grid: 1 grid(s) render as tables at this width",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @1280px stacked data grid: 1 grid(s) render as tables at this width",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L05 FAIL @390px 200% text page: document scrollWidth 441 vs clientWidth 375; 13 text run(s) escaping the viewport or a clipping container\n  span \"complete\" 334.8..440.8\n  span \"captured\" 334.8..440.8\n  span \"ready\" 334.8..401.1\n  span \"active\" 334.8..414.3\n  span \"active\" 334.8..414.3\n  span \"captured\" 334.8..440.8\n  span \"active\" 334.8..414.3\n  span \"active\" 334.8..414.3\n  span \"captured\" 334.8..440.8\n  span \"blocked\" 334.8..427.6\n  span \"captured\" 334.8..440.8\n  span \"blocked\" 334.8..427.6\n  span \"ready\" 334.8..401.1",
+        "ULI-L09 FAIL @390px 200% text inline gutter: content touches a viewport edge: button \"Mark ready\" 286..394; button \"Mark ready\" 286..394; button \"Mark ready\" 286..394; button \"Resume\" 286..393; button \"Mark ready\" 286..394; button \"Resume\" 286..393",
+        "ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS action inventory /: all 58 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: the UI ships English only (no locale switch); not exercised",
+        "print output: not a print surface",
+        "same-named row buttons (Mark ready, Resume) on other rows share rowActionCell; one per name is exercised"
+      ]
+    },
+    {
+      "id": "web-item",
+      "path": "/work/WI-EDIT",
+      "kind": "product",
+      "status": "exception",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [],
+      "actions": [
+        {
+          "id": "item-back",
+          "control": {
+            "role": "link",
+            "name": "← Queue"
+          },
+          "intent": "return to the queue",
+          "expectedOutcome": "the queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"← Queue\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EDIT\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "item-raw-record",
+          "control": {
+            "role": "disclosure",
+            "name": "Raw record"
+          },
+          "intent": "show the raw work show record",
+          "expectedOutcome": "the details element opens",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: disclosure \"Raw record\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "item-save",
+          "control": {
+            "role": "button",
+            "name": "Save"
+          },
+          "intent": "edit the item's title",
+          "expectedOutcome": "the item heading shows the new title",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Save\": expected post-state observed after activation (pre=\"WI-EDIT: WI-EDIT fixture\", post=\"WI-EDIT: Edited in the browser\")"
+          ],
+          "resetStrategy": "edit again (idempotent per value)"
+        },
+        {
+          "id": "item-attach",
+          "control": {
+            "role": "button",
+            "name": "Attach"
+          },
+          "intent": "attach a file to the item",
+          "expectedOutcome": "a download link for the attachment appears",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Attach\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "attachments accumulate in the disposable fixture"
+        },
+        {
+          "id": "item-abandon",
+          "control": {
+            "role": "button",
+            "name": "Abandon"
+          },
+          "intent": "abandon a captured item with a reason",
+          "expectedOutcome": "\"Abandoned WI-ABANDON.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Abandon\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "terminal state of a disposable fixture item"
+        },
+        {
+          "id": "item-mark-ready",
+          "control": {
+            "role": "button",
+            "name": "Mark ready"
+          },
+          "intent": "mark the item ready",
+          "expectedOutcome": "\"Marked WI-READY ready.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Mark ready\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item"
+        },
+        {
+          "id": "item-start",
+          "control": {
+            "role": "button",
+            "name": "Start"
+          },
+          "intent": "start the ready item with a work type",
+          "expectedOutcome": "\"Started WI-START.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Start\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item"
+        },
+        {
+          "id": "item-block-backlog",
+          "control": {
+            "role": "button",
+            "name": "Block"
+          },
+          "intent": "block a ready item with a reason",
+          "expectedOutcome": "\"Blocked WI-BBLOCK.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Block\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item"
+        },
+        {
+          "id": "item-block-live",
+          "control": {
+            "role": "button",
+            "name": "Block"
+          },
+          "intent": "block active work with a reason",
+          "expectedOutcome": "\"Blocked WI-BLOCK.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Block\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item"
+        },
+        {
+          "id": "item-complete-refused",
+          "control": {
+            "role": "button",
+            "name": "Complete"
+          },
+          "intent": "failure path: complete without the required implementation and tests evidence",
+          "expectedOutcome": "the CLI's refusal is shown as an inline fault and the work stays active",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A07 PASS: button \"Complete\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "name the evidence and retry (item-complete)"
+        },
+        {
+          "id": "item-complete",
+          "control": {
+            "role": "button",
+            "name": "Complete"
+          },
+          "intent": "recovery: complete with implementation and tests evidence after the refusal",
+          "expectedOutcome": "\"Completed WI-DONE.\" (the earlier refusal changed nothing)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Complete\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "terminal state of a disposable fixture item"
+        },
+        {
+          "id": "item-resume",
+          "control": {
+            "role": "button",
+            "name": "Resume"
+          },
+          "intent": "resume blocked work",
+          "expectedOutcome": "\"Resumed WI-RESUME.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Resume\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture item"
+        },
+        {
+          "id": "item-execution-link",
+          "control": {
+            "role": "link",
+            "name": "EXE-20261014T005101862Z-68aa1ac3"
+          },
+          "intent": "open the agent execution behind the work item",
+          "expectedOutcome": "the execution page loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"EXE-20261014T005101862Z-68aa1ac3\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EXEC\", post=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "item-nav-validate",
+          "control": {
+            "role": "link",
+            "name": "Validate"
+          },
+          "intent": "open the validation findings",
+          "expectedOutcome": "the validation page loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Validate\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EDIT\", post=\"http://127.0.0.1:39887/validate\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "item-nav-queue",
+          "control": {
+            "role": "link",
+            "name": "Queue"
+          },
+          "intent": "return to the work queue",
+          "expectedOutcome": "the queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Queue\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EDIT\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "item-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to main content"
+          },
+          "intent": "skip repeated navigation to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to main content\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EDIT\", post=\"http://127.0.0.1:39887/work/WI-EDIT#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "item-permalink",
+          "control": {
+            "role": "link",
+            "name": "http://127.0.0.1:39887/work/WI-EDIT"
+          },
+          "intent": "open this view at its canonical address",
+          "expectedOutcome": "the address bar holds the canonical URL",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"http://127.0.0.1:39887/work/WI-EDIT\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/work/WI-EDIT#main\", post=\"http://127.0.0.1:39887/work/WI-EDIT\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "item-copy-link",
+          "control": {
+            "role": "button",
+            "name": "Copy link"
+          },
+          "intent": "copy the view's address in one action (url-state.js enhancement)",
+          "expectedOutcome": "the status reads \"Link copied.\" and the clipboard holds the address",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Copy link\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        }
+      ],
+      "evidence": [
+        "ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @320px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @390px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @768px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @768px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @1280px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L05 PASS @390px 200% text page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS action inventory /work/WI-EDIT: all 11 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: the UI ships English only (no locale switch); not exercised",
+        "print output: not a print surface"
+      ]
+    },
+    {
+      "id": "web-validate",
+      "path": "/validate",
+      "kind": "product",
+      "status": "pass",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [],
+      "actions": [
+        {
+          "id": "validate-nav-validate",
+          "control": {
+            "role": "link",
+            "name": "Validate"
+          },
+          "intent": "open the validation findings",
+          "expectedOutcome": "the validation page loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Validate\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/validate#main\", post=\"http://127.0.0.1:39887/validate\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "validate-nav-queue",
+          "control": {
+            "role": "link",
+            "name": "Queue"
+          },
+          "intent": "return to the work queue",
+          "expectedOutcome": "the queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Queue\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/validate\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "validate-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to main content"
+          },
+          "intent": "skip repeated navigation to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to main content\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/validate\", post=\"http://127.0.0.1:39887/validate#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "validate-permalink",
+          "control": {
+            "role": "link",
+            "name": "http://127.0.0.1:39887/validate"
+          },
+          "intent": "open this view at its canonical address",
+          "expectedOutcome": "the address bar holds the canonical URL",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"http://127.0.0.1:39887/validate\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/validate#main\", post=\"http://127.0.0.1:39887/validate\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "validate-copy-link",
+          "control": {
+            "role": "button",
+            "name": "Copy link"
+          },
+          "intent": "copy the view's address in one action (url-state.js enhancement)",
+          "expectedOutcome": "the status reads \"Link copied.\" and the clipboard holds the address",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Copy link\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        }
+      ],
+      "evidence": [
+        "ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @320px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 UNKNOWN @320px button heights: not applicable: fewer than two rendered buttons to compare",
+        "ULI-L05 PASS @390px page: document scrollWidth 390 vs clientWidth 390; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @390px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 UNKNOWN @390px button heights: not applicable: fewer than two rendered buttons to compare",
+        "ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @768px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @768px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 UNKNOWN @768px button heights: not applicable: fewer than two rendered buttons to compare",
+        "ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @1280px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 UNKNOWN @1280px button heights: not applicable: fewer than two rendered buttons to compare",
+        "ULI-L05 PASS @390px 200% text page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS action inventory /validate: all 5 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: the UI ships English only (no locale switch); not exercised",
+        "print output: not a print surface"
+      ]
+    },
+    {
+      "id": "web-execution",
+      "path": "/executions/EXE-20261014T005101862Z-68aa1ac3",
+      "kind": "product",
+      "status": "exception",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [],
+      "actions": [
+        {
+          "id": "execution-back",
+          "control": {
+            "role": "link",
+            "name": "← WI-EXEC"
+          },
+          "intent": "return to the work item",
+          "expectedOutcome": "the work item page loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"← WI-EXEC\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\", post=\"http://127.0.0.1:39887/work/WI-EXEC\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "execution-nav-queue",
+          "control": {
+            "role": "link",
+            "name": "Queue"
+          },
+          "intent": "return to the queue",
+          "expectedOutcome": "the queue loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Queue\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\", post=\"http://127.0.0.1:39887/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "execution-block",
+          "control": {
+            "role": "button",
+            "name": "block"
+          },
+          "intent": "block the execution through a legal transition",
+          "expectedOutcome": "\"Transition accepted.\" and the execution state reads blocked",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"block\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture execution"
+        },
+        {
+          "id": "execution-abandon",
+          "control": {
+            "role": "button",
+            "name": "abandon"
+          },
+          "intent": "abandon the execution through a legal transition",
+          "expectedOutcome": "\"Transition accepted.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"abandon\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "disposable fixture execution (terminal)"
+        },
+        {
+          "id": "execution-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to main content"
+          },
+          "intent": "skip repeated navigation to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to main content\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\", post=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "execution-permalink",
+          "control": {
+            "role": "link",
+            "name": "http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3"
+          },
+          "intent": "open this view at its canonical address",
+          "expectedOutcome": "the address bar holds the canonical URL",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\": expected post-state observed after activation (pre=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3#main\", post=\"http://127.0.0.1:39887/executions/EXE-20261014T005101862Z-68aa1ac3\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "execution-copy-link",
+          "control": {
+            "role": "button",
+            "name": "Copy link"
+          },
+          "intent": "copy the view's address in one action (url-state.js enhancement)",
+          "expectedOutcome": "the status reads \"Link copied.\" and the clipboard holds the address",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Copy link\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        }
+      ],
+      "evidence": [
+        "ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @320px stacked data grid: 1 stacked grid(s): every cell is labelled and holds one item",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @390px stacked data grid: 1 stacked grid(s): every cell is labelled and holds one item",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @768px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @768px stacked data grid: 1 grid(s) render as tables at this width",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "ULI-L09 PASS @1280px stacked data grid: 1 grid(s) render as tables at this width",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L05 FAIL @390px 200% text page: document scrollWidth 428 vs clientWidth 375; 8 text run(s) escaping the viewport or a clipping container\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1\n  span \"blocked\" 334.8..427.6\n  span \"blocked\" 334.8..427.6\n  span \"blocked\" 334.8..427.6\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1",
+        "ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS action inventory /executions/EXE-20261014T005101862Z-68aa1ac3: all 7 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: the UI ships English only (no locale switch); not exercised",
+        "print output: not a print surface",
+        "execution abandon/rebind/complete transitions: same form as block; only block is exercised"
+      ]
+    },
+    {
+      "id": "hub-home",
+      "path": "/",
+      "kind": "product",
+      "status": "exception",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [
+        {
+          "id": "hub-filter-actions-top",
+          "relation": "top-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "button",
+              "name": "Filter"
+            },
+            {
+              "role": "link",
+              "name": "Clear"
+            }
+          ],
+          "rationale": "Filter and Clear are the filter form's related actions in one row",
+          "evidence": [
+            "@320px ULI-L10 PASS: group hub-filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=2859.45px |   - link \"Clear\": PASS top=2859.45px",
+            "@390px ULI-L10 PASS: group hub-filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=2770.17px |   - link \"Clear\": PASS top=2770.17px",
+            "@768px ULI-L10 PASS: group hub-filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=2755.72px |   - link \"Clear\": PASS top=2755.72px",
+            "@1280px ULI-L10 PASS: group hub-filter-actions-top: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS top=3043.56px |   - link \"Clear\": PASS top=3043.56px",
+            "group status: pass"
+          ]
+        },
+        {
+          "id": "hub-filter-actions-bottom",
+          "relation": "bottom-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "button",
+              "name": "Filter"
+            },
+            {
+              "role": "link",
+              "name": "Clear"
+            }
+          ],
+          "rationale": "with the top edge, equal bottom edges evidence equal control heights",
+          "evidence": [
+            "@320px ULI-L02 PASS: group hub-filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=2911.45px |   - link \"Clear\": PASS bottom=2911.45px",
+            "@390px ULI-L02 PASS: group hub-filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=2822.17px |   - link \"Clear\": PASS bottom=2822.17px",
+            "@768px ULI-L02 PASS: group hub-filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=2807.72px |   - link \"Clear\": PASS bottom=2807.72px",
+            "@1280px ULI-L02 PASS: group hub-filter-actions-bottom: bottom-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - button \"Filter\": PASS bottom=3095.56px |   - link \"Clear\": PASS bottom=3095.56px",
+            "group status: pass"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "hub-register-refused",
+          "control": {
+            "role": "button",
+            "name": "Register"
+          },
+          "intent": "failure path: register a path that is not a Praxis repository",
+          "expectedOutcome": "the refusal is shown as an inline fault; nothing is registered",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A07 PASS: button \"Register\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "register a real repository (hub-register)"
+        },
+        {
+          "id": "hub-register",
+          "control": {
+            "role": "button",
+            "name": "Register"
+          },
+          "intent": "recovery: register a real Praxis repository",
+          "expectedOutcome": "\"Registered ID.\" and the repository is listed",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A07 PASS: button \"Register\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "Unregister"
+        },
+        {
+          "id": "hub-register-second",
+          "control": {
+            "role": "button",
+            "name": "Register"
+          },
+          "intent": "register a second repository (to unregister later)",
+          "expectedOutcome": "\"Registered ID.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Register\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "Unregister"
+        },
+        {
+          "id": "hub-create",
+          "control": {
+            "role": "button",
+            "name": "Create"
+          },
+          "intent": "create a work item in a registered repository through its own CLI",
+          "expectedOutcome": "\"Created WI-NNNN in REPO.\" and the item appears in the aggregated queue",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Create\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "each run creates a new item in a disposable repository"
+        },
+        {
+          "id": "hub-filter",
+          "control": {
+            "role": "button",
+            "name": "Filter"
+          },
+          "intent": "filter the aggregated queue",
+          "expectedOutcome": "the canonical filtered URL loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Filter\": expected post-state observed after activation (pre=\"http://127.0.0.1:35743/\", post=\"http://127.0.0.1:35743/?tag=x\")"
+          ],
+          "resetStrategy": "Clear"
+        },
+        {
+          "id": "hub-clear",
+          "control": {
+            "role": "link",
+            "name": "Clear"
+          },
+          "intent": "remove every filter",
+          "expectedOutcome": "the unfiltered hub loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Clear\": expected post-state observed after activation (pre=\"http://127.0.0.1:35743/?tag=x\", post=\"http://127.0.0.1:35743/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "hub-unregister",
+          "control": {
+            "role": "button",
+            "name": "Unregister"
+          },
+          "intent": "unregister a repository",
+          "expectedOutcome": "\"Unregistered ID.\" and the repository leaves the list",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Unregister\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "Register again"
+        },
+        {
+          "id": "hub-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to main content"
+          },
+          "intent": "skip to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to main content\": expected post-state observed after activation (pre=\"http://127.0.0.1:35743/\", post=\"http://127.0.0.1:35743/#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "hub-permalink",
+          "control": {
+            "role": "link",
+            "name": "http://127.0.0.1:35743/"
+          },
+          "intent": "open this view at its canonical address",
+          "expectedOutcome": "the canonical URL loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"http://127.0.0.1:35743/\": expected post-state observed after activation (pre=\"http://127.0.0.1:35743/#main\", post=\"http://127.0.0.1:35743/\")"
+          ],
+          "resetStrategy": "none needed (read-only)"
+        },
+        {
+          "id": "hub-copy-link",
+          "control": {
+            "role": "button",
+            "name": "Copy link"
+          },
+          "intent": "copy the view's address",
+          "expectedOutcome": "the status reads \"Link copied.\"",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: button \"Copy link\": expected post-state observed after activation (pre=false, post=true)"
+          ],
+          "resetStrategy": "reload the page"
+        }
+      ],
+      "evidence": [
+        "empty hub: ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "empty hub: ULI-L09 UNKNOWN @320px stacked data grid: not applicable: no data grid rendered on this page state",
+        "empty hub: ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "empty hub: ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "empty hub: ULI-L09 UNKNOWN @390px stacked data grid: not applicable: no data grid rendered on this page state",
+        "empty hub: ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "empty hub: ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-L06 PASS @768px word integrity in tables: no label word is split across lines",
+        "empty hub: ULI-L09 UNKNOWN @768px stacked data grid: not applicable: no data grid rendered on this page state",
+        "empty hub: ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "empty hub: ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "empty hub: ULI-L09 UNKNOWN @1280px stacked data grid: not applicable: no data grid rendered on this page state",
+        "empty hub: ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "empty hub: ULI-L05 PASS @390px 200% text page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "empty hub: ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "empty hub: ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "empty hub: ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "populated hub: ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "populated hub: ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "populated hub: ULI-L09 PASS @320px stacked data grid: 2 stacked grid(s): every cell is labelled and holds one item",
+        "populated hub: ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "populated hub: ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "populated hub: ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "populated hub: ULI-L09 PASS @390px stacked data grid: 2 stacked grid(s): every cell is labelled and holds one item",
+        "populated hub: ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "populated hub: ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "populated hub: ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-L06 FAIL @768px word integrity in tables: words split across lines: Conformance, Unregister, Tags, medium",
+        "populated hub: ULI-L09 PASS @768px stacked data grid: 2 grid(s) render as tables at this width",
+        "populated hub: ULI-L02 FAIL @768px button heights: height spread 31.7 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=78.5, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "populated hub: ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "populated hub: ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-L06 FAIL @1280px word integrity in tables: words split across lines: Unregister",
+        "populated hub: ULI-L09 PASS @1280px stacked data grid: 2 grid(s) render as tables at this width",
+        "populated hub: ULI-L02 FAIL @1280px button heights: height spread 14.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=61.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "populated hub: ULI-L05 FAIL @390px 200% text page: document scrollWidth 441 vs clientWidth 375; 2 text run(s) escaping the viewport or a clipping container\n  span \"complete\" 334.8..440.8\n  span \"captured\" 334.8..440.8",
+        "populated hub: ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "populated hub: ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "populated hub: ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "populated hub: ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS empty hub action inventory /: all 6 enabled actions have a declared scenario or destination",
+        "ULI-A10 PASS populated hub action inventory /: all 8 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: English only; not exercised",
+        "print output: not a print surface"
+      ]
+    },
+    {
+      "id": "site-home",
+      "path": "/",
+      "kind": "marketing",
+      "status": "pass",
+      "viewportWidths": [
+        320,
+        390,
+        768,
+        1280
+      ],
+      "alignmentGroups": [
+        {
+          "id": "hero-actions",
+          "relation": "top-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "link",
+              "name": "See the evidence"
+            },
+            {
+              "role": "link",
+              "name": "View on GitHub"
+            }
+          ],
+          "rationale": "the hero's two calls to action share a row where they fit side by side",
+          "evidence": [
+            "@768px ULI-L10 PASS: group hero-actions: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"See the evidence\": PASS top=643.22px |   - link \"View on GitHub\": PASS top=643.22px",
+            "@1280px ULI-L10 PASS: group hero-actions: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"See the evidence\": PASS top=824.45px |   - link \"View on GitHub\": PASS top=824.45px",
+            "group status: pass"
+          ]
+        },
+        {
+          "id": "closing-actions",
+          "relation": "top-edge",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "link",
+              "name": "Show me the record"
+            },
+            {
+              "role": "link",
+              "name": "Get started"
+            }
+          ],
+          "rationale": "the closing calls to action share a row where they fit side by side",
+          "evidence": [
+            "@768px ULI-L10 PASS: group closing-actions: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Show me the record\": PASS top=20499.64px |   - link \"Get started\": PASS top=20499.64px",
+            "@1280px ULI-L10 PASS: group closing-actions: top-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"Show me the record\": PASS top=18072.91px |   - link \"Get started\": PASS top=18072.91px",
+            "group status: pass"
+          ]
+        },
+        {
+          "id": "primary-navigation",
+          "relation": "centerline",
+          "toleranceCssPx": 1,
+          "targets": [
+            {
+              "role": "link",
+              "name": "What is Praxis"
+            },
+            {
+              "role": "link",
+              "name": "How it works"
+            },
+            {
+              "role": "link",
+              "name": "Evidence"
+            },
+            {
+              "role": "link",
+              "name": "Agents"
+            },
+            {
+              "role": "link",
+              "name": "Get started"
+            },
+            {
+              "role": "link",
+              "name": "GitHub"
+            }
+          ],
+          "rationale": "the primary navigation is one row at desktop width",
+          "evidence": [
+            "@1280px ULI-L10 PASS: group primary-navigation: center-edge delta 0.00 CSS px <= tolerance 1 CSS px |   - link \"What is Praxis\": PASS center=38.00px |   - link \"How it works\": PASS center=38.00px |   - link \"Evidence\": PASS center=38.00px |   - link \"Agents\": PASS center=38.00px |   - link \"Get started\": PASS center=38.00px |   - link \"GitHub\": PASS center=38.00px",
+            "group status: pass"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "site-skip",
+          "control": {
+            "role": "link",
+            "name": "Skip to content"
+          },
+          "intent": "skip to the main content",
+          "expectedOutcome": "the URL targets #main",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Skip to content\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#main\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-brand",
+          "control": {
+            "role": "link",
+            "name": "Praxis, top of page"
+          },
+          "intent": "jump to the #top section",
+          "expectedOutcome": "the URL targets #top (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Praxis, top of page\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#top\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-nav-proposition",
+          "control": {
+            "role": "link",
+            "name": "What is Praxis"
+          },
+          "intent": "jump to the #proposition section",
+          "expectedOutcome": "the URL targets #proposition (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"What is Praxis\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#proposition\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-nav-how",
+          "control": {
+            "role": "link",
+            "name": "How it works"
+          },
+          "intent": "jump to the #how section",
+          "expectedOutcome": "the URL targets #how (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"How it works\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#how\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-nav-evidence",
+          "control": {
+            "role": "link",
+            "name": "Evidence"
+          },
+          "intent": "jump to the #evidence section",
+          "expectedOutcome": "the URL targets #evidence (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Evidence\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#evidence\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-nav-agents",
+          "control": {
+            "role": "link",
+            "name": "Agents"
+          },
+          "intent": "jump to the #agents section",
+          "expectedOutcome": "the URL targets #agents (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Agents\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#agents\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-nav-get-started",
+          "control": {
+            "role": "link",
+            "name": "Get started"
+          },
+          "intent": "jump to the #get-started section",
+          "expectedOutcome": "the URL targets #get-started (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Get started\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#get-started\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-hero-evidence",
+          "control": {
+            "role": "link",
+            "name": "See the evidence"
+          },
+          "intent": "jump to the #evidence section",
+          "expectedOutcome": "the URL targets #evidence (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"See the evidence\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#evidence\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-verify",
+          "control": {
+            "role": "link",
+            "name": "See a claim interrogated"
+          },
+          "intent": "jump to the #verify section",
+          "expectedOutcome": "the URL targets #verify (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"See a claim interrogated\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#verify\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-reconciliation",
+          "control": {
+            "role": "link",
+            "name": "How reconciliation works"
+          },
+          "intent": "jump to the #reconciliation section",
+          "expectedOutcome": "the URL targets #reconciliation (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"How reconciliation works\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#reconciliation\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-identity",
+          "control": {
+            "role": "link",
+            "name": "How identity is recorded"
+          },
+          "intent": "jump to the #agents section",
+          "expectedOutcome": "the URL targets #agents (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"How identity is recorded\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#agents\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-handoff",
+          "control": {
+            "role": "link",
+            "name": "A real handoff, as recorded"
+          },
+          "intent": "jump to the #evidence section",
+          "expectedOutcome": "the URL targets #evidence (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"A real handoff, as recorded\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#evidence\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-resilience",
+          "control": {
+            "role": "link",
+            "name": "What survives, and what is still direction"
+          },
+          "intent": "jump to the #resilience section",
+          "expectedOutcome": "the URL targets #resilience (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"What survives, and what is still direction\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#resilience\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-closing-record",
+          "control": {
+            "role": "link",
+            "name": "Show me the record"
+          },
+          "intent": "jump to the #evidence section",
+          "expectedOutcome": "the URL targets #evidence (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Show me the record\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#evidence\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-closing-get-started",
+          "control": {
+            "role": "link",
+            "name": "Get started"
+          },
+          "intent": "jump to the #get-started section",
+          "expectedOutcome": "the URL targets #get-started (the destination exists: in-page destination check)",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"Get started\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/#get-started\")"
+          ],
+          "resetStrategy": "reload the page"
+        },
+        {
+          "id": "site-snapshot",
+          "control": {
+            "role": "link",
+            "name": "snapshot"
+          },
+          "intent": "open the public evidence snapshot the page cites",
+          "expectedOutcome": "the same-origin JSON snapshot loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"snapshot\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/data/gh-84.json\")"
+          ],
+          "resetStrategy": "navigate back"
+        },
+        {
+          "id": "site-snapshot-text",
+          "control": {
+            "role": "link",
+            "name": "the public evidence snapshot"
+          },
+          "intent": "open the public evidence snapshot the page cites",
+          "expectedOutcome": "the same-origin JSON snapshot loads",
+          "status": "pass",
+          "evidence": [
+            "CDP 1280px: ULI-A02 PASS: link \"the public evidence snapshot\": expected post-state observed after activation (pre=\"http://127.0.0.1:35227/\", post=\"http://127.0.0.1:35227/data/gh-84.json\")"
+          ],
+          "resetStrategy": "navigate back"
+        },
+        {
+          "id": "site-nav-github",
+          "control": {
+            "role": "link",
+            "name": "GitHub"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-hero-github",
+          "control": {
+            "role": "link",
+            "name": "View on GitHub"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-issue-84",
+          "control": {
+            "role": "link",
+            "name": "https://github.com/kemiller2002/praxis/issues/84"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/issues/84",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/issues/84 (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/issues/84"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-install-sh",
+          "control": {
+            "role": "link",
+            "name": "install-native.sh"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.sh",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.sh (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.sh"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-install-ps1",
+          "control": {
+            "role": "link",
+            "name": "install-native.ps1"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.ps1",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.ps1 (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/scripts/install-native.ps1"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-release-bundle",
+          "control": {
+            "role": "link",
+            "name": "release bundle"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/releases",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/releases (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/releases"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-work-protocol",
+          "control": {
+            "role": "link",
+            "name": "work protocol"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/docs/work-protocol.md",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/docs/work-protocol.md (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/docs/work-protocol.md"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-cli-reference",
+          "control": {
+            "role": "link",
+            "name": "CLI reference"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/docs/cli.md",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/docs/cli.md (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/docs/cli.md"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-native-installation",
+          "control": {
+            "role": "link",
+            "name": "native installation"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/docs/native-installation.md",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/docs/native-installation.md (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/docs/native-installation.md"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-issue-84-text",
+          "control": {
+            "role": "link",
+            "name": "issue #84"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/issues/84",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/issues/84 (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/issues/84"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-actions-run",
+          "control": {
+            "role": "link",
+            "name": "GitHub Actions run"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/actions",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/actions (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/actions"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-footer-source",
+          "control": {
+            "role": "link",
+            "name": "Source on GitHub"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-footer-releases",
+          "control": {
+            "role": "link",
+            "name": "Releases"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/releases",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/releases (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/releases"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-footer-issues",
+          "control": {
+            "role": "link",
+            "name": "Issues"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/issues",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/issues (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/issues"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-footer-license",
+          "control": {
+            "role": "link",
+            "name": "MIT License"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/blob/main/LICENSE",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/blob/main/LICENSE (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/blob/main/LICENSE"
+          ],
+          "resetStrategy": "not activated; no state"
+        },
+        {
+          "id": "site-footer-page-source",
+          "control": {
+            "role": "link",
+            "name": "Source for this page"
+          },
+          "intent": "open https://github.com/kemiller2002/praxis/tree/main/site",
+          "expectedOutcome": "navigates to the external destination https://github.com/kemiller2002/praxis/tree/main/site (destination verified, external service not exercised)",
+          "status": "pass",
+          "evidence": [
+            "ULI-A01 PASS: href is the declared https destination https://github.com/kemiller2002/praxis/tree/main/site"
+          ],
+          "resetStrategy": "not activated; no state"
+        }
+      ],
+      "evidence": [
+        "ULI-L05 PASS @320px page: document scrollWidth 305 vs clientWidth 305; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @320px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @320px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @320px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 PASS @320px button heights: height spread 0.0 CSS px across 4 buttons (tolerance 1): See the evidence=50.4, View on GitHub=50.4, Show me the record=50.4, Get started=50.4",
+        "ULI-L05 PASS @390px page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @390px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @390px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 PASS @390px button heights: height spread 0.0 CSS px across 4 buttons (tolerance 1): See the evidence=50.4, View on GitHub=50.4, Show me the record=50.4, Get started=50.4",
+        "ULI-L05 PASS @768px page: document scrollWidth 753 vs clientWidth 753; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @768px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @768px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @768px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 PASS @768px button heights: height spread 0.0 CSS px across 4 buttons (tolerance 1): See the evidence=50.4, View on GitHub=50.4, Show me the record=50.4, Get started=50.4",
+        "ULI-L05 PASS @1280px page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L06 PASS @1280px word integrity in tables: no label word is split across lines",
+        "ULI-L09 UNKNOWN @1280px stacked data grid: not applicable: no data grid rendered on this page state",
+        "ULI-L02 PASS @1280px button heights: height spread 0.0 CSS px across 4 buttons (tolerance 1): See the evidence=50.4, View on GitHub=50.4, Show me the record=50.4, Get started=50.4",
+        "ULI-L05 PASS @390px 200% text page: document scrollWidth 375 vs clientWidth 375; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @390px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-L05 PASS @1280px 200% text page: document scrollWidth 1265 vs clientWidth 1265; 0 text run(s) escaping the viewport or a clipping container",
+        "ULI-L09 PASS @1280px 200% text inline gutter: no rendered text or control touches a viewport edge",
+        "ULI-A01 PASS @1280px in-page destinations: every in-page link names an existing element",
+        "ULI-A06 PASS @1280px named fields: every rendered field has an accessible name",
+        "ULI-A10 PASS action inventory /: all 33 enabled actions have a declared scenario or destination"
+      ],
+      "unknownScope": [
+        "right-to-left and translated text: English only; not exercised",
+        "external destinations: verified by exact https href; the external services were not exercised"
+      ]
+    }
+  ],
+  "exceptions": [
+    {
+      "ruleId": "ULI-L02",
+      "surface": "web-queue",
+      "reason": "Copy link starts `hidden` and the approved url-state.js (DF-ROS-2026-A058) reveals it. Forma 0.4.1's `.ef-site .ef-button { display: inline-flex }` overrides the `hidden` attribute, so giving Copy link the Forma button geometry would show it with JavaScript off (caught by the browser suite). It keeps the base button geometry, a few pixels shorter than the other buttons, until Forma honours `[hidden]` on ef-button.",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "button heights: only Copy link differs; every other button shares the ef-button height",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 10 buttons (tolerance 1): Add=52.0, Filter=52.0, Clear=52.0, Mark ready=52.0, Mark ready=52.0, Mark ready=52.0, Resume=52.0, Mark ready=52.0, Resume=52.0, Copy link=46.8"
+      ]
+    },
+    {
+      "ruleId": "ULI-L06",
+      "surface": "web-queue",
+      "reason": "Forma 0.4.1 sets `:where(td, th) { overflow-wrap: anywhere }`, so the auto table layout may squeeze a data-grid column until short label words split across lines (\"Priori|ty\", \"Unregis|ter\") at 768 and 1280 CSS px. Data-grid cell wrapping is Forma's primitive (ULI-L03).",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "word integrity in tables: see the surface evidence lines for the split words per width",
+        "ULI-L06 FAIL @768px word integrity in tables: words split across lines: Priority, fixture, medium"
+      ]
+    },
+    {
+      "ruleId": "ULI-L05",
+      "surface": "web-queue",
+      "reason": "At 200% default text on a 390 px viewport Forma's stacked data grid keeps its label track at `minmax(6.5rem, 0.4fr)` (208 px), leaving status lozenges no room, so they escape the viewport. The stacked data-grid composition is Forma's primitive (ULI-L03/L09).",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "status lozenges in stacked data-grid cells escape at 390 px with 200% text",
+        "ULI-L05 FAIL @390px 200% text page: document scrollWidth 441 vs clientWidth 375; 13 text run(s) escaping the viewport or a clipping container\n  span \"complete\" 334.8..440.8\n  span \"captured\" 334.8..440.8\n  span \"ready\" 334.8..401.1\n  span \"active\" 334.8..414.3\n  span \"active\" 334.8..414.3\n  span \"captured\" 334.8..440.8\n  span \"active\" 334.8..414.3\n  span \"active\" 334.8..414.3\n  span \"captured\" 334.8..440.8\n  span \"blocked\" 334.8..427.6\n  span \"captured\" 334.8..440.8\n  span \"blocked\" 334.8..427.6\n  span \"ready\" 334.8..401.1"
+      ]
+    },
+    {
+      "ruleId": "ULI-L09",
+      "surface": "web-queue",
+      "reason": "Consequence of the stacked data-grid label track above: cells pushed past the viewport edge leave no gutter at 390 px with 200% text.",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "stacked data-grid cells touch the viewport edge at 390 px with 200% text",
+        "ULI-L09 FAIL @390px 200% text inline gutter: content touches a viewport edge: button \"Mark ready\" 286..394; button \"Mark ready\" 286..394; button \"Mark ready\" 286..394; button \"Resume\" 286..393; button \"Mark ready\" 286..394; button \"Resume\" 286..393"
+      ]
+    },
+    {
+      "ruleId": "ULI-L02",
+      "surface": "web-item",
+      "reason": "Copy link starts `hidden` and the approved url-state.js (DF-ROS-2026-A058) reveals it. Forma 0.4.1's `.ef-site .ef-button { display: inline-flex }` overrides the `hidden` attribute, so giving Copy link the Forma button geometry would show it with JavaScript off (caught by the browser suite). It keeps the base button geometry, a few pixels shorter than the other buttons, until Forma honours `[hidden]` on ef-button.",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "button heights: only Copy link differs; every other button shares the ef-button height",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Abandon=52.0, Mark ready=52.0, Save=52.0, Attach=52.0, Copy link=46.8"
+      ]
+    },
+    {
+      "ruleId": "ULI-L02",
+      "surface": "web-execution",
+      "reason": "Copy link starts `hidden` and the approved url-state.js (DF-ROS-2026-A058) reveals it. Forma 0.4.1's `.ef-site .ef-button { display: inline-flex }` overrides the `hidden` attribute, so giving Copy link the Forma button geometry would show it with JavaScript off (caught by the browser suite). It keeps the base button geometry, a few pixels shorter than the other buttons, until Forma honours `[hidden]` on ef-button.",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "button heights: only Copy link differs; every other button shares the ef-button height",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 3 buttons (tolerance 1): abandon=52.0, block=52.0, Copy link=46.8"
+      ]
+    },
+    {
+      "ruleId": "ULI-L05",
+      "surface": "web-execution",
+      "reason": "At 200% default text on a 390 px viewport Forma's stacked data grid keeps its label track at `minmax(6.5rem, 0.4fr)` (208 px), leaving status lozenges no room, so they escape the viewport. The stacked data-grid composition is Forma's primitive (ULI-L03/L09).",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "status lozenges in stacked data-grid cells escape at 390 px with 200% text",
+        "ULI-L05 FAIL @390px 200% text page: document scrollWidth 428 vs clientWidth 375; 8 text run(s) escaping the viewport or a clipping container\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1\n  span \"blocked\" 334.8..427.6\n  span \"blocked\" 334.8..427.6\n  span \"blocked\" 334.8..427.6\n  span \"legal\" 334.8..401.1\n  span \"legal\" 334.8..401.1"
+      ]
+    },
+    {
+      "ruleId": "ULI-L02",
+      "surface": "hub-home",
+      "reason": "Copy link starts `hidden` and the approved url-state.js (DF-ROS-2026-A058) reveals it. Forma 0.4.1's `.ef-site .ef-button { display: inline-flex }` overrides the `hidden` attribute, so giving Copy link the Forma button geometry would show it with JavaScript off (caught by the browser suite). It keeps the base button geometry, a few pixels shorter than the other buttons, until Forma honours `[hidden]` on ef-button.",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "button heights: only Copy link differs; every other button shares the ef-button height",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @768px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @1280px button heights: height spread 5.2 CSS px across 5 buttons (tolerance 1): Register=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @320px button heights: height spread 5.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @390px button heights: height spread 5.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=52.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @768px button heights: height spread 31.7 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=78.5, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8",
+        "ULI-L02 FAIL @1280px button heights: height spread 14.2 CSS px across 6 buttons (tolerance 1): Register=52.0, Unregister=61.0, Create=52.0, Filter=52.0, Clear=52.0, Copy link=46.8"
+      ]
+    },
+    {
+      "ruleId": "ULI-L06",
+      "surface": "hub-home",
+      "reason": "Forma 0.4.1 sets `:where(td, th) { overflow-wrap: anywhere }`, so the auto table layout may squeeze a data-grid column until short label words split across lines (\"Priori|ty\", \"Unregis|ter\") at 768 and 1280 CSS px. Data-grid cell wrapping is Forma's primitive (ULI-L03).",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "word integrity in tables: see the surface evidence lines for the split words per width",
+        "ULI-L06 FAIL @768px word integrity in tables: words split across lines: Conformance, Unregister, Tags, medium",
+        "ULI-L06 FAIL @1280px word integrity in tables: words split across lines: Unregister"
+      ]
+    },
+    {
+      "ruleId": "ULI-L05",
+      "surface": "hub-home",
+      "reason": "At 200% default text on a 390 px viewport Forma's stacked data grid keeps its label track at `minmax(6.5rem, 0.4fr)` (208 px), leaving status lozenges no room, so they escape the viewport. The stacked data-grid composition is Forma's primitive (ULI-L03/L09).",
+      "owner": "Forma (kemiller2002/forma); Praxis consumes the pinned release vendor/forma/forma.lock",
+      "reviewTrigger": "the next Forma release pinned in vendor/forma/forma.lock: re-run ui:conformance and remove this allowance when the check passes",
+      "evidence": [
+        "status lozenges in stacked data-grid cells escape at 390 px with 200% text",
+        "ULI-L05 FAIL @390px 200% text page: document scrollWidth 441 vs clientWidth 375; 2 text run(s) escaping the viewport or a clipping container\n  span \"complete\" 334.8..440.8\n  span \"captured\" 334.8..440.8"
+      ]
+    }
+  ],
+  "notes": "Measured by tests/UiConformance.Tests (F#, Chrome DevTools Protocol; a native port of @echelon-foundry/forma-conformance 0.1.0 at kemiller2002/forma 6c71725, because Praxis may own no Node/Playwright tooling: RQ-ROS-2026-A024). Scope: praxis web serve (queue, item, validation, execution pages), praxis hub serve, and the public site. The praxis CLI's terminal output is not a browser surface and is not-applicable to this standard. Actions run at 1280 CSS px; layout is measured at 320/390/768/1280 and at 200% default text (390, 1280)."
+}
