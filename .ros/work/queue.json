@@ -6146,10 +6146,10 @@
         "gh-260"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-13T21:05:48.000Z",
-      "updatedAt": "2026-10-13T21:05:50.000Z",
+      "updatedAt": "2026-10-14T08:42:03.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
