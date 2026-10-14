@@ -10277,17 +10277,6 @@
       "completedAt": "2026-10-13T19:50:32.702Z"
     },
     {
-      "id": "GH-260",
-      "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-13T21:05:51.000Z",
-      "telemetryExecutionIds": [
-        "EXE-20261013T210554649Z-1e83e69f"
-      ]
-    },
-    {
       "id": "WI-0101",
       "type": "task",
       "state": "complete",
@@ -10328,11 +10317,67 @@
       },
       "completedAt": "2026-10-13T20:38:36Z",
       "conclusion": "Praxis 3.12.0 pinned; the pinned release is installed with checksum and attestation verification and validates this repository in CI alongside the source build"
+    },
+    {
+      "id": "GH-260",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-13T21:05:51.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261013T210554649Z-1e83e69f"
+      ]
+    },
+    {
+      "id": "WI-0102",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileTelemetryUsageRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/TelemetryUsageAttributionTests.fs"
+        },
+        {
+          "type": "evidence",
+          "path": "research/evidence/EV-ROS-2026-A076--cumulative-transcript-usage-matches-harness.md"
+        }
+      ],
+      "updatedAt": "2026-10-13T23:24:07.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261013T224241801Z-4b33865b"
+      ],
+      "latestCheckpoint": {
+        "id": "c78f1ee9ce7554667d95da93",
+        "recordedAt": "2026-10-13T23:24:04.000Z",
+        "executionId": "EXE-20261013T224241801Z-4b33865b",
+        "repository": "repository-operating-system",
+        "branch": "telemetry/cumulative-usage-attribution",
+        "commit": "87056a78f62ce23543ae0c922ecb66cc2db5e715",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "telemetry/cumulative-usage-attribution",
+        "remoteCommit": "87056a78f62ce23543ae0c922ecb66cc2db5e715",
+        "summary": "Phase 6 usage attribution implemented, tests and validation green, pushed",
+        "nextAction": "Complete WI-0102, open draft PR, report to lead",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-13T23:24:07.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T21:05:51.0000000\u002B00:00",
+  "updatedAt": "2026-10-13T23:24:07.0000000\u002B00:00",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

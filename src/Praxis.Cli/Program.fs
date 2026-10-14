@@ -29,7 +29,7 @@ open Aegis
 let Version = Lifecycle.Version
 
 let private usageBase =
-    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + IdentityCommands.usage + " | " + PlanCommands.usage + " | " + LocalHandoffCommands.usage + " | " + LocalRuntimeCommands.usage + " | " + ExecuteGroupCommands.usage + " | " + SyncCommands.usage + " | " + TutelaCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | " + BacklogQueueCommands.reidentifyUsage + " | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* [--change-class CLASS]* [--risk-level LEVEL] [--state-impact] [--protocol-impact] [--security-impact] [--failure-posture POSTURE] [--tier TIER]* [--live-proof TEXT] | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* [--role ROLE] | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] [--rebind-reason TEXT] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | " + WorkGroupCostCommands.usage + " | " + GroupTelemetryCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|step|provider|model|day] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated|origin-unrecorded} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | " + ProvenanceAcknowledgeCommands.usage + " | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
+    "Usage: praxis [--root PATH] version | " + PacingCommands.usage + " | " + ExecutionCommands.usage + " | " + InstallationCommands.usage + " | " + IdentityCommands.usage + " | " + PlanCommands.usage + " | " + LocalHandoffCommands.usage + " | " + LocalRuntimeCommands.usage + " | " + ExecuteGroupCommands.usage + " | " + SyncCommands.usage + " | " + TutelaCommands.usage + " | artifacts validate [--json] | registry build [--dry-run] | registry check | git status [--json] | work decide [options] | work plan [options] [--resolve-telemetry --candidate EXECUTIONID=active|finalized]* [--requested-execution-id ID] | work context-plan [options] | work backlog-decide --state STATE --action ACTION [--reason TEXT] | work backlog-promotion-plan --id ID [--queue-state ID=STATE] [--type TYPE] | work validate [--json] | work backlog-validate [--json] | work backlog-transition --id ID --action {ready|block|abandon} --occurred-at TIMESTAMP [--reason TEXT] | work capture --title TITLE --occurred-at TIMESTAMP [--id ID] [--priority {high|medium|low}] [--description TEXT] [--tag TAG]* [--actor NAME] [--source NAME] [--source-reference REF] | " + BacklogQueueCommands.reidentifyUsage + " | work update --id ID --occurred-at TIMESTAMP [--title TEXT] [--description TEXT] [--priority {high|medium|low}] [--tag TAG]* [--change-class CLASS]* [--risk-level LEVEL] [--state-impact] [--protocol-impact] [--security-impact] [--failure-posture POSTURE] [--tier TIER]* [--live-proof TEXT] | work attach --id ID --occurred-at TIMESTAMP --file PATH[=NAME] [--file PATH[=NAME]]* | work start --id ID [--id ID]* --occurred-at TIMESTAMP [--type TYPE] [--actor NAME] [--classification NAME]* [--role ROLE] | work resume --id ID [--id ID]* --occurred-at TIMESTAMP [--actor NAME] [--rebind-reason TEXT] | work block --id ID [--id ID]* --occurred-at TIMESTAMP [--reason TEXT] [--unrecoverable-reason TEXT] [--actor NAME] | work abandon --id ID [--id ID]* --occurred-at TIMESTAMP --reason TEXT [--actor NAME] | work complete --id ID [--id ID]* --occurred-at TIMESTAMP [--evidence TYPE=PATH]* [--conclusion TEXT] [--actor NAME] | " + ReconciliationCommands.usage + " | " + CheckpointCommands.usage + " | " + CheckpointCommands.continueUsage + " | " + WorkGroupCommands.usage + " | " + WorkGroupListCommands.usage + " | " + WorkGroupLinkCommands.usage + " | " + WorkGroupCostCommands.usage + " | " + GroupTelemetryCommands.usage + " | work context [ID] [--text] [--offline] | status [--json] [--verbose] [--offline] | " + RemoteCommands.usage + " | telemetry adapters | telemetry show [TARGET] | telemetry summary|summarize [TARGET] | telemetry finalize [TARGET] [--quiet] | telemetry record [TARGET] --metric ID --value VALUE [--unit TEXT] [--currency TEXT] [--quality {observed|derived|estimated}] [--confidence VALUE] [--scope TEXT] [--source-type TEXT] [--source-name TEXT] [--mechanism TEXT] [--pricing-source TEXT] [--pricing-version TEXT] [--pricing-effective-at DATE] [--collected-at TIMESTAMP] [--step STEP-ID] [--quiet] | telemetry step start|complete|fail [TARGET] --step STEP-ID [--name TEXT] [--reason TEXT] [--occurred-at TIMESTAMP] | telemetry usage [WORKITEM] [--by work-item|execution|execution-tree|step|provider|model|day] [--price-table FILE] [--format json|text] | telemetry ingest [TARGET] --input FILE [--adapter NAME] [--step STEP-ID] [--quiet] | telemetry classify [TARGET] --classification NAME [--classification NAME]* [--rationale TEXT] [--evidence-link LINK]* [--rd-context FILE] [--quiet] | telemetry start WORKITEMID [--classification NAME]* [--classification-rationale TEXT] [--quiet] | adapter call --store FILE --request FILE | foundations verify [--json] | adapter publish --target FILE | ordo ingest --input FILE | ordo assess --input FILE | ordo observe-search --input FILE | ordo observe-effect --input FILE | ordo current | ordo handoff --revision REV --source SOURCE [--fact TEXT]* [--assumption TEXT]* [--unknown TEXT]* [--obligation TEXT]* [--next-action TEXT]* | " + ArchitectureCommands.usage + " | provenance identity [--json] [IDENTITY] | provenance record (--path PATH|--id ID) --operation {created|modified|reviewed|approved|superseded|migrated|origin-unrecorded} [--reason TEXT] [--evidence REF]* [--derived-from REF]* [--execution EXE-ID] [--occurred-at TIMESTAMP] [--json] | provenance show ID|PATH [--json] | provenance audit [--json] | " + ProvenanceAcknowledgeCommands.usage + " | web serve [--port N (default 4310)] [--host H (default 127.0.0.1)] | hub register PATH [--name NAME] | hub unregister ID | hub repos | hub create REPO-ID TITLE [--tag T]* [--priority P] [--description D] [--id ID] [--actor NAME] [--file PATH[=NAME]]* | hub work [--repo ID] [--tag T]* [--status S] | hub serve [--port N (default 4320)] [--host H (default 127.0.0.1)]; IDENTITY (work start/resume/block/complete, add, telemetry start): [--actor-kind {agent|human|automation|unknown|x-...}] [--agent ID|--actor ID] [--provider P] [--model M] [--runtime R] ..."
 
 let private usage =
     usageBase + " | " + WorkHistoryCommands.usage
@@ -2398,7 +2398,7 @@ let private runTelemetryRecord root (arguments: string list) =
               CollectedAt = optionValue "--collected-at" arguments
               Step = optionValue "--step" arguments }
 
-        match FileTelemetryFinalizationRepository.recordMetric root target request with
+        match FileTelemetryFinalizationRepository.recordMetricPriced root target request (optionValue "--pricing-effective-at" arguments) with
         | Error message ->
             eprintfn "ERROR %s" message
             1
@@ -2466,52 +2466,6 @@ let private runTelemetryStep root (transition: StepTransition) (arguments: strin
             printfn "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true)))
             0
 
-/// `telemetry usage [WORKITEM] --by work-item|execution|step|provider|model|day`
-/// (PRAXIS-REMOTE-04): additive usage and cost grouped by one dimension,
-/// with the evidence quality of every total and the executions that
-/// reported nothing (so a total is never mistaken for "zero for them").
-let private runTelemetryUsage root (arguments: string list) =
-    let workItemId = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
-
-    match optionValue "--by" arguments |> Option.defaultValue "execution" |> UsageDimension.tryParse with
-    | None ->
-        eprintfn "ERROR --by must be one of: %s" (UsageDimension.all |> List.map UsageDimension.code |> String.concat ", ")
-        2
-    | Some dimension ->
-        let scope = FileTelemetryUsageRepository.read root workItemId dimension
-        let groups = Usage.aggregate dimension scope.ExecutionsByKey scope.Measurements
-        let output = JsonObject()
-        output["schema"] <- JsonValue.Create "praxis.telemetry-usage"
-        output["schemaVersion"] <- JsonValue.Create 1
-        output["workItemId"] <- (match workItemId with Some id -> JsonValue.Create id | None -> null)
-        output["by"] <- JsonValue.Create(UsageDimension.code dimension)
-        let groupsNode = JsonArray()
-
-        groups
-        |> List.iter (fun group ->
-            let node = JsonObject()
-            node["key"] <- JsonValue.Create group.Key
-            node["metric"] <- JsonValue.Create group.MetricId
-            node["unit"] <- JsonValue.Create group.Unit
-            node["currency"] <- (match group.Currency with Some value -> JsonValue.Create value | None -> null)
-            node["total"] <- (match group.Total with Some total -> JsonValue.Create total | None -> null)
-            node["complete"] <- JsonValue.Create group.UnavailableExecutions.IsEmpty
-            node["measurements"] <- JsonValue.Create group.Measurements
-            let strings (values: string list) =
-                let array = JsonArray()
-                values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
-                array
-            node["reportingExecutions"] <- strings group.ReportingExecutions
-            node["unavailableExecutions"] <- strings group.UnavailableExecutions
-            let qualities = JsonObject()
-            group.Qualities |> List.iter (fun (quality, count) -> qualities[quality] <- JsonValue.Create count)
-            node["evidenceQuality"] <- qualities
-            groupsNode.Add(node: JsonNode))
-
-        output["groups"] <- groupsNode
-        printfn "%s" (output.ToJsonString(JsonSerializerOptions(WriteIndented = true)))
-        0
-
 let private runTelemetryIngest root (arguments: string list) =
     let target = arguments |> List.tryHead |> Option.filter (fun value -> not (value.StartsWith("--", StringComparison.Ordinal)))
     let adapter = optionValue "--adapter" arguments |> Option.defaultValue "generic"
@@ -2529,7 +2483,7 @@ let private runTelemetryIngest root (arguments: string list) =
                 eprintfn "ERROR telemetry input exceeds %d bytes" maxBytes
                 1
             else
-                match FileTelemetryFinalizationRepository.ingestTarget root target adapter raw with
+                match FileTelemetryFinalizationRepository.ingestTargetAt root target adapter (optionValue "--step" arguments) raw with
                 | Error message ->
                     eprintfn "ERROR %s" message
                     if message.EndsWith("is not yet supported by this CLI", StringComparison.Ordinal) then 2 else 1
@@ -2928,7 +2882,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "telemetry" :: "step" :: "start" :: rest -> runTelemetryStep root StepTransition.Start rest
     | "telemetry" :: "step" :: "complete" :: rest -> runTelemetryStep root StepTransition.Complete rest
     | "telemetry" :: "step" :: "fail" :: rest -> runTelemetryStep root StepTransition.Fail rest
-    | "telemetry" :: "usage" :: rest -> runTelemetryUsage root rest
+    | "telemetry" :: "usage" :: rest -> TelemetryUsageCommands.run root rest
     | "telemetry" :: "ingest" :: target :: rest when target.StartsWith "GEX-" -> GroupTelemetryCommands.run root target rest
     | "telemetry" :: "ingest" :: rest -> runTelemetryIngest root rest
     | "telemetry" :: "classify" :: rest -> runTelemetryClassify root rest

@@ -289,6 +289,26 @@
         }
       },
       {
+        "metricId": "tokens.cache_write_5m",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "tokens.cache_write_1h",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
         "metricId": "tokens.reasoning",
         "status": "unknown",
         "reason": "runtime capability not reported or mapped",
@@ -599,6 +619,46 @@
         }
       },
       {
+        "metricId": "time.agent_wall_ms",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "host.compile_ms",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "host.verify_ms",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "host.prepare_apply_ms",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
         "metricId": "time.tool_ms",
         "status": "unknown",
         "reason": "runtime capability not reported or mapped",
@@ -710,6 +770,36 @@
       },
       {
         "metricId": "agent.retries",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "acceptance.first_pass",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "acceptance.repaired",
+        "status": "unknown",
+        "reason": "runtime capability not reported or mapped",
+        "source": {
+          "type": "environment",
+          "name": "runtime-identity",
+          "mechanism": "explicit-or-unmapped-environment"
+        }
+      },
+      {
+        "metricId": "acceptance.repair_cycles",
         "status": "unknown",
         "reason": "runtime capability not reported or mapped",
         "source": {
@@ -1588,7 +1678,7 @@
       "evidence": []
     }
   },
-  "test1CapabilitiesLength": 129,
+  "test1CapabilitiesLength": 138,
   "test2Context": {
     "schemaVersion": "1.0.0",
     "protocolVersion": "1.0.0",

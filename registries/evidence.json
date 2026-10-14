@@ -2289,5 +2289,54 @@
     "title": "EX-ROS-2026-A024 results — continuous context, code-only resets and structured handoffs",
     "updated": "2026-10-07",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "high",
+    "contradicts": [],
+    "created": "2026-10-13",
+    "evidence_type": "primary",
+    "id": "EV-ROS-2026-A076",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A076--cumulative-transcript-usage-matches-harness.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261013T224241801Z-4b33865b": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-13T22:42:51.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Recorded the WI-0102 validation of cumulative transcript usage against the CONSTRUCT-008 harness"
+        }
+      }
+    },
+    "related_documents": [
+      "EV-ROS-2026-A064",
+      "docs/development-telemetry.md",
+      "tests/Praxis.Tests/TelemetryUsageAttributionTests.fs",
+      "tests/Praxis.Tests/Fixtures/construct-008-A1-usage-only.jsonl"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "telemetry",
+      "tokens",
+      "cost",
+      "attribution",
+      "claude",
+      "construct-010"
+    ],
+    "title": "Cumulative transcript usage in Praxis equals the CONSTRUCT-008 harness on six recorded runs",
+    "updated": "2026-10-13",
+    "version": "1.0.0"
   }
 ]
