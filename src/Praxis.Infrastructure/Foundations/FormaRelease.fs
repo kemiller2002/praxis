@@ -148,14 +148,45 @@ module FormaMarkup =
     let faultBanner (message: string) (reference: string) =
         $"<main id=\"main\" tabindex=\"-1\"><aside class=\"ef-alert ef-fault-banner\" role=\"alert\" data-ef-intent=\"banner\" data-ef-severity=\"error\" aria-labelledby=\"fault-title\"><div class=\"ef-alert__icon ef-fault-banner__marker\" aria-hidden=\"true\">!</div><div class=\"ef-fault-banner__body\"><p class=\"ef-fault__severity\">Error</p><h1 class=\"ef-alert__title\" id=\"fault-title\">Something went wrong</h1><p>{escape message}</p><p class=\"ef-fault-reference\">Reference <code>{escape reference}</code></p></div></aside></main>"
 
+    // Forma composition for the web interface, the hub and the execution
+    // pages (visual-engineering/UI-LAYOUT-INTERACTION@1.0.0 ULI-L01/L02/L04/
+    // L09): fields stack label-above-control with Forma's rhythm, every
+    // action has one Forma button geometry, and every data-grid cell names
+    // its column so the stacked mobile grid keeps each value beside its label.
+
+    /// A labelled Forma field around `control`, whose id is `id`.
+    let formField (id: string) (label: string) (control: string) =
+        $"<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"{escape id}\">{escape label}</label>{control}</div>"
+
+    /// Children separated by Forma's stack rhythm.
+    let stack (children: string list) = "<div class=\"ef-stack\">" + String.concat "\n" children + "</div>"
+
+    /// A form's related actions in one Forma action row.
+    let actions (children: string list) = "<div class=\"ef-actions\">" + String.concat " " children + "</div>"
+
+    /// A submit button with Forma's button geometry.
+    let submit (label: string) = $"<button type=\"submit\" class=\"ef-button\">{escape label}</button>"
+
+    /// The form's primary submit button.
+    let primarySubmit (label: string) = $"<button type=\"submit\" class=\"ef-button\" data-ef-variant=\"primary\">{escape label}</button>"
+
+    /// A data-grid cell that names its column (shown when the grid stacks).
+    let cell (column: string) (content: string) = $"<td data-label=\"{escape column}\">{content}</td>"
+
+    /// Several inline items as one cell item.
+    let cluster (content: string) = $"<span class=\"ef-cluster\">{content}</span>"
+
     /// The document shell every page uses: Forma first, then the project's
     /// optional override stylesheet, a skip link and Forma's site typography.
     let head (stylesheetPath: string) =
         [ $"<link rel=\"stylesheet\" href=\"{escape stylesheetPath}\" />"
           "<link rel=\"stylesheet\" href=\"/styles.css\" />" ]
 
+    /// `ef-site__main` gives the page Forma's inline gutter and block rhythm
+    /// at every width (UI-LAYOUT-INTERACTION ULI-L05/L09); `ef-container`
+    /// keeps the standard reading width inside it.
     [<Literal>]
-    let BodyOpen = "<body class=\"ef-site\"><a class=\"ef-skip-link\" href=\"#main\">Skip to main content</a><div class=\"ef-container\">"
+    let BodyOpen = "<body class=\"ef-site\"><a class=\"ef-skip-link\" href=\"#main\">Skip to main content</a><div class=\"ef-site__main\"><div class=\"ef-container\">"
 
     [<Literal>]
-    let BodyClose = "</div></body>"
+    let BodyClose = "</div></div></body>"

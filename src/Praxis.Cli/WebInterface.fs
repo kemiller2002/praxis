@@ -424,7 +424,7 @@ module WebInterface =
         |> String.concat "\n"
 
     let private buttonForm (id: string) (action: string) (label: string) =
-        $"<form method=\"post\" action=\"/work/{Html.segment id}/{action}\"><button type=\"submit\">{e label}</button></form>"
+        $"<form method=\"post\" action=\"/work/{Html.segment id}/{action}\">{FormaMarkup.submit label}</form>"
 
     let private rowActionCell (row: WorkListRow) =
         let quick =
@@ -443,12 +443,12 @@ module WebInterface =
         String.concat
             ""
             [ $"<tr data-id=\"{e row.Id}\">"
-              $"<td><a href=\"/work/{Html.segment row.Id}\">{e row.Id}</a></td>"
-              $"<td>{e row.Title}</td>"
-              $"<td>{statusPill row.Status}</td>"
-              $"<td>{tagList row.Tags}</td>"
-              $"""<td>{e (row.Priority |> Option.defaultValue "")}</td>"""
-              $"<td data-label=\"Actions\"><div class=\"ef-cluster\">{rowActionCell row}</div></td>"
+              FormaMarkup.cell "ID" $"<a href=\"/work/{Html.segment row.Id}\">{e row.Id}</a>"
+              FormaMarkup.cell "Work" (e row.Title)
+              FormaMarkup.cell "Status" (statusPill row.Status)
+              FormaMarkup.cell "Tags" (FormaMarkup.cluster (tagList row.Tags))
+              FormaMarkup.cell "Priority" (e (row.Priority |> Option.defaultValue ""))
+              FormaMarkup.cell "Actions" $"<div class=\"ef-cluster\">{rowActionCell row}</div>"
               "</tr>" ]
 
     /// The queue page: capture form, filter, and the (filtered) queue.
@@ -484,22 +484,20 @@ module WebInterface =
                   "<section id=\"capture\" class=\"ef-section\" aria-label=\"Capture new work\">"
                   "<h2>Capture</h2>"
                   "<form id=\"add-form\" method=\"post\" action=\"/work\" enctype=\"multipart/form-data\">"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-title\">Title</label><input id=\"add-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-tags\">Tags</label><input id=\"add-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
-                  $"""<div class="ef-field"><label class="ef-field__label" for="add-priority">Priority</label><select id="add-priority" name="priority">{Html.options "medium" priorities}</select></div>"""
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-description\">Description</label><textarea id=\"add-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
-                  "<div class=\"ef-stack\">"
-                  fileRows 3
-                  "</div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Add</button></div>"
+                  FormaMarkup.stack [ FormaMarkup.formField "add-title" "Title" "<input id=\"add-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required />"
+                                      FormaMarkup.formField "add-tags" "Tags" "<input id=\"add-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" />"
+                                      FormaMarkup.formField "add-priority" "Priority" $"""<select id="add-priority" name="priority">{Html.options "medium" priorities}</select>"""
+                                      FormaMarkup.formField "add-description" "Description" "<textarea id=\"add-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea>"
+                                      FormaMarkup.stack [ fileRows 3 ]
+                                      FormaMarkup.actions [ FormaMarkup.primarySubmit "Add" ] ]
                   "</form>"
                   "</section>"
                   "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter work\">"
                   "<h2>Filter</h2>"
                   "<form method=\"get\" action=\"/\" data-refine>"
-                  $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
-                  $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter statuses}</select></label>"""
-                  "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"
+                  FormaMarkup.stack [ FormaMarkup.formField "filter-tag" "Tag" $"<input id=\"filter-tag\" name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" />"
+                                      FormaMarkup.formField "filter-status" "Status" $"""<select id="filter-status" name="status"><option value="">any</option>{Html.options statusFilter statuses}</select>"""
+                                      FormaMarkup.actions [ FormaMarkup.submit "Filter"; "<a class=\"ef-button\" href=\"/\">Clear</a>" ] ]
                   "</form>"
                   "</section>"
                   "<section id=\"queue\" class=\"ef-section\" aria-label=\"Work queue\">"
@@ -526,11 +524,14 @@ module WebInterface =
         | RowAction.Ready -> $"""<section id="ready"><h3>Mark ready</h3>{buttonForm row.Id "ready" "Mark ready"}</section>"""
         | RowAction.Resume -> $"""<section id="resume"><h3>Resume</h3>{buttonForm row.Id "resume" "Resume"}</section>"""
         | RowAction.Block ->
-            $"""<section id="block"><h3>Block</h3><form method="post" action="{target "block"}"><textarea name="reason" aria-label="Reason for blocking" placeholder="Reason for blocking"></textarea><div class="ef-actions"><button type="submit">Block</button></div></form></section>"""
+            let reason = FormaMarkup.formField "block-reason" "Reason for blocking" "<textarea id=\"block-reason\" name=\"reason\" placeholder=\"Why is this blocked?\"></textarea>"
+            $"""<section id="block"><h3>Block</h3><form method="post" action="{target "block"}">{FormaMarkup.stack [ reason; FormaMarkup.actions [ FormaMarkup.submit "Block" ] ]}</form></section>"""
         | RowAction.Abandon ->
-            $"""<section id="abandon"><h3>Abandon</h3><form method="post" action="{target "abandon"}"><textarea name="reason" aria-label="Reason for abandoning" placeholder="Reason for abandoning"></textarea><button type="submit">Abandon</button></form></section>"""
+            let reason = FormaMarkup.formField "abandon-reason" "Reason for abandoning" "<textarea id=\"abandon-reason\" name=\"reason\" placeholder=\"Why is this no longer needed?\"></textarea>"
+            $"""<section id="abandon"><h3>Abandon</h3><form method="post" action="{target "abandon"}">{FormaMarkup.stack [ reason; FormaMarkup.actions [ FormaMarkup.submit "Abandon" ] ]}</form></section>"""
         | RowAction.Start ->
-            $"""<section id="start"><h3>Start</h3><form method="post" action="{target "start"}"><label>Type <select name="type">{Html.options "feature" workTypes}</select></label><button type="submit">Start</button></form></section>"""
+            let workType = FormaMarkup.formField "start-type" "Type" $"""<select id="start-type" name="type">{Html.options "feature" workTypes}</select>"""
+            $"""<section id="start"><h3>Start</h3><form method="post" action="{target "start"}">{FormaMarkup.stack [ workType; FormaMarkup.actions [ FormaMarkup.submit "Start" ] ]}</form></section>"""
         | RowAction.Complete ->
             let evidenceRows =
                 [ "implementation"; "tests"; ""; "" ]
@@ -538,8 +539,10 @@ module WebInterface =
                     let hint = if placeholder = "" then "type" else placeholder
                     $"<div class=\"ef-cluster\"><input name=\"evidence-type\" aria-label=\"Evidence type\" placeholder=\"{hint}\" /><input name=\"evidence-path\" aria-label=\"Evidence path\" placeholder=\"path\" /></div>")
                 |> String.concat ""
+                |> fun rows -> FormaMarkup.stack [ rows ]
 
-            $"""<section id="complete"><h3>Complete</h3><form method="post" action="{target "complete"}">{evidenceRows}<label>Conclusion (research only) <input name="conclusion" type="text" placeholder="e.g. inconclusive" /></label><button type="submit">Complete</button></form></section>"""
+            let conclusion = FormaMarkup.formField "complete-conclusion" "Conclusion (research only)" "<input id=\"complete-conclusion\" name=\"conclusion\" type=\"text\" placeholder=\"e.g. inconclusive\" />"
+            $"""<section id="complete"><h3>Complete</h3><form method="post" action="{target "complete"}">{FormaMarkup.stack [ evidenceRows; conclusion; FormaMarkup.actions [ FormaMarkup.submit "Complete" ] ]}</form></section>"""
 
     /// One item: summary, attachments, the actions it allows, edit and attach.
     let renderDetail
@@ -588,23 +591,20 @@ module WebInterface =
                   "<section id=\"edit\" class=\"ef-section\" aria-label=\"Edit work item\">"
                   "<h3>Edit</h3>"
                   $"""<form method="post" action="{target "update"}">"""
-                  $"<label>Title <input name=\"title\" type=\"text\" value=\"{e row.Title}\" /></label>"
-                  $"""<label>Description <textarea name="description">{e (row.Description |> Option.defaultValue "")}</textarea></label>"""
-                  $"""<label>Tags <input name="tags" type="text" value="{e (String.Join(", ", row.Tags))}" /></label>"""
-                  $"""<label>Priority <select name="priority">{Html.options (row.Priority |> Option.defaultValue "medium") priorities}</select></label>"""
-                  "<button type=\"submit\">Save</button>"
+                  FormaMarkup.stack [ FormaMarkup.formField "edit-title" "Title" $"<input id=\"edit-title\" name=\"title\" type=\"text\" value=\"{e row.Title}\" />"
+                                      FormaMarkup.formField "edit-description" "Description" $"""<textarea id="edit-description" name="description">{e (row.Description |> Option.defaultValue "")}</textarea>"""
+                                      FormaMarkup.formField "edit-tags" "Tags" $"""<input id="edit-tags" name="tags" type="text" value="{e (String.Join(", ", row.Tags))}" />"""
+                                      FormaMarkup.formField "edit-priority" "Priority" $"""<select id="edit-priority" name="priority">{Html.options (row.Priority |> Option.defaultValue "medium") priorities}</select>"""
+                                      FormaMarkup.actions [ FormaMarkup.submit "Save" ] ]
                   "</form>"
                   "</section>"
                   "<section id=\"attach\" class=\"ef-section\" aria-label=\"Attach files\">"
                   "<h3>Attach files</h3>"
                   $"""<form method="post" action="{target "attachments"}" enctype="multipart/form-data">"""
-                  "<div class=\"ef-stack\">"
-                  fileRows 3
-                  "</div>"
-                  "<button type=\"submit\">Attach</button>"
+                  FormaMarkup.stack [ FormaMarkup.stack [ fileRows 3 ]; FormaMarkup.actions [ FormaMarkup.submit "Attach" ] ]
                   "</form>"
                   "</section>"
-                  "<details><summary>Raw record</summary>"
+                  "<details class=\"ef-section\"><summary>Raw record</summary>"
                   $"<pre id=\"detail-body\">{e raw}</pre>"
                   "</details>"
                   "</main>" ])
@@ -636,7 +636,7 @@ module WebInterface =
                         findings
                         |> List.map (fun finding ->
                             let get name = field finding name |> Option.defaultValue ""
-                            $"""<tr><td>{e (get "severity")}</td><td>{e (get "path")}</td><td>{e (get "field")}</td><td>{e (get "message")}</td><td>{e (get "repair")}</td></tr>""")
+                            "<tr>" + FormaMarkup.cell "Severity" (e (get "severity")) + FormaMarkup.cell "Path" (e (get "path")) + FormaMarkup.cell "Field" (e (get "field")) + FormaMarkup.cell "Message" (e (get "message")) + FormaMarkup.cell "Repair" (e (get "repair")) + "</tr>")
                         |> String.concat "\n"
 
                     let summary =

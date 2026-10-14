@@ -211,3 +211,33 @@ jobs:
           dotnet "$cli" --root "$project" init --check
           dotnet "$cli" --root "$project" verify
           dotnet "$cli" --root "$project" doctor
+
+  # ui:conformance (GH-260): every Praxis browser surface -- praxis web serve,
+  # praxis hub serve and the public site -- against
+  # visual-engineering/UI-LAYOUT-INTERACTION@1.0.0. The native equivalent of
+  # `npm run ui:conformance`: F# over the DevTools protocol, no Node
+  # (RQ-ROS-2026-A024). Blocking: any FAIL or schema-invalid evidence fails
+  # the job; UNKNOWN is reported in the evidence, never counted as PASS.
+  ui-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      # The solution builds the CLI and the site tooling; the suite is its own
+      # project outside the solution's pinned project set.
+      - run: dotnet build Praxis.slnx --configuration Release
+      - run: dotnet build tests/UiConformance.Tests/UiConformance.Tests.fsproj --configuration Release
+      - name: UI conformance (headless Chrome)
+        run: |
+          export PRAXIS_TEST_BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)"
+          test -n "$PRAXIS_TEST_BROWSER"
+          dotnet tests/UiConformance.Tests/bin/Release/net10.0/UiConformance.Tests.dll --evidence "$RUNNER_TEMP/ui-conformance/evidence.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-conformance-evidence
+          path: ${{ runner.temp }}/ui-conformance
+          if-no-files-found: warn
+          retention-days: 14

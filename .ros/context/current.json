@@ -10319,6 +10319,47 @@
       "conclusion": "Praxis 3.12.0 pinned; the pinned release is installed with checksum and attestation verification and validates this repository in CI alongside the source build"
     },
     {
+      "id": "GH-260",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "tests/UiConformance.Tests/Program.fs"
+        },
+        {
+          "type": "tests",
+          "path": "quality/ui-conformance-evidence.json"
+        }
+      ],
+      "updatedAt": "2026-10-14T08:42:03.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261013T210554649Z-1e83e69f"
+      ],
+      "latestCheckpoint": {
+        "id": "aeacd93141d57b55b605bc80",
+        "recordedAt": "2026-10-14T08:41:57.000Z",
+        "executionId": "EXE-20261013T210554649Z-1e83e69f",
+        "repository": "repository-operating-system",
+        "branch": "feat/ui-conformance-2026-10",
+        "commit": "53dee754b4fe0c9616473608dbad03118aa630fd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "feat/ui-conformance-2026-10",
+        "remoteCommit": "53dee754b4fe0c9616473608dbad03118aa630fd",
+        "summary": "UI conformance suite, Forma composition fixes, site reflow, evidence and CI job pushed (PR #267)",
+        "nextAction": "complete GH-260 and watch PR #267 CI to green",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-14T08:42:03.000Z"
+    },
+    {
       "id": "WI-0102",
       "type": "task",
       "state": "complete",
@@ -10366,7 +10407,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T23:24:07.000Z",
+  "updatedAt": "2026-10-14T08:42:03.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

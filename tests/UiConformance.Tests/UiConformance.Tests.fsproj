@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- UI conformance for every Praxis browser surface against
+       visual-engineering/UI-LAYOUT-INTERACTION@1.0.0 (GH-260). Headless Chrome
+       over the DevTools protocol with the BCL only: no Node, npm or Playwright
+       (RQ-ROS-2026-A024). The shared test harness files are compiled in by
+       link, never copied. ui-conformance.schema.json is an unmodified copy of
+       kemiller2002/visual-engineering framework/contracts/ui-conformance.schema.json
+       at 8da8fbc (standardVersion 1.0.0). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>UiConformance.Tests</AssemblyName>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Praxis.Domain/Praxis.Domain.fsproj" />
+    <ProjectReference Include="../../src/Praxis.Cli/Praxis.Cli.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Praxis.Tests/TestFramework.fs" Link="Shared/TestFramework.fs" />
+    <Compile Include="../Praxis.Tests/CliHarness.fs" Link="Shared/CliHarness.fs" />
+    <Compile Include="../Praxis.Tests/WebInterfaceTests.fs" Link="Shared/WebInterfaceTests.fs" />
+    <Compile Include="../Praxis.Tests/BrowserHarness.fs" Link="Shared/BrowserHarness.fs" />
+    <Compile Include="FormaConformance.fs" />
+    <Compile Include="Observe.fs" />
+    <Compile Include="LocalChecks.fs" />
+    <Compile Include="SchemaCheck.fs" />
+    <Compile Include="Evidence.fs" />
+    <Compile Include="Scenario.fs" />
+    <Compile Include="WebSurfaces.fs" />
+    <Compile Include="HubSurface.fs" />
+    <Compile Include="SiteSurface.fs" />
+    <Compile Include="Exceptions.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ui-conformance.schema.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
