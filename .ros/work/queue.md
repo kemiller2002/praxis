@@ -30,6 +30,7 @@
 | GH-234 | GH-234 | complete |  |  |
 | GH-235 | GH-235 | active |  |  |
 | GH-242 | GH-242 | complete |  |  |
+| GH-268 | Fix grant-draft cohort decision validation | complete |  | high |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
@@ -337,7 +338,7 @@
 | WI-0100 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | active |  | medium |
 | WI-0101 | Pin Praxis 3.12.0 and validate with the pinned release binary in CI | complete |  | medium |
 | WI-0102 | Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12) | complete | telemetry | high |
-| WI-0103 | Pin Ordo 1.16.1 and complete Praxis #266 recognition validation | ready | gh-266,construct-010 | high |
+| WI-0103 | Pin Ordo 1.16.1 and complete Praxis #266 recognition validation | active | gh-266,construct-010 | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
