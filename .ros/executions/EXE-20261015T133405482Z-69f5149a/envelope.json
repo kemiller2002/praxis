@@ -1,0 +1,97 @@
+{
+  "schema": "ordo.execution/1",
+  "executionId": "EXE-20261015T133405482Z-69f5149a",
+  "workItem": "kemiller2002/praxis:WI-0103",
+  "actor": {
+    "id": "openai/codex",
+    "kind": "agent",
+    "provider": "openai",
+    "model": null,
+    "runtime": "codex"
+  },
+  "role": "implementation",
+  "capabilities": [
+    "implementation.modify",
+    "implementation.modify-tests",
+    "evaluator.invoke",
+    "verification.observe",
+    "evidence.record"
+  ],
+  "prohibitions": [
+    "specification.create-promise",
+    "specification.approve",
+    "acceptance.modify",
+    "evaluator.modify",
+    "verification.verdict",
+    "review.accept"
+  ],
+  "baselineRevision": "04a97bda94937e5f3ff8e9d288bc7af5bbf421c3",
+  "candidateRevision": null,
+  "workspace": "checkout:EXE-20261015T133405482Z-69f5149a",
+  "workspaceBinding": {
+    "id": "checkout:EXE-20261015T133405482Z-69f5149a",
+    "branch": "codex/praxis-266-release-pin",
+    "path": null,
+    "mechanism": "working-directory"
+  },
+  "containment": "semantic-only",
+  "containmentDetail": {
+    "mechanism": "working-directory",
+    "restrictions": [],
+    "evidence": []
+  },
+  "securitySandbox": false,
+  "mutationBoundary": {
+    "scopes": [],
+    "projections": [],
+    "evaluatorReferences": []
+  },
+  "evaluator": null,
+  "humanOnlyTransitions": [],
+  "parentExecution": null,
+  "startedAt": "2026-10-15T13:34:05.880Z",
+  "state": "active",
+  "stateReason": null,
+  "origin": {
+    "kind": "work-transition",
+    "reference": "work.begin"
+  },
+  "containmentProfile": {
+    "schema": "praxis.containment/1",
+    "source": null,
+    "hostEnforced": false,
+    "restrictions": [
+      {
+        "dimension": "filesystem",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "process",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "network",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "credential",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "environment",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      }
+    ]
+  },
+  "evaluatorCommand": null
+}
