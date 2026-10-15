@@ -40,7 +40,10 @@ type DefaultPlanGenerator =
     { Id: string
       Version: string
       /// prepared cohort -> exact approved decision-record text -> vocabulary version
-      Generate: ConstructionIr.PreparedCohort -> string -> string -> Result<DefaultPlanOutput, string list> }
+      Generate: ConstructionIr.PreparedCohort -> string -> string -> Result<DefaultPlanOutput, string list>
+      /// The recognition pass run before generation (CONSTRUCT-010), when any;
+      /// its registry enters the reuse cache key.
+      Recognition: RecognitionSeam option }
 
 /// The single seam between Praxis and Ordo's default-plan generator.
 [<RequireQualifiedAccess>]
@@ -93,4 +96,5 @@ module OrdoDefaultPlan =
                   DefaultPlanDigest = p.DefaultPlanDigest } })
 
     let generator () : DefaultPlanGenerator =
-        { Id = ConstructionDefaultPlan.GeneratorId; Version = ConstructionDefaultPlan.GeneratorVersion; Generate = generate }
+        { Id = ConstructionDefaultPlan.GeneratorId; Version = ConstructionDefaultPlan.GeneratorVersion; Generate = generate
+          Recognition = Some(ConstructionRecognition.seam ()) }

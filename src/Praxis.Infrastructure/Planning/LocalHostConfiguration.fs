@@ -40,6 +40,8 @@ type LocalContainmentConfiguration =
 /// and is never read from repository configuration or worker output. It
 /// selects mechanisms only; execution authority still comes from the signed
 /// host policy and the signed delegation of each exact packet.
+type ConstructionRecognitionPolicy = { EscalateOpenQuestions: bool; Cohorts: Map<string, bool> }
+
 type LocalHostConfiguration =
     { Path: string; Digest: string
       RepositoryRoot: string; RepositoryIdentity: string
@@ -66,7 +68,12 @@ type LocalHostConfiguration =
       AcceptanceSlots: ConstructionAcceptanceSlot list
       /// Approved construction checks (CONSTRUCT-010 `construct check`): pinned
       /// commands run on a fresh checkout of a candidate for agent feedback only.
-      ConstructionChecks: Map<string, LocalValidatorTemplate> }
+      ConstructionChecks: Map<string, LocalValidatorTemplate>
+      /// Ordo recognition policy (CONSTRUCT-010, OPT-PC-02): whether a
+      /// requirement whose only missing decisions are open questions is still
+      /// delegated, to be escalated rather than answered. Default true; a
+      /// cohort may override it.
+      Recognition: ConstructionRecognitionPolicy }
 
 [<RequireQualifiedAccess>]
 module LocalHostConfiguration =
@@ -315,7 +322,7 @@ module LocalHostConfiguration =
             let root = document.RootElement
             exactly root [ "schemaVersion"; "repositoryRoot"; "repositoryIdentity"; "fileAccess"; "roots"; "git"; "committer"
                            "validatorPolicyRevision"; "systemValidators"; "acceptanceValidators"; "workers"; "completionEvidence" ]
-                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots"; "acceptanceSlots"; "constructionChecks" ]
+                         [ "lockTimeoutMilliseconds"; "constructionMount"; "containment"; "extensionSlots"; "acceptanceSlots"; "constructionChecks"; "recognition" ]
             if text root "schemaVersion" <> Schema then fail "unsupported host configuration schema"
             let repository = absolute root "repositoryRoot"
             let roots = root.GetProperty "roots"
@@ -349,6 +356,25 @@ module LocalHostConfiguration =
                         if check.Tests then fail "a construction check produces no TRX (\"tests\" must be false)"
                         check) |> Seq.toList
                 | Some _ -> fail "constructionChecks must be an array of at most 64 checks"
+            let recognition =
+                match property root "recognition" with
+                | None -> { EscalateOpenQuestions = true; Cohorts = Map.empty }
+                | Some element when element.ValueKind = JsonValueKind.Object ->
+                    exactly element [] [ "escalateOpenQuestions"; "cohorts" ]
+                    let cohorts =
+                        match property element "cohorts" with
+                        | None -> Map.empty
+                        | Some value when value.ValueKind = JsonValueKind.Object && Seq.length (value.EnumerateObject()) <= 256 ->
+                            value.EnumerateObject() |> Seq.map (fun entry ->
+                                if not (clean entry.Name) then fail "invalid recognition cohort id"
+                                match entry.Value.ValueKind with
+                                | JsonValueKind.True -> entry.Name, true
+                                | JsonValueKind.False -> entry.Name, false
+                                | _ -> fail "recognition cohorts map cohort ids to booleans") |> Map.ofSeq
+                        | Some _ -> fail "recognition cohorts must be an object of at most 256 cohorts"
+                    { EscalateOpenQuestions = (if (property element "escalateOpenQuestions").IsSome then boolean element "escalateOpenQuestions" else true)
+                      Cohorts = cohorts }
+                | Some _ -> fail "recognition must be an object"
             let ids = (systemValidators |> Map.values |> Seq.map _.Id |> Seq.toList) @ (acceptanceValidators |> List.map _.Id) @ (constructionChecks |> List.map _.Id)
             if ids.Length <> (Set.ofList ids).Count then fail "validator ids must be unique"
             let workers = root.GetProperty "workers"
@@ -384,7 +410,8 @@ module LocalHostConfiguration =
                  Containment = containmentSettings
                  ExtensionSlots = slots
                  AcceptanceSlots = acceptanceSlotList
-                 ConstructionChecks = constructionChecks |> List.map (fun item -> item.Id, item) |> Map.ofList }
+                 ConstructionChecks = constructionChecks |> List.map (fun item -> item.Id, item) |> Map.ofList
+                 Recognition = recognition }
         with
         | :? InvalidDataException as error -> Error("host configuration refused: " + error.Message)
         | :? JsonException | :? DecoderFallbackException | :? InvalidOperationException | :? ArgumentException as error ->

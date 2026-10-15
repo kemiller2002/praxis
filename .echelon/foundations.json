@@ -14,7 +14,7 @@
     },
     "ordo": {
       "required": true,
-      "version": "1.8.2"
+      "version": "1.16.1"
     },
     "folio": {
       "required": false
