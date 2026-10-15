@@ -6180,6 +6180,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "GH-268",
+      "title": "Fix grant-draft cohort decision validation",
+      "description": "Fix GitHub issue #268 and make PR #269 merge-ready without weakening committed ECIR, authorization, signature, or runtime recovery checks.",
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-14T20:58:32.000Z",
+      "updatedAt": "2026-10-14T21:29:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "runtime": "codex"
+      },
+      "source": "github",
+      "sourceReference": "https://github.com/kemiller2002/praxis/issues/268"
     }
   ]
 }

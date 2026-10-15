@@ -10362,11 +10362,57 @@
         }
       },
       "completedAt": "2026-10-13T23:24:07.000Z"
+    },
+    {
+      "id": "GH-268",
+      "type": "bug",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Planning/LocalOperator.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/LocalRuntimeCliTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionPreparedTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-14T21:29:40.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261014T205841157Z-8fa424ca"
+      ],
+      "latestCheckpoint": {
+        "id": "7f2e0ab01ba031bcd70b2a67",
+        "recordedAt": "2026-10-14T21:29:32.000Z",
+        "executionId": "EXE-20261014T205841157Z-8fa424ca",
+        "repository": "repository-operating-system",
+        "branch": "construct/grant-draft-decisions",
+        "commit": "ca32108af404674c872e2c91e4b34ba5a26ace8b",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "construct/grant-draft-decisions",
+        "remoteCommit": "ca32108af404674c872e2c91e4b34ba5a26ace8b",
+        "summary": "Grant drafting now fails closed against the exact committed ECIR cohort; runtime fixtures use three independent valid cohorts and prove cross-cohort refusal writes no artifacts. Compatibility Release build: 0 errors; targeted runtime 5/5, grant refusal 2/2, local operator 4/4. Full local run: 2176/2223 passed with 47 managed-host permission/platform failures outside this diff.",
+        "nextAction": "Complete GH-268, rebuild registries, validate against current main, and require the hosted Linux/macOS/Windows checks to pass on the final SHA.",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-14T21:29:40.000Z",
+      "conclusion": "Grant-draft now reads and validates the exact committed manifest and blueprint, derives the named cohort's required Decision IDs through Ordo 1.8.2 prepareCohort, and refuses invalid, unknown, non-Decision, or cross-cohort IDs before draft/payload writes. Targeted real-CLI runtime and authority checks pass. The managed local host cannot execute 47 unrelated permission/platform-dependent full-suite cases; final hosted matrix checks remain mandatory."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-13T23:24:07.000Z",
+  "updatedAt": "2026-10-14T21:29:40.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

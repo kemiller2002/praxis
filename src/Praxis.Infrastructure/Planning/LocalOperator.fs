@@ -89,6 +89,34 @@ module LocalOperator =
 
     // ----------------------------------------------------------------- grant
 
+    /// The decision ids a grant for `cohortId` may name: the Decision nodes in
+    /// the cohort's required scope, by Ordo's own rule, over the exact
+    /// committed documents. This derives scope without requiring the decisions
+    /// to have been authorized already; an invalid blueprint or cohort refuses
+    /// the draft instead of widening authorization to unrelated decisions.
+    let private grantableDecisions git root source manifestPath blueprintPath cohortId =
+        Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source manifestPath |> Result.bind (fun (manifestText, _) ->
+            Praxis.Infrastructure.Construction.ConstructionTree.readCommitted git root source blueprintPath |> Result.bind (fun (blueprintText, _) ->
+                Ordo.Core.ConstructionIrWire.readManifest manifestText |> Result.mapError ((+) "source manifest refused: ") |> Result.bind (fun manifest ->
+                    Ordo.Core.ConstructionIrWire.verifyManifestDigest manifest |> Result.mapError ((+) "source manifest refused: ")
+                    |> Result.bind (fun () ->
+                        Ordo.Core.ConstructionIrWire.readBlueprint blueprintText |> Result.mapError ((+) "blueprint refused: ") |> Result.bind (fun blueprint ->
+                            let decisions =
+                                blueprint.Nodes
+                                |> List.filter (fun node -> node.Kind = Ordo.Core.ConstructionIr.Decision)
+                                |> List.map _.Id
+                                |> Set.ofList
+                            match Ordo.Core.ConstructionIr.prepareCohort manifest blueprint cohortId decisions with
+                            | Error errors -> Error(sprintf "cohort %s refused by the bound blueprint: %A" cohortId errors)
+                            | Ok prepared -> Ok((Ordo.Core.ConstructionIr.preparedCohortView prepared).RequiredDecisionIds))))))
+
+    /// Every named id that is not grantable, by name, or the decisions.
+    let private checkDecisions (grantable: Set<string>) cohortId (decisions: string list) =
+        match decisions |> List.filter (grantable.Contains >> not) |> List.distinct with
+        | [] -> Ok decisions
+        | unknown ->
+            Error(sprintf "decision ids not Decision nodes of cohort %s in the bound blueprint: %s" cohortId (String.concat ", " unknown))
+
     let grantDraft (configuration: LocalHostConfiguration) keyId approver groupId cohortId sourceCommit manifestPath blueprintPath
                    (members: Map<string, string>) (decisions: string list) (constructionDecisionsDigest: string option)
                    (issuedAt: DateTimeOffset) (expiresAt: DateTimeOffset) cancellation =
@@ -97,7 +125,10 @@ module LocalOperator =
         else
             FileLocalGitCandidates.resolveCommit git root sourceCommit cancellation |> Result.bind (fun source ->
                 FileLocalGitCandidates.blobDigest git root source manifestPath cancellation |> Result.bind (fun manifest ->
-                    FileLocalGitCandidates.blobDigest git root source blueprintPath cancellation |> Result.map (fun blueprint ->
+                    FileLocalGitCandidates.blobDigest git root source blueprintPath cancellation |> Result.bind (fun blueprint ->
+                    grantableDecisions git root source manifestPath blueprintPath cohortId
+                    |> Result.bind (fun grantable -> checkDecisions grantable cohortId decisions)
+                    |> Result.map (fun decisions ->
                         { Approval =
                             { SchemaVersion = EcirApprovals.SchemaVersion; KeyId = keyId; Approver = approver
                               IssuedAt = utc issuedAt; ExpiresAt = utc expiresAt; Signature = ""
@@ -106,7 +137,7 @@ module LocalOperator =
                                         RequirementKeys = members |> Map.values |> Seq.toList |> List.sort
                                         DecisionIds = List.sort decisions
                                         ConstructionDecisionsDigest = constructionDecisionsDigest } }
-                          ManifestPath = manifestPath; BlueprintPath = blueprintPath; Members = members })))
+                          ManifestPath = manifestPath; BlueprintPath = blueprintPath; Members = members }))))
 
     let grantPayload (draft: LocalGrantDraft) = EcirApprovals.signingPayload draft.Approval
 

@@ -30,6 +30,7 @@
 | GH-234 | GH-234 | complete |  |  |
 | GH-235 | GH-235 | active |  |  |
 | GH-242 | GH-242 | complete |  |  |
+| GH-268 | Fix grant-draft cohort decision validation | complete |  | high |
 | GH-80 | Support auditable post-commit work-item attribution reconciliation (#80) | complete | attribution, reconciliation, provenance | high |
 | GH-84 | GH-84 | abandoned |  |  |
 | GH-90 | Make remote/cloud-agent Praxis execution a first-class capability (#90) | abandoned | remote-execution, gh-90 | high |
