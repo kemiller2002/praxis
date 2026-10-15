@@ -1675,6 +1675,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-15T17:46:50.000Z",
+      "stepId": "STEP-20261015T133430000Z-970c4f0f",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1725,12 +1742,12 @@
       "classification": [
         "maintenance"
       ],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-15T13:34:30.000Z",
       "startedAt": "2026-10-15T13:34:30.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-15T13:34:30.000Z",
+      "completedAt": "2026-10-15T17:46:50.000Z",
+      "endedAt": "2026-10-15T17:46:50.000Z",
+      "updatedAt": "2026-10-15T17:46:50.000Z",
       "actor": {
         "kind": "agent",
         "id": "openai/codex",
@@ -2051,6 +2068,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-15T13:34:30.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "openai/codex",
+            "provider": "openai",
+            "model": "unknown",
+            "runtime": "codex"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-15T17:46:50.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",

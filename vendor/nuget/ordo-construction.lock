@@ -4,7 +4,7 @@
 # depends only on EchelonFoundry.Ordo.Core of the same version (ordo-core.lock).
 # NuGet restores EchelonFoundry.Ordo.Construction only from this folder
 # (NuGet.config package source mapping). Upgrade together with ordo-core.lock.
-ordo 1.16.0
+ordo 1.16.1
 package EchelonFoundry.Ordo.Construction
-url https://github.com/kemiller2002/ordo/releases/download/v1.16.0/ordo-construction.nupkg
-sha256 24833b7234c72b4bddfee738b63db6c963997ce2b7dcbab64304bf44de633f93
+url https://github.com/kemiller2002/ordo/releases/download/v1.16.1/ordo-construction.nupkg
+sha256 43251a5fd022d43317f6ae2660e035ea4be43b4ca5f3f997aa7ee642745d23c0
