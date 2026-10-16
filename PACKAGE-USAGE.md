@@ -193,4 +193,4 @@ lifecycle commands against throwaway repositories.
   which downloads `ros-fs` binaries from GitHub Releases, not from npm. A
   newer project's `./ros` is a compatibility alias of its `./praxis`.
 
-The project is distributed under the MIT License.
+Source available under PolyForm Noncommercial 1.0.0 for permitted noncommercial uses. Commercial use requires a separate license from Echelon Foundry. Previously distributed versions remain subject to the licenses under which they were released.

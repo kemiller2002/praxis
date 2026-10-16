@@ -6,7 +6,6 @@ Repository initialization, verification, diagnostics, and upgrade tooling that
 makes research, engineering, decisions, and handoffs durable without relying on
 conversation history or tribal knowledge.
 
-Distributed under the [MIT License](LICENSE).
 
 The cross-cutting Aegis, Forma, and Folio application requirements are in [`requirements/SHARED-APPLICATION-FOUNDATIONS.md`](requirements/SHARED-APPLICATION-FOUNDATIONS.md) and apply to native runtime, web UI, and future printable/report surfaces as specified there.
 
@@ -494,3 +493,9 @@ Praxis-controlled repository.
 | [`docs/development-telemetry.md`](docs/development-telemetry.md) | Telemetry schema, privacy boundary, provider integrations |
 | [`PACKAGE-USAGE.md`](PACKAGE-USAGE.md) | Publication, release gate, trusted publishing |
 | [`docs/migrations/fsharp/`](docs/migrations/fsharp/README.md) | The F# migration's staged architecture and command-surface status |
+
+## License
+
+Source available under PolyForm Noncommercial 1.0.0 for permitted noncommercial uses. Commercial use requires a separate license from Echelon Foundry. Previously distributed versions remain subject to the licenses under which they were released.
+
+Commercial licensing information is forthcoming.

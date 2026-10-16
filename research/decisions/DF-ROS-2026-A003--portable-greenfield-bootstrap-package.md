@@ -39,8 +39,11 @@ Package ROS as a zero-runtime-dependency Node CLI named
 - requires explicit migration for an existing managed file rather than
   providing a destructive force option.
 
-The organization-owned npm scope and MIT License are selected. This record
-remains in review until the first public publication is validated.
+The organization-owned npm scope and MIT License were selected for the versions
+released under this decision. Current source is licensed under PolyForm
+Noncommercial 1.0.0; previously distributed versions remain under the licenses
+that accompanied them. This record remains in review until the first public
+publication is validated.
 
 ## Alternatives considered
 
@@ -76,8 +79,10 @@ project-owned records. Future upgrades require an explicit migration design.
   initialized project.
 - Snapshot verification reports drift but does not forbid governed project
   changes.
-- Public redistribution is permitted under the MIT License; npm publication
-  remains blocked only on npm organization authorization and trusted-publisher setup.
+- Public redistribution of previously released MIT versions remains permitted under
+  their original terms. Current source is available under PolyForm Noncommercial
+  1.0.0; npm publication remains blocked only on npm organization authorization and
+  trusted-publisher setup.
 
 ## Validation
 

@@ -14,7 +14,7 @@
     <PackageId>EchelonFoundry.Praxis</PackageId>
     <Authors>Echelon Foundry</Authors>
     <Description>Praxis (Echelon Foundry Repository Operating System): initialization, verification, work protocol, telemetry, provenance and durable checkpoints for research and engineering repositories.</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/kemiller2002/praxis</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kemiller2002/praxis</RepositoryUrl>
     <PackageTags>praxis;repository;governance;provenance;telemetry;cli</PackageTags>
