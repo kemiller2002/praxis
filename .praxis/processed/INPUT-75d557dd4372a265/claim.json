@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-75d557dd4372a265",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/design-by-construction-2026-10-15.md",
     "fileName": "design-by-construction-2026-10-15.md",
@@ -36,7 +36,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-18T12:55:51.854Z",
   "releaseReason": null,
   "rejectionReason": null
 }

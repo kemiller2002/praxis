@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-684a43561de78083",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-14-PRX-VIS-001.md",
     "fileName": "2026-10-14-PRX-VIS-001.md",
@@ -36,7 +36,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-18T12:55:51.352Z",
   "releaseReason": null,
   "rejectionReason": null
 }

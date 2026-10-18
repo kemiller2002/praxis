@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-695a4e7723d7f795",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-16-ENGINEERING-RELIABILITY-001.md",
     "fileName": "2026-10-16-ENGINEERING-RELIABILITY-001.md",
@@ -36,7 +36,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-18T12:55:51.638Z",
   "releaseReason": null,
   "rejectionReason": null
 }
