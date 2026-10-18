@@ -1,0 +1,42 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-75d557dd4372a265",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/design-by-construction-2026-10-15.md",
+    "fileName": "design-by-construction-2026-10-15.md",
+    "sha256": "90c50fa358a3baa509a6738e32af81c75e8749d160d865553eb81f29b189720d",
+    "size": 5262
+  },
+  "claimedAt": "2026-10-18T12:49:03.029Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "openai/codex",
+    "provider": "openai",
+    "model": "unknown",
+    "runtime": "codex"
+  },
+  "executionId": "EXE-20261018T124842618Z-ce3f5877",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "research/requirements/RQ-ROS-2026-A033--design-by-construction-governance.md",
+      "summary": "Agent governance for Design by Construction",
+      "locator": "research/requirements/RQ-ROS-2026-A033--design-by-construction-governance.md",
+      "recordedAt": "2026-10-18T12:53:10.772Z",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "executionId": "EXE-20261018T124842618Z-ce3f5877"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-18T12:55:51.854Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}

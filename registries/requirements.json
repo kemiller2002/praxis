@@ -1851,5 +1851,137 @@
     "title": "Reclassify a work item's type and accept external evidence references at completion",
     "updated": "2026-10-13",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-18",
+    "derived_from": [
+      "INPUT-684a43561de78083"
+    ],
+    "id": "RQ-ROS-2026-A031",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A031--visual-evidence-acceptance-gates.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261018T124842618Z-ce3f5877": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-18T12:53:00.522Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical ingestion of claimed requirement source"
+        }
+      }
+    },
+    "related_documents": [
+      "https://github.com/kemiller2002/praxis/issues/270"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "visual-intent",
+      "evidence",
+      "acceptance",
+      "construction"
+    ],
+    "title": "Commit-bound visual decisions and rendered-evidence acceptance gates",
+    "updated": "2026-10-18",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-18",
+    "derived_from": [
+      "INPUT-695a4e7723d7f795"
+    ],
+    "id": "RQ-ROS-2026-A032",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A032--atomic-work-ownership-and-verified-completion.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261018T124842618Z-ce3f5877": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-18T12:53:00.882Z",
+          "last": "2026-10-18T12:55:12.790Z",
+          "operations": [
+            "created",
+            "modified"
+          ],
+          "reason": "Canonical ingestion of claimed requirement source"
+        }
+      }
+    },
+    "related_documents": [],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "work-protocol",
+      "concurrency",
+      "reliability",
+      "evidence"
+    ],
+    "title": "Atomic work ownership and independently verified completion",
+    "updated": "2026-10-18",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-18",
+    "derived_from": [
+      "INPUT-75d557dd4372a265"
+    ],
+    "id": "RQ-ROS-2026-A033",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A033--design-by-construction-governance.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261018T124842618Z-ce3f5877": {
+          "actor": {
+            "id": "openai/codex",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "openai",
+            "runtime": "codex"
+          },
+          "at": "2026-10-18T12:53:01.155Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical ingestion of claimed requirement source"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A031"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "design-by-construction",
+      "governance",
+      "contracts",
+      "evidence"
+    ],
+    "title": "Agent governance for Design by Construction",
+    "updated": "2026-10-18",
+    "version": "1.0.0"
   }
 ]

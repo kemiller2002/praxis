@@ -1,0 +1,97 @@
+{
+  "schema": "ordo.execution/1",
+  "executionId": "EXE-20261018T124842618Z-ce3f5877",
+  "workItem": "kemiller2002/praxis:INGEST-REQS-20261018",
+  "actor": {
+    "id": "openai/codex",
+    "kind": "agent",
+    "provider": "openai",
+    "model": null,
+    "runtime": "codex"
+  },
+  "role": "implementation",
+  "capabilities": [
+    "implementation.modify",
+    "implementation.modify-tests",
+    "evaluator.invoke",
+    "verification.observe",
+    "evidence.record"
+  ],
+  "prohibitions": [
+    "specification.create-promise",
+    "specification.approve",
+    "acceptance.modify",
+    "evaluator.modify",
+    "verification.verdict",
+    "review.accept"
+  ],
+  "baselineRevision": "cfdaa2f7a533b34bf9a4f62a0be55e44f7e511c9",
+  "candidateRevision": null,
+  "workspace": "checkout:EXE-20261018T124842618Z-ce3f5877",
+  "workspaceBinding": {
+    "id": "checkout:EXE-20261018T124842618Z-ce3f5877",
+    "branch": "codex/ingest-outstanding-requirements-20261018",
+    "path": null,
+    "mechanism": "working-directory"
+  },
+  "containment": "semantic-only",
+  "containmentDetail": {
+    "mechanism": "working-directory",
+    "restrictions": [],
+    "evidence": []
+  },
+  "securitySandbox": false,
+  "mutationBoundary": {
+    "scopes": [],
+    "projections": [],
+    "evaluatorReferences": []
+  },
+  "evaluator": null,
+  "humanOnlyTransitions": [],
+  "parentExecution": null,
+  "startedAt": "2026-10-18T12:48:43.974Z",
+  "state": "blocked",
+  "stateReason": "Canonical ingestion is complete, but repository validation is blocked by pre-existing origin/main execution EXE-20261011T204811145Z-23f864b2 retaining unresolved step STEP-20261012T074830000Z-a1aad34f; historical execution state must be repaired through its native owner workflow.",
+  "origin": {
+    "kind": "work-transition",
+    "reference": "work.begin"
+  },
+  "containmentProfile": {
+    "schema": "praxis.containment/1",
+    "source": null,
+    "hostEnforced": false,
+    "restrictions": [
+      {
+        "dimension": "filesystem",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "process",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "network",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "credential",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      },
+      {
+        "dimension": "environment",
+        "status": "unknown",
+        "mechanism": null,
+        "evidence": null
+      }
+    ]
+  },
+  "evaluatorCommand": null
+}

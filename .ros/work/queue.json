@@ -6201,6 +6201,102 @@
       },
       "source": "github",
       "sourceReference": "https://github.com/kemiller2002/praxis/issues/268"
+    },
+    {
+      "id": "INGEST-REQS-20261018",
+      "title": "Ingest outstanding Praxis requirement sources",
+      "description": "Claim and derive canonical requirements from Praxis visual, reliability, and Design by Construction sources; preserve provenance and keep implementation work separate.",
+      "tags": [
+        "requirements",
+        "ingestion"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-18T12:48:41.531Z",
+      "updatedAt": "2026-10-18T12:48:41.838Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "user",
+      "sourceReference": "2026-10-18 ingestion request"
+    },
+    {
+      "id": "PRAXIS-REL-001",
+      "title": "Implement atomic ownership and verified completion",
+      "description": "Implement RQ-ROS-2026-A032 after REL-ORDO-001 and REL-DOKIMOS-001 are available.",
+      "tags": [
+        "requirements",
+        "implementation"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-18T12:53:20.121Z",
+      "updatedAt": "2026-10-18T12:53:20.121Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-DBC-001",
+      "title": "Implement Design by Construction governance",
+      "description": "Implement RQ-ROS-2026-A033 after the shared design contract and Ordo representation are available.",
+      "tags": [
+        "requirements",
+        "implementation"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-18T12:53:20.433Z",
+      "updatedAt": "2026-10-18T12:53:20.433Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-75d557dd4372a265"
+    },
+    {
+      "id": "PRAXIS-EXECUTIONS-COMPAT-20261018",
+      "title": "Exclude Praxis-managed execution state from attribution",
+      "description": "Add .ros/executions/** to the existing managed-state ignore list so the pinned validator does not classify Praxis execution envelopes as product changes.",
+      "tags": [
+        "governance",
+        "compatibility"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-18T13:01:40.650Z",
+      "updatedAt": "2026-10-18T13:04:56.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "source": "CI validation",
+      "sourceReference": "percepta/actions/runs/39129621742"
     }
   ]
 }

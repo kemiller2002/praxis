@@ -1,0 +1,42 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-695a4e7723d7f795",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-16-ENGINEERING-RELIABILITY-001.md",
+    "fileName": "2026-10-16-ENGINEERING-RELIABILITY-001.md",
+    "sha256": "7feec278df1b0aad09fb69c6fa9114bd6e808da38c98ca70ef41c415cf62a723",
+    "size": 2696
+  },
+  "claimedAt": "2026-10-18T12:49:02.817Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "openai/codex",
+    "provider": "openai",
+    "model": "unknown",
+    "runtime": "codex"
+  },
+  "executionId": "EXE-20261018T124842618Z-ce3f5877",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "research/requirements/RQ-ROS-2026-A032--atomic-work-ownership-and-verified-completion.md",
+      "summary": "Atomic work ownership and independently verified completion",
+      "locator": "research/requirements/RQ-ROS-2026-A032--atomic-work-ownership-and-verified-completion.md",
+      "recordedAt": "2026-10-18T12:53:10.548Z",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "executionId": "EXE-20261018T124842618Z-ce3f5877"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-18T12:55:51.638Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}
