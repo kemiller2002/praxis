@@ -10412,18 +10412,40 @@
     {
       "id": "INGEST-REQS-20261018",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-10-18T12:48:41.999Z",
+      "updatedAt": "2026-10-18T12:59:09.499Z",
       "telemetryExecutionIds": [
         "EXE-20261018T124842618Z-ce3f5877"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "65560bfe7e1c13f2496466e0",
+        "recordedAt": "2026-10-18T12:58:40.554Z",
+        "executionId": "EXE-20261018T124842618Z-ce3f5877",
+        "stepId": "STEP-20261018T124851481Z-eced847c",
+        "repository": "repository-operating-system",
+        "branch": "codex/ingest-outstanding-requirements-20261018",
+        "commit": "3ec2b0a4a2f0a66fb3635a007a218420fa62b198",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "codex/ingest-outstanding-requirements-20261018",
+        "remoteCommit": "3ec2b0a4a2f0a66fb3635a007a218420fa62b198",
+        "summary": "Praxis visual, reliability, and Design by Construction sources ingested",
+        "nextAction": "Block the ingestion work item on the pre-existing origin/main validation error and open the review PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "blockReason": "Canonical ingestion is complete, but repository validation is blocked by pre-existing origin/main execution EXE-20261011T204811145Z-23f864b2 retaining unresolved step STEP-20261012T074830000Z-a1aad34f; historical execution state must be repaired through its native owner workflow."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-18T12:48:41.999Z",
+  "updatedAt": "2026-10-18T12:59:09.499Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

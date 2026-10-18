@@ -763,14 +763,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-10-18T12:48:42.618Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-10-18T12:59:09.499Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "whitelisted-codex-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-10-18T12:59:09.499Z",
+      "recordedAt": "2026-10-18T12:59:09.499Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "whitelisted-codex-environment"
+          },
+          "discoveredAt": "2026-10-18T12:48:42.618Z",
+          "lastAssessedAt": "2026-10-18T12:48:42.618Z",
+          "recordedAt": "2026-10-18T12:48:42.618Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1612,6 +1628,26 @@
       },
       "collectedAt": "2026-10-18T12:48:42.618Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-67a0b87ceac5b0a8639de84a",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-10-18T12:59:09.499Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [
@@ -1691,6 +1727,17 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-10-18T12:59:09.499Z",
+      "reason": "Canonical ingestion is complete, but repository validation is blocked by pre-existing origin/main execution EXE-20261011T204811145Z-23f864b2 retaining unresolved step STEP-20261012T074830000Z-a1aad34f; historical execution state must be repaired through its native owner workflow.",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-278265577cb72f537339fd47"
     }
   ],
   "repository": {

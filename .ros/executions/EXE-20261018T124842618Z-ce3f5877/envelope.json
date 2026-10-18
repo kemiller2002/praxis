@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-10-18T12:48:43.974Z",
-  "state": "active",
-  "stateReason": null,
+  "state": "blocked",
+  "stateReason": "Canonical ingestion is complete, but repository validation is blocked by pre-existing origin/main execution EXE-20261011T204811145Z-23f864b2 retaining unresolved step STEP-20261012T074830000Z-a1aad34f; historical execution state must be repaired through its native owner workflow.",
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"
