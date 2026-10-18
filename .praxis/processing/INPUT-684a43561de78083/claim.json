@@ -1,0 +1,42 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-684a43561de78083",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-14-PRX-VIS-001.md",
+    "fileName": "2026-10-14-PRX-VIS-001.md",
+    "sha256": "1cee1153b21778f33ee9ce50a07796983a1cf5f6b6d14cc8e5ed78becc3e4170",
+    "size": 4433
+  },
+  "claimedAt": "2026-10-18T12:49:02.567Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "openai/codex",
+    "provider": "openai",
+    "model": "unknown",
+    "runtime": "codex"
+  },
+  "executionId": "EXE-20261018T124842618Z-ce3f5877",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "research/requirements/RQ-ROS-2026-A031--visual-evidence-acceptance-gates.md",
+      "summary": "Commit-bound visual-decision and rendered-evidence gates",
+      "locator": "research/requirements/RQ-ROS-2026-A031--visual-evidence-acceptance-gates.md",
+      "recordedAt": "2026-10-18T12:53:10.280Z",
+      "actor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
+      },
+      "executionId": "EXE-20261018T124842618Z-ce3f5877"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}

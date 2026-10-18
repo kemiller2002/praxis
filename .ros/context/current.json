@@ -10408,11 +10408,22 @@
       },
       "completedAt": "2026-10-14T21:29:40.000Z",
       "conclusion": "Grant-draft now reads and validates the exact committed manifest and blueprint, derives the named cohort's required Decision IDs through Ordo 1.8.2 prepareCohort, and refuses invalid, unknown, non-Decision, or cross-cohort IDs before draft/payload writes. Targeted real-CLI runtime and authority checks pass. The managed local host cannot execute 47 unrelated permission/platform-dependent full-suite cases; final hosted matrix checks remain mandatory."
+    },
+    {
+      "id": "INGEST-REQS-20261018",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-18T12:48:41.999Z",
+      "telemetryExecutionIds": [
+        "EXE-20261018T124842618Z-ce3f5877"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-14T21:29:40.000Z",
+  "updatedAt": "2026-10-18T12:48:41.999Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
