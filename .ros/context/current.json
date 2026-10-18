@@ -10441,11 +10441,22 @@
         }
       },
       "blockReason": "Canonical ingestion is complete, but repository validation is blocked by pre-existing origin/main execution EXE-20261011T204811145Z-23f864b2 retaining unresolved step STEP-20261012T074830000Z-a1aad34f; historical execution state must be repaired through its native owner workflow."
+    },
+    {
+      "id": "PRAXIS-EXECUTIONS-COMPAT-20261018",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-18T13:01:41.256Z",
+      "telemetryExecutionIds": [
+        "EXE-20261018T130141916Z-27d0f7b2"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-18T12:59:09.499Z",
+  "updatedAt": "2026-10-18T13:01:41.256Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

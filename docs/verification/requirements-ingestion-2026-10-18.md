@@ -9,14 +9,17 @@ Work item: `INGEST-REQS-20261018`
 - `praxis registry check`: passed.
 - `praxis provenance audit --json`: passed with no errors or warnings.
 - `git diff --check`: passed.
+- Attribution policy excludes Praxis-managed `.ros/executions/**` state, matching the current Praxis scaffold and pinned-validator expectations.
 - Final upstream sync reported no incoming commit or overlapping path.
 
-`praxis validate --json` remains blocked by a pre-existing error:
+Current Praxis 3.11.0 validation remains blocked because
 `EXE-20261011T204811145Z-23f864b2` is finalized while step
-`STEP-20261012T074830000Z-a1aad34f` remains unresolved. The identical error
-reproduces on the exact `origin/main` SHA
+`STEP-20261012T074830000Z-a1aad34f` remains unresolved. Pinned Praxis 3.7.2
+reports that same error plus pre-existing incompatibilities for the current
+groups schema and four `origin-unrecorded` provenance contributions. Every
+finding reproduces on exact `origin/main` SHA
 `cfdaa2f7a533b34bf9a4f62a0be55e44f7e511c9`. This ingestion does not rewrite
-historical execution state.
+historical execution or another contributor's provenance.
 
 This verifies ingestion and provenance only. It is not implementation evidence
 for the derived product requirements.
