@@ -10445,18 +10445,40 @@
     {
       "id": "PRAXIS-EXECUTIONS-COMPAT-20261018",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-10-18T13:01:41.256Z",
+      "updatedAt": "2026-10-18T13:04:56.000Z",
       "telemetryExecutionIds": [
         "EXE-20261018T130141916Z-27d0f7b2"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "a2a8e8189e45db02f7cfedba",
+        "recordedAt": "2026-10-18T13:03:27.682Z",
+        "executionId": "EXE-20261018T130141916Z-27d0f7b2",
+        "repository": "repository-operating-system",
+        "branch": "codex/ingest-outstanding-requirements-20261018",
+        "commit": "e5c8ebc8bffa84ea8ad10df68210821bed3776d1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "codex/ingest-outstanding-requirements-20261018",
+        "remoteCommit": "e5c8ebc8bffa84ea8ad10df68210821bed3776d1",
+        "summary": "Aligned attribution policy with Praxis-managed execution state and verified pinned/current validators",
+        "nextAction": "Complete compatibility work and verify PR checks",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-18T13:04:56.000Z",
+      "conclusion": "Praxis-managed .ros/executions state is excluded from product attribution; pinned and current validator behavior was checked."
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-18T13:01:41.256Z",
+  "updatedAt": "2026-10-18T13:04:56.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -89,7 +89,7 @@
 | PRAXIS-EXEC-07 | Execution runtime docs and requirement status per row (EXECUTION-ORCHESTRATION status, docs/execution-runtime.md) | complete | execution, docs | medium |
 | PRAXIS-EXEC-08 | Consume the Ordo execution contract instead of a local copy of role, boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001, PRX-VER-010, PRX-BND-001, PRX-SEQ-003) | abandoned | execution, ordo | low |
 | PRAXIS-EXEC-09 | Link execution step ledger to telemetry and analyse cost and reliability by role (PRX-STEP-006, PRX-STEP-008) | captured | execution, telemetry | medium |
-| PRAXIS-EXECUTIONS-COMPAT-20261018 | Exclude Praxis-managed execution state from attribution | ready | governance, compatibility | high |
+| PRAXIS-EXECUTIONS-COMPAT-20261018 | Exclude Praxis-managed execution state from attribution | complete | governance, compatibility | high |
 | PRAXIS-FND-01 | ORDO-CORE-PACKAGE: consume Ordo.Core as a pinned released package for execution roles, capabilities, mutation-boundary and evaluator semantics (PRX-EXEC-002, PRX-ARCH-001) | complete | ordo, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-02 | Accept the mutation boundary and evaluator closure from the governing Ordo execution contract (PRX-BND-001, PRX-SEQ-003, PRX-VER-010) | complete | ordo, execution, group:GROUP-FND-ORDO | high |
 | PRAXIS-FND-03 | Declare Praxis's own shared foundations and make foundations verify evidence them (SAF-DEP-1, SAF-DEP-2) | complete | foundations, group:GROUP-FND-FOUNDATIONS | high |
