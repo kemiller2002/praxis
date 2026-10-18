@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 103,
+  "nextSeq": 104,
   "items": [
     {
       "id": "WI-0001",
@@ -6177,6 +6177,29 @@
         "provider": "anthropic",
         "model": "unknown",
         "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0103",
+      "title": "Pin Ordo 1.16.1 and complete Praxis #266 recognition validation",
+      "description": null,
+      "tags": [
+        "gh-266,construct-010"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-15T13:33:46.000Z",
+      "updatedAt": "2026-10-15T21:32:30.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
       },
       "source": "manual",
       "sourceReference": null

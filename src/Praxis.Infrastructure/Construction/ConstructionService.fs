@@ -48,6 +48,16 @@ module ConstructionService =
         | Artifacts.VerifyIndependently what ->
             node["kind"] <- JsonValue.Create "verify-independently"
             node["what"] <- JsonValue.Create what
+        | Artifacts.ResolveUndecidedTransition(state, command, question) ->
+            node["kind"] <- JsonValue.Create "resolve-undecided-transition"
+            node["state"] <- JsonValue.Create state
+            node["command"] <- JsonValue.Create command
+            node["question"] <- JsonValue.Create question
+        | Artifacts.DecideExtension(contract, point, question) ->
+            node["kind"] <- JsonValue.Create "decide-extension"
+            node["contract"] <- JsonValue.Create contract
+            node["point"] <- JsonValue.Create point
+            node["question"] <- JsonValue.Create question
         node["requirementKeys"] <- strings obligation.RequirementKeys
         node["status"] <- JsonValue.Create "open"
         node

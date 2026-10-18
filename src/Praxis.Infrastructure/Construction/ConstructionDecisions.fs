@@ -57,7 +57,7 @@ module ConstructionHostStore =
                         Ok path)
         with error -> Error(error.Message)
 
-/// The envelope of an `ordo.construction-decisions/1` record set as Praxis
+/// The envelope of an `ordo.construction-decisions/1` (or later) record set as Praxis
 /// reads it. Praxis never interprets the records' semantics; Ordo does. The
 /// host only checks identity (schema, cohort, blueprint) so a record set
 /// approved for another cohort or blueprint is refused before generation.
@@ -74,6 +74,10 @@ type ConstructionDecisionsEnvelope =
 module ConstructionDecisions =
     [<Literal>]
     let Schema = "ordo.construction-decisions/1"
+
+    /// The record-set versions whose envelope Praxis accepts. Which of them
+    /// the vendored Ordo can generate from is Ordo's call, reported verbatim.
+    let Schemas = set [ Schema; "ordo.construction-decisions/2"; "ordo.construction-decisions/3" ]
 
     let private maxBytes = 1048576
     let private strict = UTF8Encoding(false, true)
@@ -112,7 +116,7 @@ module ConstructionDecisions =
             if root.ValueKind <> JsonValueKind.Object then Error "construction decisions must be a JSON object"
             else
                 field "schemaVersion" root |> Result.bind (fun schema ->
-                    if schema <> Schema then Error("construction decisions: unsupported schemaVersion " + schema)
+                    if not (Schemas.Contains schema) then Error("construction decisions: unsupported schemaVersion " + schema)
                     else
                         field "cohortId" root |> Result.bind (fun cohort ->
                             field "blueprintDigest" root |> Result.bind (fun blueprint ->

@@ -76,7 +76,8 @@ module ConstructionPreparedTests =
                                  Provenance =
                                    { GeneratorId = OrdoDefaultPlan.GeneratorId; GeneratorVersion = version; VocabularyVersion = vocabulary
                                      InputDigests = [ "decisionRecords", ConstructionDecisions.digest decisionText ]
-                                     DefaultPlanDigest = "sha256:" + String('0', 64) } } }
+                                     DefaultPlanDigest = "sha256:" + String('0', 64) } }
+          Recognition = None }
 
     let private excerpts (clone: string) =
         CliHarness.write clone "requirements/timer-stop-completion.txt" (fixture "requirements/timer-stop-completion.txt")
@@ -813,4 +814,131 @@ module ConstructionPreparedTests =
                   let cli = PraxisCli.run host.Clone (Some ConstructionCliTests.coordinator) [ "construct"; "check"; "--host-config"; host.Config; "--prepared"; out; "--candidate"; candidate; "--check"; "pass" ]
                   Assert.equal 3 cli.ExitCode)) ]
 
-    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ checkTests @ cacheTests @ telemetryTests
+    // ------------------------------------------- (c5) Ordo recognition (CONSTRUCT-010)
+
+    type private RecognitionCall = { Authorized: Set<string>; Escalate: bool; Permitted: string list }
+
+    /// A fake recognition seam: records its inputs and returns a fixed summary.
+    let private recognizing (calls: RecognitionCall list ref) (worthwhile: bool) : RecognitionSeam =
+        { Registry = "fake-registry@1"
+          Recognize =
+            fun _ _ authorized escalate permitted ->
+                calls.Value <- calls.Value @ [ { Authorized = authorized; Escalate = escalate; Permitted = permitted } ]
+                Ok { ReportDigest = "sha256:" + String('7', 64)
+                     ReportJson = """{"schemaVersion":"ordo.pattern-recognition/1"}"""
+                     GenerationWorthwhile = worthwhile
+                     Decisions = [ { NodeId = "DF-TE-2026-A009"; Justification = Some "Operation-id idempotency is durable across reload and restart."; RequirementKeys = [ k131 ]; Resolves = [ "CONFLICT-SETTLED" ] } ]
+                     EscalationRequired = set [ k105 ]
+                     Delegated = set [ k105; k131 ]
+                     ForbiddenPaths = [ "generated/**" ]
+                     Measurements = [ "delegationPackets", 1 ] } }
+
+    let private recognitionTests =
+        [ t "recognition before generation adds its approved decisions, escalation-only dispositions and forbidden paths, bound and recorded host-side" (fun () ->
+              withDecisionsHost (fun host ->
+                  let calls = ref []
+                  let generator = { fake (ref 0) "fake@1" with Recognition = Some(recognizing calls true) }
+                  let node, out = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let call = calls.Value |> List.exactlyOne
+                  Assert.isTrue call.Escalate "escalateOpenQuestions defaults to true"
+                  Assert.equal [ "src/Domain/Extensions.fs"; "src/Domain/Completion.fs" ] call.Permitted
+                  let prepared = JsonNode.Parse(File.ReadAllText out)
+                  Assert.equal (Set.ofSeq (prepared["hostBinding"].["decisionIds"] :?> JsonArray |> Seq.map str)) call.Authorized
+                  Assert.equal "fake-registry@1" (str prepared["hostBinding"].["recognitionRegistry"])
+                  Assert.equal true (prepared["hostBinding"].["escalateOpenQuestions"].GetValue<bool>())
+                  Assert.equal ("sha256:" + String('7', 64)) (str prepared["recognition"].["reportDigest"])
+                  let handoff = JsonNode.Parse(File.ReadAllText(str node["handoff"]))
+                  let decided = handoff["decisions"] :?> JsonArray |> Seq.toList
+                  Assert.isTrue (decided |> List.exists (fun d -> str d["id"] = "DF-TE-2026-A009" && str d["source"] = "recognizedDecision")) (handoff.ToJsonString())
+                  let behavior = handoff["obligations"] :?> JsonArray |> Seq.find (fun o -> str o["id"] = "OBL-COH-TIMER-extensionBehavior-1a2b3c")
+                  Assert.equal [ "escalated" ] (behavior["dispositions"] :?> JsonArray |> Seq.map str |> Seq.toList)
+                  Assert.isTrue (behavior["decisions"] :?> JsonArray |> Seq.map str |> Seq.contains "DF-TE-2026-A009") (behavior.ToJsonString())
+                  Assert.isTrue ((File.ReadAllText(str node["handoffMarkdown"])).Contains "Never write: src/Domain/generated/**") "forbidden paths not stated"))
+          t "an uncovered requirement Ordo delegates becomes implementable; one needing an open decision stays escalate-only" (fun () ->
+              withDecisionsHost (fun host ->
+                  let uncovered id key : DefaultPlanObligation =
+                      { Id = id; Kind = "uncoveredRequirement"; RequirementKeys = [ key ]; NodeIds = []
+                        Statement = sprintf "Requirement %s is assigned to cohort COH-TIMER, but no approved decision record constructs it. Which approved decision or extension implements it?" key
+                        ExtensionSurface = [] }
+                  let basis = fake (ref 0) "fake@1"
+                  let generator =
+                      { basis with
+                          Recognition = Some(recognizing (ref []) true)
+                          Generate =
+                            fun prepared decisionText vocabulary ->
+                                basis.Generate prepared decisionText vocabulary |> Result.map (fun output ->
+                                    { output with Obligations = output.Obligations @ [ uncovered "OBL-U-DELEGATED" k131; uncovered "OBL-U-OPEN" k105 ] }) }
+                  let node, _ = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let items = JsonNode.Parse(File.ReadAllText(str node["handoff"])).["obligations"] :?> JsonArray |> Seq.toList
+                  let item id = items |> List.find (fun o -> str o["id"] = id)
+                  let dispositions (o: JsonNode) = o["dispositions"] :?> JsonArray |> Seq.map str |> Seq.toList
+                  let delegatedItem = item "OBL-U-DELEGATED"
+                  Assert.equal [ "implemented"; "escalated" ] (dispositions delegatedItem)
+                  Assert.isTrue (isNull delegatedItem["question"] && (str delegatedItem["requiredBehavior"]).StartsWith "Ordo delegates this requirement") (delegatedItem.ToJsonString())
+                  let openItem = item "OBL-U-OPEN"
+                  Assert.equal [ "escalated" ] (dispositions openItem)
+                  Assert.isTrue (not (isNull openItem["question"])) (openItem.ToJsonString())))
+          t "a conflict is dropped from the handoff only when an approved decision lists it in resolves" (fun () ->
+              withDecisionsHost (fun host ->
+                  let conflict id node : DefaultPlanObligation =
+                      { Id = id; Kind = "conflict"; RequirementKeys = [ k131 ]; NodeIds = [ node ]
+                        Statement = sprintf "Conflict %s is inside cohort COH-TIMER and no approved decision resolves it. The blueprint records: x" node
+                        ExtensionSurface = [] }
+                  let basis = fake (ref 0) "fake@1"
+                  let generator =
+                      { basis with
+                          Recognition = Some(recognizing (ref []) true)
+                          Generate =
+                            fun prepared decisionText vocabulary ->
+                                basis.Generate prepared decisionText vocabulary |> Result.map (fun output ->
+                                    { output with Obligations = output.Obligations @ [ conflict "OBL-C-SETTLED" "CONFLICT-SETTLED"; conflict "OBL-C-OPEN" "CONFLICT-OPEN" ] }) }
+                  let node, _ = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let ids = JsonNode.Parse(File.ReadAllText(str node["handoff"])).["obligations"] :?> JsonArray |> Seq.map (fun o -> str o["id"]) |> Set.ofSeq
+                  Assert.isTrue (not (ids.Contains "OBL-C-SETTLED")) "a resolved conflict was re-emitted"
+                  Assert.isTrue (ids.Contains "OBL-C-OPEN") "an unresolved conflict was dropped"))
+          t "a conflict-resolution record is listed with the conflicts it resolves and its decision node's text" (fun () ->
+              let records =
+                """{"schemaVersion":"ordo.construction-decisions/3","blueprintDigest":"x","cohortId":"C","records":[
+                     {"nodeId":"DEC-SAVE-IDEMPOTENCY-DURABLE","content":{"kind":"conflictResolution","conflicts":["CONFLICT-O13"],"requirementKeys":["k"]}}]}"""
+              let node : HandoffNode =
+                  { Id = "DEC-SAVE-IDEMPOTENCY-DURABLE"; Kind = "decision"; RequirementKeys = [ "k" ]; DependsOn = []
+                    Justification = Some "Saves are idempotent by operation id (DF-TE-2026-A006), durably across restart (DF-TE-2026-A009)." }
+              let decided = ConstructionHandoff.decisions records [ node ] [] |> List.exactlyOne
+              Assert.equal "constructionRecord" decided.Source
+              Assert.isTrue (decided.Summary.StartsWith "Resolves CONFLICT-O13.") decided.Summary
+              Assert.isTrue (decided.Summary.Contains "DF-TE-2026-A006" && decided.Summary.Contains "DF-TE-2026-A009") decided.Summary
+              Assert.equal [ "k" ] decided.RequirementKeys)
+          t "the decision-record envelope accepts versions 1 to 3 and refuses any other" (fun () ->
+              let envelope version =
+                  sprintf """{"schemaVersion":"ordo.construction-decisions/%s","blueprintDigest":"x","cohortId":"C","records":[{"nodeId":"N"}]}""" version
+                  |> ConstructionDecisions.envelope
+              [ "1"; "2"; "3" ] |> List.iter (fun version ->
+                  match envelope version with
+                  | Ok parsed -> Assert.equal [ "N" ] parsed.NodeIds
+                  | Error reason -> failwithf "version %s refused: %s" version reason)
+              match envelope "4" with
+              | Error reason -> Assert.isTrue (reason.Contains "unsupported schemaVersion") reason
+              | Ok _ -> failwith "version 4 was accepted")
+          t "recognition that finds nothing worth generating refuses prepare before generation and writes nothing" (fun () ->
+              withDecisionsHost (fun host ->
+                  let generated = ref 0
+                  let generator = { fake generated "fake@1" with Recognition = Some(recognizing (ref []) false) }
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "worth generating"
+                  Assert.equal 0 generated.Value
+                  Assert.isTrue (not (File.Exists(Path.Combine(host.Parent, "prepared.json")))) "a prepared artifact was written"))
+          t "the host's per-cohort escalateOpenQuestions setting reaches recognition and changes the cache key" (fun () ->
+              withDecisionsHost (fun host ->
+                  let calls = ref []
+                  let generator = { fake (ref 0) "fake@1" with Recognition = Some(recognizing calls true) }
+                  let first, _ = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  let config = JsonNode.Parse(File.ReadAllText host.Config)
+                  config["recognition"] <- JsonNode.Parse """{"escalateOpenQuestions":true,"cohorts":{"COH-TIMER":false}}"""
+                  File.WriteAllText(host.Config, config.ToJsonString())
+                  let second, _ = prepareWith generator host (Some(decisionsPath host)) None |> okValue
+                  Assert.equal [ true; false ] (calls.Value |> List.map _.Escalate)
+                  Assert.isTrue (str first["cacheKey"] <> str second["cacheKey"]) "the recognition policy is not in the cache key"
+                  config["recognition"] <- JsonNode.Parse """{"cohorts":{"COH-TIMER":"no"}}"""
+                  File.WriteAllText(host.Config, config.ToJsonString())
+                  prepareWith generator host (Some(decisionsPath host)) None |> refusedWith "map cohort ids to booleans")) ]
+
+    let tests = grantTests @ prepareTests @ applyTests @ acceptanceTests @ workspaceTests @ checkTests @ recognitionTests @ cacheTests @ telemetryTests

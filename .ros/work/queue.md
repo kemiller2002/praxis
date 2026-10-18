@@ -338,6 +338,7 @@
 | WI-0100 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | active |  | medium |
 | WI-0101 | Pin Praxis 3.12.0 and validate with the pinned release binary in CI | complete |  | medium |
 | WI-0102 | Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12) | complete | telemetry | high |
+| WI-0103 | Pin Ordo 1.16.1 and complete Praxis #266 recognition validation | complete | gh-266,construct-010 | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

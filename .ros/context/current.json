@@ -10364,6 +10364,48 @@
       "completedAt": "2026-10-13T23:24:07.000Z"
     },
     {
+      "id": "WI-0103",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": ".echelon/foundations.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ConstructionCliTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-15T21:32:30.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261015T133405482Z-69f5149a"
+      ],
+      "latestCheckpoint": {
+        "id": "7c262d5b3ae5e249c999a266",
+        "recordedAt": "2026-10-15T20:31:30.000Z",
+        "executionId": "EXE-20261015T133405482Z-69f5149a",
+        "stepId": "STEP-20261015T175430000Z-6db6260e",
+        "repository": "repository-operating-system",
+        "branch": "codex/praxis-266-release-pin",
+        "commit": "3ef9776f8cb2defb6a5853a8baadc88e11832479",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "construct/recognition",
+        "remoteCommit": "3ef9776f8cb2defb6a5853a8baadc88e11832479",
+        "summary": "Pinned published Ordo 1.16.1, integrated current main, and validated versioned recognition",
+        "nextAction": "Verify all required GitHub checks on Praxis PR #266 head 3ef9776f",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-15T21:32:30.000Z"
+    },
+    {
       "id": "GH-268",
       "type": "bug",
       "state": "complete",
@@ -10412,7 +10454,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-14T21:29:40.000Z",
+  "updatedAt": "2026-10-15T21:32:30.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
