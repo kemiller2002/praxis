@@ -10516,11 +10516,22 @@
       },
       "completedAt": "2026-10-19T15:56:03.000Z",
       "conclusion": "RQ-ROS-2026-A032 integrated: Ordo ecir/1 admission (PRX-REL-008), atomic claims with fencing/leases over memory/file/git-ref CAS stores, Dokimos-verified completion and legacy-completion guard (PRX-REL-001..007,010,011), provider usage ingestion and cost-per-verified-requirement report (PRX-REL-009). Full suite 2277/2277 with the real Dokimos CLI (baseline 2223/2223)."
+    },
+    {
+      "id": "RELEASE-3-14-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-19T17:22:18.167Z",
+      "telemetryExecutionIds": [
+        "EXE-20261019T172219154Z-af713a7d"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-19T15:56:03.000Z",
+  "updatedAt": "2026-10-19T17:22:18.167Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
