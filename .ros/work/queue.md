@@ -166,6 +166,7 @@
 | PRAXIS-REL-005 | Bind completion evidence to the verification revision | complete | reliability, follow-up | high |
 | PRAXIS-REL-006 | Enable workProtocol.requireVerifiedCompletion in Echelon repositories | captured | reliability, follow-up | medium |
 | PRAXIS-REL-007 | Run the REL-001 baseline vs treatment pilot and preregister replicates | captured | reliability, follow-up | medium |
+| PRAXIS-REL-008 | Require Ordo contract readiness for verified completion (REL-GATE-002) | ready | reliability, rel-gate-002 | high |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |

@@ -1,0 +1,25 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-59f6f1fb81fc30c2",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-19-REL-GATE-002-contract-readiness.md",
+    "fileName": "2026-10-19-REL-GATE-002-contract-readiness.md",
+    "sha256": "2095c971e790ea618f517f215895dd68b682cf0089c0e0bcf894b6b24f8f0c33",
+    "size": 3152
+  },
+  "claimedAt": "2026-10-19T22:15:40.005Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261019T221538016Z-60cbdf02",
+  "derivations": [],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}

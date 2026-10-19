@@ -6483,6 +6483,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-REL-008",
+      "title": "Require Ordo contract readiness for verified completion (REL-GATE-002)",
+      "description": "REL-GATE-002: contradictory decisions with an unresolved conflict (B6a) and an unresolved requirement (B5b) reach Dokimos-verified completion. Mirror Ordo ORDO-REL-003 (UNRESOLVED_CONFLICT admission rule, requirement-scoped readiness), enforce readiness in OrdoBoundAuthority.bind with the host authority's RequiredDecisionIds as the authorized set, make the bound authority constructible only from a ready scope, and report readiness in praxis ordo contract check.",
+      "tags": [
+        "reliability",
+        "rel-gate-002"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-19T22:15:35Z",
+      "updatedAt": "2026-10-19T22:15:35Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-GATE-002",
+      "sourceReference": ".praxis/inbox/documents/2026-10-19-REL-GATE-002-contract-readiness.md"
     }
   ]
 }
