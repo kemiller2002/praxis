@@ -163,7 +163,7 @@
 | PRAXIS-REL-002 | Release-qualify Dokimos 0.6.0 (completion verify) for host enforcement | captured | reliability, follow-up | high |
 | PRAXIS-REL-003 | Release Praxis with claims and verified completion, then qualify via Conditor and Registry | captured | reliability, follow-up | high |
 | PRAXIS-REL-004 | Ingest provider transcripts automatically at work complete | captured | reliability, follow-up | high |
-| PRAXIS-REL-005 | Bind completion evidence to the verification revision | captured | reliability, follow-up | high |
+| PRAXIS-REL-005 | Bind completion evidence to the verification revision | complete | reliability, follow-up | high |
 | PRAXIS-REL-006 | Enable workProtocol.requireVerifiedCompletion in Echelon repositories | captured | reliability, follow-up | medium |
 | PRAXIS-REL-007 | Run the REL-001 baseline vs treatment pilot and preregister replicates | captured | reliability, follow-up | medium |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |

@@ -6,7 +6,7 @@ open Praxis.Domain.Provenance
 open Praxis.Domain.Work
 open Praxis.Infrastructure.Work
 
-/// `praxis work claim|renew|release|recover|expire|claims|complete-verified`
+/// `praxis work claim|renew|release|recover|expire|claims|complete-verified|validate-run`
 /// (PRX-REL-001..011): parse, call the claim services, render one JSON
 /// document. Exit codes: 0 done or replayed, 2 invalid arguments, 3 refused
 /// (structured `PRX.CLAIM.*` / `PRX.COMPLETION.*` / `DOK.COMPLETION.*`
@@ -24,9 +24,9 @@ module WorkClaimCommands =
         + $"work complete-verified {fence} --commit SHA --verification-revision SHA --authority FILE [--ordo-contract FILE [--expected-ordo-digest sha256:HEX]] "
         + "[--ordo-contract-version V] [--ordo-contract-digest sha256:HEX] [--requirement ID]* [--decision ID]* "
         + "[--conflict-resolution ID]* [--validation NAME=passed|failed|unavailable[:EVIDENCE-ID,...]]* "
-        + $"[--evidence ID=PATH[@sha256:HEX]]* [--telemetry-execution EXE-ID]* [--timeout-seconds N] {store}"
+        + $"[--evidence ID=PATH[@sha256:HEX]]* [--telemetry-execution EXE-ID]* [--timeout-seconds N] {store} | {WorkValidationCommands.usage}"
 
-    let verbs = set [ "claim"; "recover"; "renew"; "release"; "expire"; "claims"; "complete-verified" ]
+    let verbs = set [ "claim"; "recover"; "renew"; "release"; "expire"; "claims"; "complete-verified"; "validate-run" ]
 
     let private optionValue (name: string) (arguments: string list) =
         arguments
@@ -105,9 +105,7 @@ module WorkClaimCommands =
         values
         |> List.fold (fun state value -> state |> Result.bind (fun items -> parse value |> Result.map (fun item -> items @ [ item ]))) (Ok [])
 
-    let private print (text: string, code: int) =
-        printfn "%s" text
-        code
+    let private print (text: string, code: int) = printfn "%s" text; code
 
     let private invalid (message: string) =
         eprintfn "ERROR %s" message
@@ -240,10 +238,13 @@ module WorkClaimCommands =
 
     /// Routed from the root dispatcher for every verb in `verbs`.
     let run root (withActor: string list -> (Actor -> int) -> int) verb arguments =
-        match storeChoice arguments with
+        let options, command = if verb = "validate-run" then WorkValidationCommands.split arguments else arguments, []
+
+        match storeChoice options with
         | Error message -> invalid message
         | Ok choice ->
             match verb with
             | "claims" -> inspect root choice arguments
             | "complete-verified" -> withActor arguments (fun actor -> completeVerified root actor choice arguments)
+            | "validate-run" -> withActor options (fun actor -> WorkValidationCommands.run root actor choice options command)
             | _ -> withActor arguments (fun actor -> mutate root actor choice verb arguments)

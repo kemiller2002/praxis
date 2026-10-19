@@ -1,0 +1,58 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-0578a52a35aff58a",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-19-REL-GATE-001-evidence-binding.md",
+    "fileName": "2026-10-19-REL-GATE-001-evidence-binding.md",
+    "sha256": "12b2600dac226f35c7dcda499409f1a86f2321c7233504836d149dc5a4f53f9b",
+    "size": 2623
+  },
+  "claimedAt": "2026-10-19T19:07:41.514Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261019T190735954Z-b1bd636a",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "docs/work-claims.md",
+      "summary": "PRAXIS-REL-005: completion evidence is a host-observed validation result bound to claim, revision and lease window (REL-GATE-001 acceptance criteria)",
+      "locator": "## Evidence model (PRAXIS-REL-005, REL-GATE-001)",
+      "recordedAt": "2026-10-19T20:16:44.692Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261019T190735954Z-b1bd636a"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/ValidationEvidenceTests.fs",
+      "summary": "Regression tests reproducing both gate cases and every refusal code",
+      "locator": "ValidationEvidenceTests; ReliabilityPipelineTests REL-GATE-001",
+      "recordedAt": "2026-10-19T20:16:45.467Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261019T190735954Z-b1bd636a"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-19T20:17:47.168Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}

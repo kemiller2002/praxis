@@ -188,7 +188,9 @@
     <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="IdentityTests.fs" />
     <Compile Include="ProvenanceAcknowledgementTests.fs" />
+    <Compile Include="ValidationEvidenceFixtures.fs" />
     <Compile Include="WorkClaimTests.fs" />
+    <Compile Include="ValidationEvidenceTests.fs" />
     <Compile Include="TelemetryReliabilityReportTests.fs" />
     <Compile Include="ReliabilityPipelineTests.fs" />
     <Compile Include="Program.fs" />
