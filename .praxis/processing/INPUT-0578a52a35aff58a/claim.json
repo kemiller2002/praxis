@@ -1,0 +1,25 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-0578a52a35aff58a",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-19-REL-GATE-001-evidence-binding.md",
+    "fileName": "2026-10-19-REL-GATE-001-evidence-binding.md",
+    "sha256": "12b2600dac226f35c7dcda499409f1a86f2321c7233504836d149dc5a4f53f9b",
+    "size": 2623
+  },
+  "claimedAt": "2026-10-19T19:07:41.514Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261019T190735954Z-b1bd636a",
+  "derivations": [],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}
