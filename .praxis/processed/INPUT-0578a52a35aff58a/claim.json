@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-0578a52a35aff58a",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-19-REL-GATE-001-evidence-binding.md",
     "fileName": "2026-10-19-REL-GATE-001-evidence-binding.md",
@@ -52,7 +52,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-19T20:17:47.168Z",
   "releaseReason": null,
   "rejectionReason": null
 }
