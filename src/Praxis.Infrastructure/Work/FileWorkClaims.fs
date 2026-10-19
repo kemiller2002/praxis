@@ -200,3 +200,63 @@ module FileWorkClaims =
             else Error $"completion authority input '{path}' does not exist"
         with error ->
             Error error.Message
+
+    /// `workProtocol.requireVerifiedCompletion` in ros.json. Absent: false
+    /// (legacy items stay completable). Present but not a boolean, or ros.json
+    /// unreadable: an error, so plain completion fails closed.
+    let readRequireVerifiedCompletion (root: string) : Result<bool, string> =
+        let path = Path.Combine(root, "ros.json")
+
+        if not (File.Exists path) then
+            Ok false
+        else
+            try
+                use document = JsonDocument.Parse(File.ReadAllText path)
+
+                match document.RootElement.TryGetProperty "workProtocol" with
+                | true, protocol when protocol.ValueKind = JsonValueKind.Object ->
+                    match protocol.TryGetProperty "requireVerifiedCompletion" with
+                    | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+                    | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+                    | true, _ -> Error "ros.json workProtocol.requireVerifiedCompletion must be a boolean"
+                    | _ -> Ok false
+                | _ -> Ok false
+            with error ->
+                Error $"ros.json could not be read: {error.Message}"
+
+    /// The admitted Ordo contract at `path` (interface I3), refused with
+    /// Ordo's own diagnostics when unsupported, malformed or stale.
+    let admitOrdoContract (root: string) (supported: string list) (expectedDigest: string option) (path: string) =
+        let file = if Path.IsPathRooted path then path else Path.Combine(root, path)
+
+        try
+            if File.Exists file then
+                Praxis.Domain.Ordo.OrdoContractAdmission.admitPinned
+                    (if List.isEmpty supported then Praxis.Domain.Ordo.OrdoContractAdmission.implementedVersions else supported)
+                    expectedDigest
+                    (File.ReadAllText file)
+                |> Result.mapError (List.map (fun diagnostic -> { Code = diagnostic.Code; Detail = defaultArg diagnostic.Subject "" + " " + diagnostic.Message |> _.Trim() }))
+            else
+                Error [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = $"Ordo contract '{path}' does not exist" } ]
+        with error ->
+            Error [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = $"Ordo contract '{path}' could not be read: {error.Message}" } ]
+
+    /// Whether plain `work complete` may close `ids`: reads the policy and each
+    /// item's claim from the selected store (fails closed on any read error).
+    let plainCompletion (root: string) (choice: ClaimStoreChoice) (ids: string list) : Result<PlainCompletion, string> =
+        let claims = store root choice
+
+        readRequireVerifiedCompletion root
+        |> Result.bind (fun requireVerified ->
+            ids
+            |> List.fold (fun acc id -> acc |> Result.bind (fun read -> claims.Read id |> Result.map (fun claim -> read @ [ id, claim ]))) (Ok [])
+            |> Result.map (PlainCompletion.decideAll requireVerified))
+
+    /// The authority input bound to the admitted Ordo contract at `contract`
+    /// when one is given (PRX-REL-008); otherwise the input unchanged.
+    let bindOrdoContract (root: string) (contract: string option) (expectedDigest: string option) (input: CompletionAuthorityInput) =
+        match contract with
+        | None -> Ok input
+        | Some path ->
+            admitOrdoContract root input.SupportedOrdoContractVersions expectedDigest path
+            |> Result.bind (fun admitted -> OrdoBoundAuthority.bind admitted input)

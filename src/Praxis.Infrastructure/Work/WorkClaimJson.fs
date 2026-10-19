@@ -159,7 +159,8 @@ module WorkClaimJson =
             [ "claimant", str claimant; "reason", str reason; "currentGeneration", num generation ]
         | ClaimEventPayload.ClaimRenewed(claimant, token, generation, expires) ->
             [ "claimant", str claimant; "claimToken", str token; "generation", num generation; "leaseExpiresAt", time expires ]
-        | ClaimEventPayload.ClaimReleased(claimant, token, generation) ->
+        | ClaimEventPayload.ClaimReleased(claimant, token, generation)
+        | ClaimEventPayload.ClaimExpired(claimant, token, generation) ->
             [ "claimant", str claimant; "claimToken", str token; "generation", num generation ]
         | ClaimEventPayload.CompletionRejected(claimant, token, generation, codes, digest, verifier) ->
             [ "claimant", str claimant

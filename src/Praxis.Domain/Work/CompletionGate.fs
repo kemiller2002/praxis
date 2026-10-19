@@ -365,6 +365,7 @@ type ClaimEventPayload =
     | ClaimRejected of claimant: string * reason: string * currentGeneration: int64
     | ClaimRenewed of claimant: string * claimToken: string * generation: int64 * leaseExpiresAt: DateTimeOffset
     | ClaimReleased of claimant: string * claimToken: string * generation: int64
+    | ClaimExpired of claimant: string * claimToken: string * generation: int64
     | CompletionRejected of claimant: string * claimToken: string * generation: int64 * codes: string list * packetDigest: string option * verifier: VerifierIdentity option
     | CompletionVerified of claimant: string * claimToken: string * generation: int64 * completion: VerifiedCompletion
     | CompletionReplayed of claimToken: string * generation: int64 * packetDigest: string
@@ -382,6 +383,7 @@ module ClaimEvent =
         | ClaimEventPayload.ClaimRejected _ -> "work.claim.rejected"
         | ClaimEventPayload.ClaimRenewed _ -> "work.claim.renewed"
         | ClaimEventPayload.ClaimReleased _ -> "work.claim.released"
+        | ClaimEventPayload.ClaimExpired _ -> "work.claim.expired"
         | ClaimEventPayload.CompletionRejected _ -> "work.completion.rejected"
         | ClaimEventPayload.CompletionVerified _ -> "work.completion.verified"
         | ClaimEventPayload.CompletionReplayed _ -> "work.completion.replayed"
@@ -412,4 +414,8 @@ module ClaimEvent =
                 { WorkItemId = claim.WorkItemId
                   OccurredAt = at
                   Payload = ClaimEventPayload.ClaimReleased(holder.Claimant, holder.ClaimToken, claim.Generation) }
-        | ClaimEffect.MarkedExpired -> None
+        | ClaimEffect.MarkedExpired ->
+            Some
+                { WorkItemId = claim.WorkItemId
+                  OccurredAt = at
+                  Payload = ClaimEventPayload.ClaimExpired(holder.Claimant, holder.ClaimToken, claim.Generation) }

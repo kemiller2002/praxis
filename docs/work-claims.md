@@ -4,8 +4,12 @@ Implements `RQ-ROS-2026-A032` (PRX-REL-001..007, 010, 011). Praxis gives every
 work item an optional **claim**: one holder at a time, a lease, a fencing
 generation and a record revision. Completion through a claim is accepted only
 when the independent Dokimos verifier returns a receipt bound to exactly the
-packet Praxis built. The existing `work begin`/`work complete` lifecycle is
-unchanged; claims are additive.
+packet Praxis built. Claims are additive, but once an item has a claim record
+the legacy `work complete` transition is refused
+(`PRX.COMPLETION.VERIFIED_COMPLETION_REQUIRED`, exit 3) until
+`work complete-verified` has recorded a Dokimos-accepted completion; setting
+`workProtocol.requireVerifiedCompletion: true` in `ros.json` extends that rule
+to every item. Unreadable policy or claim state fails closed.
 
 ## Claim record
 
@@ -114,6 +118,17 @@ leaves `awaiting-verification`; the same holder retrying the same packet
 completes exactly once, and if the lease expires first, a new claimant
 recovers at generation + 1 and the old owner is refused.
 
+## Ordo contract binding (PRX-REL-008)
+
+`work complete-verified --ordo-contract FILE [--expected-ordo-digest D]` admits
+the Ordo `ecir/1` contract (`praxis ordo contract check` semantics) and binds
+it to the authority: version and digest come from admission, a conflicting
+pinned version or digest is `PRX.COMPLETION.STALE_ORDO_CONTRACT`, a required
+requirement/decision/conflict-resolution ID absent from the contract is
+`PRX.COMPLETION.UNKNOWN_CONTRACT_REFERENCE`, and an authority naming no
+required requirements inherits the contract's. Admission failures carry
+Ordo's own `ORDO.CONTRACT.*` codes. Nothing reaches Dokimos on refusal.
+
 ## Codes
 
 `PRX.CLAIM.HELD`, `STALE_REVISION`, `STALE_GENERATION`, `STALE_TOKEN`,
@@ -131,10 +146,25 @@ Appended to `.ros/events/events.jsonl` with the standard work-event envelope;
 an identical event (same content, same `eventId`) is recorded once:
 `work.claim.acquired`, `work.claim.rejected`, `work.claim.renewed`,
 `work.claim.released`, `work.completion.rejected`, `work.completion.verified`,
-`work.completion.replayed`. `work expire` records state only (I1 defines no
-expiry event; the next acquisition reports `recovered: true`).
+`work.completion.replayed`, `work.claim.expired` (durable expiry by
+`work expire`; the next acquisition still reports `recovered: true`).
 
 ## Batches
 
 Each slice of a cohesive batch is claimed, renewed and completed on its own
 claim with its own evidence (`WorkClaims.acquireEach`); no ownership is shared.
+
+## Integration scenarios
+
+| # | Scenario | Expected | Test evidence |
+|---|---|---|---|
+| 1 | One agent completes one requirement | Verified by the real Dokimos, claim `completed`, plain `work complete` then permitted | `reliability pipeline: scenarios 1, 5, 7, 8` (needs `PRAXIS_TEST_DOKIMOS_DLL`) |
+| 2 | Two agents acquire the same item | Exactly one winner; losers get `PRX.CLAIM.HELD`/`CONFLICT` | `work claims:` race tests (memory, file, git with bare origin) |
+| 3 | Lost ownership, then completion | `PRX.CLAIM.STALE_*`/`EXPIRED`, nothing verified | `work claims:` stale-owner tests |
+| 4 | Agent crashes, work recovered | Recovery at generation + 1; old owner refused; no double completion | `work claims:` interruption/recovery tests |
+| 5 | Valid implementation, insufficient evidence | `PRX.COMPLETION.EVIDENCE_MISSING`, and a Dokimos `DOK.COMPLETION.*` refusal for an unproven required check | `reliability pipeline: scenarios 1, 5, 7, 8` |
+| 6 | Stale Ordo contract | `ORDO.CONTRACT.STALE_REFERENCE` / `PRX.COMPLETION.STALE_ORDO_CONTRACT` before verification | `reliability pipeline: scenario 6` |
+| 7 | Replayed completion | Praxis replays idempotently without re-verifying; Dokimos refuses the consumed packet (`REPLAYED_PACKET`) | `reliability pipeline: scenarios 1, 5, 7, 8` |
+| 8 | Token usage unavailable | Verified count measured; token/cost ratios `unavailable` and `null`, never 0 | `reliability pipeline: scenarios 1, 5, 7, 8` |
+| 9 | Token usage present and attributed | Deduped per observation, attributed by ledger or session window | `reliability:` report tests |
+| 10 | Independent requirements concurrently | Each item claimed by its own agent in parallel, all at generation 1, no rejection events | `reliability pipeline: scenario 10`; `work claims: batched slices keep independent claims and evidence` |

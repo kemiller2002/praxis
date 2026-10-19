@@ -295,8 +295,11 @@ module ReliabilityReport =
         events |> List.sortBy (fun event -> event.OccurredAt |> Option.defaultValue DateTimeOffset.MaxValue, event.Order)
 
     let private isStale (event: ReliabilityEvent) =
-        (event.Type = "work.claim.rejected" && event.Reason |> Option.exists (fun reason -> reason.StartsWith("stale-", StringComparison.Ordinal)))
-        || (event.Type = "work.completion.rejected" && event.Codes |> List.exists (fun code -> code.Contains("STALE", StringComparison.OrdinalIgnoreCase)))
+        // A write from an owner whose lease expired is stale too (PRX-REL-005).
+        (event.Type = "work.claim.rejected"
+         && event.Reason |> Option.exists (fun reason -> reason.StartsWith("stale-", StringComparison.Ordinal) || reason = "expired"))
+        || (event.Type = "work.completion.rejected"
+            && event.Codes |> List.exists (fun code -> code.Contains("STALE", StringComparison.OrdinalIgnoreCase) || code = "PRX.CLAIM.EXPIRED"))
 
     let allocationRules =
         [ "R1 observation identity: each provider usage observation has an ID (provider message ID, else request ID; Codex: session + cumulative total) and is counted at most once; duplicates (streamed content blocks, a ledger and a transcript holding the same request) are excluded and counted."
@@ -562,7 +565,7 @@ module ReliabilityReport =
                     "reworkFrequency", ratio reworked attempted "work items with more than one completion attempt / work items with at least one completion attempt" "no work item has a completion attempt"
                     "completionRejectionFrequency", ratio completionRejected (completionRejected + verifiedEvents.Length) "work.completion.rejected / (rejected + verified) completion attempts" "no completion attempt"
                     "duplicateOwnershipAttempts", metric Available (countNode (claimRejected |> List.filter (fun event -> event.Reason = Some "held") |> List.length)) "attempts" (countNode (claimRejected |> List.filter (fun event -> event.Reason = Some "held") |> List.length)) (countNode claimAttempts) "work.claim.rejected with reason held (denominator: claim attempts = acquired + rejected)" None
-                    "staleWriteRejections", metric Available (countNode (events |> List.filter isStale |> List.length)) "rejections" (countNode (events |> List.filter isStale |> List.length)) (countNode (claimAttempts + completionRejected + verifiedEvents.Length)) "work.claim.rejected reason stale-* plus work.completion.rejected with a *STALE* code (denominator: claim and completion attempts)" None
+                    "staleWriteRejections", metric Available (countNode (events |> List.filter isStale |> List.length)) "rejections" (countNode (events |> List.filter isStale |> List.length)) (countNode (claimAttempts + completionRejected + verifiedEvents.Length)) "work.claim.rejected reason stale-*|expired plus work.completion.rejected with a *STALE* or PRX.CLAIM.EXPIRED code (denominator: claim and completion attempts)" None
                     "retries",
                     ReportNode.Object
                         [ "completionReattempts", count extraAttempts "attempts" "completion attempts beyond each work item's first"

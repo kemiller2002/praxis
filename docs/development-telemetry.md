@@ -663,8 +663,9 @@ attribution methods, coverage, `tokens.{input,output,cacheRead,cacheWrite,total}
 `cost.{estimated,billed}`, `unattributed`), `verification`
 (`verifiedRequirements`, `firstPassVerificationRate`, `reworkFrequency`,
 `completionRejectionFrequency`, `duplicateOwnershipAttempts` (claim rejected
-`held`), `staleWriteRejections` (claim rejected `stale-*` plus completion
-codes containing `STALE`), `retries`), `perVerifiedRequirement`
+`held`), `staleWriteRejections` (claim rejected `stale-*` or `expired` plus
+completion codes containing `STALE` or equal to `PRX.CLAIM.EXPIRED`: a late
+write from an expired owner is stale), `retries`), `perVerifiedRequirement`
 (`estimatedCost`, `billedCost`, `tokensTotal`), `time` (`elapsedMs` claim to
 verification, `activeMs`, `blockedMs`, `wallMs`), `attributedCommits`,
 `agents`, `executions`, `workItems[]`, `requirements[]`, `allocationRules`.

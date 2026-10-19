@@ -21,7 +21,7 @@ module WorkClaimCommands =
         + $"work recover --id ID [--claimant NAME] [--token TOKEN] [--lease-seconds N] {store} | "
         + $"work renew {fence} [--lease-seconds N] [--running] {store} | work release {fence} [--failed] {store} | "
         + $"work expire --id ID {store} | work claims [ID] {store} | "
-        + $"work complete-verified {fence} --commit SHA --verification-revision SHA --authority FILE "
+        + $"work complete-verified {fence} --commit SHA --verification-revision SHA --authority FILE [--ordo-contract FILE [--expected-ordo-digest sha256:HEX]] "
         + "[--ordo-contract-version V] [--ordo-contract-digest sha256:HEX] [--requirement ID]* [--decision ID]* "
         + "[--conflict-resolution ID]* [--validation NAME=passed|failed|unavailable[:EVIDENCE-ID,...]]* "
         + $"[--evidence ID=PATH[@sha256:HEX]]* [--telemetry-execution EXE-ID]* [--timeout-seconds N] {store}"
@@ -169,8 +169,17 @@ module WorkClaimCommands =
         | Ok request, Ok timeout, Ok authorityPath ->
             let ports = FileWorkClaims.completionPorts root choice (Some actor) (optionValue "--execution" arguments) timeout
 
-            match FileWorkClaims.readAuthorityInput root authorityPath with
-            | Error message -> invalid message
+            let bound =
+                FileWorkClaims.readAuthorityInput root authorityPath
+                |> Result.mapError Choice1Of2
+                |> Result.bind (FileWorkClaims.bindOrdoContract root (optionValue "--ordo-contract" arguments) (optionValue "--expected-ordo-digest" arguments) >> Result.mapError Choice2Of2)
+
+            match bound with
+            | Error(Choice1Of2 message) -> invalid message
+            | Error(Choice2Of2 findings) ->
+                CompletionOutcome.Rejected(findings, ports.Claims.Store.Read request.WorkItemId |> Result.defaultValue None)
+                |> WorkClaimOutcomeJson.completionOutcome (ports.Claims.Now())
+                |> print
             | Ok input ->
                 WorkClaims.completeVerified ports input request
                 |> WorkClaimOutcomeJson.completionOutcome (ports.Claims.Now())
@@ -212,6 +221,22 @@ module WorkClaimCommands =
             eprintfn "ERROR %s" message
             1
         | Ok claims -> print (WorkClaimOutcomeJson.claims (ports.Now()) claims, 0)
+
+    /// Wraps the legacy `work complete`: an item under claim-based ownership
+    /// (or any item when `workProtocol.requireVerifiedCompletion` is set) is
+    /// refused with exit 3 unless `complete-verified` already recorded a
+    /// Dokimos-accepted completion. Unreadable policy or claims fail closed.
+    let guardPlainComplete root (arguments: string list) (inner: Actor -> int) (actor: Actor) =
+        let decision = storeChoice arguments |> Result.bind (fun choice -> FileWorkClaims.plainCompletion root choice (optionValues "--id" arguments))
+
+        match decision with
+        | Ok PlainCompletion.Permitted -> inner actor
+        | Ok(PlainCompletion.Refused finding) ->
+            eprintfn "ERROR %s: %s" finding.Code finding.Detail
+            3
+        | Error message ->
+            eprintfn "ERROR %s: %s" PlainCompletion.RequiredCode message
+            3
 
     /// Routed from the root dispatcher for every verb in `verbs`.
     let run root (withActor: string list -> (Actor -> int) -> int) verb arguments =

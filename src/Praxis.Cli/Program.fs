@@ -2866,7 +2866,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "work" :: "resume" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Resume rest (runWorkResume root rest))
     | "work" :: "block" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Block rest (runWorkBlock root rest))
     | "work" :: "abandon" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Abandon rest (runWorkAbandon root rest))
-    | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Complete rest (runWorkComplete root rest))
+    | "work" :: ("complete" | "done") :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Complete rest (WorkClaimCommands.guardPlainComplete root rest (runWorkComplete root rest)))
     | "work" :: (("history" | "reconcile") as operation) :: rest -> WorkHistoryCommands.route root operation rest
     | "work" :: verb :: rest when WorkClaimCommands.verbs.Contains verb -> WorkClaimCommands.run root ProvenanceCommands.withResolvedActor verb rest
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
