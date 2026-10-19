@@ -83,6 +83,7 @@
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Work/FileCheckpointRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
+    <Compile Include="Ordo/OrdoContractSource.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
     <Compile Include="Remote/GitHubActionsExecutor.fs" />
