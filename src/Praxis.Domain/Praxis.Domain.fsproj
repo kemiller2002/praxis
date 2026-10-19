@@ -63,6 +63,8 @@
     <Compile Include="Telemetry/UsageCost.fs" />
     <Compile Include="Telemetry/Acceptance.fs" />
     <Compile Include="Telemetry/Usage.fs" />
+    <Compile Include="Telemetry/ProviderUsage.fs" />
+    <Compile Include="Telemetry/ReliabilityReport.fs" />
     <Compile Include="Pacing/Model.fs" />
     <Compile Include="Provenance/Actor.fs" />
     <Compile Include="Provenance/ArtifactProvenance.fs" />
