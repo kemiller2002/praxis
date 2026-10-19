@@ -188,6 +188,7 @@
     <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="IdentityTests.fs" />
     <Compile Include="ProvenanceAcknowledgementTests.fs" />
+    <Compile Include="WorkClaimTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
