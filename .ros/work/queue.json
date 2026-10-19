@@ -6493,10 +6493,10 @@
         "rel-gate-002"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-19T22:15:35Z",
-      "updatedAt": "2026-10-19T22:15:35Z",
+      "updatedAt": "2026-10-19T23:53:55Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

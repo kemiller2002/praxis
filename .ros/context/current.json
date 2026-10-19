@@ -10637,38 +10637,57 @@
     {
       "id": "PRAXIS-REL-008",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-19T22:15:35Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/CompletionPolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Ordo/ContractAdmission.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ReliabilityPipelineTests.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/OrdoContractAdmissionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-19T23:53:55Z",
       "telemetryExecutionIds": [
         "EXE-20261019T221538016Z-60cbdf02"
       ],
       "latestCheckpoint": {
-        "id": "3fdfe5158ecf01fe04b413f0",
-        "recordedAt": "2026-10-19T23:02:09Z",
+        "id": "9bdb29b25d60be84da949e25",
+        "recordedAt": "2026-10-19T23:53:51Z",
         "executionId": "EXE-20261019T221538016Z-60cbdf02",
         "repository": "repository-operating-system",
         "branch": "claude/echelon-reliability-integration-g8x7vn",
-        "commit": "f7f0a30c2c4303a5589317e3554b8626fee72912",
+        "commit": "ab1b1d20875fb983005346ae2d1ed26004c90b06",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
-        "remoteCommit": "f7f0a30c2c4303a5589317e3554b8626fee72912",
-        "summary": "Readiness enforced in OrdoBoundAuthority.bind (BoundCompletionAuthority only from a ReadyScope), Ordo UNRESOLVED_CONFLICT rule and readiness mirrored with corpus parity, praxis ordo contract check readiness mode; full suite 2298 passed 0 failed; B harness re-run refuses B5b/B6a",
-        "nextAction": "Record final suite with tripwire test, derive intake, complete PRAXIS-REL-008",
+        "remoteCommit": "ab1b1d20875fb983005346ae2d1ed26004c90b06",
+        "summary": "Final suite 2299 passed, 0 failed, no SKIP (real Dokimos 0.6.0); intake INPUT-59f6f1fb81fc30c2 derived and completed",
+        "nextAction": "Complete PRAXIS-REL-008",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-19T23:53:55Z",
+      "conclusion": "REL-GATE-002 closed: Ordo UNRESOLVED_CONFLICT admission rule and requirement-scoped readiness mirrored (corpus parity with ordo 1f39ff0); OrdoBoundAuthority.bind requires readiness with the host authority's RequiredDecisionIds and yields BoundCompletionAuthority (ReadyScope-only); full suite 2299 passed 0 failed with real Dokimos 0.6.0; REL-001 B re-run refuses B5b/B6a"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-19T22:15:35Z",
+  "updatedAt": "2026-10-19T23:53:55Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
