@@ -98,6 +98,11 @@
     <Compile Include="Work/FileWorkGroupRepository.fs" />
     <Compile Include="Planning/FilePacingCapacity.fs" />
     <Compile Include="Work/FileInputInbox.fs" />
+    <Compile Include="Work/WorkClaimJson.fs" />
+    <Compile Include="Work/ClaimProcess.fs" />
+    <Compile Include="Work/WorkClaimStores.fs" />
+    <Compile Include="Work/GitRefWorkClaimStore.fs" />
+    <Compile Include="Work/FileWorkClaims.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileGroupObservation.fs" />
     <Compile Include="Planning/FileWorkGroupFacts.fs" />

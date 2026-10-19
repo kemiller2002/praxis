@@ -1,0 +1,323 @@
+namespace Praxis.Infrastructure.Work
+
+open System
+open System.Globalization
+open System.Text.Json
+open System.Text.Json.Nodes
+open Praxis.Contracts.Provenance
+open Praxis.Domain.Provenance
+open Praxis.Domain.Work
+open Praxis.Infrastructure.Json
+
+/// Wire forms for claims: the stored claim record
+/// (`praxis.work-claim/1`), the I1 event envelope, the Dokimos packet and
+/// authority (I2), and the Dokimos receipt.
+[<RequireQualifiedAccess>]
+module WorkClaimJson =
+    let ClaimSchemaVersion = "praxis.work-claim/1"
+
+    let stamp (value: DateTimeOffset) =
+        value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)
+
+    let private str (value: string) : JsonNode = JsonValue.Create value
+    let private num (value: int64) : JsonNode = JsonValue.Create value
+    let private flag (value: bool) : JsonNode = JsonValue.Create value
+    let private time (value: DateTimeOffset) = str (stamp value)
+
+    let private optional (value: string option) : JsonNode =
+        match value with
+        | Some text -> str text
+        | None -> null
+
+    let private strings (values: string list) : JsonNode =
+        let array = JsonArray()
+        values |> List.iter (fun value -> array.Add(str value))
+        array
+
+    let private obj (members: (string * JsonNode) list) : JsonNode =
+        let node = JsonObject()
+        members |> List.iter (fun (name, value) -> node[name] <- value)
+        node
+
+    // ---- claim record ------------------------------------------------------
+
+    let private completionNode (completion: VerifiedCompletion) =
+        obj
+            [ "packetDigest", str completion.PacketDigest
+              "receiptDigest", str completion.ReceiptDigest
+              "commit", str completion.Commit
+              "verificationRevision", str completion.VerificationRevision
+              "requirementIds", strings completion.RequirementIds
+              "telemetryExecutions", strings completion.TelemetryExecutions
+              "verifier", obj [ "name", str completion.VerifierName; "version", str completion.VerifierVersion ]
+              "completedAt", time completion.CompletedAt ]
+
+    let claimNode (claim: WorkClaim) =
+        obj
+            [ "schemaVersion", str ClaimSchemaVersion
+              "workItemId", str claim.WorkItemId
+              "revision", num claim.Revision
+              "generation", num claim.Generation
+              "status", str (ClaimStatus.code claim.Status)
+              "holder",
+              (match claim.Holder with
+               | None -> null
+               | Some holder ->
+                   obj
+                       [ "claimant", str holder.Claimant
+                         "claimToken", str holder.ClaimToken
+                         "acquiredAt", time holder.AcquiredAt
+                         "leaseExpiresAt", time holder.LeaseExpiresAt ])
+              "previousClaimant", optional claim.PreviousClaimant
+              "pendingPacketDigest", optional claim.PendingPacketDigest
+              "consumedPacketDigests", strings claim.ConsumedPacketDigests
+              "completion", (claim.Completion |> Option.map completionNode |> Option.toObj)
+              "updatedAt", time claim.UpdatedAt ]
+
+    let renderClaim (claim: WorkClaim) =
+        (claimNode claim).ToJsonString(JsonSerializerOptions(WriteIndented = true)) + "\n"
+
+    let private property (element: JsonElement) (name: string) =
+        match element.TryGetProperty name with
+        | true, value when value.ValueKind <> JsonValueKind.Null -> Some value
+        | _ -> None
+
+    let private text element name =
+        property element name
+        |> Option.filter (fun value -> value.ValueKind = JsonValueKind.String)
+        |> Option.map _.GetString()
+
+    let private requireText element name =
+        text element name |> Option.defaultWith (fun () -> failwith $"'{name}' must be a string")
+
+    let private requireTime element name =
+        DateTimeOffset.Parse(requireText element name, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)
+
+    let private texts element name =
+        match property element name with
+        | Some value when value.ValueKind = JsonValueKind.Array ->
+            value.EnumerateArray() |> Seq.map (fun item -> item.GetString()) |> Seq.toList
+        | Some _ -> failwith $"'{name}' must be an array"
+        | None -> []
+
+    let private parseClaimElement (root: JsonElement) =
+        if text root "schemaVersion" <> Some ClaimSchemaVersion then failwith "unsupported claim schemaVersion"
+
+        { WorkItemId = requireText root "workItemId"
+          Revision = root.GetProperty("revision").GetInt64()
+          Generation = root.GetProperty("generation").GetInt64()
+          Status =
+            requireText root "status"
+            |> ClaimStatus.tryParse
+            |> Option.defaultWith (fun () -> failwith "unknown claim status")
+          Holder =
+            property root "holder"
+            |> Option.map (fun holder ->
+                { ClaimHolder.Claimant = requireText holder "claimant"
+                  ClaimToken = requireText holder "claimToken"
+                  AcquiredAt = requireTime holder "acquiredAt"
+                  LeaseExpiresAt = requireTime holder "leaseExpiresAt" })
+          PreviousClaimant = text root "previousClaimant"
+          PendingPacketDigest = text root "pendingPacketDigest"
+          ConsumedPacketDigests = texts root "consumedPacketDigests"
+          Completion =
+            property root "completion"
+            |> Option.map (fun completion ->
+                let verifier = completion.GetProperty "verifier"
+
+                { PacketDigest = requireText completion "packetDigest"
+                  ReceiptDigest = requireText completion "receiptDigest"
+                  Commit = requireText completion "commit"
+                  VerificationRevision = requireText completion "verificationRevision"
+                  RequirementIds = texts completion "requirementIds"
+                  TelemetryExecutions = texts completion "telemetryExecutions"
+                  VerifierName = requireText verifier "name"
+                  VerifierVersion = requireText verifier "version"
+                  CompletedAt = requireTime completion "completedAt" })
+          UpdatedAt = requireTime root "updatedAt" }
+
+    let parseClaim (json: string) : Result<WorkClaim, string> =
+        try
+            use document = JsonDocument.Parse json
+            Ok(parseClaimElement document.RootElement)
+        with error ->
+            Error $"claim record is malformed: {error.Message}"
+
+    // ---- I1 events ----------------------------------------------------------
+
+    let private payloadMembers (payload: ClaimEventPayload) : (string * JsonNode) list =
+        match payload with
+        | ClaimEventPayload.ClaimAcquired(claimant, token, generation, expires, revision, recovered, previous) ->
+            [ "claimant", str claimant
+              "claimToken", str token
+              "generation", num generation
+              "leaseExpiresAt", time expires
+              "revision", num revision
+              "recovered", flag recovered ]
+            @ (previous |> Option.map (fun value -> "previousClaimant", str value) |> Option.toList)
+        | ClaimEventPayload.ClaimRejected(claimant, reason, generation) ->
+            [ "claimant", str claimant; "reason", str reason; "currentGeneration", num generation ]
+        | ClaimEventPayload.ClaimRenewed(claimant, token, generation, expires) ->
+            [ "claimant", str claimant; "claimToken", str token; "generation", num generation; "leaseExpiresAt", time expires ]
+        | ClaimEventPayload.ClaimReleased(claimant, token, generation) ->
+            [ "claimant", str claimant; "claimToken", str token; "generation", num generation ]
+        | ClaimEventPayload.CompletionRejected(claimant, token, generation, codes, digest, verifier) ->
+            [ "claimant", str claimant
+              "claimToken", str token
+              "generation", num generation
+              "codes", strings codes ]
+            @ (digest |> Option.map (fun value -> "packetDigest", str value) |> Option.toList)
+            @ [ "verifier",
+                (match verifier with
+                 | Some identity -> obj [ "name", str identity.Name; "version", str identity.Version ]
+                 | None -> null) ]
+        | ClaimEventPayload.CompletionVerified(claimant, token, generation, completion) ->
+            [ "claimant", str claimant
+              "claimToken", str token
+              "generation", num generation
+              "commit", str completion.Commit
+              "verificationRevision", str completion.VerificationRevision
+              "requirementIds", strings completion.RequirementIds
+              "packetDigest", str completion.PacketDigest
+              "receiptDigest", str completion.ReceiptDigest
+              "telemetryExecutions", strings completion.TelemetryExecutions ]
+        | ClaimEventPayload.CompletionReplayed(token, generation, digest) ->
+            [ "claimToken", str token; "generation", num generation; "packetDigest", str digest ]
+
+    /// The existing work-event envelope plus the I1 payload. `eventId` is the
+    /// content hash of every member before it, as for every work event, so
+    /// an identical event always has the identical id.
+    let eventNode (repository: string) (protocolVersion: string) (execution: string option) (actor: Actor option) (event: ClaimEvent) =
+        let node = JsonObject()
+        node["schemaVersion"] <- str "1.0.0"
+        node["type"] <- str (ClaimEvent.eventType event)
+        node["workItem"] <- str event.WorkItemId
+        node["repository"] <- str repository
+        node["protocolVersion"] <- str protocolVersion
+        node["occurredAt"] <- time event.OccurredAt
+        execution |> Option.iter (fun value -> node["execution"] <- str value)
+        payloadMembers event.Payload |> List.iter (fun (name, value) -> node[name] <- value)
+        actor |> Option.iter (fun value -> node["actor"] <- ActorJson.node value)
+        node["eventId"] <- str (CanonicalJson.sha256HexPrefix 24 (CanonicalJson.serializeCompact node))
+        node
+
+    // ---- Dokimos wire (I2) --------------------------------------------------
+
+    let packetNode (packet: CompletionPacket) =
+        obj
+            [ "SchemaVersion", str CompletionGate.PacketSchemaVersion
+              "WorkItemId", str packet.WorkItemId
+              "ClaimToken", str packet.ClaimToken
+              "FencingGeneration", num packet.FencingGeneration
+              "Commit", str packet.Commit
+              "VerificationRevision", str packet.VerificationRevision
+              "OrdoContractVersion", str packet.OrdoContractVersion
+              "OrdoContractDigest", str packet.OrdoContractDigest
+              "RequirementIds", strings packet.RequirementIds
+              "DecisionIds", strings packet.DecisionIds
+              "ConflictResolutionIds", strings packet.ConflictResolutionIds
+              "Validations",
+              (let array = JsonArray()
+               for validation in packet.Validations do
+                   array.Add(
+                       obj
+                           [ "Name", str validation.Name
+                             "Status", str (CheckStatus.code validation.Status)
+                             "EvidenceIds", strings validation.EvidenceIds ]
+                   )
+               array)
+              "Evidence",
+              (let array = JsonArray()
+               for evidence in packet.Evidence do
+                   array.Add(obj [ "Id", str evidence.Id; "Digest", str evidence.Digest; "Revision", str evidence.Revision ])
+               array) ]
+
+    let authorityNode (authority: CompletionAuthority) =
+        obj
+            [ "SchemaVersion", str CompletionGate.AuthoritySchemaVersion
+              "WorkItemId", str authority.WorkItemId
+              "ClaimToken", str authority.ClaimToken
+              "FencingGeneration", num authority.FencingGeneration
+              "ExpectedCommit", str authority.ExpectedCommit
+              "ExpectedVerificationRevision", str authority.ExpectedVerificationRevision
+              "SupportedOrdoContractVersions", strings authority.SupportedOrdoContractVersions
+              "ExpectedOrdoContractDigest", str authority.ExpectedOrdoContractDigest
+              "RequiredRequirementIds", strings authority.RequiredRequirementIds
+              "RequiredDecisionIds", strings authority.RequiredDecisionIds
+              "RequiredConflictResolutionIds", strings authority.RequiredConflictResolutionIds
+              "RequiredValidationNames", strings authority.RequiredValidationNames
+              "Evidence",
+              (let array = JsonArray()
+               for evidence in authority.Evidence do
+                   array.Add(
+                       obj
+                           [ "Id", str evidence.Id
+                             "Digest", str evidence.Digest
+                             "Revision", str evidence.Revision
+                             "Status", str (CheckStatus.code evidence.Status)
+                             "Reusable", flag evidence.Reusable ]
+                   )
+               array)
+              "ConsumedPacketDigests", strings authority.ConsumedPacketDigests ]
+
+    /// Strict receipt intake: every required member, nothing unknown.
+    let parseReceipt (json: string) : Result<DokimosReceipt, string> =
+        let required =
+            set
+                [ "Contract"; "SchemaVersion"; "DokimosVersion"; "Verdict"; "ExitCode"; "WorkItemId"; "Commit"; "VerificationRevision"
+                  "PacketDigest"; "RequirementCount"; "EvidenceDigests"; "ReusedEvidenceIds"; "Diagnostics" ]
+
+        try
+            use document = JsonDocument.Parse json
+            let root = document.RootElement
+
+            if root.ValueKind <> JsonValueKind.Object then
+                Error "receipt is not a JSON object"
+            else
+                let names = root.EnumerateObject() |> Seq.map _.Name |> Set.ofSeq
+
+                if names <> required then
+                    Error $"receipt members differ from dokimos.completion-verification/1: {Set.difference (Set.union names required) (Set.intersect names required) |> Set.toList}"
+                else
+                    Ok
+                        { Contract = requireText root "Contract"
+                          SchemaVersion = requireText root "SchemaVersion"
+                          DokimosVersion = requireText root "DokimosVersion"
+                          Verdict = requireText root "Verdict"
+                          ExitCode = root.GetProperty("ExitCode").GetInt32()
+                          WorkItemId = requireText root "WorkItemId"
+                          Commit = requireText root "Commit"
+                          VerificationRevision = requireText root "VerificationRevision"
+                          PacketDigest = requireText root "PacketDigest"
+                          RequirementCount = root.GetProperty("RequirementCount").GetInt32()
+                          EvidenceDigests = texts root "EvidenceDigests"
+                          ReusedEvidenceIds = texts root "ReusedEvidenceIds"
+                          Diagnostics =
+                            root.GetProperty("Diagnostics").EnumerateArray()
+                            |> Seq.map (fun item ->
+                                { Code = requireText item "Code"
+                                  Subject = requireText item "Subject"
+                                  Detail = requireText item "Detail" })
+                            |> Seq.toList }
+        with error ->
+            Error $"receipt is not valid JSON: {error.Message}"
+
+    /// The caller-supplied authority input (I3 minimal Ordo record).
+    let parseAuthorityInput (json: string) : Result<CompletionAuthorityInput, string> =
+        try
+            use document = JsonDocument.Parse json
+            let root = document.RootElement
+
+            Ok
+                { OrdoContractVersion = requireText root "OrdoContractVersion"
+                  OrdoContractDigest = requireText root "OrdoContractDigest"
+                  SupportedOrdoContractVersions = texts root "SupportedOrdoContractVersions"
+                  RequiredRequirementIds = texts root "RequiredRequirementIds"
+                  RequiredDecisionIds = texts root "RequiredDecisionIds"
+                  RequiredConflictResolutionIds = texts root "RequiredConflictResolutionIds"
+                  RequiredValidationNames = texts root "RequiredValidationNames"
+                  RequiredEvidenceIds = texts root "RequiredEvidenceIds"
+                  ExpectedCommit = text root "ExpectedCommit"
+                  ExpectedVerificationRevision = text root "ExpectedVerificationRevision" }
+        with error ->
+            Error $"completion authority input is malformed: {error.Message}"
