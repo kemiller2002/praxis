@@ -74,6 +74,7 @@
     <Compile Include="TelemetryUsageCommands.fs" />
     <Compile Include="OrdoContractCommands.fs" />
     <Compile Include="WorkClaimCommands.fs" />
+    <Compile Include="TelemetryReliabilityCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>
