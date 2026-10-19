@@ -25,29 +25,35 @@ module ReliabilityPipelineTests =
     let private commit = String('e', 40)
     let private lease = TimeSpan.FromMinutes 30.0
 
-    let private admitted name =
-        match OrdoContractAdmission.admit OrdoContractAdmission.implementedVersions (fixture name) with
-        | Ok contract -> contract
-        | Error diagnostics -> failwith $"fixture {name} must be admitted: {diagnostics}"
-
     /// The authority a host derives for one work item before any agent runs:
-    /// required sets come from the admitted contract, not from prose.
+    /// required sets come from the admitted contract, not from prose. The host
+    /// authorizes the contract's decision (REL-GATE-002): without it the
+    /// requirement in scope is not ready and binding refuses.
     let private baseInput =
         { OrdoContractVersion = ""
           OrdoContractDigest = ""
           SupportedOrdoContractVersions = []
           RequiredRequirementIds = []
-          RequiredDecisionIds = []
+          RequiredDecisionIds = [ "DEC-CONFIRM" ]
           RequiredConflictResolutionIds = []
           RequiredValidationNames = [ "unit-tests" ]
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
           ExpectedVerificationRevision = Some commit }
 
-    let private boundInput () =
-        match OrdoBoundAuthority.bind (admitted "valid-contract.json") baseInput with
-        | Ok input -> input
+    let private bindTo name input = OrdoBoundAuthority.bind None (fixture name) input
+
+    let private boundWith input =
+        match bindTo "valid-contract.json" input with
+        | Ok bound -> bound
         | Error findings -> failwith $"binding must succeed: {findings}"
+
+    let private boundInput () = boundWith baseInput
+
+    let private findingCodes (outcome: Result<BoundCompletionAuthority, CompletionFinding list>) =
+        match outcome with
+        | Error findings -> findings |> List.map _.Code
+        | Ok _ -> failwith "binding must be refused"
 
     let private ports (events: ResizeArray<ClaimEvent>) (clock: DateTimeOffset ref) =
         { Store = InMemoryWorkClaimStore.create ()
@@ -70,7 +76,11 @@ module ReliabilityPipelineTests =
     /// A recorded, passing `unit-tests` result for `held` at `commit`.
     let private evidence (claimPorts: WorkClaimPorts) (held: WorkClaim) = ValidationEvidenceFixtures.validate claimPorts commit held
 
-    let private request (input: CompletionAuthorityInput) (held: WorkClaim) evidencePath =
+    /// The agent's claim: it cites the requirements and the decisions the host
+    /// authorized, as Dokimos requires.
+    let private request (bound: BoundCompletionAuthority) (held: WorkClaim) evidencePath =
+        let input = BoundCompletionAuthority.input bound
+
         { WorkItemId = held.WorkItemId
           Fence = { Claimant = held.Holder.Value.Claimant; ClaimToken = held.Holder.Value.ClaimToken; Generation = held.Generation }
           Commit = commit
@@ -78,7 +88,7 @@ module ReliabilityPipelineTests =
           OrdoContractVersion = Some input.OrdoContractVersion
           OrdoContractDigest = Some input.OrdoContractDigest
           RequirementIds = input.RequiredRequirementIds
-          DecisionIds = []
+          DecisionIds = input.RequiredDecisionIds
           ConflictResolutionIds = []
           Validations = [ { Name = "unit-tests"; Status = CheckStatus.Passed; EvidenceIds = [ "EV-TESTS" ] } ]
           Evidence = [ { Id = "EV-TESTS"; Path = evidencePath; ClaimedDigest = None } ]
@@ -131,11 +141,17 @@ module ReliabilityPipelineTests =
 
     let tests =
         [ t "the admitted Ordo contract supplies the authority's contract identity and requirement set" (fun () ->
-              let input = boundInput ()
+              let bound = boundInput ()
+              let input = BoundCompletionAuthority.input bound
               Assert.equal "ecir/1" input.OrdoContractVersion
               Assert.equal validDigest input.OrdoContractDigest
               Assert.equal [ "ecir/1" ] input.SupportedOrdoContractVersions
-              Assert.equal [ "requirements/domain.md#R-001"; "requirements/operations.md#R-001" ] input.RequiredRequirementIds)
+              Assert.equal [ "requirements/domain.md#R-001"; "requirements/operations.md#R-001" ] input.RequiredRequirementIds
+              Assert.equal [ "DEC-CONFIRM" ] input.RequiredDecisionIds
+              // The ready scope executes the modeled requirement; the deferred one is accounted for only.
+              let scope = OrdoContractAdmission.readyScopeView (BoundCompletionAuthority.scope bound)
+              Assert.equal [ "requirements/domain.md#R-001" ] scope.RequirementKeys
+              Assert.equal [ "DEC-CONFIRM" ] scope.AuthorizedDecisionIds)
 
           t "scenario 6: a stale Ordo contract is refused before any agent work or verification" (fun () ->
               // The host pinned the valid contract; the agent supplies the previous revision.
@@ -146,14 +162,14 @@ module ReliabilityPipelineTests =
               // An authority pinned to another digest is a stale binding.
               let pinned = { baseInput with OrdoContractDigest = "sha256:" + String('0', 64) }
 
-              match OrdoBoundAuthority.bind (admitted "valid-contract.json") pinned with
+              match bindTo "valid-contract.json" pinned with
               | Error findings -> Assert.equal [ OrdoBoundAuthority.StaleCode ] (findings |> List.map _.Code)
               | Ok _ -> failwith "a conflicting pinned digest must be refused"
 
               // Required IDs that the contract does not define are refused, not trusted.
               let unknown = { baseInput with RequiredRequirementIds = [ "requirements/domain.md#R-999" ]; RequiredDecisionIds = [ "DEC-NOPE" ] }
 
-              match OrdoBoundAuthority.bind (admitted "valid-contract.json") unknown with
+              match bindTo "valid-contract.json" unknown with
               | Error findings ->
                   Assert.equal [ OrdoBoundAuthority.UnknownReferenceCode; OrdoBoundAuthority.UnknownReferenceCode ] (findings |> List.map _.Code)
               | Ok _ -> failwith "unknown contract references must be refused"
@@ -231,7 +247,7 @@ module ReliabilityPipelineTests =
 
                   // A required validation with no validated evidence cannot even form a
                   // packet: Praxis refuses it before Dokimos (PRAXIS-REL-005).
-                  let unproven = { input with RequiredValidationNames = [ "unit-tests"; "integration-tests" ] }
+                  let unproven = boundWith { baseInput with RequiredValidationNames = [ "unit-tests"; "integration-tests" ] }
                   let thinEvidence = evidence claimPorts thin
                   let before = calls.Value
 
@@ -243,11 +259,9 @@ module ReliabilityPipelineTests =
                   Assert.equal before calls.Value
 
                   // Proof Praxis can establish but the authority still requires more
-                  // (a decision the packet omits) is refused by Dokimos itself.
-                  let undecided = { input with RequiredDecisionIds = [ "DF-ROS-2026-A001" ] }
-
+                  // (an authorized decision the packet omits) is refused by Dokimos itself.
                   let dokimosRefusal =
-                      WorkClaims.completeVerified (completionPorts events claimPorts counted) undecided (request undecided thin thinEvidence)
+                      WorkClaims.completeVerified (completionPorts events claimPorts counted) input { request input thin thinEvidence with DecisionIds = [] }
                       |> codes
 
                   Assert.isTrue (dokimosRefusal |> List.exists (fun code -> code.StartsWith "DOK.COMPLETION.")) $"Dokimos itself refuses: {dokimosRefusal}"
@@ -360,4 +374,99 @@ module ReliabilityPipelineTests =
                   | CompletionOutcome.Completed(completed, _) -> Assert.equal ClaimStatus.Completed completed.Status
                   | other -> failwith $"expected the real Dokimos to verify a recorded passing result, got {other}"
 
-                  Assert.equal 1 calls.Value) ]
+                  Assert.equal 1 calls.Value)
+          t "REL-GATE-002: contradictory decisions and unresolved requirements never bind a completion authority" (fun () ->
+              // B6a: contradictory decisions joined by an open conflict. Authorizing both
+              // decisions does not resolve it; admission refuses the contract itself.
+              let contradictory = { baseInput with RequiredDecisionIds = [ "DEC-ALLOW-REOPEN"; "DEC-FORBID-REOPEN" ] }
+              Assert.equal [ OrdoContractAdmission.UnresolvedConflictCode ] (findingCodes (bindTo "contradictory-decisions-contract.json" contradictory))
+              Assert.equal [ OrdoContractAdmission.UnresolvedConflictCode ] (findingCodes (bindTo "contradictory-decisions-contract.json" baseInput |> Result.mapError (List.filter (fun f -> f.Code <> OrdoBoundAuthority.UnknownReferenceCode))))
+              // B5b: a well-formed contract whose requirement is unresolved (open conflict).
+              Assert.equal
+                  [ OrdoBoundAuthority.NotReadyCode; OrdoContractAdmission.BlockedRequirementCode; OrdoContractAdmission.UnresolvedConflictCode ]
+                  (findingCodes (bindTo "unresolved-requirement-contract.json" { baseInput with RequiredDecisionIds = [] }))
+              // A valid contract whose decision the host did not authorize is not ready.
+              Assert.equal
+                  [ OrdoBoundAuthority.NotReadyCode; OrdoContractAdmission.MissingDecisionAuthorizationCode ]
+                  (findingCodes (bindTo "valid-contract.json" { baseInput with RequiredDecisionIds = [] }))
+              // Completing only the deferred requirement executes nothing.
+              Assert.equal
+                  [ OrdoBoundAuthority.NotReadyCode; OrdoContractAdmission.EmptyScopeCode ]
+                  (findingCodes (bindTo "valid-contract.json" { baseInput with RequiredRequirementIds = [ "requirements/operations.md#R-001" ]; RequiredDecisionIds = [] }))
+              // No contract at all: a declared identity can never be bound.
+              Assert.equal [ OrdoBoundAuthority.NotReadyCode ] (OrdoBoundAuthority.missingContract () |> List.map _.Code))
+
+          t "REL-GATE-002 invariant: only a ready Ordo scope can construct the authority the builders accept" (fun () ->
+              // Compile-time guarantees, checked at runtime as a tripwire.
+              for kind in [ typeof<BoundCompletionAuthority>; typeof<OrdoContractAdmission.ReadyScope> ] do
+                  Assert.equal 0 (kind.GetConstructors(Reflection.BindingFlags.Public ||| Reflection.BindingFlags.Instance)).Length
+                  let factories =
+                      kind.GetMethods(Reflection.BindingFlags.Public ||| Reflection.BindingFlags.Static)
+                      |> Array.filter (fun m -> m.ReturnType = kind)
+                  Assert.equal 0 factories.Length
+              let parameters (name: string) =
+                  typedefof<CompletionPacket>.Assembly.GetType("Praxis.Domain.Work.CompletionGateModule")
+                  |> Option.ofObj
+                  |> Option.orElse (typedefof<CompletionPacket>.Assembly.GetTypes() |> Array.tryFind (fun t -> t.FullName = "Praxis.Domain.Work.CompletionGate"))
+                  |> Option.map (fun gate -> gate.GetMethod(name).GetParameters() |> Array.map _.ParameterType |> Array.head)
+              for builder in [ "packet"; "authority"; "submissionDigest"; "preflight" ] do
+                  Assert.equal (Some typeof<BoundCompletionAuthority>) (parameters builder))
+
+          t "REL-GATE-002: B5b and B6a are refused end to end and a ready contract verifies through the real Dokimos" (fun () ->
+              match dokimosDll () with
+              | None -> eprintfn "SKIP reliability pipeline: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              | Some dll ->
+                  let root = CliHarness.temporaryDirectory "praxis-pipeline-readiness"
+                  let item = "PRAXIS-PIPE-RG2"
+                  let identity = [ "PRAXIS_ACTOR_KIND", "agent"; "PRAXIS_ACTOR", "test/agent-a"; "PRAXIS_TELEMETRY_PROVIDER", "test"; "PRAXIS_TELEMETRY_RUNTIME", "test" ]
+                  CliHarness.write root ".ros/work/queue.json" ($"{{\"schemaVersion\":\"1.0.0\",\"items\":[{{\"id\":\"{item}\",\"status\":\"captured\"}}]}}")
+                  for name in [ "valid-contract.json"; "unresolved-requirement-contract.json"; "contradictory-decisions-contract.json" ] do
+                      CliHarness.write root name (fixture name)
+                  let authority decisions =
+                      let ids = decisions |> List.map (sprintf "\"%s\"") |> String.concat ","
+                      $"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[],\"RequiredDecisionIds\":[{ids}],\"RequiredConflictResolutionIds\":[],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"]}}"
+                  CliHarness.write root "authority-none.json" (authority [])
+                  CliHarness.write root "authority-both.json" (authority [ "DEC-ALLOW-REOPEN"; "DEC-FORBID-REOPEN" ])
+                  CliHarness.write root "authority-confirm.json" (authority [ "DEC-CONFIRM" ])
+                  CliHarness.git root [ "init"; "-q" ] |> ignore
+                  CliHarness.commitAll root "fixture"
+                  let head = CliHarness.git root [ "rev-parse"; "HEAD" ]
+                  Assert.equal 0 (CliHarness.rosWith root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-a" ]).Exit
+                  let fence = [ "--id"; item; "--token"; "tok-a"; "--generation"; "1" ]
+                  let validated = CliHarness.rosWith root identity ([ "work"; "validate-run" ] @ fence @ [ "--validation"; "unit-tests"; "--evidence-id"; "EV-TESTS"; "--"; "true" ])
+                  Assert.equal 0 validated.Exit
+                  let validatedDocument = CliHarness.json validated.Out
+                  let resultPath = validatedDocument["resultPath"].GetValue<string>()
+
+                  let complete contract authorityFile decisions =
+                      CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", dll) :: identity)
+                          ([ "work"; "complete-verified" ] @ fence
+                           @ [ "--commit"; head; "--verification-revision"; head; "--authority"; authorityFile; "--ordo-contract"; contract
+                               "--requirement"; "requirements/domain.md#R-001"; "--requirement"; "requirements/operations.md#R-001"
+                               "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={resultPath}" ]
+                           @ (decisions |> List.collect (fun id -> [ "--decision"; id ])))
+
+                  let refusedWith (run: CliHarness.Run) (expected: string list) =
+                      Assert.equal 3 run.Exit
+                      let outcome = CliHarness.json run.Out
+                      Assert.equal "rejected" (outcome["outcome"].GetValue<string>())
+                      for code in expected do
+                          Assert.isTrue (run.Out.Contains code) $"{code} missing: {run.Out}"
+
+                  // B6a, even with both contradictory decisions authorized and cited.
+                  refusedWith (complete "contradictory-decisions-contract.json" "authority-both.json" [ "DEC-ALLOW-REOPEN"; "DEC-FORBID-REOPEN" ]) [ OrdoContractAdmission.UnresolvedConflictCode ]
+                  // B5b: the requirement being completed is unresolved.
+                  refusedWith
+                      (complete "unresolved-requirement-contract.json" "authority-none.json" [])
+                      [ OrdoBoundAuthority.NotReadyCode; OrdoContractAdmission.BlockedRequirementCode; OrdoContractAdmission.UnresolvedConflictCode ]
+                  // The agent cannot authorize a decision by citing it: authorization is the host's.
+                  refusedWith (complete "valid-contract.json" "authority-none.json" [ "DEC-CONFIRM" ]) [ OrdoBoundAuthority.NotReadyCode; OrdoContractAdmission.MissingDecisionAuthorizationCode ]
+                  let events () = if File.Exists(Path.Combine(root, ".ros/events/events.jsonl")) then CliHarness.read root ".ros/events/events.jsonl" else ""
+                  Assert.isTrue (not ((events ()).Contains "\"type\":\"work.completion.verified\"")) "a refused contract must never record a verified completion"
+
+                  // The ready contract, with its decision authorized by the host, verifies.
+                  let verified = complete "valid-contract.json" "authority-confirm.json" [ "DEC-CONFIRM" ]
+                  Assert.equal 0 verified.Exit
+                  let verifiedDocument = CliHarness.json verified.Out
+                  Assert.equal "verified" (verifiedDocument["outcome"].GetValue<string>())
+                  Assert.isTrue ((events ()).Contains "\"type\":\"work.completion.verified\"") (events ())) ]

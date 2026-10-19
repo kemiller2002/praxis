@@ -309,6 +309,226 @@
           "code": "ORDO.CONTRACT.INVALID_BLUEPRINT_JSON"
         }
       ]
+    },
+    {
+      "name": "contradictory-decisions-unresolved-conflict",
+      "contract": "contradictory-decisions-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.UNRESOLVED_CONFLICT",
+          "subject": "requirements/domain.md#R-001->CONFLICT-REOPEN"
+        }
+      ]
+    },
+    {
+      "name": "unresolved-requirement",
+      "contract": "unresolved-requirement-contract.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:88a67074845864e1d99cb51b93bc4aa95abf8561ebd6d7c89e5b72fb2dbfe035",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [],
+        "conflictIds": [
+          "CONFLICT-CONFIRM"
+        ]
+      }
+    }
+  ],
+  "readinessComparison": "readiness consumers must match outcome, the scope exactly, and the ordered (code, subject) diagnostic list; authorizedDecisionIds come from the host's authority, never from the agent",
+  "readinessCases": [
+    {
+      "name": "contradictory-decisions-authorized",
+      "contract": "contradictory-decisions-contract.json",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [
+        "DEC-ALLOW-REOPEN",
+        "DEC-FORBID-REOPEN"
+      ],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.UNRESOLVED_CONFLICT",
+          "subject": "requirements/domain.md#R-001->CONFLICT-REOPEN"
+        }
+      ]
+    },
+    {
+      "name": "unresolved-requirement",
+      "contract": "unresolved-requirement-contract.json",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.BLOCKED_REQUIREMENT",
+          "subject": "requirements/domain.md#R-001"
+        },
+        {
+          "code": "ORDO.CONTRACT.UNRESOLVED_CONFLICT",
+          "subject": "requirements/domain.md#R-001->CONFLICT-CONFIRM"
+        }
+      ]
+    },
+    {
+      "name": "decision-not-authorized",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.MISSING_DECISION_AUTHORIZATION",
+          "subject": "DEC-CONFIRM"
+        }
+      ]
+    },
+    {
+      "name": "decision-authorized",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [
+        "DEC-CONFIRM"
+      ],
+      "outcome": "ready",
+      "scope": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+        "requirementKeys": [
+          "requirements/domain.md#R-001"
+        ],
+        "requiredRequirementKeys": [
+          "requirements/domain.md#R-001"
+        ],
+        "requiredNodeIds": [
+          "COHORT-CONFIRM",
+          "DEC-CONFIRM",
+          "VERIFY-CONFIRM"
+        ],
+        "requiredDecisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "requiredRationaleIds": [],
+        "authorizedDecisionIds": [
+          "DEC-CONFIRM"
+        ]
+      }
+    },
+    {
+      "name": "deferred-requirement",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/operations.md#R-001"
+      ],
+      "authorizedDecisionIds": [],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.BLOCKED_REQUIREMENT",
+          "subject": "requirements/operations.md#R-001"
+        }
+      ]
+    },
+    {
+      "name": "authorization-outside-scope",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/operations.md#R-001"
+      ],
+      "authorizedDecisionIds": [
+        "DEC-CONFIRM"
+      ],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.AUTHORIZATION_OUTSIDE_SCOPE",
+          "subject": "DEC-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.BLOCKED_REQUIREMENT",
+          "subject": "requirements/operations.md#R-001"
+        }
+      ]
+    },
+    {
+      "name": "unknown-scope-requirement",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/ghost.md#R-404"
+      ],
+      "authorizedDecisionIds": [],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.UNKNOWN_SCOPE_REQUIREMENT",
+          "subject": "requirements/ghost.md#R-404"
+        }
+      ]
+    },
+    {
+      "name": "invalid-authorizations",
+      "contract": "valid-contract.json",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [
+        "DEC-GHOST",
+        "COHORT-CONFIRM",
+        "DEC-CONFIRM"
+      ],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.AUTHORIZATION_KIND_MISMATCH",
+          "subject": "COHORT-CONFIRM->Cohort"
+        },
+        {
+          "code": "ORDO.CONTRACT.UNKNOWN_AUTHORIZATION",
+          "subject": "DEC-GHOST"
+        }
+      ]
+    },
+    {
+      "name": "stale-pin",
+      "contract": "valid-contract.json",
+      "expectedDigest": "sha256:2f972025b57040eb60fb4b76a4c672c228c8129b29f517bb279789d21568ecd7",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "authorizedDecisionIds": [
+        "DEC-CONFIRM"
+      ],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.STALE_REFERENCE",
+          "subject": "sha256:2f972025b57040eb60fb4b76a4c672c228c8129b29f517bb279789d21568ecd7->sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e"
+        }
+      ]
+    },
+    {
+      "name": "empty-scope",
+      "contract": "valid-contract.json",
+      "requirementKeys": [],
+      "authorizedDecisionIds": [],
+      "outcome": "refused",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.EMPTY_SCOPE"
+        }
+      ]
     }
   ]
 }

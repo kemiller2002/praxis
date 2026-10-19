@@ -210,6 +210,36 @@ requirement/decision/conflict-resolution ID absent from the contract is
 required requirements inherits the contract's. Admission failures carry
 Ordo's own `ORDO.CONTRACT.*` codes. Nothing reaches Dokimos on refusal.
 
+### Contract readiness (REL-GATE-002)
+
+`--ordo-contract` is required: without the contract no readiness can be
+established, so a declared identity alone is refused
+(`PRX.COMPLETION.CONTRACT_NOT_READY`). Admission refuses a `modeled`
+requirement that links a `conflict` node (`ORDO.CONTRACT.UNRESOLVED_CONFLICT`):
+ecir/1 carries no conflict resolution, so contradictory decisions recorded as a
+conflict are open. Binding then requires execution readiness, mirroring Ordo's
+`ConstructibilityContract.assessReadiness`, for the requirements the completion
+executes: the required ones, less those the contract defers, rejects or
+supersedes (they stay in the packet for lossless accounting). A non-modeled
+requirement reached in scope (`ORDO.CONTRACT.BLOCKED_REQUIREMENT`), a reached
+conflict (`UNRESOLVED_CONFLICT`), a decision or standalone rationale in scope
+that is not authorized (`MISSING_DECISION_AUTHORIZATION`,
+`MISSING_RATIONALE_AUTHORIZATION`), an authorization outside the scope
+(`AUTHORIZATION_OUTSIDE_SCOPE`) or an empty executed scope (`EMPTY_SCOPE`) is
+refused with `PRX.COMPLETION.CONTRACT_NOT_READY` followed by the Ordo codes.
+
+The authorized decision set is the authority file's `RequiredDecisionIds`. It
+comes from the host's authority, never from the agent's packet: citing a
+decision with `--decision` does not authorize it. Dokimos still requires the
+packet to cite every authorized decision. Success is a
+`BoundCompletionAuthority`, a type only an Ordo `ReadyScope` can construct;
+the packet and authority builders accept nothing else, so an unready contract
+identity cannot reach Dokimos.
+
+`praxis ordo contract check --contract FILE --requirement KEY... [--authorized-decision ID]...`
+reports the same readiness before any agent work (`status: ready`, exit 0;
+refused, exit 1). Without `--requirement` it is admission only.
+
 ## Codes
 
 `PRX.CLAIM.HELD`, `STALE_REVISION`, `STALE_GENERATION`, `STALE_TOKEN`,
@@ -218,7 +248,8 @@ Ordo's own `ORDO.CONTRACT.*` codes. Nothing reaches Dokimos on refusal.
 `EVIDENCE_MISSING`, `EVIDENCE_UNREADABLE`, `EVIDENCE_UNRECOGNIZED`,
 `EVIDENCE_UNRECORDED`, `EVIDENCE_FOREIGN_CLAIM`, `EVIDENCE_REVISION_MISMATCH`,
 `EVIDENCE_NOT_PASSED`, `EVIDENCE_STALE`, `EVIDENCE_VALIDATION_MISMATCH`,
-`VALIDATION_UNPROVEN`, `AUTHORITY_UNAVAILABLE`,
+`VALIDATION_UNPROVEN`, `AUTHORITY_UNAVAILABLE`, `CONTRACT_NOT_READY`,
+`STALE_ORDO_CONTRACT`, `UNKNOWN_CONTRACT_REFERENCE`,
 `VERIFIER_UNAVAILABLE`, `VERIFIER_TIMEOUT`, `VERIFIER_FAILED`,
 `VERIFIER_INPUT_REJECTED`, `RECEIPT_UNPARSABLE`, `RECEIPT_MISMATCH`,
 `VERIFICATION_REJECTED` (followed by the receipt's `DOK.COMPLETION.*` codes

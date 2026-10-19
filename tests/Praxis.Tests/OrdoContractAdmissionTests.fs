@@ -94,7 +94,10 @@ module OrdoContractAdmissionTests =
     /// Independent differential oracle: the Ordo binary Praxis already vendors
     /// (EchelonFoundry.Ordo.Core 1.8.2) has the same canonical codec and
     /// validator as the contract source. Praxis's own wire implementation must
-    /// agree with it on digest and on accept/reject for every input.
+    /// agree with it on digest and on accept/reject for every input. 1.8.2
+    /// predates the REL-GATE-002 admission rule (ordo 1f39ff0), so the oracle
+    /// applies that one rule on top of the vendored `validate`: a modeled
+    /// requirement linking a conflict node is refused.
     let private ordoBinary (json: string) =
         try
             match Ordo.Core.ConstructionIrWire.readBlueprint json with
@@ -103,8 +106,14 @@ module OrdoContractAdmissionTests =
                 let manifest: Ordo.Core.ConstructionIr.SourceManifest =
                     { Digest = blueprint.SourceManifestDigest
                       Requirements = blueprint.Requirements |> List.map _.Source |> List.distinctBy _.Key }
+                let conflicts =
+                    blueprint.Nodes |> List.filter (fun node -> node.Kind = Ordo.Core.ConstructionIr.Conflict) |> List.map _.Id |> Set.ofList
+                let unresolvedConflict =
+                    blueprint.Requirements
+                    |> List.exists (fun requirement ->
+                        requirement.Disposition = Ordo.Core.ConstructionIr.Modeled && requirement.NodeIds |> List.exists conflicts.Contains)
                 match Ordo.Core.ConstructionIr.validate manifest blueprint with
-                | [] -> Some(Ordo.Core.ConstructionIrWire.blueprintDigest blueprint)
+                | [] when not unresolvedConflict -> Some(Ordo.Core.ConstructionIrWire.blueprintDigest blueprint)
                 | _ -> None
         with :? InvalidOperationException -> None
 
@@ -218,6 +227,118 @@ module OrdoContractAdmissionTests =
         finally
             CliHarness.removeDirectory root
 
+    // -- REL-GATE-002: unresolved conflicts and requirement readiness ----------
+
+    type private ReadinessCase =
+        { Name: string
+          Contract: string
+          ExpectedDigest: string option
+          RequirementKeys: string list
+          AuthorizedDecisionIds: string list
+          Outcome: string
+          Scope: JsonElement option
+          Diagnostics: (string * string option) list }
+
+    let private readinessCases () =
+        use document = JsonDocument.Parse(read "expectations.json")
+        let optionalText (element: JsonElement) (name: string) =
+            match element.TryGetProperty name with
+            | true, value -> Option.ofObj (value.GetString())
+            | _ -> None
+        [ for case in document.RootElement.GetProperty("readinessCases").EnumerateArray() ->
+            { Name = case.GetProperty("name").GetString() |> string
+              Contract = case.GetProperty("contract").GetString() |> string
+              ExpectedDigest = optionalText case "expectedDigest"
+              RequirementKeys = stringsOf case "requirementKeys"
+              AuthorizedDecisionIds = stringsOf case "authorizedDecisionIds"
+              Outcome = case.GetProperty("outcome").GetString() |> string
+              Scope =
+                match case.TryGetProperty "scope" with
+                | true, scope -> Some(scope.Clone())
+                | _ -> None
+              Diagnostics =
+                match case.TryGetProperty "diagnostics" with
+                | true, items ->
+                    [ for item in items.EnumerateArray() -> item.GetProperty("code").GetString() |> string, optionalText item "subject" ]
+                | _ -> [] } ]
+
+    let private ``Praxis reproduces every Ordo golden readiness outcome exactly`` () =
+        let all = readinessCases ()
+        holds(all.Length >= 10, "the copied Ordo readiness corpus is incomplete")
+        for case in all do
+            let outcome =
+                OrdoContractAdmission.assessReadiness
+                    OrdoContractAdmission.implementedVersions case.ExpectedDigest (read case.Contract) case.RequirementKeys case.AuthorizedDecisionIds
+            match case.Outcome, outcome with
+            | "ready", Ok ready ->
+                let scope = case.Scope |> Option.get
+                let view = OrdoContractAdmission.readyScopeView ready
+                equal(scope.GetProperty("contractSchemaVersion").GetString(), view.Contract.Version)
+                equal(scope.GetProperty("contractDigest").GetString(), view.Contract.Digest)
+                equal(stringsOf scope "requirementKeys", view.RequirementKeys)
+                equal(stringsOf scope "requiredRequirementKeys", view.RequiredRequirementKeys)
+                equal(stringsOf scope "requiredNodeIds", view.RequiredNodeIds)
+                equal(stringsOf scope "requiredDecisionIds", view.RequiredDecisionIds)
+                equal(stringsOf scope "requiredRationaleIds", view.RequiredRationaleIds)
+                equal(stringsOf scope "authorizedDecisionIds", view.AuthorizedDecisionIds)
+            | "refused", Error diagnostics ->
+                holds((case.Diagnostics = codesOf diagnostics), sprintf "%s: expected %A got %A" case.Name case.Diagnostics (codesOf diagnostics))
+            | expected, actual -> failwithf "%s: Ordo says %s, Praxis says %A" case.Name expected actual
+
+    let private ``contradictory decisions with an open conflict are refused at admission`` () =
+        match admit (read "contradictory-decisions-contract.json") with
+        | Error diagnostics ->
+            equal([ OrdoContractAdmission.UnresolvedConflictCode, Some "requirements/domain.md#R-001->CONFLICT-REOPEN" ], codesOf diagnostics)
+        | Ok _ -> failwith "a modeled requirement linking an unresolved conflict was admitted"
+        // The conflict rule is independent of member and array order.
+        for variant in mutations (read "contradictory-decisions-contract.json") do
+            holds(admit variant |> Result.isError, "a reordering admitted the contradictory contract")
+
+    let private ``completion readiness executes only the requirements the contract does not exclude`` () =
+        let assess contract required authorized =
+            OrdoContractAdmission.assessCompletionReadiness OrdoContractAdmission.implementedVersions None (read contract) required authorized
+            |> Result.map (OrdoContractAdmission.readyScopeView >> _.RequirementKeys)
+            |> Result.mapError codesOf
+        let both = [ "requirements/domain.md#R-001"; "requirements/operations.md#R-001" ]
+        // The deferred requirement is accounted for, not executed; the modeled one needs its decision.
+        equal(Ok [ "requirements/domain.md#R-001" ], assess "valid-contract.json" both [ "DEC-CONFIRM" ])
+        equal(Error [ OrdoContractAdmission.MissingDecisionAuthorizationCode, Some "DEC-CONFIRM" ], assess "valid-contract.json" both [])
+        // Completing only a deferred requirement executes nothing.
+        equal(Error [ OrdoContractAdmission.EmptyScopeCode, None ], assess "valid-contract.json" [ "requirements/operations.md#R-001" ] [])
+        // An unresolved requirement is executed, and blocks.
+        equal(
+            Error
+                [ OrdoContractAdmission.BlockedRequirementCode, Some "requirements/domain.md#R-001"
+                  OrdoContractAdmission.UnresolvedConflictCode, Some "requirements/domain.md#R-001->CONFLICT-CONFIRM" ],
+            assess "unresolved-requirement-contract.json" both [])
+
+    let private ``praxis ordo contract check reports readiness before any agent work`` () =
+        let root = CliHarness.temporaryDirectory "praxis-ordo-readiness-"
+        try
+            for name in [ "valid-contract.json"; "unresolved-requirement-contract.json"; "contradictory-decisions-contract.json" ] do
+                File.Copy(Path.Combine(fixtureDir, name), Path.Combine(root, name))
+            let check contract extra = CliHarness.ros root ([ "ordo"; "contract"; "check"; "--contract"; contract; "--json" ] @ extra)
+            let domain = [ "--requirement"; "requirements/domain.md#R-001" ]
+            let ready = check "valid-contract.json" (domain @ [ "--authorized-decision"; "DEC-CONFIRM" ])
+            equal((0, ""), (ready.Exit, ready.Err))
+            let body = JsonDocument.Parse(ready.Out).RootElement
+            equal("ready", body.GetProperty("status").GetString())
+            equal([ "DEC-CONFIRM" ], stringsOf body "authorizedDecisionIds")
+            equal(false, body.GetProperty("executionAuthorized").GetBoolean())
+            for contract, extra, code in
+                [ "valid-contract.json", domain, OrdoContractAdmission.MissingDecisionAuthorizationCode
+                  "unresolved-requirement-contract.json", domain, OrdoContractAdmission.BlockedRequirementCode
+                  "contradictory-decisions-contract.json", domain @ [ "--authorized-decision"; "DEC-ALLOW-REOPEN" ], OrdoContractAdmission.UnresolvedConflictCode
+                  "contradictory-decisions-contract.json", [], OrdoContractAdmission.UnresolvedConflictCode ] do
+                let refused = check contract extra
+                equal(1, refused.Exit)
+                holds(refused.Out.Contains code, refused.Out)
+            // The unresolved contract is well formed: plain admission still succeeds.
+            equal(0, (check "unresolved-requirement-contract.json" []).Exit)
+            equal(2, (check "valid-contract.json" [ "--authorized-decision"; "DEC-CONFIRM" ]).Exit)
+        finally
+            CliHarness.removeDirectory root
+
     let tests: TestCase list =
         [ { Name = "ordo contract: Praxis reproduces every Ordo golden admission outcome exactly"; Run = fun () -> ``Praxis reproduces every Ordo golden admission outcome exactly`` () }
           { Name = "ordo contract: Praxis renders Ordo's published canonical form byte for byte"; Run = fun () -> ``Praxis renders Ordo's published canonical form byte for byte`` () }
@@ -226,4 +347,8 @@ module OrdoContractAdmissionTests =
           { Name = "ordo contract: callers can narrow but never widen the supported contract versions"; Run = fun () -> ``callers can narrow but never widen the supported contract versions`` () }
           { Name = "ordo contract: a held digest detects that the Ordo contract has changed"; Run = fun () -> ``a held digest detects that the Ordo contract has changed`` () }
           { Name = "ordo contract: admission is deterministic and never throws on hostile input"; Run = fun () -> ``admission is deterministic and never throws on hostile input`` () }
-          { Name = "ordo contract: praxis ordo contract check refuses before any agent work"; Run = fun () -> ``praxis ordo contract check refuses before any agent work`` () } ]
+          { Name = "ordo contract: praxis ordo contract check refuses before any agent work"; Run = fun () -> ``praxis ordo contract check refuses before any agent work`` () }
+          { Name = "ordo contract: Praxis reproduces every Ordo golden readiness outcome exactly"; Run = fun () -> ``Praxis reproduces every Ordo golden readiness outcome exactly`` () }
+          { Name = "ordo contract: contradictory decisions with an open conflict are refused at admission"; Run = fun () -> ``contradictory decisions with an open conflict are refused at admission`` () }
+          { Name = "ordo contract: completion readiness executes only the requirements the contract does not exclude"; Run = fun () -> ``completion readiness executes only the requirements the contract does not exclude`` () }
+          { Name = "ordo contract: praxis ordo contract check reports readiness before any agent work"; Run = fun () -> ``praxis ordo contract check reports readiness before any agent work`` () } ]

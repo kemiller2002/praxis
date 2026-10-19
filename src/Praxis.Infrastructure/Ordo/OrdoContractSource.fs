@@ -23,3 +23,12 @@ module OrdoContractSource =
 
     let check root path supportedVersions expectedDigest =
         read root path |> Result.bind (OrdoContractAdmission.admitPinned supportedVersions expectedDigest)
+
+    /// Readiness as `work complete-verified` will require it (REL-GATE-002):
+    /// admission, then the executed subset of `requirementIds` must be ready
+    /// under `authorizedDecisionIds`, which the caller takes from its host
+    /// authority. Reported before any agent work is claimed.
+    let checkReadiness root path supportedVersions expectedDigest requirementIds authorizedDecisionIds =
+        read root path
+        |> Result.bind (fun json ->
+            OrdoContractAdmission.assessCompletionReadiness supportedVersions expectedDigest json requirementIds authorizedDecisionIds)

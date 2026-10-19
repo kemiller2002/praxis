@@ -44,7 +44,7 @@ module ValidationEvidenceTests =
         | ClaimOutcome.Succeeded(claim, _) -> claim
         | other -> failwith $"expected a claim, got {other}"
 
-    let private input =
+    let private hostInput =
         { OrdoContractVersion = ordoVersion
           OrdoContractDigest = "sha256:" + String('b', 64)
           SupportedOrdoContractVersions = [ ordoVersion ]
@@ -55,6 +55,9 @@ module ValidationEvidenceTests =
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
           ExpectedVerificationRevision = Some commit }
+
+    /// The host input bound to a contract ready for it (REL-GATE-002).
+    let private input = OrdoTestContracts.bind hostInput
 
     let private completion (claim: WorkClaim) (path: string) =
         { WorkItemId = claim.WorkItemId
@@ -257,7 +260,7 @@ module ValidationEvidenceTests =
               let h = harness ()
               let claim = acquire h item "tok-a"
               let path = ValidationEvidenceFixtures.validate h.Ports commit claim
-              let strict = { input with RequiredValidationNames = [ "unit-tests"; "integration-tests" ] }
+              let strict = OrdoTestContracts.bind { hostInput with RequiredValidationNames = [ "unit-tests"; "integration-tests" ] }
               let seen = ResizeArray()
 
               match WorkClaims.completeVerified (completionPorts h (ValidationEvidenceFixtures.recorded h.Events) (accepting seen)) strict (completion claim path) with
@@ -413,12 +416,15 @@ module ValidationEvidenceTests =
               match Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists with
               | None -> eprintfn "SKIP validation evidence cli: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
               | Some dll ->
-                  CliHarness.write root "authority.json" $"{{\"OrdoContractVersion\":\"{ordoVersion}\",\"OrdoContractDigest\":\"sha256:{String('b', 64)}\",\"SupportedOrdoContractVersions\":[\"{ordoVersion}\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"]}}"
+                  // The ready contract, not the authority, supplies the contract identity (REL-GATE-002).
+                  CliHarness.write root "contract.json" (OrdoTestContracts.contract [ item ] [])
+                  CliHarness.write root "authority.json" $"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"]}}"
 
                   let complete evidence =
                       CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", dll) :: identity)
                           [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; head; "--verification-revision"; head
-                            "--authority"; "authority.json"; "--requirement"; item; "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
+                            "--authority"; "authority.json"; "--ordo-contract"; "contract.json"; "--requirement"; item
+                            "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
 
                   let failedPath = (at [ "resultPath" ] failed.Out).GetValue<string>()
                   let refused = complete failedPath

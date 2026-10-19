@@ -68,6 +68,35 @@ type CompletionAuthorityInput =
       ExpectedCommit: string option
       ExpectedVerificationRevision: string option }
 
+/// The completion authority the packet and authority builders accept
+/// (REL-GATE-002). It can only be constructed from an Ordo `ReadyScope`, so the
+/// Ordo contract version and digest every packet and authority carry name a
+/// contract whose completed requirements are execution-ready: modeled, free of
+/// reached conflicts, and with every decision in their scope authorized by the
+/// host authority's `RequiredDecisionIds`. A declared identity alone cannot
+/// reach Dokimos.
+type BoundCompletionAuthority =
+    private
+        { Input: CompletionAuthorityInput
+          Scope: Praxis.Domain.Ordo.OrdoContractAdmission.ReadyScope }
+
+[<RequireQualifiedAccess>]
+module BoundCompletionAuthority =
+    /// The Ordo identity and the authorized decision set are taken from the
+    /// ready scope, never from `input`; everything else is the host's input.
+    let fromReadyScope (scope: Praxis.Domain.Ordo.OrdoContractAdmission.ReadyScope) (input: CompletionAuthorityInput) =
+        let view = Praxis.Domain.Ordo.OrdoContractAdmission.readyScopeView scope
+
+        { Input =
+            { input with
+                OrdoContractVersion = view.Contract.Version
+                OrdoContractDigest = view.Contract.Digest
+                RequiredDecisionIds = view.AuthorizedDecisionIds }
+          Scope = scope }
+
+    let input (bound: BoundCompletionAuthority) = bound.Input
+    let scope (bound: BoundCompletionAuthority) = bound.Scope
+
 type EvidenceSubmission =
     { Id: string
       Path: string
@@ -216,12 +245,13 @@ module CompletionGate =
     /// evidence item established as `ValidatedEvidence` (PRAXIS-REL-005);
     /// and at least one validated item for every required validation.
     let preflight
-        (input: CompletionAuthorityInput)
+        (bound: BoundCompletionAuthority)
         (request: CompletionRequest)
         (claim: WorkClaim)
         (recorded: Result<RecordedValidation list, string>)
         (observations: Map<string, EvidenceObservation>)
         : Result<ValidatedEvidence list, CompletionFinding list> =
+        let input = BoundCompletionAuthority.input bound
         let submitted = request.Evidence |> List.map _.Id |> Set.ofList
 
         let citedBy id =
@@ -287,7 +317,8 @@ module CompletionGate =
         | [] -> Ok validated
         | findings -> Error findings
 
-    let private draft (input: CompletionAuthorityInput) (request: CompletionRequest) (digestOf: string -> string) =
+    let private draft (bound: BoundCompletionAuthority) (request: CompletionRequest) (digestOf: string -> string) =
+        let input = BoundCompletionAuthority.input bound
         { WorkItemId = request.WorkItemId
           ClaimToken = request.Fence.ClaimToken
           FencingGeneration = request.Fence.Generation
@@ -309,7 +340,7 @@ module CompletionGate =
     /// The identity of a submission before its evidence is established, for
     /// replay recognition and refusal events. Only a digest leaves here; no
     /// packet is ever built from raw file observations.
-    let submissionDigest (input: CompletionAuthorityInput) (request: CompletionRequest) (observations: Map<string, EvidenceObservation>) =
+    let submissionDigest (input: BoundCompletionAuthority) (request: CompletionRequest) (observations: Map<string, EvidenceObservation>) =
         draft input request (fun id ->
             match observations |> Map.tryFind id with
             | Some(EvidenceObservation.Observed(digest, _))
@@ -320,7 +351,7 @@ module CompletionGate =
     /// The untrusted packet: the agent's claim, with Praxis-computed digests
     /// of established evidence where the agent claimed none. Its digest
     /// equals `submissionDigest` for the same request.
-    let packet (input: CompletionAuthorityInput) (request: CompletionRequest) (evidence: ValidatedEvidence list) =
+    let packet (input: BoundCompletionAuthority) (request: CompletionRequest) (evidence: ValidatedEvidence list) =
         draft input request (fun id -> evidence |> List.tryFind (fun item -> item.Id = id) |> Option.map _.Digest |> Option.defaultValue "")
 
     /// The authority comes only from Praxis-held state: the current claim's
@@ -329,13 +360,15 @@ module CompletionGate =
     /// established evidence (status, revision, observation time and
     /// validation of each recorded result).
     let authority
-        (input: CompletionAuthorityInput)
+        (bound: BoundCompletionAuthority)
         (claim: WorkClaim)
         (expectedCommit: string)
         (expectedRevision: string)
         (evaluatedAt: DateTimeOffset)
         (evidence: ValidatedEvidence list)
         =
+        let input = BoundCompletionAuthority.input bound
+
         { WorkItemId = claim.WorkItemId
           ClaimToken = claim.Holder |> Option.map _.ClaimToken |> Option.defaultValue ""
           FencingGeneration = claim.Generation

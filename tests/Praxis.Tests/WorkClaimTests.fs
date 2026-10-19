@@ -101,7 +101,7 @@ module WorkClaimTests =
 
     // ---- completion fixtures -------------------------------------------------
 
-    let private input =
+    let private hostInput =
         { OrdoContractVersion = "ordo.constructibility-contract/1"
           OrdoContractDigest = ordoDigest
           SupportedOrdoContractVersions = [ "ordo.constructibility-contract/1" ]
@@ -112,6 +112,9 @@ module WorkClaimTests =
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
           ExpectedVerificationRevision = Some commit }
+
+    /// The host input bound to a contract ready for it (REL-GATE-002).
+    let private input = OrdoTestContracts.bind hostInput
 
     /// A passing `unit-tests` result for EV-TESTS, recorded for `claim`
     /// through `ValidationRuns.run` into the harness's event sink.
@@ -628,11 +631,14 @@ module WorkClaimTests =
                   CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", "/nonexistent/dokimos") :: identity "test/agent-a")
                       [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; head
                         "--verification-revision"; head; "--authority"; authority; "--requirement"; item
+                        "--ordo-contract"; "contract.json"
                         "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
 
               Assert.equal 2 (complete "missing.json" resultPath).Exit
               CliHarness.write root "evidence/tests.txt" "ok\n"
-              CliHarness.write root "authority.json" ($"{{\"OrdoContractVersion\":\"v1\",\"OrdoContractDigest\":\"{ordoDigest}\",\"SupportedOrdoContractVersions\":[\"v1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{head}\",\"ExpectedVerificationRevision\":\"{head}\"}}")
+              // The host authority names no contract identity: the ready contract supplies it (REL-GATE-002).
+              CliHarness.write root "contract.json" (OrdoTestContracts.contract [ item ] [])
+              CliHarness.write root "authority.json" ($"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{head}\",\"ExpectedVerificationRevision\":\"{head}\"}}")
               let plain = complete "authority.json" "evidence/tests.txt"
               Assert.equal 3 plain.Exit
               Assert.isTrue (plain.Out.Contains ValidationEvidence.UnrecognizedCode) plain.Out
@@ -670,7 +676,7 @@ module WorkClaimTests =
 
                   // A second claimant's packet that omits the required decision is refused by Dokimos itself.
                   let h2, _, _, completion2 = prepared ()
-                  let strict = { input with RequiredDecisionIds = [ "DF-ROS-2026-A001" ] }
+                  let strict = OrdoTestContracts.bind { hostInput with RequiredDecisionIds = [ "DF-ROS-2026-A001" ] }
 
                   match WorkClaims.completeVerified (completionPorts h2 real) strict completion2 with
                   | CompletionOutcome.Rejected(findings, _) ->

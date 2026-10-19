@@ -179,7 +179,9 @@ module WorkClaims =
         |> List.map (fun evidence -> evidence.Id, ports.ObserveEvidence evidence)
         |> Map.ofList
 
-    let private expectedRevisions (ports: CompletionPorts) (input: CompletionAuthorityInput) =
+    let private expectedRevisions (ports: CompletionPorts) (bound: BoundCompletionAuthority) =
+        let input = BoundCompletionAuthority.input bound
+
         match input.ExpectedCommit, input.ExpectedVerificationRevision with
         | Some commit, Some revision -> Ok(commit, revision)
         | commit, revision ->
@@ -192,7 +194,7 @@ module WorkClaims =
     /// this claim, revision and lease window; Dokimos returns a verified
     /// receipt for exactly this packet; and the final transition wins a CAS
     /// keyed to the same generation. Everything else fails closed.
-    let completeVerified (ports: CompletionPorts) (input: CompletionAuthorityInput) (request: CompletionRequest) =
+    let completeVerified (ports: CompletionPorts) (input: BoundCompletionAuthority) (request: CompletionRequest) =
         let observations = observeAll ports request
         let digest = CompletionGate.submissionDigest input request observations
         let reject findings digest verifier current = completionRejected ports request findings digest verifier current

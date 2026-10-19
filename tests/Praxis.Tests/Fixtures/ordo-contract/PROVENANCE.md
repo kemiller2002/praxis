@@ -1,20 +1,22 @@
 # Provenance
 
 Copied verbatim (byte-for-byte) from kemiller2002/ordo `examples/ecir/consumer/`
-at commit `f50b63e2242c5c1d704bfd7a4b5b48f1a2f4c935` (branch `claude/echelon-reliability-integration-g8x7vn`,
-not yet merged or released). `README.md` here is Ordo's corpus README.
+at commit `1f39ff027109a6cc356607b9936f7473ee6773d5` (branch `claude/echelon-reliability-integration-g8x7vn`,
+not yet merged or released; REL-GATE-002 adds the unresolved-conflict admission
+rule and the `readinessCases`). `README.md` here is Ordo's corpus README.
 Do not edit these files in Praxis: re-copy from Ordo and update this note.
 
 SHA-256 of each file at copy time:
 
 ```
+f933110a0e64ce07857def28db666cabf9eb08d2b060010ccae1c17995550bd4  contradictory-decisions-contract.json
 88b62c071aaef4e96223e033209d45a7eb0287353790d96bf5449302eaaeb527  cyclic-dependency-contract.json
 e1582e6331a4f3b298ce684c1f893479cbe998dddd680c0666abaf7ceae249c6  dangling-decision-contract.json
 7e47b2175ae20ca6ef8013336a3ccfb208e78358da66740f0a84b163a72f67ff  dangling-dependency-contract.json
 76a2a34acd5100dc86d98aecf7cc7ac30e8e32b0f8a1b479a93c46ee46b6527c  duplicate-member-contract.json
 2de544cb5cad2a126cca0f89f535fface4449c3b5f8eb708953817aa5c9dbaf4  duplicate-node-contract.json
 0fcffdac8f00f32a076b30150f352e483380cbbc0b739e2edd57a74b2ab1e054  empty-contract.json
-d336a3b751c84f57835744189ec00276d824b8e9baae30f747eaf10b540d90ae  expectations.json
+38a33b5aa9008dbba4263135438cc50c0090ba507ac9ae991cb17a68a112aa50  expectations.json
 0ab0d85378cc52504b106c4b0afc848fcaf6ced4b91104aafc3451cb2ef6027b  invalid-supersession-contract.json
 367c04943fff27933d9a66881847652c35c6ef671001fc7e55ec89617bca7ebb  lone-surrogate-contract.json
 7ba5827aad9bf95728d05fe706e24ae3c99c619bee5279de2edeaa154e7aa928  malformed-contract.json
@@ -25,6 +27,7 @@ b08fd3fbb7ec193f0218f40a42f9040f74acdba46b0c39cd766be41163efb367  reordered-cont
 64c85eaa271723f84045a2b0d703394547a81d1d2cd577f7fd7211a89cac09dc  self-dependency-contract.json
 08acb16ac6968e8525d712cc0a5b0f65f3e17d461af4ab78c794f7e832135d04  unicode-ordinal-contract.json
 e820f0899da6b1d95331b965d9f6b626a4fa874ab10adc027bc0e61c9ada0dbb  unknown-member-contract.json
+037a3da6139114181ad7e8be31c09bf1383f54352fc938f266a6a57e5d12ff6c  unresolved-requirement-contract.json
 0b4525d15f9c6025fa72a23712c784ec6fa51d1e419a16986a8edd9c516d28de  unsupported-version-contract.json
 4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e  valid-contract.canonical.json
 03dd154dc23c707a07ea61287c3addb482d4d5e62da98c36e7e64bd2c81f8095  valid-contract.json
