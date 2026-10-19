@@ -10484,7 +10484,27 @@
       "updatedAt": "2026-10-19T15:55:02.000Z",
       "telemetryExecutionIds": [
         "EXE-20261019T155503978Z-978f54a3"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "feac49c9ac406bc721b1ab5d",
+        "recordedAt": "2026-10-19T15:55:50.000Z",
+        "executionId": "EXE-20261019T155503978Z-978f54a3",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-reliability-integration-g8x7vn",
+        "commit": "a395712d4f402122c91c13c62147daba84b8e11d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
+        "remoteCommit": "a395712d4f402122c91c13c62147daba84b8e11d",
+        "summary": "Ordo admission, atomic claims, Dokimos-gated completion, plain-completion guard and reliability telemetry integrated; full suite 2277/2277 with real Dokimos",
+        "nextAction": "Complete PRAXIS-REL-001, then release-qualify Dokimos 0.6.0 and Praxis via Conditor/Registry",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
