@@ -6235,10 +6235,10 @@
         "implementation"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-18T12:53:20.121Z",
-      "updatedAt": "2026-10-18T12:53:20.121Z",
+      "updatedAt": "2026-10-19T15:55:02.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

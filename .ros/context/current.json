@@ -10474,11 +10474,22 @@
       },
       "completedAt": "2026-10-18T13:04:56.000Z",
       "conclusion": "Praxis-managed .ros/executions state is excluded from product attribution; pinned and current validator behavior was checked."
+    },
+    {
+      "id": "PRAXIS-REL-001",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-19T15:55:02.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261019T155503978Z-978f54a3"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-18T13:04:56.000Z",
+  "updatedAt": "2026-10-19T15:55:02.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
