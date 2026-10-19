@@ -184,6 +184,16 @@ module WorkClaimJson =
               "telemetryExecutions", strings completion.TelemetryExecutions ]
         | ClaimEventPayload.CompletionReplayed(token, generation, digest) ->
             [ "claimToken", str token; "generation", num generation; "packetDigest", str digest ]
+        | ClaimEventPayload.ValidationObserved(claimant, token, generation, validation, evidenceId, revision, status, observedAt, resultDigest) ->
+            [ "claimant", str claimant
+              "claimToken", str token
+              "generation", num generation
+              "validation", str validation
+              "evidenceId", str evidenceId
+              "revision", str revision
+              "status", str (CheckStatus.code status)
+              "observedAt", time observedAt
+              "resultDigest", str resultDigest ]
 
     /// The existing work-event envelope plus the I1 payload. `eventId` is the
     /// content hash of every member before it, as for every work event, so
@@ -233,8 +243,13 @@ module WorkClaimJson =
                    array.Add(obj [ "Id", str evidence.Id; "Digest", str evidence.Digest; "Revision", str evidence.Revision ])
                array) ]
 
+    /// Dokimos refuses JSON `null` for an optional member: absent means
+    /// "not asserted", so an unset optional member is omitted.
+    let private present (name: string) (value: JsonNode option) =
+        value |> Option.map (fun node -> name, node) |> Option.toList
+
     let authorityNode (authority: CompletionAuthority) =
-        obj
+        obj (
             [ "SchemaVersion", str CompletionGate.AuthoritySchemaVersion
               "WorkItemId", str authority.WorkItemId
               "ClaimToken", str authority.ClaimToken
@@ -256,10 +271,16 @@ module WorkClaimJson =
                              "Digest", str evidence.Digest
                              "Revision", str evidence.Revision
                              "Status", str (CheckStatus.code evidence.Status)
-                             "Reusable", flag evidence.Reusable ]
+                             "Reusable", flag evidence.Reusable
+                             "ObservedAt", time evidence.ObservedAt
+                             "Validation", str evidence.Validation ]
                    )
                array)
               "ConsumedPacketDigests", strings authority.ConsumedPacketDigests ]
+            @ present "ClaimAcquiredAt" (authority.ClaimAcquiredAt |> Option.map time)
+            @ present "LeaseExpiresAt" (authority.LeaseExpiresAt |> Option.map time)
+            @ present "EvaluatedAt" (authority.EvaluatedAt |> Option.map time)
+        )
 
     /// Strict receipt intake: every required member, nothing unknown.
     let parseReceipt (json: string) : Result<DokimosReceipt, string> =

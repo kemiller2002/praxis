@@ -77,10 +77,12 @@ praxis work renew --id ID --token T --generation N [--lease-seconds S] [--runnin
 praxis work release --id ID --token T --generation N [--failed]
 praxis work expire --id ID
 praxis work claims [ID]
+praxis work validate-run --id ID --token T --generation N --validation NAME --evidence-id EVIDENCE-ID \
+  [--timeout-seconds 1800] -- COMMAND [ARGUMENT...]
 praxis work complete-verified --id ID --token T --generation N \
   --commit SHA40|SHA64 --verification-revision SHA --authority authority.json \
   --requirement ID ... --validation NAME=passed:EVIDENCE-ID ... \
-  --evidence EVIDENCE-ID=PATH[@sha256:HEX] ... [--telemetry-execution EXE-ID] [--timeout-seconds 120]
+  --evidence EVIDENCE-ID=RESULT.json[@sha256:HEX] ... [--telemetry-execution EXE-ID] [--timeout-seconds 120]
 ```
 
 `authority.json` is Praxis's minimal authoritative input (until Ordo
@@ -94,17 +96,96 @@ admission is wired in):
   "ExpectedCommit": "<optional; default Git HEAD>", "ExpectedVerificationRevision": "<optional; default Git HEAD>" }
 ```
 
+## Evidence model (PRAXIS-REL-005, REL-GATE-001)
+
+Completion evidence is a **host-observed validation result**, never "a file
+Praxis can hash". Praxis 3.14.0 asserted every hashable evidence file as a
+passed observation at the verification revision, so a file recording a
+failing run, or no test run at all, completed work. Now:
+
+1. `work validate-run` is the only producer. It fence-checks the caller
+   (token, generation, valid lease; `PRX.CLAIM.*` otherwise), observes
+   `git rev-parse HEAD`, and refuses with `PRX.VALIDATION.DIRTY_WORKTREE`
+   when a tracked file outside `.ros/` and `.praxis/` differs from HEAD
+   (untracked files are ignored). It runs the command as an argument list
+   (never through a shell) in the repository root with the timeout (default
+   1800 s), and writes:
+   - `.ros/claims/<ID>/validations/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.output.txt`
+     (stdout followed by stderr), and
+   - `.ros/claims/<ID>/validations/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.json`,
+     a `praxis.validation-result/1` document with members, in this order:
+     `schemaVersion, workItemId, claimant, claimToken, generation,
+     validation, evidenceId, revision, observedAt, startedAt, status,
+     exitCode, command, outputSha256`. `status` is `passed` iff the exit
+     code is 0, `failed` otherwise, `unavailable` (with `exitCode: null`)
+     on timeout or start failure. Files are never overwritten.
+   It then appends the I1 event `work.validation.observed` with `claimant,
+   claimToken, generation, validation, evidenceId, revision, status,
+   observedAt, resultDigest` (SHA-256 of the result document bytes). Exit 0
+   when the run passed, 3 when it failed, was unavailable or was refused,
+   1 on a storage or event failure; stdout names `resultPath`,
+   `resultDigest`, `outputPath` and the result.
+2. `complete-verified --evidence EV=PATH` parses PATH strictly as
+   `praxis.validation-result/1` and establishes it, failing closed with:
+
+   | Code | When |
+   | --- | --- |
+   | `PRX.COMPLETION.EVIDENCE_UNRECOGNIZED` | not a validation result (plain text, unparsable, unknown or missing member) |
+   | `PRX.COMPLETION.EVIDENCE_UNRECORDED` | its digest is not in a `work.validation.observed` event for this item, token and generation (or the event log cannot be read) |
+   | `PRX.COMPLETION.EVIDENCE_FOREIGN_CLAIM` | the result names another work item, token or generation |
+   | `PRX.COMPLETION.EVIDENCE_REVISION_MISMATCH` | the result ran at a revision other than `--verification-revision` |
+   | `PRX.COMPLETION.EVIDENCE_NOT_PASSED` | the result is `failed` or `unavailable` |
+   | `PRX.COMPLETION.EVIDENCE_STALE` | `observedAt` is before claim acquisition or at/after lease expiry |
+   | `PRX.COMPLETION.EVIDENCE_VALIDATION_MISMATCH` | it is cited by a `--validation NAME` other than the result's, or as an evidence ID other than the result's |
+   | `PRX.COMPLETION.VALIDATION_UNPROVEN` | all submitted evidence is valid but a required validation has none |
+
+3. **Invariant: passing evidence can only come from
+   `ValidatedEvidence.establish`.** `ValidatedEvidence`
+   (`src/Praxis.Domain/Work/ValidationResult.fs`) is a sealed type with a
+   private constructor; `establish` is its only constructor and returns
+   the codes above on its error side. `CompletionGate.preflight` returns
+   `Result<ValidatedEvidence list, CompletionFinding list>`;
+   `CompletionGate.packet` and `CompletionGate.authority` accept only
+   `ValidatedEvidence`, and `CompletionAuthority.Evidence` *is*
+   `ValidatedEvidence list`. There is no record from which a `Passed`
+   observation can be built from a raw file or a failed result: it does
+   not type-check. Failed and unavailable results remain representable for
+   reporting as a plain `ValidationResult`, which the builders do not
+   accept. Before evidence is established, only `submissionDigest` (a
+   digest, never a packet) identifies a submission for replay detection and
+   refusal events. The test `validation evidence: invariant: ...` is a
+   runtime tripwire (no public constructor; non-passing results never
+   establish).
+4. The authority sends each observation's `Status`, `Revision`,
+   `ObservedAt` and `Validation` from the result, plus `ClaimAcquiredAt`,
+   `LeaseExpiresAt` and `EvaluatedAt` (Praxis's injected clock). Dokimos
+   0.6.0 enforces them as defence in depth (`EVIDENCE_FAILED`,
+   `EVIDENCE_STALE`, `STALE_LEASE`, `EVIDENCE_VALIDATION_MISMATCH`). The
+   packet/1 and authority/1 schema versions are unchanged: the members are
+   optional and additive in Dokimos 0.6.0.
+
+**Remaining risk.** The event log and result files are repository state. A
+principal with write access to that state can still forge a result
+document *and* a matching `work.validation.observed` event; Praxis
+detects inconsistency between them, not collusion. Results are as honest as
+the host that ran `validate-run`. CI-produced evidence (results run and
+signed by a CI identity the agent cannot write as) is the next hardening
+step.
+
 ## Completion gate
 
 1. The caller holds the current token, generation and a valid lease.
 2. Commit and verification revision are full 40/64-hex object IDs.
-3. Every `RequiredEvidenceIds` entry is supplied and every evidence file
-   exists; Praxis computes each SHA-256 digest itself.
+3. Every `RequiredEvidenceIds` entry is supplied, every evidence file is a
+   recorded `praxis.validation-result/1` established as `ValidatedEvidence`
+   (above), and every required validation has such evidence; Praxis
+   computes each SHA-256 digest itself.
 4. The claim moves to `awaiting-verification` by CAS.
 5. Praxis writes `praxis.completion-packet/1` (the agent's claim) and
-   `dokimos.completion-authority/1` (claim token and generation, expected
-   commit, required IDs, Praxis-observed evidence digests, consumed packet
-   digests) and runs `dokimos completion verify --packet P --authority A`
+   `dokimos.completion-authority/1` (claim token, generation and lease
+   window, expected commit, required IDs, the established evidence with its
+   status, revision, observation time and validation, the evaluation time,
+   consumed packet digests) and runs `dokimos completion verify --packet P --authority A`
    (`PRAXIS_DOKIMOS_EXECUTABLE`, else `dokimos` on PATH; a `.dll` runs via
    `dotnet`).
 6. Only exit 0 with a receipt whose contract, verdict, work item, commit,
@@ -134,11 +215,15 @@ Ordo's own `ORDO.CONTRACT.*` codes. Nothing reaches Dokimos on refusal.
 `PRX.CLAIM.HELD`, `STALE_REVISION`, `STALE_GENERATION`, `STALE_TOKEN`,
 `EXPIRED`, `NOT_CLAIMABLE`, `NOT_HELD`, `CONFLICT`, `INVALID_REQUEST`.
 `PRX.COMPLETION.INVALID_COMMIT`, `INVALID_VERIFICATION_REVISION`,
-`EVIDENCE_MISSING`, `EVIDENCE_UNREADABLE`, `AUTHORITY_UNAVAILABLE`,
+`EVIDENCE_MISSING`, `EVIDENCE_UNREADABLE`, `EVIDENCE_UNRECOGNIZED`,
+`EVIDENCE_UNRECORDED`, `EVIDENCE_FOREIGN_CLAIM`, `EVIDENCE_REVISION_MISMATCH`,
+`EVIDENCE_NOT_PASSED`, `EVIDENCE_STALE`, `EVIDENCE_VALIDATION_MISMATCH`,
+`VALIDATION_UNPROVEN`, `AUTHORITY_UNAVAILABLE`,
 `VERIFIER_UNAVAILABLE`, `VERIFIER_TIMEOUT`, `VERIFIER_FAILED`,
 `VERIFIER_INPUT_REJECTED`, `RECEIPT_UNPARSABLE`, `RECEIPT_MISMATCH`,
 `VERIFICATION_REJECTED` (followed by the receipt's `DOK.COMPLETION.*` codes
-verbatim), `CONFLICT`. Each refusal says how to refresh and replan.
+verbatim), `CONFLICT`. `PRX.VALIDATION.DIRTY_WORKTREE` (`validate-run`).
+Each refusal says how to refresh and replan.
 
 ## Events (I1)
 
@@ -147,7 +232,9 @@ an identical event (same content, same `eventId`) is recorded once:
 `work.claim.acquired`, `work.claim.rejected`, `work.claim.renewed`,
 `work.claim.released`, `work.completion.rejected`, `work.completion.verified`,
 `work.completion.replayed`, `work.claim.expired` (durable expiry by
-`work expire`; the next acquisition still reports `recovered: true`).
+`work expire`; the next acquisition still reports `recovered: true`),
+`work.validation.observed` (one `validate-run`; its `resultDigest` is what
+makes a result usable as completion evidence).
 
 ## Batches
 
@@ -162,9 +249,10 @@ claim with its own evidence (`WorkClaims.acquireEach`); no ownership is shared.
 | 2 | Two agents acquire the same item | Exactly one winner; losers get `PRX.CLAIM.HELD`/`CONFLICT` | `work claims:` race tests (memory, file, git with bare origin) |
 | 3 | Lost ownership, then completion | `PRX.CLAIM.STALE_*`/`EXPIRED`, nothing verified | `work claims:` stale-owner tests |
 | 4 | Agent crashes, work recovered | Recovery at generation + 1; old owner refused; no double completion | `work claims:` interruption/recovery tests |
-| 5 | Valid implementation, insufficient evidence | `PRX.COMPLETION.EVIDENCE_MISSING`, and a Dokimos `DOK.COMPLETION.*` refusal for an unproven required check | `reliability pipeline: scenarios 1, 5, 7, 8` |
+| 5 | Valid implementation, insufficient evidence | `PRX.COMPLETION.EVIDENCE_MISSING`; `PRX.COMPLETION.VALIDATION_UNPROVEN` for a required check with no validated result (no packet is built); a Dokimos `DOK.COMPLETION.*` refusal for a required decision the packet omits | `reliability pipeline: scenarios 1, 5, 7, 8` |
 | 6 | Stale Ordo contract | `ORDO.CONTRACT.STALE_REFERENCE` / `PRX.COMPLETION.STALE_ORDO_CONTRACT` before verification | `reliability pipeline: scenario 6` |
 | 7 | Replayed completion | Praxis replays idempotently without re-verifying; Dokimos refuses the consumed packet (`REPLAYED_PACKET`) | `reliability pipeline: scenarios 1, 5, 7, 8` |
 | 8 | Token usage unavailable | Verified count measured; token/cost ratios `unavailable` and `null`, never 0 | `reliability pipeline: scenarios 1, 5, 7, 8` |
 | 9 | Token usage present and attributed | Deduped per observation, attributed by ledger or session window | `reliability:` report tests |
 | 10 | Independent requirements concurrently | Each item claimed by its own agent in parallel, all at generation 1, no rejection events | `reliability pipeline: scenario 10`; `work claims: batched slices keep independent claims and evidence` |
+| 11 | Failing, unrelated, stale or mis-bound evidence (REL-GATE-001) | `EVIDENCE_UNRECOGNIZED` / `EVIDENCE_NOT_PASSED` / `EVIDENCE_STALE` / `EVIDENCE_VALIDATION_MISMATCH` before Dokimos; Dokimos 0.6.0 independently refuses such observations on the wire | `reliability pipeline: REL-GATE-001 ...`; `validation evidence:` tests |

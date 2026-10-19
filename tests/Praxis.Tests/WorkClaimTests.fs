@@ -113,11 +113,9 @@ module WorkClaimTests =
           ExpectedCommit = Some commit
           ExpectedVerificationRevision = Some commit }
 
-    let private evidenceFile () =
-        let root = CliHarness.temporaryDirectory "praxis-claim-evidence"
-        let path = Path.Combine(root, "tests.txt")
-        File.WriteAllText(path, "128 test(s); 128 passed; 0 failed\n")
-        root, path
+    /// A passing `unit-tests` result for EV-TESTS, recorded for `claim`
+    /// through `ValidationRuns.run` into the harness's event sink.
+    let private evidenceFile (h: Harness) (claim: WorkClaim) = ValidationEvidenceFixtures.validate h.Ports commit claim
 
     let private completionRequest (claim: WorkClaim) (evidencePath: string) =
         { WorkItemId = item
@@ -173,6 +171,7 @@ module WorkClaimTests =
     let private completionPorts (h: Harness) verifier =
         { Claims = h.Ports
           ObserveEvidence = FileWorkClaims.observeEvidence "/"
+          RecordedValidations = ValidationEvidenceFixtures.recorded h.Events
           ObserveHead = fun () -> Ok commit
           Verifier = verifier }
 
@@ -202,12 +201,18 @@ module WorkClaimTests =
     let private prepared () =
         let h = harness ()
         let claim = WorkClaims.acquire h.Ports (request "agent-a" "token-a") |> claimed
-        let _, evidence = evidenceFile ()
+        let evidence = evidenceFile h claim
         h, claim, evidence, completionRequest claim evidence
 
-    let private packetFor (request: CompletionRequest) =
+    /// The packet Praxis builds for `request`: only from evidence the gate
+    /// establishes as `ValidatedEvidence` against the harness's claim.
+    let private packetFor (h: Harness) (request: CompletionRequest) =
         let observations = request.Evidence |> List.map (fun e -> e.Id, FileWorkClaims.observeEvidence "/" e) |> Map.ofList
-        CompletionGate.packet input request observations
+        let claim = h.Ports.Store.Read request.WorkItemId |> Result.defaultValue None |> Option.get
+
+        match CompletionGate.preflight input request claim (ValidationEvidenceFixtures.recorded h.Events request.WorkItemId) observations with
+        | Ok evidence -> CompletionGate.packet input request evidence
+        | Error findings -> failwith $"the fixture evidence must be established: {findings}"
 
     // ---- Git fixtures --------------------------------------------------------
 
@@ -373,7 +378,7 @@ module WorkClaimTests =
                   Assert.equal [ item ] verified.RequirementIds
               | other -> failwith $"expected completion, got {other}"
 
-              Assert.equal [ "work.claim.acquired"; "work.completion.verified" ] (eventTypes h))
+              Assert.equal [ "work.claim.acquired"; "work.validation.observed"; "work.completion.verified" ] (eventTypes h))
 
           t "a replayed completion is idempotent: no second verification and one verified event" (fun () ->
               let h, _, _, completion = prepared ()
@@ -388,7 +393,7 @@ module WorkClaimTests =
               | other -> failwith $"expected completion then replay, got {other}"
 
               Assert.equal 1 calls.Value
-              Assert.equal [ "work.claim.acquired"; "work.completion.verified"; "work.completion.replayed" ] (eventTypes h))
+              Assert.equal [ "work.claim.acquired"; "work.validation.observed"; "work.completion.verified"; "work.completion.replayed" ] (eventTypes h))
 
           t "a stale owner cannot complete after another claimant recovered" (fun () ->
               let h, _, _, completion = prepared ()
@@ -398,7 +403,7 @@ module WorkClaimTests =
               let codes = WorkClaims.completeVerified (completionPorts h (fakeDokimos calls)) input completion |> findingCodes
               Assert.equal [ "PRX.CLAIM.STALE_GENERATION" ] codes
               Assert.equal 0 calls.Value
-              Assert.equal [ "work.claim.acquired"; "work.claim.acquired"; "work.completion.rejected" ] (eventTypes h))
+              Assert.equal [ "work.claim.acquired"; "work.validation.observed"; "work.claim.acquired"; "work.completion.rejected" ] (eventTypes h))
 
           t "an expired owner cannot publish a late completion" (fun () ->
               let h, _, _, completion = prepared ()
@@ -503,7 +508,7 @@ module WorkClaimTests =
 
           t "a fake Dokimos executable: refusal codes are copied verbatim, a receipt for another packet is refused, a bound receipt verifies" (fun () ->
               let h, _, _, completion = prepared ()
-              let packet = packetFor completion
+              let packet = packetFor h completion
               let attempt body = WorkClaims.completeVerified (completionPorts h (scriptVerifier body (TimeSpan.FromSeconds 20.0))) input completion
               let refusal = receipt packet "rejected" [ { Code = "DOK.COMPLETION.MISSING_DECISION"; Subject = "DF-1"; Detail = "required decision is absent" } ]
               let refused = attempt $"cat <<'JSON'\n{receiptJson refusal}\nJSON\nexit 4" |> findingCodes
@@ -557,7 +562,10 @@ module WorkClaimTests =
               Assert.equal
                   [ "claimToken"; "claimant"; "commit"; "generation"; "packetDigest"; "receiptDigest"; "requirementIds"; "telemetryExecutions"; "verificationRevision" ]
                   (keys (ClaimEventPayload.CompletionVerified("a", "t", 1L, completed)))
-              Assert.equal [ "claimToken"; "generation"; "packetDigest" ] (keys (ClaimEventPayload.CompletionReplayed("t", 1L, "sha256:x"))))
+              Assert.equal [ "claimToken"; "generation"; "packetDigest" ] (keys (ClaimEventPayload.CompletionReplayed("t", 1L, "sha256:x")))
+              Assert.equal
+                  [ "claimToken"; "claimant"; "evidenceId"; "generation"; "observedAt"; "resultDigest"; "revision"; "status"; "validation" ]
+                  (keys (ClaimEventPayload.ValidationObserved("a", "t", 1L, "unit-tests", "EV-TESTS", commit, CheckStatus.Passed, t0, "sha256:x"))))
 
           t "the file event sink appends an identical event once" (fun () ->
               let root = CliHarness.temporaryDirectory "praxis-claim-events"
@@ -606,16 +614,29 @@ module WorkClaimTests =
               let holder = first["holder"]
               Assert.equal "test/agent-a" (holder["claimant"].GetValue<string>())
 
-              let complete authority =
-                  CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", "/nonexistent/dokimos") :: identity "test/agent-a")
-                      [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; commit
-                        "--verification-revision"; commit; "--authority"; authority; "--requirement"; item
-                        "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; "EV-TESTS=evidence/tests.txt" ]
+              // Completion evidence is a recorded validation result run at HEAD.
+              CliHarness.git root [ "init"; "-q" ] |> ignore
+              CliHarness.commitAll root "fixture"
+              let head = CliHarness.git root [ "rev-parse"; "HEAD" ]
+              let fence = [ "--id"; item; "--token"; "tok-a"; "--generation"; "1" ]
+              let validated = CliHarness.rosWith root (identity "test/agent-a") ([ "work"; "validate-run" ] @ fence @ [ "--validation"; "unit-tests"; "--evidence-id"; "EV-TESTS"; "--"; "true" ])
+              Assert.equal 0 validated.Exit
+              let validatedDocument = CliHarness.json validated.Out
+              let resultPath = validatedDocument["resultPath"].GetValue<string>()
 
-              Assert.equal 2 (complete "missing.json").Exit
+              let complete authority evidence =
+                  CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", "/nonexistent/dokimos") :: identity "test/agent-a")
+                      [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; head
+                        "--verification-revision"; head; "--authority"; authority; "--requirement"; item
+                        "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
+
+              Assert.equal 2 (complete "missing.json" resultPath).Exit
               CliHarness.write root "evidence/tests.txt" "ok\n"
-              CliHarness.write root "authority.json" ($"{{\"OrdoContractVersion\":\"v1\",\"OrdoContractDigest\":\"{ordoDigest}\",\"SupportedOrdoContractVersions\":[\"v1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{commit}\",\"ExpectedVerificationRevision\":\"{commit}\"}}")
-              let unavailable = complete "authority.json"
+              CliHarness.write root "authority.json" ($"{{\"OrdoContractVersion\":\"v1\",\"OrdoContractDigest\":\"{ordoDigest}\",\"SupportedOrdoContractVersions\":[\"v1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{head}\",\"ExpectedVerificationRevision\":\"{head}\"}}")
+              let plain = complete "authority.json" "evidence/tests.txt"
+              Assert.equal 3 plain.Exit
+              Assert.isTrue (plain.Out.Contains ValidationEvidence.UnrecognizedCode) plain.Out
+              let unavailable = complete "authority.json" resultPath
               Assert.equal 3 unavailable.Exit
               Assert.isTrue (unavailable.Out.Contains "PRX.COMPLETION.VERIFIER_UNAVAILABLE") unavailable.Out
               Assert.equal 2 (CliHarness.ros root [ "work"; "claim"; "--id"; item; "--store"; "nfs" ]).Exit) ]
@@ -639,7 +660,7 @@ module WorkClaimTests =
 
                   match WorkClaims.completeVerified ports input completion with
                   | CompletionOutcome.Completed(_, verified) ->
-                      Assert.equal (CompletionGate.packetDigest (packetFor completion)) verified.PacketDigest
+                      Assert.equal (CompletionGate.packetDigest (packetFor h completion)) verified.PacketDigest
                   | other -> failwith $"expected the real Dokimos to verify, got {other}"
 
                   // The same packet again is a Praxis-side replay; Dokimos is not asked twice.

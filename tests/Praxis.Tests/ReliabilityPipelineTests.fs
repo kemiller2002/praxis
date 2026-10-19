@@ -60,11 +60,15 @@ module ReliabilityPipelineTests =
         | ClaimOutcome.Succeeded(claim, _) -> claim
         | other -> failwith $"expected a claim, got {other}"
 
-    let private evidence () =
+    /// A file that is not a validation result (REL-GATE-001 reproduction).
+    let private plainFile (content: string) =
         let root = CliHarness.temporaryDirectory "praxis-pipeline-evidence"
         let path = Path.Combine(root, "tests.txt")
-        File.WriteAllText(path, "2254 test(s); 2254 passed; 0 failed\n")
+        File.WriteAllText(path, content)
         path
+
+    /// A recorded, passing `unit-tests` result for `held` at `commit`.
+    let private evidence (claimPorts: WorkClaimPorts) (held: WorkClaim) = ValidationEvidenceFixtures.validate claimPorts commit held
 
     let private request (input: CompletionAuthorityInput) (held: WorkClaim) evidencePath =
         { WorkItemId = held.WorkItemId
@@ -86,11 +90,39 @@ module ReliabilityPipelineTests =
         |> Option.filter File.Exists
         |> Option.map (fun dll -> DokimosCompletionVerifier.create (Ok dll) (TimeSpan.FromSeconds 120.0))
 
-    let private completionPorts claimPorts verifier =
+    let private completionPorts (events: ResizeArray<ClaimEvent>) claimPorts verifier =
         { Claims = claimPorts
           ObserveEvidence = FileWorkClaims.observeEvidence "/"
+          RecordedValidations = ValidationEvidenceFixtures.recorded events
           ObserveHead = fun () -> Ok commit
           Verifier = verifier }
+
+    /// Evidence the gate establishes for `submission` under `held`; the only
+    /// input `CompletionGate.packet` and `CompletionGate.authority` accept.
+    let private established input (events: ResizeArray<ClaimEvent>) (held: WorkClaim) (submission: CompletionRequest) =
+        let observations = submission.Evidence |> List.map (fun e -> e.Id, FileWorkClaims.observeEvidence "/" e) |> Map.ofList
+
+        match CompletionGate.preflight input submission held (ValidationEvidenceFixtures.recorded events held.WorkItemId) observations with
+        | Ok evidence -> evidence
+        | Error findings -> failwith $"the evidence must be established: {findings}"
+
+    let private dokimosDll () =
+        Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists
+
+    /// Runs the real Dokimos CLI on wire documents edited after Praxis built
+    /// them: an authority Praxis's types cannot express (a failed or stale
+    /// observation) still reaches Dokimos only this way, in a test.
+    let private dokimosOnWire (dll: string) (packet: JsonNode) (authority: JsonNode) =
+        let root = CliHarness.temporaryDirectory "praxis-dokimos-wire"
+        let packetPath = Path.Combine(root, "packet.json")
+        let authorityPath = Path.Combine(root, "authority.json")
+        File.WriteAllText(packetPath, packet.ToJsonString())
+        File.WriteAllText(authorityPath, authority.ToJsonString())
+        let run = CliHarness.run "dotnet" [ dll; "completion"; "verify"; "--packet"; packetPath; "--authority"; authorityPath ] []
+
+        match WorkClaimJson.parseReceipt run.Out with
+        | Ok receipt when run.Exit = 4 -> receipt.Diagnostics |> List.map _.Code
+        | other -> failwith $"expected Dokimos to refuse (exit 4), got exit {run.Exit}: {other} {run.Err}"
 
     let private codes outcome =
         match outcome with
@@ -190,24 +222,39 @@ module ReliabilityPipelineTests =
                       calls.Value <- calls.Value + 1
                       dokimos packet authority
 
-                  let complete = WorkClaims.completeVerified (completionPorts claimPorts counted) input
+                  let complete = WorkClaims.completeVerified (completionPorts events claimPorts counted) input
 
                   // Scenario 5: a valid implementation with insufficient evidence.
                   let thin = claim claimPorts "PRAXIS-PIPE-5" "agent-a" "tok-5"
-                  let missing = { request input thin (evidence ()) with Evidence = []; Validations = [] }
+                  let missing = { request input thin (evidence claimPorts thin) with Evidence = []; Validations = [] }
                   Assert.isTrue (codes (complete missing) |> List.contains "PRX.COMPLETION.EVIDENCE_MISSING") "preflight refuses missing evidence"
 
+                  // A required validation with no validated evidence cannot even form a
+                  // packet: Praxis refuses it before Dokimos (PRAXIS-REL-005).
                   let unproven = { input with RequiredValidationNames = [ "unit-tests"; "integration-tests" ] }
+                  let thinEvidence = evidence claimPorts thin
+                  let before = calls.Value
+
+                  let praxisRefusal =
+                      WorkClaims.completeVerified (completionPorts events claimPorts counted) unproven (request unproven thin thinEvidence)
+                      |> codes
+
+                  Assert.equal [ CompletionGate.UnprovenValidationCode ] praxisRefusal
+                  Assert.equal before calls.Value
+
+                  // Proof Praxis can establish but the authority still requires more
+                  // (a decision the packet omits) is refused by Dokimos itself.
+                  let undecided = { input with RequiredDecisionIds = [ "DF-ROS-2026-A001" ] }
 
                   let dokimosRefusal =
-                      WorkClaims.completeVerified (completionPorts claimPorts counted) unproven (request unproven thin (evidence ()))
+                      WorkClaims.completeVerified (completionPorts events claimPorts counted) undecided (request undecided thin thinEvidence)
                       |> codes
 
                   Assert.isTrue (dokimosRefusal |> List.exists (fun code -> code.StartsWith "DOK.COMPLETION.")) $"Dokimos itself refuses: {dokimosRefusal}"
 
                   // Scenario 1: one agent completes one requirement.
                   let held = claim claimPorts "PRAXIS-PIPE-1" "agent-a" "tok-1"
-                  let submission = request input held (evidence ())
+                  let submission = request input held (evidence claimPorts held)
 
                   let verified =
                       match complete submission with
@@ -225,9 +272,9 @@ module ReliabilityPipelineTests =
                   | CompletionOutcome.Replayed _ -> Assert.equal before calls.Value
                   | other -> failwith $"expected an idempotent replay, got {other}"
 
-                  let observations = submission.Evidence |> List.map (fun e -> e.Id, FileWorkClaims.observeEvidence "/" e) |> Map.ofList
-                  let packet = CompletionGate.packet input submission observations
-                  let replayAuthority = { CompletionGate.authority input held commit commit observations submission.Evidence with ConsumedPacketDigests = [ verified.PacketDigest ] }
+                  let validated = established input events held submission
+                  let packet = CompletionGate.packet input submission validated
+                  let replayAuthority = { CompletionGate.authority input held commit commit clock.Value validated with ConsumedPacketDigests = [ verified.PacketDigest ] }
 
                   match dokimos packet replayAuthority with
                   | VerifierRun.Exited(exitCode, Ok receipt, _, _) ->
@@ -250,4 +297,67 @@ module ReliabilityPipelineTests =
                   Assert.equal 2L (at("verification.verifiedRequirements.value").GetValue<int64>())
                   Assert.equal "unavailable" (at("usage.tokens.total.availability").GetValue<string>())
                   Assert.isTrue (isNull (at "perVerifiedRequirement.tokensTotal.value")) "tokens per verified requirement must be null, not 0"
-                  Assert.equal "unavailable" (at("perVerifiedRequirement.tokensTotal.availability").GetValue<string>())) ]
+                  Assert.equal "unavailable" (at("perVerifiedRequirement.tokensTotal.availability").GetValue<string>()))
+          t "REL-GATE-001: failing, unrelated, stale and mis-bound evidence never verifies through the real Dokimos" (fun () ->
+              match realDokimos () with
+              | None -> eprintfn "SKIP reliability pipeline: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              | Some dokimos ->
+                  let input = boundInput ()
+                  let events = ResizeArray()
+                  let t0 = DateTimeOffset(2026, 10, 19, 12, 0, 0, TimeSpan.Zero)
+                  let clock = ref t0
+                  let claimPorts = ports events clock
+                  let calls = ref 0
+
+                  let counted packet authority =
+                      calls.Value <- calls.Value + 1
+                      dokimos packet authority
+
+                  let complete = WorkClaims.completeVerified (completionPorts events claimPorts counted) input
+                  let held = claim claimPorts "GATE-1" "agent-a" "tok-gate"
+
+                  // Gate case 1: a file recording a failing run, produced outside any claim.
+                  let failingText = plainFile "12 test(s); 7 passed; 5 failed\n"
+                  Assert.equal [ ValidationEvidence.UnrecognizedCode ] (codes (complete (request input held failingText)))
+                  // Gate case 2: a file that is not a test report at all.
+                  Assert.equal [ ValidationEvidence.UnrecognizedCode ] (codes (complete (request input held (plainFile "not a test report\n"))))
+                  // A recorded, host-observed failing run is refused too.
+                  let failed = ValidationEvidenceFixtures.validateWith claimPorts commit ValidationEvidenceFixtures.failing held "unit-tests" "EV-TESTS"
+                  Assert.equal [ ValidationEvidence.NotPassedCode ] (codes (complete (request input held failed)))
+                  Assert.equal 0 calls.Value
+
+                  // Defence in depth: the real Dokimos enforces what the authority now
+                  // carries. Praxis cannot build a failed, stale or mis-bound
+                  // observation (ValidatedEvidence), so those are edited on the wire.
+                  let dll = (dokimosDll ()).Value
+                  let passed = request input held (evidence claimPorts held)
+                  let validated = established input events held passed
+                  let packetNode () = WorkClaimJson.packetNode (CompletionGate.packet input passed validated)
+                  let authorityNode () = WorkClaimJson.authorityNode (CompletionGate.authority input held commit commit clock.Value validated)
+
+                  let refusedWith (edit: JsonNode -> unit) =
+                      let authority = authorityNode ()
+                      edit authority
+                      dokimosOnWire dll (packetNode ()) authority
+
+                  let firstEvidence (authority: JsonNode) = authority["Evidence"].AsArray()[0]
+                  let failedCodes = refusedWith (fun a -> (firstEvidence a)["Status"] <- JsonValue.Create "failed")
+                  Assert.isTrue (failedCodes |> List.contains "DOK.COMPLETION.EVIDENCE_FAILED") $"{failedCodes}"
+
+                  let stale =
+                      refusedWith (fun a ->
+                          a["ClaimAcquiredAt"] <- JsonValue.Create "2026-10-19T12:01:00.000Z"
+                          a["EvaluatedAt"] <- JsonValue.Create "2026-10-19T12:02:00.000Z")
+
+                  Assert.isTrue (stale |> List.contains "DOK.COMPLETION.EVIDENCE_STALE") $"{stale}"
+                  let expired = refusedWith (fun a -> a["EvaluatedAt"] <- JsonValue.Create(a["LeaseExpiresAt"].GetValue<string>()))
+                  Assert.isTrue (expired |> List.contains "DOK.COMPLETION.STALE_LEASE") $"{expired}"
+                  let misbound = refusedWith (fun a -> (firstEvidence a)["Validation"] <- JsonValue.Create "lint")
+                  Assert.isTrue (misbound |> List.contains "DOK.COMPLETION.EVIDENCE_VALIDATION_MISMATCH") $"{misbound}"
+
+                  // The recorded passing result for this claim verifies.
+                  match complete passed with
+                  | CompletionOutcome.Completed(completed, _) -> Assert.equal ClaimStatus.Completed completed.Status
+                  | other -> failwith $"expected the real Dokimos to verify a recorded passing result, got {other}"
+
+                  Assert.equal 1 calls.Value) ]

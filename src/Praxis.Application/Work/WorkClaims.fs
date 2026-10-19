@@ -33,6 +33,9 @@ type CompletionVerifier = CompletionPacket -> CompletionAuthority -> VerifierRun
 type CompletionPorts =
     { Claims: WorkClaimPorts
       ObserveEvidence: EvidenceSubmission -> EvidenceObservation
+      /// The `work.validation.observed` events recorded for a work item
+      /// (PRAXIS-REL-005); evidence whose digest is not among them is refused.
+      RecordedValidations: string -> Result<RecordedValidation list, string>
       /// The commit Praxis itself observes as current (e.g. Git HEAD).
       ObserveHead: unit -> Result<string, string>
       Verifier: CompletionVerifier }
@@ -185,13 +188,13 @@ module WorkClaims =
 
     /// The completion gate. Succeeds only when the caller holds the current
     /// token, generation and lease; the commit and verification revision are
-    /// immutable; mandatory evidence exists; Dokimos returns a verified
+    /// immutable; every evidence item is a recorded validation result bound to
+    /// this claim, revision and lease window; Dokimos returns a verified
     /// receipt for exactly this packet; and the final transition wins a CAS
     /// keyed to the same generation. Everything else fails closed.
     let completeVerified (ports: CompletionPorts) (input: CompletionAuthorityInput) (request: CompletionRequest) =
         let observations = observeAll ports request
-        let packet = CompletionGate.packet input request observations
-        let digest = CompletionGate.packetDigest packet
+        let digest = CompletionGate.submissionDigest input request observations
         let reject findings digest verifier current = completionRejected ports request findings digest verifier current
 
         match ports.Claims.Store.Read request.WorkItemId with
@@ -201,9 +204,12 @@ module WorkClaims =
             | CompletionStart.AlreadyCompleted(claim, completion) -> replayed ports claim completion
             | CompletionStart.Refused conflict -> reject [ conflictFinding conflict ] (Some digest) None current
             | CompletionStart.Proceed(claim, next) ->
-                match CompletionGate.preflight input request observations with
-                | (_ :: _) as findings -> reject findings (Some digest) None current
-                | [] ->
+                match CompletionGate.preflight input request claim (ports.RecordedValidations request.WorkItemId) observations with
+                | Error findings -> reject findings (Some digest) None current
+                | Ok evidence ->
+                    // The packet and authority exist only for established evidence.
+                    let packet = CompletionGate.packet input request evidence
+
                     match expectedRevisions ports input with
                     | Error message ->
                         reject [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = message } ] (Some digest) None current
@@ -223,7 +229,7 @@ module WorkClaims =
                             let latest = ports.Claims.Store.Read request.WorkItemId |> Result.defaultValue current
                             reject [ conflictFinding (ClaimConflict.Lost claim.Revision) ] (Some digest) None latest
                         | Ok(Some awaiting) ->
-                            let authority = CompletionGate.authority input awaiting expectedCommit expectedRevision observations request.Evidence
+                            let authority = CompletionGate.authority input awaiting expectedCommit expectedRevision (ports.Claims.Now()) evidence
 
                             match CompletionGate.judge packet digest (ports.Verifier packet authority) with
                             | CompletionVerdict.Rejected(findings, verifier) ->

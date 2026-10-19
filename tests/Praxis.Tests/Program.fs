@@ -183,6 +183,7 @@ let main argv =
     @ ProvenanceAcknowledgementTests.tests
     @ WorkClaimTests.tests
     @ WorkClaimTests.integration
+    @ ValidationEvidenceTests.tests
     @ UrlEnhancementTests.tests
     @ TelemetryReliabilityReportTests.tests
     @ ReliabilityPipelineTests.tests

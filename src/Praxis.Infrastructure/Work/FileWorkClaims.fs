@@ -161,12 +161,15 @@ module FileWorkClaims =
         with error ->
             Claimability.NotClaimable $"the work queue cannot be read: {error.Message}"
 
+    /// Evidence is a `praxis.validation-result/1` document (PRAXIS-REL-005):
+    /// Praxis hashes the exact bytes and parses the result; any other file is
+    /// `Unrecognized` and refused by the gate. Existence alone proves nothing.
     let observeEvidence (root: string) (submission: EvidenceSubmission) =
         let path = if Path.IsPathRooted submission.Path then submission.Path else Path.Combine(root, submission.Path)
 
         try
             if File.Exists path then
-                EvidenceObservation.Observed(CompletionGate.sha256 (File.ReadAllBytes path))
+                ValidationResultJson.observe (File.ReadAllBytes path)
             else
                 EvidenceObservation.Missing
         with error ->
@@ -189,6 +192,7 @@ module FileWorkClaims =
 
         { Claims = ports root choice actor execution
           ObserveEvidence = observeEvidence root
+          RecordedValidations = FileValidationEvents.read root
           ObserveHead = observeHead root
           Verifier = DokimosCompletionVerifier.create (DokimosCompletionVerifier.resolve environment) timeout }
 

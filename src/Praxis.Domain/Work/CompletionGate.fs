@@ -8,23 +8,6 @@ open System.Text
 /// `praxis.completion-packet/1` from the agent's claim and the
 /// `dokimos.completion-authority/1` from state Praxis holds or observes
 /// itself, then trusts only Dokimos's receipt. Every function here is pure.
-[<RequireQualifiedAccess>]
-type CheckStatus =
-    | Passed
-    | Failed
-    | Unavailable
-
-[<RequireQualifiedAccess>]
-module CheckStatus =
-    let code status =
-        match status with
-        | CheckStatus.Passed -> "passed"
-        | CheckStatus.Failed -> "failed"
-        | CheckStatus.Unavailable -> "unavailable"
-
-    let tryParse text =
-        [ CheckStatus.Passed; CheckStatus.Failed; CheckStatus.Unavailable ] |> List.tryFind (fun status -> code status = text)
-
 type ValidationClaim =
     { Name: string
       Status: CheckStatus
@@ -49,13 +32,6 @@ type CompletionPacket =
       Validations: ValidationClaim list
       Evidence: PacketEvidence list }
 
-type ObservedEvidence =
-    { Id: string
-      Digest: string
-      Revision: string
-      Status: CheckStatus
-      Reusable: bool }
-
 type CompletionAuthority =
     { WorkItemId: string
       ClaimToken: string
@@ -68,8 +44,14 @@ type CompletionAuthority =
       RequiredDecisionIds: string list
       RequiredConflictResolutionIds: string list
       RequiredValidationNames: string list
-      Evidence: ObservedEvidence list
-      ConsumedPacketDigests: string list }
+      /// Host observations: only `ValidatedEvidence` (see its invariant), so
+      /// every observation Dokimos receives is a recorded, bound, passed result.
+      Evidence: ValidatedEvidence list
+      ConsumedPacketDigests: string list
+      /// Optional Dokimos 0.6.0 freshness members; omitted on the wire when `None`.
+      ClaimAcquiredAt: DateTimeOffset option
+      LeaseExpiresAt: DateTimeOffset option
+      EvaluatedAt: DateTimeOffset option }
 
 /// Praxis's own minimal record of the authoritative completion inputs
 /// (I3): the admitted Ordo contract identity and the required sets. Read
@@ -106,10 +88,13 @@ type CompletionRequest =
       Evidence: EvidenceSubmission list
       TelemetryExecutions: string list }
 
-/// Praxis's independent observation of one evidence file.
+/// Praxis's independent observation of one evidence file. Only a parsed
+/// `praxis.validation-result/1` is `Observed`; any other readable file is
+/// `Unrecognized` and refused.
 [<RequireQualifiedAccess>]
 type EvidenceObservation =
-    | Observed of digest: string
+    | Observed of digest: string * result: ValidationResult
+    | Unrecognized of digest: string * reason: string
     | Missing
     | Unreadable of reason: string
 
@@ -140,8 +125,6 @@ type VerifierRun =
     | TimedOut of after: TimeSpan
     | Crashed of reason: string
     | Exited of exitCode: int * receipt: Result<DokimosReceipt, string> * receiptDigest: string * diagnostics: string
-
-type CompletionFinding = { Code: string; Detail: string }
 
 type VerifierIdentity = { Name: string; Version: string }
 
@@ -225,37 +208,86 @@ module CompletionGate =
         |> Encoding.UTF8.GetBytes
         |> sha256
 
-    /// Checks Praxis enforces before any claim mutation or verifier call:
-    /// immutable revisions and present, readable mandatory evidence.
-    let preflight (input: CompletionAuthorityInput) (request: CompletionRequest) (observations: Map<string, EvidenceObservation>) =
+    let UnprovenValidationCode = "PRX.COMPLETION.VALIDATION_UNPROVEN"
+
+    /// Checks Praxis enforces before any claim mutation or verifier call, and
+    /// the only source of the evidence the packet and authority are built
+    /// from: immutable revisions; present, readable mandatory evidence; each
+    /// evidence item established as `ValidatedEvidence` (PRAXIS-REL-005);
+    /// and at least one validated item for every required validation.
+    let preflight
+        (input: CompletionAuthorityInput)
+        (request: CompletionRequest)
+        (claim: WorkClaim)
+        (recorded: Result<RecordedValidation list, string>)
+        (observations: Map<string, EvidenceObservation>)
+        : Result<ValidatedEvidence list, CompletionFinding list> =
         let submitted = request.Evidence |> List.map _.Id |> Set.ofList
 
-        [ if not (isImmutableRevision request.Commit) then
-              yield finding "PRX.COMPLETION.INVALID_COMMIT" $"commit '{request.Commit}' must be a full 40- or 64-hex Git object ID"
-          if not (isImmutableRevision request.VerificationRevision) then
-              yield
-                  finding
-                      "PRX.COMPLETION.INVALID_VERIFICATION_REVISION"
-                      $"verification revision '{request.VerificationRevision}' must be a full 40- or 64-hex Git object ID"
-          for id in input.RequiredEvidenceIds do
-              if not (submitted.Contains id) then
-                  yield finding "PRX.COMPLETION.EVIDENCE_MISSING" $"required evidence '{id}' was not supplied (--evidence {id}=PATH)"
-          for evidence in request.Evidence do
-              match observations |> Map.tryFind evidence.Id with
-              | Some(EvidenceObservation.Observed _) -> ()
-              | Some(EvidenceObservation.Unreadable reason) ->
-                  yield finding "PRX.COMPLETION.EVIDENCE_UNREADABLE" $"evidence '{evidence.Id}' at '{evidence.Path}' cannot be read: {reason}"
-              | Some EvidenceObservation.Missing
-              | None -> yield finding "PRX.COMPLETION.EVIDENCE_MISSING" $"evidence '{evidence.Id}' at '{evidence.Path}' does not exist" ]
+        let citedBy id =
+            request.Validations |> List.filter (fun validation -> validation.EvidenceIds |> List.contains id) |> List.map _.Name
 
-    let private observedDigest (observations: Map<string, EvidenceObservation>) id =
-        match observations |> Map.tryFind id with
-        | Some(EvidenceObservation.Observed digest) -> digest
-        | _ -> ""
+        let revisionFindings =
+            [ if not (isImmutableRevision request.Commit) then
+                  yield finding "PRX.COMPLETION.INVALID_COMMIT" $"commit '{request.Commit}' must be a full 40- or 64-hex Git object ID"
+              if not (isImmutableRevision request.VerificationRevision) then
+                  yield
+                      finding
+                          "PRX.COMPLETION.INVALID_VERIFICATION_REVISION"
+                          $"verification revision '{request.VerificationRevision}' must be a full 40- or 64-hex Git object ID"
+              for id in input.RequiredEvidenceIds do
+                  if not (submitted.Contains id) then
+                      yield finding "PRX.COMPLETION.EVIDENCE_MISSING" $"required evidence '{id}' was not supplied (--evidence {id}=PATH)" ]
 
-    /// The untrusted packet: the agent's claim, with Praxis-computed digests
-    /// only where the agent claimed none.
-    let packet (input: CompletionAuthorityInput) (request: CompletionRequest) (observations: Map<string, EvidenceObservation>) =
+        let established =
+            request.Evidence
+            |> List.map (fun evidence ->
+                match observations |> Map.tryFind evidence.Id with
+                | Some(EvidenceObservation.Observed(digest, result)) ->
+                    ValidatedEvidence.establish
+                        request.WorkItemId
+                        request.Fence
+                        claim.Holder
+                        request.VerificationRevision
+                        recorded
+                        evidence.Id
+                        (citedBy evidence.Id)
+                        digest
+                        result
+                    // An invalid verification revision is already refused; a mismatch against it says nothing more.
+                    |> Result.mapError (
+                        List.filter (fun item -> isImmutableRevision request.VerificationRevision || item.Code <> ValidationEvidence.RevisionMismatchCode)
+                    )
+                | Some(EvidenceObservation.Unrecognized(_, reason)) ->
+                    Error
+                        [ finding
+                              ValidationEvidence.UnrecognizedCode
+                              $"evidence '{evidence.Id}' at '{evidence.Path}' is not a {ValidationEvidence.SchemaVersion} document ({reason}); produce it with 'praxis work validate-run'" ]
+                | Some(EvidenceObservation.Unreadable reason) ->
+                    Error [ finding "PRX.COMPLETION.EVIDENCE_UNREADABLE" $"evidence '{evidence.Id}' at '{evidence.Path}' cannot be read: {reason}" ]
+                | Some EvidenceObservation.Missing
+                | None -> Error [ finding "PRX.COMPLETION.EVIDENCE_MISSING" $"evidence '{evidence.Id}' at '{evidence.Path}' does not exist" ])
+
+        let validated = established |> List.choose (function Ok value -> Some value | Error _ -> None)
+        let evidenceFindings = established |> List.collect (function Error findings -> findings | Ok _ -> [])
+
+        // Reported only once everything submitted is valid: then a required
+        // validation with no validated evidence is the precise reason.
+        let unproven =
+            if not evidenceFindings.IsEmpty || not revisionFindings.IsEmpty then
+                []
+            else
+                input.RequiredValidationNames
+                |> List.distinct
+                |> List.filter (fun name -> not (validated |> List.exists (fun evidence -> evidence.Validation = name)))
+                |> List.map (fun name ->
+                    finding UnprovenValidationCode $"required validation '{name}' has no recorded, passing result; run it with 'praxis work validate-run --validation {name}'")
+
+        match revisionFindings @ evidenceFindings @ unproven with
+        | [] -> Ok validated
+        | findings -> Error findings
+
+    let private draft (input: CompletionAuthorityInput) (request: CompletionRequest) (digestOf: string -> string) =
         { WorkItemId = request.WorkItemId
           ClaimToken = request.Fence.ClaimToken
           FencingGeneration = request.Fence.Generation
@@ -271,19 +303,38 @@ module CompletionGate =
             request.Evidence
             |> List.map (fun evidence ->
                 { PacketEvidence.Id = evidence.Id
-                  Digest = evidence.ClaimedDigest |> Option.defaultValue (observedDigest observations evidence.Id)
+                  Digest = evidence.ClaimedDigest |> Option.defaultValue (digestOf evidence.Id)
                   Revision = request.VerificationRevision }) }
 
+    /// The identity of a submission before its evidence is established, for
+    /// replay recognition and refusal events. Only a digest leaves here; no
+    /// packet is ever built from raw file observations.
+    let submissionDigest (input: CompletionAuthorityInput) (request: CompletionRequest) (observations: Map<string, EvidenceObservation>) =
+        draft input request (fun id ->
+            match observations |> Map.tryFind id with
+            | Some(EvidenceObservation.Observed(digest, _))
+            | Some(EvidenceObservation.Unrecognized(digest, _)) -> digest
+            | _ -> "")
+        |> packetDigest
+
+    /// The untrusted packet: the agent's claim, with Praxis-computed digests
+    /// of established evidence where the agent claimed none. Its digest
+    /// equals `submissionDigest` for the same request.
+    let packet (input: CompletionAuthorityInput) (request: CompletionRequest) (evidence: ValidatedEvidence list) =
+        draft input request (fun id -> evidence |> List.tryFind (fun item -> item.Id = id) |> Option.map _.Digest |> Option.defaultValue "")
+
     /// The authority comes only from Praxis-held state: the current claim's
-    /// token and generation, the expected commit, the required sets, the
-    /// digests Praxis computed itself, and the packets already consumed.
+    /// token, generation and lease window, the expected commit, the required
+    /// sets, the packets already consumed, Praxis's own clock, and the
+    /// established evidence (status, revision, observation time and
+    /// validation of each recorded result).
     let authority
         (input: CompletionAuthorityInput)
         (claim: WorkClaim)
         (expectedCommit: string)
         (expectedRevision: string)
-        (observations: Map<string, EvidenceObservation>)
-        (submissions: EvidenceSubmission list)
+        (evaluatedAt: DateTimeOffset)
+        (evidence: ValidatedEvidence list)
         =
         { WorkItemId = claim.WorkItemId
           ClaimToken = claim.Holder |> Option.map _.ClaimToken |> Option.defaultValue ""
@@ -296,20 +347,11 @@ module CompletionGate =
           RequiredDecisionIds = input.RequiredDecisionIds
           RequiredConflictResolutionIds = input.RequiredConflictResolutionIds
           RequiredValidationNames = input.RequiredValidationNames
-          Evidence =
-            submissions
-            |> List.choose (fun evidence ->
-                match observations |> Map.tryFind evidence.Id with
-                | Some(EvidenceObservation.Observed digest) ->
-                    Some
-                        { ObservedEvidence.Id = evidence.Id
-                          Digest = digest
-                          Revision = expectedRevision
-                          Status = CheckStatus.Passed
-                          Reusable = false }
-                | _ -> None)
-            |> List.distinctBy _.Id
-          ConsumedPacketDigests = claim.ConsumedPacketDigests }
+          Evidence = evidence |> List.distinctBy _.Id
+          ConsumedPacketDigests = claim.ConsumedPacketDigests
+          ClaimAcquiredAt = claim.Holder |> Option.map _.AcquiredAt
+          LeaseExpiresAt = claim.Holder |> Option.map _.LeaseExpiresAt
+          EvaluatedAt = Some evaluatedAt }
 
     /// Fail closed: only an exit-0 receipt bound to exactly this packet is
     /// verification. Anything else is a refusal with actionable codes.
@@ -369,6 +411,16 @@ type ClaimEventPayload =
     | CompletionRejected of claimant: string * claimToken: string * generation: int64 * codes: string list * packetDigest: string option * verifier: VerifierIdentity option
     | CompletionVerified of claimant: string * claimToken: string * generation: int64 * completion: VerifiedCompletion
     | CompletionReplayed of claimToken: string * generation: int64 * packetDigest: string
+    | ValidationObserved of
+        claimant: string *
+        claimToken: string *
+        generation: int64 *
+        validation: string *
+        evidenceId: string *
+        revision: string *
+        status: CheckStatus *
+        observedAt: DateTimeOffset *
+        resultDigest: string
 
 type ClaimEvent =
     { WorkItemId: string
@@ -387,6 +439,7 @@ module ClaimEvent =
         | ClaimEventPayload.CompletionRejected _ -> "work.completion.rejected"
         | ClaimEventPayload.CompletionVerified _ -> "work.completion.verified"
         | ClaimEventPayload.CompletionReplayed _ -> "work.completion.replayed"
+        | ClaimEventPayload.ValidationObserved _ -> ValidationEvidence.ObservedEventType
 
     /// The event a written or replayed claim transition stands for. A
     /// replay reproduces the original event exactly (same time, same
