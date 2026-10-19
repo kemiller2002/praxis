@@ -133,5 +133,17 @@
       "effects": 0
     }
   },
-  "exceptions": []
+  "exceptions": [
+    {
+      "id": "QX-PRX-REL-001",
+      "rule": "PRX-ARCH-002",
+      "path": "Program.fs",
+      "limit": 2973,
+      "rationale": "One root-dispatch line routes the work-claim verbs (claim, renew, release, recover, expire, claims, complete-verified) to WorkClaimCommands; all behaviour lives in Application/Infrastructure. Remove by folding work-verb routing into a shared route table.",
+      "owner": "repository-governance",
+      "created": "2026-10-19",
+      "expires": "2027-01-19",
+      "evidence": "RQ-ROS-2026-A032 (PRX-REL-001..007); src/Praxis.Cli/WorkClaimCommands.fs"
+    }
+  ]
 }

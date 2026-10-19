@@ -105,6 +105,9 @@ module WorkClaims =
         let claimability = ports.Claimability request.WorkItemId
         transact ports request.WorkItemId request.Claimant (fun now current -> WorkClaim.acquire now claimability request current)
 
+    /// `work recover`: acquire only an expired (or durably expired) claim.
+    let recover (ports: WorkClaimPorts) (request: ClaimAcquisition) = acquire ports { request with RecoverOnly = true }
+
     /// PRX-REL-011: every slice of a cohesive batch is claimed on its own;
     /// one slice's conflict never changes another slice's ownership.
     let acquireEach (ports: WorkClaimPorts) (requests: ClaimAcquisition list) =

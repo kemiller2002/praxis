@@ -75,7 +75,7 @@ module WorkClaimJson =
               "updatedAt", time claim.UpdatedAt ]
 
     let renderClaim (claim: WorkClaim) =
-        (claimNode claim).ToJsonString(JsonSerializerOptions(WriteIndented = true)) + "\n"
+        (claimNode claim).ToJsonString(JsonSerializerOptions(WriteIndented = true, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)) + "\n"
 
     let private property (element: JsonElement) (name: string) =
         match element.TryGetProperty name with
@@ -321,3 +321,78 @@ module WorkClaimJson =
                   ExpectedVerificationRevision = text root "ExpectedVerificationRevision" }
         with error ->
             Error $"completion authority input is malformed: {error.Message}"
+
+/// Command results for `praxis work claim|renew|release|recover|expire|
+/// claims|complete-verified`: one JSON document on stdout.
+[<RequireQualifiedAccess>]
+module WorkClaimOutcomeJson =
+    open Praxis.Application.Work
+
+    let private render (node: JsonNode) =
+        node.ToJsonString(JsonSerializerOptions(WriteIndented = true, Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
+
+    let private view (now: DateTimeOffset) (claim: WorkClaim) =
+        let node = WorkClaimJson.claimNode claim :?> JsonObject
+        node["effectiveStatus"] <- JsonValue.Create(ClaimStatus.code (WorkClaim.effectiveStatus now claim))
+        node :> JsonNode
+
+    let private document (members: (string * JsonNode) list) =
+        let node = JsonObject()
+        members |> List.iter (fun (name, value) -> node[name] <- value)
+        render node
+
+    let private findings (items: CompletionFinding list) =
+        let array = JsonArray()
+
+        for item in items do
+            let entry = JsonObject()
+            entry["code"] <- JsonValue.Create item.Code
+            entry["detail"] <- JsonValue.Create item.Detail
+            array.Add(entry :> JsonNode)
+
+        array :> JsonNode
+
+    /// The document and the documented exit code: 0 done (or replayed),
+    /// 3 refused with a structured conflict, 1 storage or event failure.
+    let claimOutcome (now: DateTimeOffset) (outcome: ClaimOutcome) =
+        match outcome with
+        | ClaimOutcome.Succeeded(claim, replayed) ->
+            document [ "outcome", JsonValue.Create(if replayed then "replayed" else "recorded"); "claim", view now claim ], 0
+        | ClaimOutcome.Refused(conflict, current) ->
+            document
+                [ "outcome", JsonValue.Create "refused"
+                  "code", JsonValue.Create(ClaimConflict.code conflict)
+                  "reason", JsonValue.Create(ClaimConflict.reason conflict)
+                  "detail", JsonValue.Create(ClaimConflict.detail conflict)
+                  "claim", (current |> Option.map (view now) |> Option.toObj) ],
+            3
+        | ClaimOutcome.Failed reason -> document [ "outcome", JsonValue.Create "failed"; "detail", JsonValue.Create reason ], 1
+
+    let claims (now: DateTimeOffset) (claims: WorkClaim list) =
+        let array = JsonArray()
+        claims |> List.iter (fun claim -> array.Add(view now claim))
+        document [ "claims", array ]
+
+    let completionOutcome (now: DateTimeOffset) (outcome: CompletionOutcome) =
+        match outcome with
+        | CompletionOutcome.Completed(claim, completion)
+        | CompletionOutcome.Replayed(claim, completion) ->
+            let replayed =
+                match outcome with
+                | CompletionOutcome.Replayed _ -> true
+                | _ -> false
+
+            document
+                [ "outcome", JsonValue.Create(if replayed then "replayed" else "verified")
+                  "packetDigest", JsonValue.Create completion.PacketDigest
+                  "receiptDigest", JsonValue.Create completion.ReceiptDigest
+                  "claim", view now claim ],
+            0
+        | CompletionOutcome.Rejected(items, current) ->
+            document
+                [ "outcome", JsonValue.Create "rejected"
+                  "codes", (items |> List.map _.Code |> List.distinct |> List.map (fun code -> JsonValue.Create code :> JsonNode) |> Array.ofList |> JsonArray :> JsonNode)
+                  "findings", findings items
+                  "claim", (current |> Option.map (view now) |> Option.toObj) ],
+            3
+        | CompletionOutcome.Failed reason -> document [ "outcome", JsonValue.Create "failed"; "detail", JsonValue.Create reason ], 1

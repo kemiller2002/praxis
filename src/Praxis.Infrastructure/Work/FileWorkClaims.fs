@@ -145,7 +145,7 @@ module FileWorkClaims =
 
     let store (root: string) (choice: ClaimStoreChoice) =
         match choice with
-        | ClaimStoreChoice.Local -> FileWorkClaimStore.create root RegistryLock.defaultSettings
+        | ClaimStoreChoice.Local -> FileWorkClaimStore.create root
         | ClaimStoreChoice.GitRef remote -> GitRefWorkClaimStore.create root remote gitTimeout
 
     /// Claimable when the queue or the event log knows the item and the

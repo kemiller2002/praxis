@@ -5,7 +5,6 @@ open System.IO
 open System.Text
 open Praxis.Application.Work
 open Praxis.Domain.Work
-open Praxis.Infrastructure.Artifacts
 
 /// Deterministic in-process claim store: one immutable map behind a lock,
 /// so compare-and-swap is linearizable across threads.
@@ -28,89 +27,110 @@ module InMemoryWorkClaimStore =
                         Ok(ClaimWrite.Conflict current))
           List = fun () -> lock gate (fun () -> Ok(claims |> Map.toList |> List.map snd)) }
 
-/// Single-host claim store: one `praxis.work-claim/1` file per work item
-/// under `.ros/claims/` (additive; `.ros/work/queue.json` is never
-/// touched). A write holds the existing per-resource registry lock, checks
-/// the stored revision, then publishes by atomic rename; a first write is
-/// create-only, so even a lock bypass cannot overwrite an existing claim.
-/// Not valid across hosts: remote agents use the Git-ref store.
+/// Single-host claim store, lock-free: each durable write is a new
+/// revision directory `.ros/claims/<work-item-id>/<revision>/claim.json`.
+/// Revisions are dense (`next = expected + 1`), so "publish revision N+1"
+/// must succeed for exactly one writer. The record is staged in a private
+/// directory and renamed into place; rename(2) onto an existing, non-empty
+/// directory fails atomically, so the rename is the compare-and-swap and a
+/// writer with a stale expected revision always finds N+1 taken. Readers
+/// never see a partial record. History is append-only and additive;
+/// `.ros/work/queue.json` is never touched. Valid on one host's filesystem
+/// only: remote agents use the Git-ref store.
 [<RequireQualifiedAccess>]
 module FileWorkClaimStore =
     let directory (root: string) = Path.Combine(root, ".ros", "claims")
 
-    let path (root: string) (id: string) = Path.Combine(directory root, $"{id}.json")
+    let itemDirectory (root: string) (id: string) = Path.Combine(directory root, id)
+
+    let revisionDirectory (root: string) (id: string) (revision: int64) =
+        Path.Combine(itemDirectory root id, $"{revision:D12}")
+
+    let path (root: string) (id: string) (revision: int64) =
+        Path.Combine(revisionDirectory root id revision, "claim.json")
+
+    let private revisions (root: string) (id: string) =
+        let folder = itemDirectory root id
+
+        if Directory.Exists folder then
+            Directory.GetDirectories folder
+            |> Array.choose (fun entry ->
+                match Int64.TryParse(Path.GetFileName entry) with
+                | true, revision -> Some revision
+                | _ -> None)
+            |> Array.sort
+            |> Array.toList
+        else
+            []
 
     let private read (root: string) (id: string) =
         if not (WorkItemId.isValid id) then
             Error $"'{id}' is not a work-item id"
         else
-            let file = path root id
-
             try
-                if File.Exists file then
-                    WorkClaimJson.parseClaim (File.ReadAllText(file, Encoding.UTF8)) |> Result.map Some
-                else
-                    Ok None
+                match revisions root id |> List.tryLast with
+                | None -> Ok None
+                | Some revision ->
+                    WorkClaimJson.parseClaim (File.ReadAllText(path root id revision, Encoding.UTF8))
+                    |> Result.bind (fun claim ->
+                        if claim.Revision = revision && claim.WorkItemId = id then Ok(Some claim)
+                        else Error $"claim file {revision} for '{id}' does not match its record")
             with error ->
                 Error $"cannot read claim '{id}': {error.Message}"
 
-    let private publish (root: string) (expected: int64 option) (next: WorkClaim) =
-        let file = path root next.WorkItemId
-        let temporary = Path.Combine(directory root, $".{next.WorkItemId}.{Guid.NewGuid():N}.tmp")
-        Directory.CreateDirectory(directory root) |> ignore
-        File.WriteAllText(temporary, WorkClaimJson.renderClaim next, UTF8Encoding(false))
+    let private compareAndSwap (root: string) (expected: int64 option) (next: WorkClaim) =
+        let id = next.WorkItemId
 
-        try
-            // Create-only when no record may exist; replace otherwise.
-            File.Move(temporary, file, expected.IsSome)
-        finally
-            if File.Exists temporary then File.Delete temporary
+        if not (WorkItemId.isValid id) then
+            Error $"'{id}' is not a work-item id"
+        elif next.Revision <> (expected |> Option.defaultValue 0L) + 1L then
+            Error $"claim revision {next.Revision} does not follow expected revision {expected}"
+        else
+            let folder = itemDirectory root id
+            let stage = Path.Combine(folder, $".stage-{Guid.NewGuid():N}")
+            let target = revisionDirectory root id next.Revision
 
-    let create (root: string) (settings: RegistryLockSettings) : WorkClaimStore =
-        let compareAndSwap (expected: int64 option) (next: WorkClaim) =
-            if not (WorkItemId.isValid next.WorkItemId) then
-                Error $"'{next.WorkItemId}' is not a work-item id"
-            else
-                match RegistryLock.acquire root $"work-claim:{next.WorkItemId}" settings with
-                | Error failure -> Error $"claim lock unavailable: {failure.Message}"
-                | Ok lease ->
-                    let outcome =
-                        match read root next.WorkItemId with
-                        | Error message -> Error message
-                        | Ok current when current |> Option.map _.Revision <> expected -> Ok(ClaimWrite.Conflict current)
-                        | Ok _ ->
-                            try
-                                publish root expected next
-                                Ok(ClaimWrite.Written next)
-                            with
-                            | :? IOException when expected.IsNone -> read root next.WorkItemId |> Result.map ClaimWrite.Conflict
-                            | error -> Error $"cannot write claim '{next.WorkItemId}': {error.Message}"
-
-                    match lease.Release(), outcome with
-                    | Ok(), _ -> outcome
-                    | Error _, Ok written -> Ok written
-                    | Error failure, Error message -> Error $"{message}; {failure.Message}"
-
-        let list () =
             try
-                if Directory.Exists(directory root) then
-                    Directory.GetFiles(directory root, "*.json")
-                    |> Array.sort
-                    |> Array.toList
-                    |> List.map (fun file -> read root (Path.GetFileNameWithoutExtension file))
-                    |> List.fold
-                        (fun state item ->
-                            match state, item with
-                            | Ok claims, Ok(Some claim) -> Ok(claims @ [ claim ])
-                            | Ok claims, Ok None -> Ok claims
-                            | Error message, _
-                            | _, Error message -> Error message)
-                        (Ok [])
-                else
-                    Ok []
-            with error ->
-                Error $"cannot list claims: {error.Message}"
+                try
+                    Directory.CreateDirectory stage |> ignore
+                    File.WriteAllText(Path.Combine(stage, "claim.json"), WorkClaimJson.renderClaim next, UTF8Encoding(false))
 
+                    match read root id with
+                    | Error message -> Error message
+                    | Ok current when current |> Option.map _.Revision <> expected -> Ok(ClaimWrite.Conflict current)
+                    | Ok _ ->
+                        try
+                            Directory.Move(stage, target)
+                            Ok(ClaimWrite.Written next)
+                        with :? IOException when Directory.Exists target ->
+                            read root id |> Result.map ClaimWrite.Conflict
+                with error ->
+                    Error $"cannot write claim '{id}': {error.Message}"
+            finally
+                try
+                    if Directory.Exists stage then Directory.Delete(stage, true)
+                with _ ->
+                    ()
+
+    let private list (root: string) () =
+        try
+            if Directory.Exists(directory root) then
+                Directory.GetDirectories(directory root)
+                |> Array.map Path.GetFileName
+                |> Array.filter WorkItemId.isValid
+                |> Array.sort
+                |> Array.toList
+                |> List.fold
+                    (fun state id ->
+                        state
+                        |> Result.bind (fun claims -> read root id |> Result.map (fun claim -> claims @ Option.toList claim)))
+                    (Ok [])
+            else
+                Ok []
+        with error ->
+            Error $"cannot list claims: {error.Message}"
+
+    let create (root: string) : WorkClaimStore =
         { Read = read root
-          CompareAndSwap = compareAndSwap
-          List = list }
+          CompareAndSwap = compareAndSwap root
+          List = list root }
