@@ -69,6 +69,7 @@ let main argv =
     @ RoutingFoundationsTests.limenTests
     @ UrlStateTests.tests
     @ OrdoObservationTests.tests
+    @ OrdoContractAdmissionTests.tests
     @ ProvenanceTests.tests
     @ ProvenanceEffectTests.tests
     @ WorkReconciliationTests.tests
@@ -180,6 +181,10 @@ let main argv =
     @ IdentityTests.tests
     @ CompletionObligationsTests.tests
     @ ProvenanceAcknowledgementTests.tests
+    @ WorkClaimTests.tests
+    @ WorkClaimTests.integration
     @ UrlEnhancementTests.tests
+    @ TelemetryReliabilityReportTests.tests
+    @ ReliabilityPipelineTests.tests
     |> TestRunner.run
   | other -> eprintfn "unknown arguments: %s (expected none, --suite browser, or --suite pinned-release)" (String.concat " " other); 2

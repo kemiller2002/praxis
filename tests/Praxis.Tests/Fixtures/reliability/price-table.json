@@ -1,0 +1,3 @@
+{ "source": "test-fixture-prices-not-real", "version": "fixture-1", "effectiveDate": "2026-10-01",
+  "currency": "USD", "unit": "per-million-tokens",
+  "models": { "claude-test-1": { "input": 1, "output": 2, "cacheRead": 0.1, "cacheWrite": 1.25 } } }

@@ -1,0 +1,314 @@
+{
+  "schemaVersion": "ordo.constructibility-fixtures/1",
+  "supportedVersions": [
+    "ecir/1"
+  ],
+  "digestAlgorithm": "sha256 over UTF-8 bytes of the canonical ecir/1 rendering (ConstructionIrWire.canonicalBlueprint)",
+  "comparison": "consumers must match outcome, identity exactly, and the ordered (code, subject) diagnostic list; messages are informative only",
+  "cases": [
+    {
+      "name": "valid",
+      "contract": "valid-contract.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "canonical-form",
+      "contract": "valid-contract.canonical.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "reordered-members-and-arrays",
+      "contract": "reordered-contract.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "unicode-and-ordinal-ordering",
+      "contract": "unicode-ordinal-contract.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:28b3b30ffa2232085c94a0ca8e9d0331e88458d0dabe8354de40015594243dd6",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "previous-revision",
+      "contract": "previous-contract.json",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:2f972025b57040eb60fb4b76a4c672c228c8129b29f517bb279789d21568ecd7",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "current-pin",
+      "contract": "valid-contract.json",
+      "expectedDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+      "outcome": "admitted",
+      "identity": {
+        "contractSchemaVersion": "ecir/1",
+        "contractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+        "requirementKeys": [
+          "requirements/domain.md#R-001",
+          "requirements/operations.md#R-001"
+        ],
+        "decisionIds": [
+          "DEC-CONFIRM"
+        ],
+        "conflictIds": []
+      }
+    },
+    {
+      "name": "stale-pin",
+      "contract": "valid-contract.json",
+      "expectedDigest": "sha256:2f972025b57040eb60fb4b76a4c672c228c8129b29f517bb279789d21568ecd7",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.STALE_REFERENCE",
+          "subject": "sha256:2f972025b57040eb60fb4b76a4c672c228c8129b29f517bb279789d21568ecd7->sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e"
+        }
+      ]
+    },
+    {
+      "name": "malformed-pin",
+      "contract": "valid-contract.json",
+      "expectedDigest": "sha256:ABC",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_REFERENCE_DIGEST",
+          "subject": "sha256:ABC"
+        }
+      ]
+    },
+    {
+      "name": "unsupported-version",
+      "contract": "unsupported-version-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.UNSUPPORTED_SCHEMA",
+          "subject": "ecir/2"
+        }
+      ]
+    },
+    {
+      "name": "unknown-member",
+      "contract": "unknown-member-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_BLUEPRINT_JSON"
+        }
+      ]
+    },
+    {
+      "name": "duplicate-member",
+      "contract": "duplicate-member-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_BLUEPRINT_JSON"
+        }
+      ]
+    },
+    {
+      "name": "malformed-json",
+      "contract": "malformed-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_BLUEPRINT_JSON"
+        }
+      ]
+    },
+    {
+      "name": "dangling-dependency",
+      "contract": "dangling-dependency-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.MISSING_DEPENDENCY",
+          "subject": "VERIFY-CONFIRM->DEC-RETIRED"
+        }
+      ]
+    },
+    {
+      "name": "dangling-decision-reference",
+      "contract": "dangling-decision-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.MISSING_NODE",
+          "subject": "requirements/domain.md#R-001->DEC-GHOST"
+        }
+      ]
+    },
+    {
+      "name": "cyclic-dependency",
+      "contract": "cyclic-dependency-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "COHORT-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "DEC-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "VERIFY-CONFIRM"
+        }
+      ]
+    },
+    {
+      "name": "duplicate-node",
+      "contract": "duplicate-node-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.DUPLICATE_NODE",
+          "subject": "DEF-OPERATIONS"
+        }
+      ]
+    },
+    {
+      "name": "nonreciprocal-link",
+      "contract": "nonreciprocal-link-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.MISSING_VERIFICATION",
+          "subject": "requirements/domain.md#R-001"
+        },
+        {
+          "code": "ORDO.CONTRACT.NON_RECIPROCAL_LINK",
+          "subject": "requirements/domain.md#R-001<->VERIFY-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.UNJUSTIFIED_NODE",
+          "subject": "VERIFY-CONFIRM"
+        }
+      ]
+    },
+    {
+      "name": "self-dependency",
+      "contract": "self-dependency-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "COHORT-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "DEC-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.DEPENDENCY_CYCLE",
+          "subject": "VERIFY-CONFIRM"
+        },
+        {
+          "code": "ORDO.CONTRACT.SELF_DEPENDENCY",
+          "subject": "DEC-CONFIRM"
+        }
+      ]
+    },
+    {
+      "name": "missing-disposition-node",
+      "contract": "missing-disposition-node-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.MISSING_DISPOSITION_NODE",
+          "subject": "requirements/operations.md#R-001->Conflict"
+        }
+      ]
+    },
+    {
+      "name": "invalid-supersession",
+      "contract": "invalid-supersession-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_SUPERSESSION",
+          "subject": "requirements/operations.md#R-001->requirements/missing.md#R-404"
+        }
+      ]
+    },
+    {
+      "name": "empty-intake",
+      "contract": "empty-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.EMPTY_INTAKE"
+        }
+      ]
+    },
+    {
+      "name": "lone-surrogate",
+      "contract": "lone-surrogate-contract.json",
+      "outcome": "rejected",
+      "diagnostics": [
+        {
+          "code": "ORDO.CONTRACT.INVALID_BLUEPRINT_JSON"
+        }
+      ]
+    }
+  ]
+}

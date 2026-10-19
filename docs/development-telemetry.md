@@ -569,3 +569,109 @@ A checkpoint's summary is agent-reported prose. Test results remain
 telemetry measurements (such as `tests.passed`) with their source and
 quality. `work continue` shows a successor exactly those measurements, so a
 summary is never mistaken for evidence.
+
+## Reliability report: cost per verified requirement (PRX-REL-009)
+
+**Why tokens were missing.** Of 307 execution records in this repository,
+287 declare `tokens.input` `supported-unavailable` ("no observation has been
+ingested"), 18 `unknown`, and 2 carry tokens (both ingested by hand). The
+adapters work (`anthropic-claude-session` deduplicates correctly); nothing
+runs them. `work begin`/`work complete` record the runtime's session ID
+(`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`) but never read the transcript
+the runtime writes outside the repository:
+
+| Runtime | Where usage is written | Usage fields |
+| --- | --- | --- |
+| Claude Code | `~/.claude/projects/<cwd-slug>/<SESSION>.jsonl`; subagents in `<SESSION>/subagents/agent-*.jsonl` (same `sessionId`, plus `agentId`, `isSidechain`) | assistant `message.usage` (`input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, TTL split), `message.id`, `requestId`, `message.model`; one line per content block, so the same message repeats |
+| Codex | `~/.codex/sessions/YYYY/MM/DD/rollout-*-<SESSION>.jsonl` | `session_meta.payload.id`, `turn_context.payload.model`, cumulative `event_msg` `token_count.info.total_token_usage` (`input_tokens` includes `cached_input_tokens`) |
+
+The `openai-codex` adapter reads `codex exec --json` output, not rollout
+files. Remote containers are ephemeral, so transcripts of past sessions are
+gone: historical records cannot be backfilled and remain truthfully
+unavailable.
+
+**Command.** Read-only over its inputs; it never mutates `.ros/`:
+
+```bash
+praxis telemetry reliability-report \
+  [--events .ros/events/events.jsonl] [--executions .ros/telemetry/executions] \
+  [--transcripts FILE|DIR]... [--discover-transcripts] \
+  [--price-table FILE] [--work-item ID]... \
+  [--attribution session-window|explicit-only] [--out report.json]
+```
+
+`--discover-transcripts` reads `$CLAUDE_CONFIG_DIR/projects` (else
+`~/.claude/projects`) and `$CODEX_HOME/sessions` (else `~/.codex/sessions`),
+keeping only files of sessions that in-scope execution records name. To keep
+evidence of a run, copy its transcripts next to the run and pass
+`--transcripts`. Only content-free usage facts are read; the report lists
+each transcript by SHA-256, never by path.
+
+**Observations.** Each provider usage observation carries input, output,
+cache-read and cache-write tokens (separate buckets, never folded into
+input), TTL split and reasoning when reported, model, message and request
+IDs, session and agent IDs. Its ID is `anthropic:<message.id>` (else
+`requestId`); a usage line with neither is counted in
+`unidentifiedUsageEntries` and never summed. A Codex cumulative counter
+becomes one observation per distinct total (`openai:<SESSION>:total@<N>`):
+repeated readings add nothing and a decreasing counter is a counted reset.
+For Codex, input is normalized to the uncached part and cache read to
+`cached_input_tokens`; cache write is *not applicable* to that provider (it
+contributes nothing and is priced at nothing), which is different from
+unavailable. A bucket the provider did not report is unavailable: the total
+becomes `partial` (a labelled lower bound), never zero.
+
+**Cost.** `--price-table FILE` takes the operator-supplied, versioned table
+described under "Cumulative usage and cost attribution" (source, version,
+effective date, per-million-token rates by model). Praxis ships no prices.
+Estimated cost is always `estimated`; `billed` is the sum of observed
+(provider/platform-reported) `cost.execution_total`. They are never summed.
+A missing table, model or rate leaves cost unavailable, or `partial` with
+every reason listed, never zero.
+
+**Allocation rules** (also emitted in the report as `allocationRules`):
+
+1. Each observation is counted at most once, by observation ID; excluded
+   duplicates and IDs whose duplicates disagreed are reported.
+2. A request in an ingested execution ledger belongs to that execution.
+   Recorded `tokens.*` metrics without a ledger form one execution-record
+   observation, superseded (and listed) when transcript observations exist
+   for the same session.
+3. Otherwise an observation belongs to the executions of its session and
+   provider whose `[startedAt, finalizedAt]` contains it, narrowed by agent
+   ID when one matches; several candidates split it evenly. No candidate:
+   reported under `usage.unattributed` with a reason, never counted as
+   attributable. `--attribution explicit-only` disables this rule.
+4. An execution named by events of several work items is split evenly among
+   them; otherwise it belongs to its record's work item.
+5. A work item's share is split evenly among the requirement IDs of its
+   `work.completion.verified` events; without verified requirements it stays
+   at work-item level and still counts in the numerator.
+6. Integer tokens split as quotient plus one remainder token each to the
+   ordinally first targets, so shares sum exactly; cost is priced per share.
+7. Cost per verified requirement = total attributable cost of every
+   in-scope execution (rejected and unverified work included) / distinct
+   requirement IDs in `work.completion.verified`. Zero verified requirements
+   leaves the ratio unavailable, never zero or infinite.
+
+**Output** (`schema: praxis.telemetry-reliability-report`, `schemaVersion:
+1`). Every metric is `{availability: available|partial|unavailable, value,
+unit, numerator, denominator, definition, reason}`; an unavailable value is
+`null`. Top-level members: `inputs` (event line counts, executions in scope,
+price table, transcript digests), `usage` (observations, duplicates,
+attribution methods, coverage, `tokens.{input,output,cacheRead,cacheWrite,total}`,
+`cost.{estimated,billed}`, `unattributed`), `verification`
+(`verifiedRequirements`, `firstPassVerificationRate`, `reworkFrequency`,
+`completionRejectionFrequency`, `duplicateOwnershipAttempts` (claim rejected
+`held`), `staleWriteRejections` (claim rejected `stale-*` or `expired` plus
+completion codes containing `STALE` or equal to `PRX.CLAIM.EXPIRED`: a late
+write from an expired owner is stale), `retries`), `perVerifiedRequirement`
+(`estimatedCost`, `billedCost`, `tokensTotal`), `time` (`elapsedMs` claim to
+verification, `activeMs`, `blockedMs`, `wallMs`), `attributedCommits`,
+`agents`, `executions`, `workItems[]`, `requirements[]`, `allocationRules`.
+The event inputs are interface I1 (`work.claim.*`, `work.completion.*`).
+
+**Determinism.** Keys are sorted ordinally, arrays sorted, numbers use the
+invariant culture, decimals are rounded half-to-even and printed with six
+places, and no wall-clock value is emitted: identical inputs give
+byte-identical output, whatever the input file order.

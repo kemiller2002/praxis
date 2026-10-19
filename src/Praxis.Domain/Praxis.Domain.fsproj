@@ -63,6 +63,8 @@
     <Compile Include="Telemetry/UsageCost.fs" />
     <Compile Include="Telemetry/Acceptance.fs" />
     <Compile Include="Telemetry/Usage.fs" />
+    <Compile Include="Telemetry/ProviderUsage.fs" />
+    <Compile Include="Telemetry/ReliabilityReport.fs" />
     <Compile Include="Pacing/Model.fs" />
     <Compile Include="Provenance/Actor.fs" />
     <Compile Include="Provenance/ArtifactProvenance.fs" />
@@ -74,6 +76,7 @@
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Work/InputInbox.fs" />
     <Compile Include="Ordo/Model.fs" />
+    <Compile Include="Ordo/ContractAdmission.fs" />
     <Compile Include="Lifecycle/Model.fs" />
     <Compile Include="Lifecycle/ConsumerLinks.fs" />
     <Compile Include="Lifecycle/RequiredLines.fs" />
@@ -108,6 +111,8 @@
     <Compile Include="Work/LocalWorkerSubmission.fs" />
     <Compile Include="Work/LocalIntegrationJournal.fs" />
     <Compile Include="Work/LocalContainment.fs" />
+    <Compile Include="Work/Claim.fs" />
+    <Compile Include="Work/CompletionGate.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />

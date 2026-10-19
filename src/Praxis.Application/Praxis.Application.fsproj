@@ -31,6 +31,8 @@
     <Compile Include="Work/LocalSpooledDispatch.fs" />
     <Compile Include="Work/LocalIntegration.fs" />
     <Compile Include="Work/LocalIntegratedCompletion.fs" />
+    <Compile Include="Work/WorkClaims.fs" />
+    <Compile Include="Work/CompletionPolicy.fs" />
     <Compile Include="Telemetry/Operations.fs" />
     <Compile Include="Pacing/Contracts.fs" />
     <Compile Include="Pacing/Events.fs" />

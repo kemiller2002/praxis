@@ -77,12 +77,14 @@
     <Compile Include="Work/FileNativeCompletionEffects.fs" />
     <Compile Include="Work/FileLocalIntegratedCompletion.fs" />
     <Compile Include="Work/PriceTableReader.fs" />
+    <Compile Include="Telemetry/ReliabilityInputs.fs" />
     <Compile Include="Work/FileTelemetryUsageRepository.fs" />
     <Compile Include="Work/FileTelemetryValidationRepository.fs" />
     <Compile Include="Work/FileAdapterRepository.fs" />
     <Compile Include="Provenance/FileProvenanceRepository.fs" />
     <Compile Include="Work/FileCheckpointRepository.fs" />
     <Compile Include="Ordo/FileObservationRepository.fs" />
+    <Compile Include="Ordo/OrdoContractSource.fs" />
     <Compile Include="Lifecycle/Payload.fs" />
     <Compile Include="Lifecycle/Installation.fs" />
     <Compile Include="Remote/GitHubActionsExecutor.fs" />
@@ -98,6 +100,11 @@
     <Compile Include="Work/FileWorkGroupRepository.fs" />
     <Compile Include="Planning/FilePacingCapacity.fs" />
     <Compile Include="Work/FileInputInbox.fs" />
+    <Compile Include="Work/WorkClaimJson.fs" />
+    <Compile Include="Work/ClaimProcess.fs" />
+    <Compile Include="Work/WorkClaimStores.fs" />
+    <Compile Include="Work/GitRefWorkClaimStore.fs" />
+    <Compile Include="Work/FileWorkClaims.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileGroupObservation.fs" />
     <Compile Include="Planning/FileWorkGroupFacts.fs" />

@@ -6235,10 +6235,10 @@
         "implementation"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-18T12:53:20.121Z",
-      "updatedAt": "2026-10-18T12:53:20.121Z",
+      "updatedAt": "2026-10-19T15:56:03.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6297,6 +6297,150 @@
       },
       "source": "CI validation",
       "sourceReference": "percepta/actions/runs/39129621742"
+    },
+    {
+      "id": "PRAXIS-REL-002",
+      "title": "Release-qualify Dokimos 0.6.0 (completion verify) for host enforcement",
+      "description": "Dokimos completion verify (#44, #45) is unreleased; echelon-current pins dokimos 0.2.0. Bump to 0.6.0, tag dokimos-v0.6.0 via release.yml, add echelon-registry release record, qualify in Conditor Compatibility.fs, raise the Praxis-required range to >=0.6.0. Until then PRAXIS_DOKIMOS_EXECUTABLE must point at a source build.",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:39.000Z",
+      "updatedAt": "2026-10-19T15:56:39.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-REL-003",
+      "title": "Release Praxis with claims and verified completion, then qualify via Conditor and Registry",
+      "description": "Praxis 3.13.0 (release.json) predates RQ-ROS-2026-A032. Cut the next minor through the release workflow after PRAXIS-REL-002, qualify in Conditor, select in echelon-current without touching the indy-init freeze.",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:40.000Z",
+      "updatedAt": "2026-10-19T15:56:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-REL-004",
+      "title": "Ingest provider transcripts automatically at work complete",
+      "description": "Root cause of 287/307 executions lacking tokens: nothing invokes the transcript adapters. Discover ~/.claude/projects/<slug>/<SID>.jsonl (+subagents) and Codex rollout files at work complete and ingest them; validate the Codex rollout parser on a real rollout (only synthetic fixtures so far).",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:40.000Z",
+      "updatedAt": "2026-10-19T15:56:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-REL-005",
+      "title": "Bind completion evidence to the verification revision",
+      "description": "Praxis marks evidence observed when the file exists with the digest it computes; it does not prove the evidence was produced at the verification revision or that the check passed. Produce evidence from host-run checks (e.g. test result documents with revision and status) before Dokimos sees it.",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:41.000Z",
+      "updatedAt": "2026-10-19T15:56:41.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-REL-006",
+      "title": "Enable workProtocol.requireVerifiedCompletion in Echelon repositories",
+      "description": "The guard is opt-in for unclaimed items to preserve compatibility. Enable it per repository once Dokimos is released and agents use work claim / complete-verified; document migration.",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:41.000Z",
+      "updatedAt": "2026-10-19T15:56:41.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
+    },
+    {
+      "id": "PRAXIS-REL-007",
+      "title": "Run the REL-001 baseline vs treatment pilot and preregister replicates",
+      "description": "cohort-based-engineering research/experiments/REL-001 is designed, not run. Preregister replicates, freeze the task set and run both arms with transcripts captured; report instrumentation-incomplete runs explicitly.",
+      "tags": [
+        "reliability",
+        "follow-up"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-19T15:56:42.000Z",
+      "updatedAt": "2026-10-19T15:56:42.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "Praxis inbox",
+      "sourceReference": "INPUT-695a4e7723d7f795"
     }
   ]
 }

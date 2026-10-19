@@ -159,7 +159,13 @@
 | PRAXIS-QUAL-09 | Verification-matrix obligation as a completion-readiness facet (PRX-QUAL-022) | complete | quality, completion | high |
 | PRAXIS-QUAL-10 | Evidence-file digests and a release-readiness evidence contract (PRX-QUAL-023 leftovers) | complete | quality, completion | medium |
 | PRAXIS-QUEUE-MD-LIVE-STATE | queue.md shows the pre-promotion backlog status after work start/complete until the next backlog write | captured | work, backlog | low |
-| PRAXIS-REL-001 | Implement atomic ownership and verified completion | captured | requirements, implementation | high |
+| PRAXIS-REL-001 | Implement atomic ownership and verified completion | complete | requirements, implementation | high |
+| PRAXIS-REL-002 | Release-qualify Dokimos 0.6.0 (completion verify) for host enforcement | captured | reliability, follow-up | high |
+| PRAXIS-REL-003 | Release Praxis with claims and verified completion, then qualify via Conditor and Registry | captured | reliability, follow-up | high |
+| PRAXIS-REL-004 | Ingest provider transcripts automatically at work complete | captured | reliability, follow-up | high |
+| PRAXIS-REL-005 | Bind completion evidence to the verification revision | captured | reliability, follow-up | high |
+| PRAXIS-REL-006 | Enable workProtocol.requireVerifiedCompletion in Echelon repositories | captured | reliability, follow-up | medium |
+| PRAXIS-REL-007 | Run the REL-001 baseline vs treatment pilot and preregister replicates | captured | reliability, follow-up | medium |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |
 | PRAXIS-REMOTE-02 | Remote provenance roles: asserted request actor, observed executor, transport principal | complete | remote-execution, gh-90 | high |
