@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "ecir/1",
+  "sourceManifestDigest": "sha256:7e2359a1181e54d9c76ce0b73bf7fd56d3f6332e363482b9ef66d34ba76b3b5c",
+  "requirements": [],
+  "nodes": [],
+  "note\ud800": "an escaped lone surrogate cannot be decoded to text"
+}

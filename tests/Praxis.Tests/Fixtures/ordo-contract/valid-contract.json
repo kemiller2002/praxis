@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "ecir/1",
+  "sourceManifestDigest": "sha256:7e2359a1181e54d9c76ce0b73bf7fd56d3f6332e363482b9ef66d34ba76b3b5c",
+  "requirements": [
+    {
+      "source": {
+        "key": "requirements/domain.md#R-001",
+        "originalId": "R-001",
+        "document": "requirements/domain.md",
+        "location": "L13",
+        "revision": "sha256:3d1173601063d3eaedc34e6b9411de399fac4802db490cfe0077c85e0021c8fd",
+        "contentDigest": "sha256:1231154c6ddfd1ce27288c8eab28f4cd8a3c8d805a6dffb63a4ae367c94a7867"
+      },
+      "disposition": {
+        "kind": "modeled"
+      },
+      "nodeIds": [
+        "DEC-CONFIRM",
+        "VERIFY-CONFIRM",
+        "COHORT-CONFIRM"
+      ]
+    },
+    {
+      "source": {
+        "key": "requirements/operations.md#R-001",
+        "originalId": "R-001",
+        "document": "requirements/operations.md",
+        "location": "L9",
+        "revision": "sha256:9864fd5f93ca9244006058fdce654f4dd4a13220186bdb5faf4ae7fb82c5f383",
+        "contentDigest": "sha256:dfd35bb645b0a0252471680783555081f4dcf90fd5e837db24ba84efbe30f9e0"
+      },
+      "disposition": {
+        "kind": "deferred",
+        "reason": "release scope awaiting operator approval"
+      },
+      "nodeIds": [
+        "DEF-OPERATIONS"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "DEC-CONFIRM",
+      "kind": "decision",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "dependsOn": [],
+      "justification": "domain transition must be authorized"
+    },
+    {
+      "id": "VERIFY-CONFIRM",
+      "kind": "verificationObligation",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "dependsOn": [
+        "DEC-CONFIRM"
+      ]
+    },
+    {
+      "id": "COHORT-CONFIRM",
+      "kind": "cohort",
+      "requirementKeys": [
+        "requirements/domain.md#R-001"
+      ],
+      "dependsOn": [
+        "DEC-CONFIRM"
+      ]
+    },
+    {
+      "id": "DEF-OPERATIONS",
+      "kind": "deferral",
+      "requirementKeys": [
+        "requirements/operations.md#R-001"
+      ],
+      "dependsOn": []
+    }
+  ]
+}
