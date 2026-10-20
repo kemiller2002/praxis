@@ -6586,10 +6586,10 @@
         "rel-001"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:45.000Z",
-      "updatedAt": "2026-10-20T07:57:55.000Z",
+      "updatedAt": "2026-10-20T09:30:42.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
