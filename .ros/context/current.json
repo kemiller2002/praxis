@@ -10874,11 +10874,33 @@
         }
       },
       "completedAt": "2026-10-20T09:31:07.000Z"
+    },
+    {
+      "id": "PRAXIS-REL-010",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-20T10:43:09.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T104310995Z-9596f004"
+      ]
+    },
+    {
+      "id": "PRAXIS-REL-013",
+      "type": "task",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-20T10:43:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T104313440Z-90c508a6"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-20T09:31:07.000Z",
+  "updatedAt": "2026-10-20T10:43:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

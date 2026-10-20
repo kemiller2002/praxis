@@ -6562,10 +6562,10 @@
         "rel-001"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:44.000Z",
-      "updatedAt": "2026-10-20T07:48:44.000Z",
+      "updatedAt": "2026-10-20T10:43:09.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6634,10 +6634,10 @@
         "rel-001"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:46.000Z",
-      "updatedAt": "2026-10-20T07:48:46.000Z",
+      "updatedAt": "2026-10-20T10:43:12.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
