@@ -6538,10 +6538,10 @@
         "rel-001"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:44.000Z",
-      "updatedAt": "2026-10-20T07:48:44.000Z",
+      "updatedAt": "2026-10-20T09:30:10.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6586,10 +6586,10 @@
         "rel-001"
       ],
       "priority": "high",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:45.000Z",
-      "updatedAt": "2026-10-20T07:48:45.000Z",
+      "updatedAt": "2026-10-20T07:57:55.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6610,10 +6610,10 @@
         "rel-001"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-20T07:48:46.000Z",
-      "updatedAt": "2026-10-20T07:48:46.000Z",
+      "updatedAt": "2026-10-20T07:57:55.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

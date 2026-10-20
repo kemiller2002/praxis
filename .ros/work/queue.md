@@ -167,10 +167,10 @@
 | PRAXIS-REL-006 | Enable workProtocol.requireVerifiedCompletion in Echelon repositories | captured | reliability, follow-up | medium |
 | PRAXIS-REL-007 | Run the REL-001 baseline vs treatment pilot and preregister replicates | captured | reliability, follow-up | medium |
 | PRAXIS-REL-008 | Require Ordo contract readiness for verified completion (REL-GATE-002) | complete | reliability, rel-gate-002 | high |
-| PRAXIS-REL-009 | Attested validation evidence: verifier-signed receipts bound to commit, item, contract and policy (F1) | captured | reliability, rel-001 | high |
+| PRAXIS-REL-009 | Attested validation evidence: verifier-signed receipts bound to commit, item, contract and policy (F1) | complete | reliability, rel-001 | high |
 | PRAXIS-REL-010 | Attribute provider usage per agent within one orchestrating session (F2) | captured | reliability, rel-001 | high |
-| PRAXIS-REL-011 | Verified completion leaves a clean worktree and references exactly the validated commit (F3) | captured | reliability, rel-001 | high |
-| PRAXIS-REL-012 | Reduce verified-completion protocol overhead without weakening F1-F3 (F4) | captured | reliability, rel-001 | medium |
+| PRAXIS-REL-011 | Verified completion leaves a clean worktree and references exactly the validated commit (F3) | ready | reliability, rel-001 | high |
+| PRAXIS-REL-012 | Reduce verified-completion protocol overhead without weakening F1-F3 (F4) | ready | reliability, rel-001 | medium |
 | PRAXIS-REL-013 | Versioned model price table for estimated cost (F5) | captured | reliability, rel-001 | low |
 | PRAXIS-RELEASE-BUMP-WORKFLOW | Release workflow: one-click version bump that publishes | complete | release | high |
 | PRAXIS-REMOTE-01 | Remote protocol v1 contract: schemas, typed domain model, validation, fingerprint, decision order | complete | remote-execution, gh-90 | high |

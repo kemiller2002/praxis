@@ -10715,11 +10715,64 @@
         }
       },
       "completedAt": "2026-10-20T00:35:39.585Z"
+    },
+    {
+      "id": "PRAXIS-REL-009",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/VerificationReceipt.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/TrustedVerifier.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/Verification.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AttestedCompletionTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/work-claims.md"
+        }
+      ],
+      "updatedAt": "2026-10-20T09:30:10.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T075758773Z-168b3aff"
+      ],
+      "latestCheckpoint": {
+        "id": "fd26c656b94fb2fadf05674f",
+        "recordedAt": "2026-10-20T08:34:13.000Z",
+        "executionId": "EXE-20261020T075758773Z-168b3aff",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-reliability-integration-g8x7vn",
+        "commit": "388f593ea5f8f9ff0f527392ea66167a7fa79a87",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
+        "remoteCommit": "388f593ea5f8f9ff0f527392ea66167a7fa79a87",
+        "summary": "Attested receipts (I4/I6), trusted verifier serve/run, work verify client, attested-mode gate with RECEIPT_* codes, tests and docs committed at 388f593e",
+        "nextAction": "Run full suite, praxis validate, complete PRAXIS-REL-009 with evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-20T09:30:10.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-20T00:35:39.585Z",
+  "updatedAt": "2026-10-20T09:30:10.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
