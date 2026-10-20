@@ -10958,11 +10958,22 @@
       },
       "completedAt": "2026-10-20T10:43:54.000Z",
       "conclusion": "Versioned price tables are applied only within their effective range; missing price leaves cost unavailable while tokens are reported"
+    },
+    {
+      "id": "RELEASE-3-17-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-20T12:25:53.790Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T122554816Z-fefa0cd3"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-20T10:43:54.000Z",
+  "updatedAt": "2026-10-20T12:25:53.790Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

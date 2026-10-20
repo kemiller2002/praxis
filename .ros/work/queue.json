@@ -6648,6 +6648,27 @@
       },
       "source": "REL-001 run-01",
       "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
+    },
+    {
+      "id": "RELEASE-3-17-0",
+      "title": "Release Praxis 3.17.0",
+      "description": "Bump release.json from 3.16.0 to 3.17.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-20T12:25:53.303Z",
+      "updatedAt": "2026-10-20T12:25:53.500Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
