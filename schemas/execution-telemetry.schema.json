@@ -10,6 +10,15 @@
     "workItemId": {"type": "string", "minLength": 1},
     "instanceId": {"type": ["string", "null"], "description": "Locally authoritative Praxis instance identity when available."},
     "status": {"enum": ["active", "finalized"]},
+    "provider": {
+      "type": "object",
+      "description": "Interface I7 (PRAXIS-REL-010): the provider session (CLAUDE_CODE_SESSION_ID) and agent instance (PRAXIS_AGENT_INSTANCE_ID) when the host sets them; absent otherwise.",
+      "properties": {
+        "sessionId": {"type": ["string", "null"]},
+        "agentInstanceId": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
     "startedAt": {"type": "string", "format": "date-time"},
     "finalizedAt": {"type": ["string", "null"], "format": "date-time"},
     "identity": {

@@ -267,6 +267,13 @@ module ExecutionJson =
               "origin", (let kind, reference = ExecutionOrigin.toWire e.Origin in obj [ "kind", str kind; "reference", opt reference ])
               "containmentProfile", containmentProfile e.ContainmentProfile
               "evaluatorCommand", opt e.EvaluatorCommand ]
+        |> fun node ->
+            // Additive (I7): written only when the host reported either value,
+            // so envelopes of hosts without them keep their exact shape.
+            if not (ProviderSession.isEmpty e.ProviderSession) then
+                node["provider"] <- obj [ "sessionId", opt e.ProviderSession.SessionId; "agentInstanceId", opt e.ProviderSession.AgentInstanceId ]
+
+            node
 
     let private parseTime (raw: string) =
         match DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind) with
@@ -389,7 +396,13 @@ module ExecutionJson =
                     member' "containmentProfile" node
                     |> Option.bind (fun p -> readProfile p |> Result.toOption)
                     |> Option.defaultValue ContainmentProfile.unknown
-                  EvaluatorCommand = optionalText "evaluatorCommand" node }))
+                  EvaluatorCommand = optionalText "evaluatorCommand" node
+                  ProviderSession =
+                    match member' "provider" node with
+                    | Some(:? JsonObject as provider) ->
+                        { SessionId = optionalText "sessionId" provider
+                          AgentInstanceId = optionalText "agentInstanceId" provider }
+                    | _ -> ProviderSession.none }))
 
     // ---- ledger entries ----
 

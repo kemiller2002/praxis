@@ -153,7 +153,9 @@ module ReliabilityInputs =
                           Values = RequestLedger.values usage
                           NotApplicable = Set.empty
                           Origin = "execution-ledger"
-                          ExplicitExecution = Some executionId })))
+                          ExplicitExecution = Some executionId
+                          Sidechain = None
+                          Source = None })))
             |> Option.defaultValue [])
 
     let parseExecution (content: string) : ReliabilityExecution option =
@@ -164,6 +166,8 @@ module ReliabilityInputs =
                 |> Option.map (fun executionId ->
                     let identity = child record "identity"
                     let identityText name = identity |> Option.bind (fun node -> text node name)
+                    // I7: `provider.sessionId` / `provider.agentInstanceId`.
+                    let providerText name = child record "provider" |> Option.bind (fun node -> text node name)
 
                     let tokenValues =
                         values ((ProviderUsage.buckets @ ProviderUsage.detailBuckets) |> List.map (fun metric -> metric, metricSum record metric))
@@ -178,8 +182,9 @@ module ReliabilityInputs =
                       StartedAt = timestamp (text record "startedAt")
                       FinalizedAt = timestamp (text record "finalizedAt")
                       Provider = identityText "provider"
-                      SessionId = identityText "sessionId"
+                      SessionId = identityText "sessionId" |> Option.orElse (providerText "sessionId")
                       AgentId = identityText "subagentId" |> Option.orElse (identityText "agentId")
+                      AgentInstanceId = providerText "agentInstanceId"
                       WallMs = metricSum record "time.wall_ms"
                       ActiveMs = metricSum record "time.active_ms"
                       BlockedMs = metricSum record "time.blocked_ms"
@@ -197,7 +202,7 @@ module ReliabilityInputs =
                                 { ObservationId = $"record:{executionId}"
                                   Provider = identityText "provider" |> Option.defaultValue "unknown"
                                   Runtime = identityText "runtime" |> Option.defaultValue "unknown"
-                                  SessionId = identityText "sessionId"
+                                  SessionId = identityText "sessionId" |> Option.orElse (providerText "sessionId")
                                   AgentId = None
                                   Model = identityText "model"
                                   MessageId = None
@@ -206,7 +211,9 @@ module ReliabilityInputs =
                                   Values = tokenValues
                                   NotApplicable = Set.empty
                                   Origin = "execution-record"
-                                  ExplicitExecution = Some executionId } })
+                                  ExplicitExecution = Some executionId
+                                  Sidechain = None
+                                  Source = None } })
             | _ -> None
         with :? JsonException ->
             None
@@ -214,6 +221,33 @@ module ReliabilityInputs =
     // ---- transcripts -------------------------------------------------------------
 
     let private syntheticModel = "<synthetic>"
+
+    let private flag (node: JsonObject) (name: string) =
+        match node[name] with
+        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.True -> Some true
+        | :? JsonValue as value when value.GetValueKind() = JsonValueKind.False -> Some false
+        | _ -> None
+
+    /// Sub-agent content a parent transcript echoes: a `progress` line whose
+    /// `data.message` is the sub-agent's assistant line (older Claude Code
+    /// releases). Returned as that assistant line with the sub-agent identity
+    /// the echo names; deduplicated with the sub-agent file's own copy by
+    /// message ID. The Agent tool's `toolUseResult.usage` and the
+    /// `<usage>` totals of a task notification carry no message ID and are
+    /// summaries, so they are never read as observations.
+    let private echoedAssistant (node: JsonObject) : JsonObject option =
+        match text node "type", child node "data" with
+        | Some "progress", Some data ->
+            child data "message"
+            |> Option.filter (fun inner -> text inner "type" = Some "assistant")
+            |> Option.map (fun inner ->
+                let copy = inner.DeepClone().AsObject()
+                let agentId = text inner "agentId" |> Option.orElse (text data "agentId")
+                agentId |> Option.iter (fun id -> copy["agentId"] <- JsonValue.Create id)
+                if isNull copy["sessionId"] then text node "sessionId" |> Option.iter (fun id -> copy["sessionId"] <- JsonValue.Create id)
+                copy["isSidechain"] <- JsonValue.Create true
+                copy)
+        | _ -> None
 
     let private claudeObservation (node: JsonObject) : Result<UsageObservation, unit> option =
         match text node "type", child node "message" with
@@ -250,7 +284,9 @@ module ReliabilityInputs =
                                   "tokens.reasoning", details |> Option.bind (fun node -> integer node "thinking_tokens") ]
                           NotApplicable = Set.empty
                           Origin = "claude-transcript"
-                          ExplicitExecution = None })
+                          ExplicitExecution = None
+                          Sidechain = flag node "isSidechain"
+                          Source = None })
         | _ -> None
 
     let private digest (content: string) =
@@ -304,30 +340,36 @@ module ReliabilityInputs =
         let parsed = lines |> List.choose id
         let malformed = lines.Length - parsed.Length
 
+        let source = digest content
+        let withSource (observation: UsageObservation) = { observation with Source = Some source }
+
         if isCodex parsed then
             let sessionId, observations, entries, resets = codexObservations parsed
 
-            observations,
+            observations |> List.map withSource,
             { Kind = "codex-rollout"
-              Digest = digest content
+              Digest = source
               SessionId = sessionId
               AgentId = None
               UsageEntries = entries
               MalformedLines = malformed
               UnidentifiedUsageEntries = (if sessionId.IsNone then entries else 0)
+              EchoedUsageEntries = 0
               CounterResets = resets }
         else
-            let results = parsed |> List.choose claudeObservation
+            let echoes = parsed |> List.choose echoedAssistant |> List.choose claudeObservation
+            let results = (parsed |> List.choose claudeObservation) @ echoes
             let observations = results |> List.choose (function Ok value -> Some value | Error _ -> None)
 
-            observations,
+            observations |> List.map withSource,
             { Kind = "claude-transcript"
-              Digest = digest content
+              Digest = source
               SessionId = parsed |> List.tryPick (fun line -> text line "sessionId")
               AgentId = parsed |> List.tryPick (fun line -> text line "agentId")
               UsageEntries = results.Length
               MalformedLines = malformed
               UnidentifiedUsageEntries = results |> List.filter Result.isError |> List.length
+              EchoedUsageEntries = echoes.Length
               CounterResets = 0 }
 
     // ---- file system ---------------------------------------------------------------
@@ -382,9 +424,54 @@ module ReliabilityInputs =
     let readEvents (path: string) : ReliabilityEvent list * int * int =
         if File.Exists path then parseEvents (File.ReadAllText path) else [], 0, 0
 
-    let readPriceTable (path: string) : Result<PriceTable, string> =
-        if File.Exists path then Praxis.Infrastructure.Work.PriceTableReader.parse (File.ReadAllText path)
+    /// A legacy (`telemetry usage`) table or a `praxis.price-table/1`
+    /// table, normalized to dated entries (F5).
+    let readPriceTable (path: string) : Result<PriceSchedule, string> =
+        if File.Exists path then Praxis.Infrastructure.Work.PriceTableReader.parseSchedule (File.ReadAllText path)
         else Error $"price table not found: {path}"
+
+    /// Parses `praxis.agent-binding/1` (I7):
+    /// `{ "schema"?: "praxis.agent-binding/1", "bindings": [ { "agentId", "sessionId"?, "scope"?, "workItems"? } ] }`.
+    let parseAgentBinding (content: string) : Result<AgentBinding, string> =
+        try
+            match JsonNode.Parse content with
+            | :? JsonObject as root ->
+                match text root "schema" with
+                | Some other when other <> AgentAttribution.schema -> Error $"agent binding schema '{other}' is not supported; expected {AgentAttribution.schema}"
+                | _ ->
+                    match root["bindings"] with
+                    | :? JsonArray as entries ->
+                        let parsed =
+                            entries
+                            |> Seq.mapi (fun index entry ->
+                                match entry with
+                                | :? JsonObject as node ->
+                                    match text node "agentId" with
+                                    | Some agentId ->
+                                        Ok
+                                            { AgentId = agentId
+                                              SessionId = text node "sessionId"
+                                              Scope = text node "scope"
+                                              WorkItems = strings node "workItems" |> List.filter (String.IsNullOrWhiteSpace >> not) }
+                                    | None -> Error $"binding {index} requires a non-empty 'agentId'"
+                                | _ -> Error $"binding {index} must be an object")
+                            |> Seq.toList
+
+                        match parsed |> List.tryPick (function Error message -> Some message | Ok _ -> None) with
+                        | Some message -> Error message
+                        | None ->
+                            let bindings = parsed |> List.choose Result.toOption
+
+                            match bindings |> List.countBy (fun entry -> entry.AgentId, entry.SessionId) |> List.filter (fun (_, n) -> n > 1) with
+                            | ((agent, _), _) :: _ -> Error $"agent '{agent}' is bound more than once for the same session"
+                            | [] -> Ok { Bindings = bindings; Digest = Some(digest content) }
+                    | _ -> Error "agent binding requires a 'bindings' array"
+            | _ -> Error "agent binding must be a JSON object"
+        with :? JsonException as error ->
+            Error $"agent binding is not valid JSON: {error.Message}"
+
+    let readAgentBinding (path: string) : Result<AgentBinding, string> =
+        if File.Exists path then parseAgentBinding (File.ReadAllText path) else Error $"agent binding not found: {path}"
 
     /// Writes the report through a same-directory temporary file and an
     /// atomic replace, so a reader never sees a partial report.

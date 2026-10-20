@@ -50,7 +50,9 @@ type ExecutionHostPort =
       /// `PRAXIS_CONTAINMENT_EVIDENCE`; `Ok None` when nothing is reported.
       ContainmentEvidence: string option -> Result<ContainmentProfile option, string>
       /// The remote executor running this process, if any.
-      RemoteExecutor: unit -> string option }
+      RemoteExecutor: unit -> string option
+      /// The provider session and agent instance the host reports (I7).
+      ProviderSession: unit -> ProviderSession }
 
 type ExecutionPorts =
     { Store: ExecutionStorePort
@@ -308,7 +310,8 @@ module ExecutionService =
                             Containment = containment
                             HumanOnlyTransitions = request.HumanOnly
                             Parent = request.Parent
-                            EvaluatorCommand = evaluatorCommand }
+                            EvaluatorCommand = evaluatorCommand
+                            ProviderSession = ports.Host.ProviderSession() }
                         |> withProfile profile
 
                     ports.Store.Save envelope
@@ -688,7 +691,13 @@ module ExecutionBinding =
                                     Path = None
                                     Mechanism = "working-directory" }
                             ContainmentProfile = profile
-                            Containment = ContainmentProfile.containment semantic profile }
+                            Containment = ContainmentProfile.containment semantic profile
+                            // A reconciled fallback records another runtime's work:
+                            // this host's session is not that execution's (I7).
+                            ProviderSession =
+                              match binding.Origin with
+                              | ExecutionOrigin.Fallback _ -> ProviderSession.none
+                              | _ -> ports.Host.ProviderSession() }
 
                     ports.Store.Save envelope
                     let origin, reference = ExecutionOrigin.toWire binding.Origin

@@ -713,6 +713,29 @@ type ExecutionActor =
       Model: string option
       Runtime: string option }
 
+/// The provider session an execution ran in (PRAXIS-REL-010, interface I7):
+/// `CLAUDE_CODE_SESSION_ID` and `PRAXIS_AGENT_INSTANCE_ID` when the host sets
+/// them. Sub-agents share their orchestrator's session ID, so the agent
+/// instance is what lets usage be attributed to one agent. Absent values are
+/// unknown, never guessed.
+type ProviderSession =
+    { SessionId: string option
+      AgentInstanceId: string option }
+
+[<RequireQualifiedAccess>]
+module ProviderSession =
+    let SessionVariable = "CLAUDE_CODE_SESSION_ID"
+    let AgentInstanceVariable = "PRAXIS_AGENT_INSTANCE_ID"
+    let none = { SessionId = None; AgentInstanceId = None }
+
+    /// Reads both values through a variable lookup (pure given the lookup);
+    /// blank values are absent.
+    let fromLookup (lookup: string -> string option) =
+        let read name = lookup name |> Option.filter (String.IsNullOrWhiteSpace >> not)
+        { SessionId = read SessionVariable; AgentInstanceId = read AgentInstanceVariable }
+
+    let isEmpty (session: ProviderSession) = session.SessionId.IsNone && session.AgentInstanceId.IsNone
+
 /// Workspace binding. `Path` is local bookkeeping only; it is never sent to
 /// another system.
 type Workspace =
@@ -740,7 +763,9 @@ type ExecutionEnvelope =
       Origin: ExecutionOrigin
       ContainmentProfile: ContainmentProfile
       /// The one verification command a runner may execute (PRX-VER-001).
-      EvaluatorCommand: string option }
+      EvaluatorCommand: string option
+      /// Provider session and agent instance (I7); additive on the wire.
+      ProviderSession: ProviderSession }
 
 [<RequireQualifiedAccess>]
 module ExecutionEnvelope =
@@ -781,7 +806,8 @@ module ExecutionEnvelope =
                   State = ExecutionState.Active
                   Origin = ExecutionOrigin.Explicit
                   ContainmentProfile = ContainmentProfile.unknown
-                  EvaluatorCommand = None }
+                  EvaluatorCommand = None
+                  ProviderSession = ProviderSession.none }
 
     /// Whether this execution declared a mutation boundary to compare
     /// observed mutations against.
