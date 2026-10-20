@@ -10683,11 +10683,22 @@
       },
       "completedAt": "2026-10-19T23:53:55Z",
       "conclusion": "REL-GATE-002 closed: Ordo UNRESOLVED_CONFLICT admission rule and requirement-scoped readiness mirrored (corpus parity with ordo 1f39ff0); OrdoBoundAuthority.bind requires readiness with the host authority's RequiredDecisionIds and yields BoundCompletionAuthority (ReadyScope-only); full suite 2299 passed 0 failed with real Dokimos 0.6.0; REL-001 B re-run refuses B5b/B6a"
+    },
+    {
+      "id": "RELEASE-3-16-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-20T00:35:34.074Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T003534614Z-0f6e2944"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-19T23:53:55Z",
+  "updatedAt": "2026-10-20T00:35:34.074Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

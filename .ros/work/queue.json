@@ -6507,6 +6507,27 @@
       },
       "source": "REL-GATE-002",
       "sourceReference": ".praxis/inbox/documents/2026-10-19-REL-GATE-002-contract-readiness.md"
+    },
+    {
+      "id": "RELEASE-3-16-0",
+      "title": "Release Praxis 3.16.0",
+      "description": "Bump release.json from 3.15.0 to 3.16.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-20T00:35:33.715Z",
+      "updatedAt": "2026-10-20T00:35:33.848Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
