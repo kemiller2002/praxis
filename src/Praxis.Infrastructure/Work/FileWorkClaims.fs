@@ -246,10 +246,9 @@ module FileWorkClaims =
         with error ->
             Error error.Message
 
-    /// `workProtocol.requireVerifiedCompletion` in ros.json. Absent: false
-    /// (legacy items stay completable). Present but not a boolean, or ros.json
-    /// unreadable: an error, so plain completion fails closed.
-    let readRequireVerifiedCompletion (root: string) : Result<bool, string> =
+    /// A boolean `workProtocol.<name>` in ros.json. Absent: false. Present but
+    /// not a boolean, or ros.json unreadable: an error, so callers fail closed.
+    let readProtocolFlag (name: string) (root: string) : Result<bool, string> =
         let path = Path.Combine(root, "ros.json")
 
         if not (File.Exists path) then
@@ -260,14 +259,24 @@ module FileWorkClaims =
 
                 match document.RootElement.TryGetProperty "workProtocol" with
                 | true, protocol when protocol.ValueKind = JsonValueKind.Object ->
-                    match protocol.TryGetProperty "requireVerifiedCompletion" with
+                    match protocol.TryGetProperty name with
                     | true, value when value.ValueKind = JsonValueKind.True -> Ok true
                     | true, value when value.ValueKind = JsonValueKind.False -> Ok false
-                    | true, _ -> Error "ros.json workProtocol.requireVerifiedCompletion must be a boolean"
+                    | true, _ -> Error $"ros.json workProtocol.{name} must be a boolean"
                     | _ -> Ok false
                 | _ -> Ok false
             with error ->
                 Error $"ros.json could not be read: {error.Message}"
+
+    /// `workProtocol.requireVerifiedCompletion` in ros.json (legacy items stay
+    /// completable when absent).
+    let readRequireVerifiedCompletion (root: string) = readProtocolFlag "requireVerifiedCompletion" root
+
+    /// `workProtocol.requireAttestedEvidence` in ros.json (PRAXIS-REL-006 rollout
+    /// gate): when set, a host authority that trusts no verifier key is refused,
+    /// so repository policy, not the per-run authority file, decides whether
+    /// unattested evidence can ever complete an item.
+    let readRequireAttestedEvidence (root: string) = readProtocolFlag "requireAttestedEvidence" root
 
     /// The Ordo contract bytes at `path` (interface I3).
     let private readOrdoContract (root: string) (path: string) =

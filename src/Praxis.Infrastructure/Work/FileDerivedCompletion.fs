@@ -247,6 +247,8 @@ type DerivedCompletionReport =
 /// F4 composition of `praxis work complete-verified`.
 [<RequireQualifiedAccess>]
 module FileDerivedCompletion =
+    let AttestationRequiredCode = "PRX.COMPLETION.ATTESTATION_REQUIRED"
+
     let AuthorityVariable = "PRAXIS_COMPLETION_AUTHORITY"
     let ContractVariable = "PRAXIS_ORDO_CONTRACT"
 
@@ -306,23 +308,32 @@ module FileDerivedCompletion =
             match FileWorkClaims.readAuthorityInput root authorityPath with
             | Error message -> Error message
             | Ok input ->
-                match OrdoContractCache.bind root contract arguments.ExpectedOrdoDigest input with
-                | Error findings ->
-                    mark "admission"
-                    report (rejected findings) None
-                | Ok(bound, cache) ->
-                    mark "admission"
-                    let attested = BoundCompletionAuthority.isAttested bound
-                    let basePorts = FileWorkClaims.completionPorts root choice actor arguments.Execution arguments.Timeout
+                match FileWorkClaims.readRequireAttestedEvidence root with
+                | Error message -> report (rejected [ { Code = AttestationRequiredCode; Detail = message } ]) None
+                | Ok true when input.TrustedVerifierKeys.IsEmpty ->
+                    report
+                        (rejected
+                            [ { Code = AttestationRequiredCode
+                                Detail = "ros.json workProtocol.requireAttestedEvidence requires a host authority that pins TrustedVerifierKeys; unattested evidence cannot complete this item" } ])
+                        None
+                | Ok _ ->
+                    match OrdoContractCache.bind root contract arguments.ExpectedOrdoDigest input with
+                    | Error findings ->
+                        mark "admission"
+                        report (rejected findings) None
+                    | Ok(bound, cache) ->
+                        mark "admission"
+                        let attested = BoundCompletionAuthority.isAttested bound
+                        let basePorts = FileWorkClaims.completionPorts root choice actor arguments.Execution arguments.Timeout
 
-                    let ports =
-                        { Completion = { basePorts with Verifier = verifier |> Option.defaultValue basePorts.Verifier }
-                          WorktreeStatus = FileWorkVerification.worktreeStatus root
-                          Candidates = if attested then FileWorkVerification.candidates root else FileValidationCandidates.read root
-                          Publish = CompletionMetadataCommit.publish root actor arguments.Execution
-                          Mark = mark }
+                        let ports =
+                            { Completion = { basePorts with Verifier = verifier |> Option.defaultValue basePorts.Verifier }
+                              WorktreeStatus = FileWorkVerification.worktreeStatus root
+                              Candidates = if attested then FileWorkVerification.candidates root else FileValidationCandidates.read root
+                              Publish = CompletionMetadataCommit.publish root actor arguments.Execution
+                              Mark = mark }
 
-                    let explicit =
-                        { arguments.Explicit with Evidence = arguments.ExplicitEvidence |> List.map (fun submission -> submission, observeExplicit root submission) }
+                        let explicit =
+                            { arguments.Explicit with Evidence = arguments.ExplicitEvidence |> List.map (fun submission -> submission, observeExplicit root submission) }
 
-                    report (DerivedCompletion.complete ports bound arguments.WorkItemId arguments.Token explicit) (Some cache)
+                        report (DerivedCompletion.complete ports bound arguments.WorkItemId arguments.Token explicit) (Some cache)

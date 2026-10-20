@@ -538,4 +538,33 @@ module AttestedCompletionTests =
 
                   Assert.equal (Some verifiedCommit) report.Result.VerifiedCommit
                   Assert.equal verifiedCommit (CliHarness.git f.Root [ "rev-parse"; "HEAD^" ])
-                  Assert.equal "" (status f)) ]
+                  Assert.equal "" (status f))
+
+          t "workProtocol.requireAttestedEvidence refuses a host authority that trusts no verifier key (rollout gate)" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              let seen = ResizeArray()
+              let refused = codes (complete f (accepting seen) "tok-1")
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] refused
+              Assert.equal 0 seen.Count)
+
+          t "workProtocol.requireAttestedEvidence that is not a boolean fails closed" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":\"yes\"}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes (complete f (accepting (ResizeArray())) "tok-1")))
+
+          t "workProtocol.requireAttestedEvidence admits an authority that pins verifier keys" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              verify f "tok-1" |> ignore
+              let report = complete f (accepting (ResizeArray())) "tok-1"
+              Assert.isTrue (not (codes report |> List.contains FileDerivedCompletion.AttestationRequiredCode)) $"{codes report}"
+              match report.Result.Outcome with
+              | CompletionOutcome.Completed _ -> ()
+              | other -> failwith $"expected completion under the policy, got {other}") ]
