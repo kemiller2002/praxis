@@ -6528,6 +6528,126 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "PRAXIS-REL-009",
+      "title": "Attested validation evidence: verifier-signed receipts bound to commit, item, contract and policy (F1)",
+      "description": "C3b: forged result + forged validation event accepted. Validation runs in a trusted verifier holding a signing key unavailable to implementation agents; Praxis and Dokimos accept only receipts whose signature verifies under a host-pinned key and whose payload binds work item, generation, commit, contract digest and policy digest.",
+      "tags": [
+        "reliability",
+        "rel-001"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-20T07:48:44.000Z",
+      "updatedAt": "2026-10-20T07:48:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-001 run-01",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
+    },
+    {
+      "id": "PRAXIS-REL-010",
+      "title": "Attribute provider usage per agent within one orchestrating session (F2)",
+      "description": "Sub-agents share the orchestrator's session ID; executions record no session or agent. Attribute by agent identity with explicit binding, dedupe observations by provider message ID, report unavailable metrics explicitly, one cost summary per verified requirement.",
+      "tags": [
+        "reliability",
+        "rel-001"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-20T07:48:44.000Z",
+      "updatedAt": "2026-10-20T07:48:44.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-001 run-01",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
+    },
+    {
+      "id": "PRAXIS-REL-011",
+      "title": "Verified completion leaves a clean worktree and references exactly the validated commit (F3)",
+      "description": "Run-01 D: 4/6 treatment runs left .ros claim/validation state dirty, 2/6 moved HEAD past the verified commit. Keep transient claim/validation state out of the tracked tree, refuse changed HEAD/dirty source/stale evidence, record completion metadata in a metadata-only commit whose parent is the verified commit.",
+      "tags": [
+        "reliability",
+        "rel-001"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-20T07:48:45.000Z",
+      "updatedAt": "2026-10-20T07:48:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-001 run-01",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
+    },
+    {
+      "id": "PRAXIS-REL-012",
+      "title": "Reduce verified-completion protocol overhead without weakening F1-F3 (F4)",
+      "description": "Derive completion arguments from claim, contract, authority and receipts; one verification test run at the boundary; cache admitted contracts by digest; measure each verification step.",
+      "tags": [
+        "reliability",
+        "rel-001"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-20T07:48:46.000Z",
+      "updatedAt": "2026-10-20T07:48:46.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-001 run-01",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
+    },
+    {
+      "id": "PRAXIS-REL-013",
+      "title": "Versioned model price table for estimated cost (F5)",
+      "description": "Cost is unavailable without a versioned price table; record provider, model, effective date, per-token prices by kind, currency, source and retrieval date; never apply current prices to historical runs.",
+      "tags": [
+        "reliability",
+        "rel-001"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-20T07:48:46.000Z",
+      "updatedAt": "2026-10-20T07:48:46.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "REL-001 run-01",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md"
     }
   ]
 }
