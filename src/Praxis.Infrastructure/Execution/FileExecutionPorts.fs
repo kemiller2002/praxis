@@ -132,7 +132,8 @@ module FileExecutionPorts =
               Run = runShell
               Policy = fun () -> readPolicy root
               ContainmentEvidence = readContainmentEvidence
-              RemoteExecutor = remoteExecutor } }
+              RemoteExecutor = remoteExecutor
+              ProviderSession = fun () -> ProviderSession.fromLookup variable } }
 
     /// Caller holds `ExecutionLifecycleLease.within root` for the whole operation.
     let createLocked (root: string) = build root (fun write -> write ())

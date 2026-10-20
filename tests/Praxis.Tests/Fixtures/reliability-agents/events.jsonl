@@ -1,0 +1,2 @@
+{"eventId":"e1","type":"work.completion.verified","workItem":"WI-A","occurredAt":"2026-10-02T10:10:00.000Z","requirementIds":["REQ-A1","REQ-A2"]}
+{"eventId":"e2","type":"work.completion.verified","workItem":"WI-B","occurredAt":"2026-10-02T10:10:00.000Z","requirementIds":["REQ-B"]}

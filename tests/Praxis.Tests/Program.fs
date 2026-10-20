@@ -186,6 +186,7 @@ let main argv =
     @ ValidationEvidenceTests.tests
     @ UrlEnhancementTests.tests
     @ TelemetryReliabilityReportTests.tests
+    @ TelemetryAgentAttributionTests.tests
     @ ReliabilityPipelineTests.tests
     @ AttestedCompletionTests.tests
     |> TestRunner.run

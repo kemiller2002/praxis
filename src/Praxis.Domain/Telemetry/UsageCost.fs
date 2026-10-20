@@ -82,8 +82,12 @@ module UsageCost =
     let private cacheWriteCost (prices: ModelPrices) (values: Map<string, int64>) : Result<decimal, string> =
         let tryFind metricId = values |> Map.tryFind metricId
 
+        // A zero bucket needs no rate, so an observation that wrote only
+        // 5-minute entries is priced by TTL with only the 5-minute rate.
+        let ttlPriceable (rate: decimal option) (tokens: int64) = rate.IsSome || tokens = 0L
+
         match tryFind "tokens.cache_write_5m", tryFind "tokens.cache_write_1h", prices.CacheWrite5m, prices.CacheWrite1h with
-        | Some short, Some long, Some _, Some _ ->
+        | Some short, Some long, shortRate, longRate when ttlPriceable shortRate short && ttlPriceable longRate long && (shortRate.IsSome || longRate.IsSome) ->
             map2 (+) (priced prices.CacheWrite5m (Some short) "5-minute cache-write") (priced prices.CacheWrite1h (Some long) "1-hour cache-write")
         | _ -> priced prices.CacheWrite (tryFind "tokens.cache_write") "cache-write"
 
@@ -110,3 +114,129 @@ module UsageCost =
     let estimate (table: PriceTable) (requests: LedgerRequest list) : Result<decimal, string> =
         requests
         |> List.fold (fun total request -> total |> Result.bind (fun sum -> estimateRequest table request |> Result.map ((+) sum))) (Ok 0m)
+
+/// One dated price of `praxis.price-table/1` (PRAXIS-REL-013, F5): the rates
+/// of one provider and model over `[EffectiveFrom, EffectiveTo)`. A legacy
+/// table's model becomes an entry for any provider from its effective date,
+/// open-ended.
+type PriceEntry =
+    { /// `None` only for a legacy table, which names no provider.
+      Provider: string option
+      Model: string
+      EffectiveFrom: DateTimeOffset
+      /// Exclusive; `None` is open-ended.
+      EffectiveTo: DateTimeOffset option
+      Currency: string
+      Prices: ModelPrices
+      SourceUrl: string option
+      RetrievedAt: string option }
+
+/// Every price table the reliability report reads, legacy or versioned,
+/// normalized to dated entries. Praxis ships none: the operator supplies it.
+type PriceSchedule =
+    { /// `praxis.price-table/1` or `legacy` (`telemetry usage` format).
+      Format: string
+      Reference: PriceTableRef
+      Currency: string
+      Entries: PriceEntry list }
+
+[<RequireQualifiedAccess>]
+module PriceSchedule =
+    let VersionedFormat = "praxis.price-table/1"
+    let LegacyFormat = "legacy"
+
+    let private stamp (at: DateTimeOffset) =
+        at.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", Globalization.CultureInfo.InvariantCulture)
+
+    /// A stable name of an entry, for the report's list of applied prices.
+    let entryKey (entry: PriceEntry) =
+        $"""{defaultArg entry.Provider "*"}/{entry.Model}@{stamp entry.EffectiveFrom}"""
+
+    /// A legacy table read compatibly: each model priced from the table's
+    /// effective date onward, for any provider.
+    let ofLegacy (effectiveFrom: DateTimeOffset) (table: PriceTable) : PriceSchedule =
+        { Format = LegacyFormat
+          Reference = table.Reference
+          Currency = table.Currency
+          Entries =
+            table.Models
+            |> Map.toList
+            |> List.map (fun (model, prices) ->
+                { Provider = None
+                  Model = model
+                  EffectiveFrom = effectiveFrom
+                  EffectiveTo = None
+                  Currency = table.Currency
+                  Prices = prices
+                  SourceUrl = None
+                  RetrievedAt = None }) }
+
+    let private covers (at: DateTimeOffset) (entry: PriceEntry) =
+        entry.EffectiveFrom <= at && entry.EffectiveTo |> Option.forall (fun until -> at < until)
+
+    let private overlaps (a: PriceEntry) (b: PriceEntry) =
+        let before (end': DateTimeOffset option) (start: DateTimeOffset) = end' |> Option.exists (fun e -> e <= start)
+        not (before a.EffectiveTo b.EffectiveFrom || before b.EffectiveTo a.EffectiveFrom)
+
+    /// Problems that make a schedule ambiguous or unusable: an empty or
+    /// inverted range, mixed currencies, or two entries of one provider and
+    /// model whose ranges overlap (a timestamp would select two prices).
+    let problems (schedule: PriceSchedule) : string list =
+        let inverted =
+            schedule.Entries
+            |> List.filter (fun entry -> entry.EffectiveTo |> Option.exists (fun until -> until <= entry.EffectiveFrom))
+            |> List.map (fun entry -> $"entry {entryKey entry} has effectiveTo at or before effectiveFrom")
+
+        let currencies =
+            match schedule.Entries |> List.map _.Currency |> List.distinct with
+            | []
+            | [ _ ] -> []
+            | several -> [ $"""entries mix currencies ({String.concat ", " several}); supply one table per currency""" ]
+
+        let overlapping =
+            schedule.Entries
+            |> List.groupBy (fun entry -> entry.Provider, entry.Model)
+            |> List.collect (fun (_, held) ->
+                held
+                |> List.sortBy _.EffectiveFrom
+                |> List.pairwise
+                |> List.filter (fun (a, b) -> overlaps a b)
+                |> List.map (fun (a, b) -> $"entries {entryKey a} and {entryKey b} overlap"))
+
+        inverted @ currencies @ overlapping
+
+    /// The entry that prices an observation of this provider and model at
+    /// this instant, or why none does. Never a price outside its range.
+    let select (schedule: PriceSchedule) (provider: string) (model: string option) (at: DateTimeOffset option) : Result<PriceEntry, string> =
+        match model, at with
+        | None, _ -> Error "the observation names no model"
+        | _, None -> Error "the observation has no timestamp, so no dated price can be selected"
+        | Some model, Some at ->
+            let candidates =
+                schedule.Entries |> List.filter (fun entry -> entry.Model = model && entry.Provider |> Option.forall ((=) provider))
+
+            match candidates |> List.filter (covers at) with
+            | [ entry ] -> Ok entry
+            | [] when candidates.IsEmpty -> Error $"the price table has no prices for {provider}/{model}"
+            | [] -> Error $"no {provider}/{model} price is effective at {stamp at}"
+            | _ -> Error $"several {provider}/{model} prices are effective at {stamp at}"
+
+    /// The estimated cost of one observation with the entry that priced it.
+    /// Cache read and the cache-write TTLs are priced as their own buckets.
+    let estimate
+        (schedule: PriceSchedule)
+        (provider: string)
+        (model: string option)
+        (at: DateTimeOffset option)
+        (key: string)
+        (values: Map<string, int64>)
+        : Result<decimal * PriceEntry, string> =
+        select schedule provider model at
+        |> Result.bind (fun entry ->
+            let table =
+                { Reference = schedule.Reference
+                  Currency = entry.Currency
+                  Models = Map.ofList [ entry.Model, entry.Prices ] }
+
+            UsageCost.estimateRequest table { Key = key; Model = Some entry.Model; AgentId = None; Values = values }
+            |> Result.map (fun amount -> amount, entry))

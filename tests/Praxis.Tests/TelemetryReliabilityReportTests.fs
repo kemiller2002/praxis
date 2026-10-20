@@ -31,6 +31,7 @@ module TelemetryReliabilityReportTests =
                 | Error message -> failwith message
             else
                 None
+          AgentBinding = None
           SessionWindow = true
           WorkItemFilter = [] }
 
