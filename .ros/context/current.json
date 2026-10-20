@@ -10878,10 +10878,19 @@
     {
       "id": "PRAXIS-REL-010",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-20T10:43:09.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Telemetry/AgentBinding.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/TelemetryAgentAttributionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-20T10:43:42.000Z",
       "telemetryExecutionIds": [
         "EXE-20261020T104310995Z-9596f004"
       ],
@@ -10904,15 +10913,26 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-20T10:43:42.000Z",
+      "conclusion": "Usage is attributed per agent within one orchestrating session with no double counting; output tokens from Claude Code transcripts remain a lower bound"
     },
     {
       "id": "PRAXIS-REL-013",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-20T10:43:12.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Telemetry/UsageCost.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/TelemetryAgentAttributionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-20T10:43:54.000Z",
       "telemetryExecutionIds": [
         "EXE-20261020T104313440Z-90c508a6"
       ],
@@ -10935,12 +10955,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-20T10:43:54.000Z",
+      "conclusion": "Versioned price tables are applied only within their effective range; missing price leaves cost unavailable while tokens are reported"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-20T10:43:12.000Z",
+  "updatedAt": "2026-10-20T10:43:54.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

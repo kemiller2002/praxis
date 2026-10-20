@@ -1,1 +1,2 @@
 {"entry":"transition","transition":"execution.start","state":"active","origin":"work-transition","originReference":"work.begin","actor":"anthropic/claude-code","actorKind":"agent","at":"2026-10-20T10:43:12.003Z"}
+{"entry":"transition","transition":"work.complete","state":"completed","reason":null,"actor":"anthropic/claude-code","actorKind":"agent","candidate":"ecf4c21d43b70a1da0838ba616f12c9a91c04926","commits":"4e0ffe137c99cfbf49c7edb1682dc88094ad4e14,ecf4c21d43b70a1da0838ba616f12c9a91c04926","at":"2026-10-20T10:43:54.216Z"}
