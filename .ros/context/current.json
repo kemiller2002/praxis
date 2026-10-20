@@ -10884,7 +10884,27 @@
       "updatedAt": "2026-10-20T10:43:09.000Z",
       "telemetryExecutionIds": [
         "EXE-20261020T104310995Z-9596f004"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b5ebdf14e1b5bfed3a6d5db5",
+        "recordedAt": "2026-10-20T10:43:33.000Z",
+        "executionId": "EXE-20261020T104310995Z-9596f004",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-reliability-integration-g8x7vn",
+        "commit": "4e0ffe137c99cfbf49c7edb1682dc88094ad4e14",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
+        "remoteCommit": "4e0ffe137c99cfbf49c7edb1682dc88094ad4e14",
+        "summary": "Per-agent usage attribution: execution provider.sessionId/agentInstanceId, --agent-binding praxis.agent-binding/1, cross-file dedupe by message id (max per field), unattributed never split; 10 tests incl. 3-subagent fixture; real run-01 trial fully attributed",
+        "nextAction": "complete with evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     },
     {
       "id": "PRAXIS-REL-013",
@@ -10895,7 +10915,27 @@
       "updatedAt": "2026-10-20T10:43:12.000Z",
       "telemetryExecutionIds": [
         "EXE-20261020T104313440Z-90c508a6"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "a9f5fe9cc85877c290a5da05",
+        "recordedAt": "2026-10-20T10:43:37.000Z",
+        "executionId": "EXE-20261020T104313440Z-90c508a6",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-reliability-integration-g8x7vn",
+        "commit": "4e0ffe137c99cfbf49c7edb1682dc88094ad4e14",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
+        "remoteCommit": "4e0ffe137c99cfbf49c7edb1682dc88094ad4e14",
+        "summary": "praxis.price-table/1 with effective-date selection, cache write 5m/1h split, cost unavailable without a matching entry; legacy format still read; Praxis ships no prices",
+        "nextAction": "complete with evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
