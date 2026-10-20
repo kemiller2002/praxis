@@ -206,7 +206,7 @@ module WorkClaims =
             | CompletionStart.AlreadyCompleted(claim, completion) -> replayed ports claim completion
             | CompletionStart.Refused conflict -> reject [ conflictFinding conflict ] (Some digest) None current
             | CompletionStart.Proceed(claim, next) ->
-                match CompletionGate.preflight input request claim (ports.RecordedValidations request.WorkItemId) observations with
+                match CompletionGate.preflight input request claim (ports.RecordedValidations request.WorkItemId) observations (ports.Claims.Now()) with
                 | Error findings -> reject findings (Some digest) None current
                 | Ok evidence ->
                     // The packet and authority exist only for established evidence.
@@ -248,6 +248,7 @@ module WorkClaims =
                                 let completion =
                                     { PacketDigest = digest
                                       ReceiptDigest = receiptDigest
+                                      EvidenceDigests = evidence |> List.map _.Digest |> List.distinct
                                       Commit = packet.Commit
                                       VerificationRevision = packet.VerificationRevision
                                       RequirementIds = packet.RequirementIds |> List.distinct |> List.sort

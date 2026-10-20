@@ -111,7 +111,9 @@ module WorkClaimTests =
           RequiredValidationNames = [ "unit-tests" ]
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
-          ExpectedVerificationRevision = Some commit }
+          ExpectedVerificationRevision = Some commit 
+          TrustedVerifierKeys = []
+          ValidationPolicyDigest = None }
 
     /// The host input bound to a contract ready for it (REL-GATE-002).
     let private input = OrdoTestContracts.bind hostInput
@@ -213,7 +215,7 @@ module WorkClaimTests =
         let observations = request.Evidence |> List.map (fun e -> e.Id, FileWorkClaims.observeEvidence "/" e) |> Map.ofList
         let claim = h.Ports.Store.Read request.WorkItemId |> Result.defaultValue None |> Option.get
 
-        match CompletionGate.preflight input request claim (ValidationEvidenceFixtures.recorded h.Events request.WorkItemId) observations with
+        match CompletionGate.preflight input request claim (ValidationEvidenceFixtures.recorded h.Events request.WorkItemId) observations claim.Holder.Value.AcquiredAt with
         | Ok evidence -> CompletionGate.packet input request evidence
         | Error findings -> failwith $"the fixture evidence must be established: {findings}"
 
@@ -545,7 +547,7 @@ module WorkClaimTests =
 
           t "I1 event payloads carry exactly the frozen members" (fun () ->
               let completed =
-                  { PacketDigest = "sha256:" + String('1', 64); ReceiptDigest = "sha256:" + String('2', 64); Commit = commit
+                  { PacketDigest = "sha256:" + String('1', 64); ReceiptDigest = "sha256:" + String('2', 64); EvidenceDigests = []; Commit = commit
                     VerificationRevision = commit; RequirementIds = [ item ]; TelemetryExecutions = [ "EXE-1" ]
                     VerifierName = "dokimos"; VerifierVersion = "0.5.0"; CompletedAt = t0 }
 
@@ -576,7 +578,8 @@ module WorkClaimTests =
               let event = { WorkItemId = item; OccurredAt = t0; Payload = ClaimEventPayload.ClaimReleased("a", "t", 1L) }
               Assert.equal (Ok()) (emit event)
               Assert.equal (Ok()) (emit event)
-              let lines = File.ReadAllLines(Path.Combine(root, ".ros", "events", "events.jsonl"))
+              let lines = File.ReadAllLines(TransientStore.events root)
+              Assert.isTrue (not (File.Exists(Path.Combine(root, ".ros", "events", "events.jsonl")))) "claim-protocol events stay out of the tracked tree (I8)"
               Assert.equal 1 lines.Length)
 
           t "migration: the repository's queue.json loads unchanged with zero lost records beside a claims store" (fun () ->
@@ -627,22 +630,25 @@ module WorkClaimTests =
               let validatedDocument = CliHarness.json validated.Out
               let resultPath = validatedDocument["resultPath"].GetValue<string>()
 
+              let host = CliHarness.temporaryDirectory "praxis-claim-cli-host"
+
               let complete authority evidence =
                   CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", "/nonexistent/dokimos") :: identity "test/agent-a")
                       [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; head
                         "--verification-revision"; head; "--authority"; authority; "--requirement"; item
-                        "--ordo-contract"; "contract.json"
+                        "--ordo-contract"; Path.Combine(host, "contract.json")
                         "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
 
               Assert.equal 2 (complete "missing.json" resultPath).Exit
-              CliHarness.write root "evidence/tests.txt" "ok\n"
+              // Host inputs and the stray file live outside the candidate tree: completion needs a clean worktree (I8).
+              CliHarness.write host "evidence/tests.txt" "ok\n"
               // The host authority names no contract identity: the ready contract supplies it (REL-GATE-002).
-              CliHarness.write root "contract.json" (OrdoTestContracts.contract [ item ] [])
-              CliHarness.write root "authority.json" ($"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{head}\",\"ExpectedVerificationRevision\":\"{head}\"}}")
-              let plain = complete "authority.json" "evidence/tests.txt"
+              CliHarness.write host "contract.json" (OrdoTestContracts.contract [ item ] [])
+              CliHarness.write host "authority.json" ($"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"],\"ExpectedCommit\":\"{head}\",\"ExpectedVerificationRevision\":\"{head}\"}}")
+              let plain = complete (Path.Combine(host, "authority.json")) (Path.Combine(host, "evidence/tests.txt"))
               Assert.equal 3 plain.Exit
               Assert.isTrue (plain.Out.Contains ValidationEvidence.UnrecognizedCode) plain.Out
-              let unavailable = complete "authority.json" resultPath
+              let unavailable = complete (Path.Combine(host, "authority.json")) resultPath
               Assert.equal 3 unavailable.Exit
               Assert.isTrue (unavailable.Out.Contains "PRX.COMPLETION.VERIFIER_UNAVAILABLE") unavailable.Out
               Assert.equal 2 (CliHarness.ros root [ "work"; "claim"; "--id"; item; "--store"; "nfs" ]).Exit) ]

@@ -194,6 +194,7 @@
     <Compile Include="ValidationEvidenceTests.fs" />
     <Compile Include="TelemetryReliabilityReportTests.fs" />
     <Compile Include="ReliabilityPipelineTests.fs" />
+    <Compile Include="AttestedCompletionTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

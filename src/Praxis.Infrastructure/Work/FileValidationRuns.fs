@@ -13,7 +13,7 @@ open Praxis.Domain.Work
 /// Composition of the `work validate-run` ports for one repository root
 /// (PRAXIS-REL-005): Git HEAD and worktree observation, a non-shell child
 /// process with a timeout, and result files under
-/// `.ros/claims/<ID>/validations/<EVIDENCE-ID>/`.
+/// `<store>/validations/<ID>/<EVIDENCE-ID>/` in the out-of-tree store (I8).
 [<RequireQualifiedAccess>]
 module FileValidationRuns =
     /// Paths Praxis itself writes during work; they never make a run dirty.
@@ -55,7 +55,7 @@ module FileValidationRuns =
             | Error(ClaimProcessFailure.NotStarted reason) -> CommandRun.NotStarted reason
 
     let directory (root: string) (workItemId: string) (evidenceId: string) =
-        Path.Combine(FileWorkClaimStore.itemDirectory root workItemId, "validations", evidenceId)
+        Path.Combine(TransientStore.validations root, workItemId, evidenceId)
 
     /// `<generation>-<revision[0..11]>-<observedAt>`: one file per run, so a
     /// later run never overwrites a result an event already recorded.
@@ -63,9 +63,6 @@ module FileValidationRuns =
         let revision = if result.Revision.Length > 12 then result.Revision.Substring(0, 12) else result.Revision
         let observed = result.ObservedAt.UtcDateTime.ToString("yyyyMMdd'T'HHmmssfff'Z'", CultureInfo.InvariantCulture)
         $"{result.Generation}-{revision}-{observed}"
-
-    let private relative (root: string) (path: string) =
-        Path.GetRelativePath(root, path).Replace('\\', '/')
 
     let private publish (path: string) (bytes: byte array) =
         let temporary = $"{path}.{Guid.NewGuid():N}.tmp"
@@ -87,8 +84,8 @@ module FileValidationRuns =
                 publish resultPath document
 
                 Ok
-                    { ResultPath = relative root resultPath
-                      OutputPath = relative root outputPath
+                    { ResultPath = resultPath
+                      OutputPath = outputPath
                       ResultDigest = CompletionGate.sha256 document }
             with error ->
                 Error error.Message

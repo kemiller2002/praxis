@@ -187,5 +187,6 @@ let main argv =
     @ UrlEnhancementTests.tests
     @ TelemetryReliabilityReportTests.tests
     @ ReliabilityPipelineTests.tests
+    @ AttestedCompletionTests.tests
     |> TestRunner.run
   | other -> eprintfn "unknown arguments: %s (expected none, --suite browser, or --suite pinned-release)" (String.concat " " other); 2

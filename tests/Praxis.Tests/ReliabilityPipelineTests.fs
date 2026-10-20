@@ -39,7 +39,9 @@ module ReliabilityPipelineTests =
           RequiredValidationNames = [ "unit-tests" ]
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
-          ExpectedVerificationRevision = Some commit }
+          ExpectedVerificationRevision = Some commit 
+          TrustedVerifierKeys = []
+          ValidationPolicyDigest = None }
 
     let private bindTo name input = OrdoBoundAuthority.bind None (fixture name) input
 
@@ -112,7 +114,7 @@ module ReliabilityPipelineTests =
     let private established input (events: ResizeArray<ClaimEvent>) (held: WorkClaim) (submission: CompletionRequest) =
         let observations = submission.Evidence |> List.map (fun e -> e.Id, FileWorkClaims.observeEvidence "/" e) |> Map.ofList
 
-        match CompletionGate.preflight input submission held (ValidationEvidenceFixtures.recorded events held.WorkItemId) observations with
+        match CompletionGate.preflight input submission held (ValidationEvidenceFixtures.recorded events held.WorkItemId) observations held.Holder.Value.AcquiredAt with
         | Ok evidence -> evidence
         | Error findings -> failwith $"the evidence must be established: {findings}"
 

@@ -45,6 +45,7 @@ module WorkClaimJson =
         obj
             [ "packetDigest", str completion.PacketDigest
               "receiptDigest", str completion.ReceiptDigest
+              "evidenceDigests", strings completion.EvidenceDigests
               "commit", str completion.Commit
               "verificationRevision", str completion.VerificationRevision
               "requirementIds", strings completion.RequirementIds
@@ -127,6 +128,7 @@ module WorkClaimJson =
 
                 { PacketDigest = requireText completion "packetDigest"
                   ReceiptDigest = requireText completion "receiptDigest"
+                  EvidenceDigests = texts completion "evidenceDigests"
                   Commit = requireText completion "commit"
                   VerificationRevision = requireText completion "verificationRevision"
                   RequirementIds = texts completion "requirementIds"
@@ -266,7 +268,7 @@ module WorkClaimJson =
               (let array = JsonArray()
                for evidence in authority.Evidence do
                    array.Add(
-                       obj
+                       obj (
                            [ "Id", str evidence.Id
                              "Digest", str evidence.Digest
                              "Revision", str evidence.Revision
@@ -274,9 +276,20 @@ module WorkClaimJson =
                              "Reusable", flag evidence.Reusable
                              "ObservedAt", time evidence.ObservedAt
                              "Validation", str evidence.Validation ]
+                           @ present "Attestation" (evidence.Attestation |> Option.map VerificationReceipt.envelopeNode)
+                       )
                    )
                array)
               "ConsumedPacketDigests", strings authority.ConsumedPacketDigests ]
+            @ (if authority.TrustedVerifierKeys.IsEmpty then
+                   []
+               else
+                   [ "TrustedVerifierKeys",
+                     (let array = JsonArray()
+                      for key in authority.TrustedVerifierKeys do
+                          array.Add(obj [ "KeyId", str key.KeyId; "Algorithm", str key.Algorithm; "PublicKey", str key.PublicKey ])
+                      array :> JsonNode) ])
+            @ present "ValidationPolicyDigest" (authority.ValidationPolicyDigest |> Option.map str)
             @ present "ClaimAcquiredAt" (authority.ClaimAcquiredAt |> Option.map time)
             @ present "LeaseExpiresAt" (authority.LeaseExpiresAt |> Option.map time)
             @ present "EvaluatedAt" (authority.EvaluatedAt |> Option.map time)
@@ -340,7 +353,19 @@ module WorkClaimJson =
                   RequiredValidationNames = texts root "RequiredValidationNames"
                   RequiredEvidenceIds = texts root "RequiredEvidenceIds"
                   ExpectedCommit = text root "ExpectedCommit"
-                  ExpectedVerificationRevision = text root "ExpectedVerificationRevision" }
+                  ExpectedVerificationRevision = text root "ExpectedVerificationRevision"
+                  TrustedVerifierKeys =
+                    match property root "TrustedVerifierKeys" with
+                    | Some keys when keys.ValueKind = JsonValueKind.Array ->
+                        keys.EnumerateArray()
+                        |> Seq.map (fun key ->
+                            { TrustedVerifierKey.KeyId = requireText key "KeyId"
+                              Algorithm = requireText key "Algorithm"
+                              PublicKey = requireText key "PublicKey" })
+                        |> Seq.toList
+                    | Some _ -> failwith "'TrustedVerifierKeys' must be an array"
+                    | None -> []
+                  ValidationPolicyDigest = text root "ValidationPolicyDigest" }
         with error ->
             Error $"completion authority input is malformed: {error.Message}"
 
@@ -374,6 +399,17 @@ module WorkClaimOutcomeJson =
 
         array :> JsonNode
 
+    /// `FileWorkClaimStore.LegacyStoreCode`: a claim only the legacy tracked
+    /// store holds is a refusal (exit 3) naming the migration, not a failure.
+    let LegacyStoreCode = "PRX.CLAIM.LEGACY_STORE"
+
+    let legacy (reason: string) =
+        document
+            [ "outcome", JsonValue.Create "refused"
+              "code", JsonValue.Create LegacyStoreCode
+              "detail", JsonValue.Create(reason.Substring(LegacyStoreCode.Length).TrimStart(':', ' ')) ],
+        3
+
     /// The document and the documented exit code: 0 done (or replayed),
     /// 3 refused with a structured conflict, 1 storage or event failure.
     let claimOutcome (now: DateTimeOffset) (outcome: ClaimOutcome) =
@@ -388,6 +424,7 @@ module WorkClaimOutcomeJson =
                   "detail", JsonValue.Create(ClaimConflict.detail conflict)
                   "claim", (current |> Option.map (view now) |> Option.toObj) ],
             3
+        | ClaimOutcome.Failed reason when reason.StartsWith(LegacyStoreCode, StringComparison.Ordinal) -> legacy reason
         | ClaimOutcome.Failed reason -> document [ "outcome", JsonValue.Create "failed"; "detail", JsonValue.Create reason ], 1
 
     let claims (now: DateTimeOffset) (claims: WorkClaim list) =
@@ -417,4 +454,5 @@ module WorkClaimOutcomeJson =
                   "findings", findings items
                   "claim", (current |> Option.map (view now) |> Option.toObj) ],
             3
+        | CompletionOutcome.Failed reason when reason.StartsWith(LegacyStoreCode, StringComparison.Ordinal) -> legacy reason
         | CompletionOutcome.Failed reason -> document [ "outcome", JsonValue.Create "failed"; "detail", JsonValue.Create reason ], 1
