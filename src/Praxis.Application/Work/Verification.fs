@@ -28,7 +28,10 @@ type VerifyRequest =
       WorkItemId: string
       Claimant: string
       FencingGeneration: int64
-      Commit: string }
+      Commit: string
+      /// The claim store the verifier re-reads: `None` is the repository's
+      /// local file store, `Some remote` the Git-ref store on that remote.
+      Remote: string option }
 
 /// One signed receipt and the combined output of the run it attests.
 type SignedReceipt =
@@ -51,6 +54,8 @@ type WorkVerifyPorts =
     { Claims: WorkClaimStore
       Now: unit -> DateTimeOffset
       RepoPath: string
+      /// The claim store `Claims` reads, passed on so the verifier reads the same one.
+      Remote: string option
       ObserveHead: unit -> Result<string, string>
       /// `git status --porcelain` entries; any entry is a dirty worktree.
       WorktreeStatus: unit -> Result<string list, string>
@@ -150,7 +155,8 @@ module WorkVerification =
                           WorkItemId = workItemId
                           Claimant = fence.Claimant
                           FencingGeneration = fence.Generation
-                          Commit = head }
+                          Commit = head
+                          Remote = ports.Remote }
 
                     match ports.Request request with
                     | Error message -> refused VerifierEngine.UnavailableCode message

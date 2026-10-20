@@ -14,8 +14,8 @@ open Praxis.Infrastructure.Work
 module VerifierCommands =
     let usage =
         "verifier serve --socket PATH --policy FILE --contract-digest sha256:HEX [--key-file PEM] | "
-        + "verifier run --repo PATH --commit SHA --work-item ID --claimant NAME --generation N --policy FILE --contract-digest sha256:HEX --key-file PEM --out FILE | "
-        + "work verify --id ID --token TOKEN [--timeout-seconds N] | work claims migrate [--keep-legacy]"
+        + "verifier run --repo PATH --commit SHA --work-item ID --claimant NAME --generation N [--store local|git] [--remote NAME] --policy FILE --contract-digest sha256:HEX --key-file PEM --out FILE | "
+        + "work verify --id ID --token TOKEN [--timeout-seconds N] [--store local|git] [--remote NAME] | work claims migrate [--keep-legacy]"
 
     let private value = ClaimArguments.optionValue
     let private required = ClaimArguments.required
@@ -50,7 +50,8 @@ module VerifierCommands =
                                       WorkItemId = id
                                       Claimant = claimant
                                       FencingGeneration = generation
-                                      Commit = commit }
+                                      Commit = commit
+                                      Remote = if ClaimArguments.optionValue "--store" arguments = Some "git" then Some(ClaimArguments.optionValue "--remote" arguments |> Option.defaultValue "origin") else None }
                             | Ok None -> Error "--generation is required"
                             | Error message -> Error message))))
 
@@ -64,12 +65,13 @@ module VerifierCommands =
             VerificationJson.verifierRun (FileTrustedVerifier.runOnce request policy digest key out) out |> ClaimArguments.print
 
     let verify root (arguments: string list) =
-        match required "--id" arguments, required "--token" arguments, ClaimArguments.seconds "--timeout-seconds" 3600.0 arguments with
-        | Error message, _, _
-        | _, Error message, _
-        | _, _, Error message -> invalid message
-        | Ok id, Ok token, Ok timeout ->
-            let ports = FileWorkVerification.ports root (FileWorkVerification.environmentSocket ()) timeout
+        match required "--id" arguments, required "--token" arguments, ClaimArguments.seconds "--timeout-seconds" 3600.0 arguments, ClaimArguments.storeChoice arguments with
+        | Error message, _, _, _
+        | _, Error message, _, _
+        | _, _, Error message, _
+        | _, _, _, Error message -> invalid message
+        | Ok id, Ok token, Ok timeout, Ok choice ->
+            let ports = FileWorkVerification.ports root choice (FileWorkVerification.environmentSocket ()) timeout
             WorkVerification.run ports id token |> VerificationJson.verify |> ClaimArguments.print
 
     let migrate root (arguments: string list) =

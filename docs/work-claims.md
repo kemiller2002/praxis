@@ -114,7 +114,7 @@ praxis work expire --id ID
 praxis work claims [ID]
 praxis work validate-run --id ID --token T --generation N --validation NAME --evidence-id EVIDENCE-ID \
   [--timeout-seconds 1800] -- COMMAND [ARGUMENT...]
-praxis work verify --id ID --token T [--timeout-seconds 3600]        # agent; PRAXIS_VERIFIER_SOCKET
+praxis work verify --id ID --token T [--timeout-seconds 3600] [--store local|git] [--remote NAME]   # agent; PRAXIS_VERIFIER_SOCKET
 praxis work complete-verified --id ID --token T                        # PRAXIS_COMPLETION_AUTHORITY, PRAXIS_ORDO_CONTRACT
   [--authority FILE] [--ordo-contract FILE] [--expected-ordo-digest sha256:HEX] [--claimant NAME] [--generation N]
   [--commit SHA] [--verification-revision SHA] [--requirement ID]* [--decision ID]* [--conflict-resolution ID]*
@@ -228,7 +228,8 @@ the agent can write is refused (`PRX.COMPLETION.RECEIPT_MISSING`).
 
 **Verifier engine** (`TrustedVerifierEngine`, shared by `serve` and `run`):
 
-1. Re-reads the claim from the repository's local claim store and requires
+1. Re-reads the claim from the store named in the request (the repository's
+   local claim store, or the Git-ref store on the named remote) and requires
    the stated claimant and generation to be the current, unexpired holder
    (`PRX.VERIFIER.STALE_CLAIM`). The request never carries the claim token.
 2. `git clone --no-hardlinks` into its own temporary directory and a detached
@@ -310,8 +311,14 @@ signing key lives and the policy and authority they are checked against.
   verifier) can read the private key from process memory and sign anything.
   Attested mode moves trust from "anyone with repository write access" to
   "whoever controls the verifier host or CI secret"; it does not remove it.
-- `verify` re-reads claims from the local file store only; `--store git`
-  claims are not yet re-read by the verifier.
+- The verifier re-reads the claim through the store the agent claimed with:
+  `work verify [--store git] [--remote NAME]` sends the choice in the request
+  (`"store": "local"|"git"`, `"remote"`; absent means local), and the engine
+  reads `refs/praxis/claims/<ID>` from that remote, fetched into the
+  agent's repository, exactly as the Git-ref store does. The remote is the one
+  configured in the agent's clone, so — like the local store, which the agent
+  can also write — the claim re-read is a holder/generation consistency check,
+  not a trust root; the trust root is the key, the policy and the authority.
 - The socket path's permissions are the host's to restrict; Praxis does not
   authenticate the caller. Any local caller can ask for receipts, but a
   receipt binds the current holder, generation and commit, so it only helps

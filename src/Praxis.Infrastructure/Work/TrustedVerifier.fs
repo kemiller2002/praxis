@@ -142,6 +142,8 @@ module VerifierWire =
         node["claimant"] <- JsonValue.Create request.Claimant
         node["fencingGeneration"] <- JsonValue.Create request.FencingGeneration
         node["commit"] <- JsonValue.Create request.Commit
+        node["store"] <- JsonValue.Create(if request.Remote.IsSome then "git" else "local")
+        request.Remote |> Option.iter (fun remote -> node["remote"] <- JsonValue.Create remote)
         compact node
 
     let parseRequest (line: string) : Result<VerifyRequest, string> =
@@ -150,12 +152,26 @@ module VerifierWire =
             let root = document.RootElement
             let text (name: string) = root.GetProperty(name).GetString() |> Option.ofObj |> Option.defaultWith (fun () -> failwith $"'{name}' is required")
 
+            let optional (name: string) =
+                match root.TryGetProperty name with
+                | true, value when value.ValueKind = JsonValueKind.String -> Some(value.GetString())
+                | _ -> None
+
+            // Absent `store` is the local file store (the original wire).
+            let remote =
+                match optional "store" with
+                | None
+                | Some "local" -> None
+                | Some "git" -> Some(optional "remote" |> Option.defaultValue "origin")
+                | Some other -> failwith $"unknown store '{other}' (expected local or git)"
+
             Ok
                 { RepoPath = text "repoPath"
                   WorkItemId = text "workItemId"
                   Claimant = text "claimant"
                   FencingGeneration = root.GetProperty("fencingGeneration").GetInt64()
-                  Commit = text "commit" }
+                  Commit = text "commit"
+                  Remote = remote }
         with error ->
             Error $"malformed verify request: {error.Message}"
 
@@ -299,7 +315,14 @@ module TrustedVerifierEngine =
         let now () = DateTimeOffset.UtcNow
         let repository = Path.GetFullPath request.RepoPath
 
-        match FileWorkClaimStore.create repository |> fun store -> store.Read request.WorkItemId with
+        // The same store the agent claimed through: the local file store, or
+        // the Git-ref store read from the remote (fetched into the repository).
+        let store =
+            match request.Remote with
+            | None -> FileWorkClaimStore.create repository
+            | Some remote -> GitRefWorkClaimStore.create repository remote FileWorkClaims.gitTimeout
+
+        match store.Read request.WorkItemId with
         | Error message -> VerifierResponse.Refused(VerifierEngine.StaleClaimCode, $"the claim cannot be read: {message}")
         | Ok current ->
             match VerifierEngine.admit (now ()) request current with
@@ -435,10 +458,14 @@ module FileWorkVerification =
         with error ->
             Error error.Message
 
-    let ports (root: string) (socket: string option) (timeout: TimeSpan) : WorkVerifyPorts =
-        { Claims = FileWorkClaimStore.create root
+    let ports (root: string) (choice: ClaimStoreChoice) (socket: string option) (timeout: TimeSpan) : WorkVerifyPorts =
+        { Claims = FileWorkClaims.store root choice
           Now = fun () -> DateTimeOffset.UtcNow
           RepoPath = Path.GetFullPath root
+          Remote =
+            match choice with
+            | ClaimStoreChoice.Local -> None
+            | ClaimStoreChoice.GitRef remote -> Some remote
           ObserveHead = FileWorkClaims.observeHead root
           WorktreeStatus = worktreeStatus root
           Request =

@@ -87,7 +87,7 @@ module AttestedCompletionTests =
 
     /// `work verify` through the real engine (in process, no socket).
     let private verify (f: Fixture) token =
-        let ports = { FileWorkVerification.ports f.Root None (TimeSpan.FromMinutes 5.0) with Request = fun request -> Ok(TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request) }
+        let ports = { FileWorkVerification.ports f.Root ClaimStoreChoice.Local None (TimeSpan.FromMinutes 5.0) with Request = fun request -> Ok(TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request) }
         WorkVerification.run ports item token
 
     let private receipts outcome =
@@ -163,6 +163,30 @@ module AttestedCompletionTests =
         |> Option.ofObj
         |> Option.filter File.Exists
         |> Option.filter (fun dll -> DokimosCompletionVerifier.supportsAttestation dll (TimeSpan.FromSeconds 60.0) |> Result.isOk)
+
+    /// A bare remote seeded from `f.Root`, and two clones of it (agents A and B).
+    let private shared (f: Fixture) =
+        let parent = CliHarness.temporaryDirectory "praxis-attested-remote"
+        let origin = Path.Combine(parent, "origin.git")
+        CliHarness.git parent [ "init"; "-q"; "--bare"; origin ] |> ignore
+        CliHarness.git f.Root [ "push"; "-q"; origin; "main" ] |> ignore
+        let clone name =
+            let path = Path.Combine(parent, name)
+            CliHarness.git parent [ "clone"; "-q"; "--branch"; "main"; origin; path ] |> ignore
+            path
+        clone "a", clone "b"
+
+    let private gitClaim (root: string) claimant token (duration: TimeSpan) =
+        let ports = FileWorkClaims.ports root (ClaimStoreChoice.GitRef "origin") None None
+
+        match WorkClaims.acquire ports { WorkItemId = item; Claimant = claimant; ClaimToken = token; LeaseDuration = duration; ExpectedRevision = None; RecoverOnly = false } with
+        | ClaimOutcome.Succeeded(claim, _) -> claim
+        | other -> failwith $"expected a claim on the remote, got {other}"
+
+    /// `work verify` from `root` through `choice`, with the real engine in process.
+    let private verifyIn (f: Fixture) (root: string) (choice: ClaimStoreChoice) token =
+        let ports = { FileWorkVerification.ports root choice None (TimeSpan.FromMinutes 5.0) with Request = fun request -> Ok(TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request) }
+        WorkVerification.run ports item token
 
     let tests =
         [ t "C3b reproduced: a forged validation result plus a forged validation event is refused in attested mode" (fun () ->
@@ -343,7 +367,7 @@ module AttestedCompletionTests =
               Assert.equal [ VerificationReceipt.BindingMismatchCode; VerificationReceipt.StaleCode ] (codes replayed)
               Assert.equal 0 seen.Count
               // The verifier itself re-reads the claim and refuses the stale generation or holder.
-              let request = { RepoPath = f.Root; WorkItemId = item; Claimant = "agent-a"; FencingGeneration = first.Generation; Commit = head f }
+              let request = { RepoPath = f.Root; WorkItemId = item; Claimant = "agent-a"; FencingGeneration = first.Generation; Commit = head f; Remote = None }
 
               match TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request with
               | VerifierResponse.Refused(code, _) -> Assert.equal VerifierEngine.StaleClaimCode code
@@ -566,4 +590,77 @@ module AttestedCompletionTests =
               let report = complete f (accepting (ResizeArray())) "tok-1"
               match report.Result.Outcome with
               | CompletionOutcome.Completed _ -> ()
-              | other -> failwith $"expected completion under the policy, got {other}") ]
+              | other -> failwith $"expected completion under the policy, got {other}")
+
+          t "git store: a claim on the shared remote is verified and completed from a clone with no local claim" (fun () ->
+              let f = fixture [ "true" ] true
+              let a, b = shared f
+              let remoteA = ClaimStoreChoice.GitRef "origin"
+              let held = gitClaim a "agent-a" "tok-1" lease
+              Assert.isTrue (not (Directory.Exists(FileWorkClaimStore.itemDirectory a item))) "no local claim exists"
+              // A verifies through the remote's claim ref; the verifier re-reads it there.
+              let stored = receipts (verifyIn f a remoteA "tok-1")
+              Assert.equal [ CheckStatus.Passed ] (stored |> List.map _.Payload.Status)
+              Assert.equal [ held.Generation ] (stored |> List.map _.Payload.FencingGeneration)
+              // The local path still does not see the remote claim.
+              match verifyIn f a ClaimStoreChoice.Local "tok-1" with
+              | WorkVerifyOutcome.Refused finding -> Assert.equal "PRX.CLAIM.NOT_HELD" finding.Code
+              | other -> failwith $"expected the local store to hold nothing, got {other}"
+
+              let seen = ResizeArray()
+              let report = FileDerivedCompletion.run a remoteA None (Some(accepting seen)) { arguments f "tok-1" with WorkItemId = item } |> Result.defaultWith failwith
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Completed(completed, _) -> Assert.equal ClaimStatus.Completed completed.Status
+              | other -> failwith $"expected a verified completion through the git store, got {other}"
+
+              Assert.equal (Some(CliHarness.git a [ "rev-parse"; "HEAD^" ])) report.Result.VerifiedCommit
+              Assert.equal "" (CliHarness.git a [ "status"; "--porcelain" ])
+              // B, on another clone, sees the completed claim on the remote.
+              match (GitRefWorkClaimStore.create b "origin" FileWorkClaims.gitTimeout).Read item with
+              | Ok(Some claim) -> Assert.equal ClaimStatus.Completed claim.Status
+              | other -> failwith $"expected B to read the completed claim, got {other}")
+
+          t "git store: another clone cannot verify the holder's claim, and a stale generation after remote recovery is refused" (fun () ->
+              let f = fixture [ "true" ] true
+              let a, b = shared f
+              let remote = ClaimStoreChoice.GitRef "origin"
+              let first = gitClaim a "agent-a" "tok-1" (TimeSpan.FromSeconds 2.0)
+              // B holds no token for A's claim; asking as itself is refused by the verifier too.
+              match verifyIn f b remote "tok-b" with
+              | WorkVerifyOutcome.Refused finding -> Assert.equal "PRX.CLAIM.STALE_TOKEN" finding.Code
+              | other -> failwith $"expected B to be refused, got {other}"
+
+              let asB = { RepoPath = b; WorkItemId = item; Claimant = "agent-b"; FencingGeneration = first.Generation; Commit = CliHarness.git b [ "rev-parse"; "HEAD" ]; Remote = Some "origin" }
+
+              match TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest asB with
+              | VerifierResponse.Refused(code, _) -> Assert.equal VerifierEngine.StaleClaimCode code
+              | other -> failwith $"expected a stale-holder refusal, got {other}"
+
+              // A's lease passes; B recovers on the remote at generation + 1.
+              Thread.Sleep(TimeSpan.FromSeconds 2.5)
+              let ports = FileWorkClaims.ports b remote None None
+
+              let recovered =
+                  match WorkClaims.recover ports { WorkItemId = item; Claimant = "agent-b"; ClaimToken = "tok-2"; LeaseDuration = lease; ExpectedRevision = None; RecoverOnly = true } with
+                  | ClaimOutcome.Succeeded(claim, _) -> claim
+                  | other -> failwith $"expected B to recover, got {other}"
+
+              Assert.equal (first.Generation + 1L) recovered.Generation
+
+              match verifyIn f a remote "tok-1" with
+              | WorkVerifyOutcome.Refused finding -> Assert.isTrue (finding.Code.StartsWith "PRX.CLAIM.") finding.Code
+              | other -> failwith $"expected A's stale claim to be refused, got {other}"
+
+              let stale = { asB with RepoPath = a; Claimant = "agent-a"; Commit = CliHarness.git a [ "rev-parse"; "HEAD" ] }
+
+              match TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest stale with
+              | VerifierResponse.Refused(code, detail) -> Assert.isTrue (code = VerifierEngine.StaleClaimCode && detail.Contains "stale") detail
+              | other -> failwith $"expected a stale-generation refusal, got {other}"
+
+              // The new holder verifies from its own clone.
+              Assert.equal [ recovered.Generation ] (receipts (verifyIn f b remote "tok-2") |> List.map _.Payload.FencingGeneration)
+              // The CLI parses --store git for verify (no socket here: refused as unavailable, not as a local NOT_HELD).
+              let cli = CliHarness.rosWith b identity [ "work"; "verify"; "--id"; item; "--token"; "tok-2"; "--store"; "git"; "--remote"; "origin" ]
+              Assert.equal 3 cli.Exit
+              Assert.equal VerifierEngine.UnavailableCode (text (field (CliHarness.json cli.Out) "code"))) ]
