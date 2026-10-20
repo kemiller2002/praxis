@@ -64,6 +64,7 @@
     <Compile Include="Telemetry/Acceptance.fs" />
     <Compile Include="Telemetry/Usage.fs" />
     <Compile Include="Telemetry/ProviderUsage.fs" />
+    <Compile Include="Telemetry/AgentBinding.fs" />
     <Compile Include="Telemetry/ReliabilityReport.fs" />
     <Compile Include="Pacing/Model.fs" />
     <Compile Include="Provenance/Actor.fs" />
@@ -113,6 +114,7 @@
     <Compile Include="Work/LocalContainment.fs" />
     <Compile Include="Work/Claim.fs" />
     <Compile Include="Work/ValidationResult.fs" />
+    <Compile Include="Work/VerificationReceipt.fs" />
     <Compile Include="Work/CompletionGate.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />

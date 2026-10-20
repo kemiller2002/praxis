@@ -11,7 +11,7 @@ open Praxis.Infrastructure.Telemetry
 [<RequireQualifiedAccess>]
 module TelemetryReliabilityCommands =
     let usage =
-        "telemetry reliability-report [--events FILE] [--executions DIR] [--transcripts PATH]* [--discover-transcripts] [--price-table FILE] [--work-item ID]* [--attribution session-window|explicit-only] [--out FILE]"
+        "telemetry reliability-report [--events FILE] [--executions DIR] [--transcripts PATH]* [--discover-transcripts] [--price-table FILE] [--agent-binding FILE] [--work-item ID]* [--attribution session-window|explicit-only] [--out FILE]"
 
     let private values (name: string) (arguments: string list) =
         arguments |> List.pairwise |> List.choose (fun (flag, value) -> if flag = name then Some value else None)
@@ -19,7 +19,7 @@ module TelemetryReliabilityCommands =
     let private value name arguments = values name arguments |> List.tryLast
 
     let private known =
-        set [ "--events"; "--executions"; "--transcripts"; "--price-table"; "--work-item"; "--attribution"; "--out" ]
+        set [ "--events"; "--executions"; "--transcripts"; "--price-table"; "--agent-binding"; "--work-item"; "--attribution"; "--out" ]
 
     /// Flags that take a value, and the switches; anything else is refused.
     let private unknownArguments (arguments: string list) =
@@ -44,17 +44,25 @@ module TelemetryReliabilityCommands =
             |> Option.map (combine root >> ReliabilityInputs.readPriceTable >> Result.map Some)
             |> Option.defaultValue (Ok None)
 
-        match unknownArguments arguments, priceTable with
-        | (_ :: _ as unknown), _ ->
+        let binding =
+            value "--agent-binding" arguments
+            |> Option.map (combine root >> ReliabilityInputs.readAgentBinding >> Result.map Some)
+            |> Option.defaultValue (Ok None)
+
+        match unknownArguments arguments, priceTable, binding with
+        | (_ :: _ as unknown), _, _ ->
             eprintfn "ERROR unknown arguments: %s\nUsage: praxis %s" (String.concat " " unknown) usage
             2
-        | _, Error message ->
+        | _, Error message, _ ->
             eprintfn "ERROR --price-table: %s" message
+            2
+        | _, _, Error message ->
+            eprintfn "ERROR --agent-binding: %s" message
             2
         | _ when attribution <> "session-window" && attribution <> "explicit-only" ->
             eprintfn "ERROR --attribution must be session-window or explicit-only"
             2
-        | [], Ok table ->
+        | [], Ok table, Ok agentBinding ->
             let events, lines, malformed = ReliabilityInputs.readEvents (path "--events" ".ros/events/events.jsonl")
             let executions = ReliabilityInputs.readExecutions (path "--executions" ".ros/telemetry/executions")
             let explicitFiles = ReliabilityInputs.transcriptFiles (values "--transcripts" arguments |> List.map (combine root))
@@ -79,6 +87,7 @@ module TelemetryReliabilityCommands =
                       Transcripts = observations
                       Sources = sources
                       PriceTable = table
+                      AgentBinding = agentBinding
                       SessionWindow = (attribution = "session-window")
                       WorkItemFilter = values "--work-item" arguments }
                 |> ReliabilityReport.toJson

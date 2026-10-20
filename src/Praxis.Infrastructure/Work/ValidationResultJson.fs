@@ -118,12 +118,18 @@ module ValidationResultJson =
             with _ ->
                 Error "not UTF-8 text"
 
-        match decoded |> Result.bind parse with
-        | Ok result -> EvidenceObservation.Observed(digest, result)
-        | Error reason -> EvidenceObservation.Unrecognized(digest, reason)
+        match decoded with
+        | Ok json when VerificationReceipt.looksLikeEnvelope json ->
+            match VerificationReceipt.parseEnvelope json with
+            | Ok envelope -> EvidenceObservation.Enveloped(VerificationReceipt.identity envelope.Payload, envelope)
+            | Error reason -> EvidenceObservation.MalformedEnvelope(digest, reason)
+        | _ ->
+            match decoded |> Result.bind parse with
+            | Ok result -> EvidenceObservation.Observed(digest, result)
+            | Error reason -> EvidenceObservation.Unrecognized(digest, reason)
 
-/// Reads `work.validation.observed` events back from `.ros/events/events.jsonl`
-/// (the I1 log every claim event is appended to). Read-only.
+/// Reads `work.validation.observed` events back from the out-of-tree I1 log
+/// (`TransientStore.events`, I8) every claim event is appended to. Read-only.
 [<RequireQualifiedAccess>]
 module FileValidationEvents =
     let private recorded (workItemId: string) (line: string) =
@@ -147,7 +153,7 @@ module FileValidationEvents =
         | _ -> None
 
     let read (root: string) (workItemId: string) : Result<RecordedValidation list, string> =
-        let path = Path.Combine(root, ".ros", "events", "events.jsonl")
+        let path = TransientStore.events root
 
         try
             if File.Exists path then

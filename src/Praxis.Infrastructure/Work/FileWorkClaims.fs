@@ -37,43 +37,73 @@ module DokimosCompletionVerifier =
     let private write (file: string) (node: JsonNode) =
         File.WriteAllText(file, node.ToJsonString(JsonSerializerOptions(WriteIndented = true)) + "\n", UTF8Encoding(false))
 
+    /// The first release providing `completion.verify-attested/1`.
+    let AttestedSince = Version(0, 7, 0)
+
+    let private command (executable: string) (arguments: string list) =
+        if executable.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) then "dotnet", executable :: arguments
+        else executable, arguments
+
+    /// Attested mode fails closed unless `dokimos version` reports a release
+    /// that provides `completion.verify-attested/1` (0.7.0 or later): an older
+    /// Dokimos would refuse the authority as malformed, or ignore attestations.
+    let supportsAttestation (executable: string) (timeout: TimeSpan) =
+        let program, arguments = command executable [ "version" ]
+
+        match ClaimProcess.run program (Path.GetTempPath()) [] None timeout arguments with
+        | Ok result when result.ExitCode = 0 ->
+            try
+                use document = JsonDocument.Parse result.Stdout
+                let release = document.RootElement.GetProperty("ReleaseVersion").GetString()
+
+                match Version.TryParse((release.Split('+', '-')[0])) with
+                | true, version when version >= AttestedSince -> Ok()
+                | _ -> Error $"Dokimos {release} does not provide completion.verify-attested/1 (needs {AttestedSince} or later)"
+            with error ->
+                Error $"the Dokimos version report is unreadable: {error.Message}"
+        | Ok result -> Error $"'dokimos version' exited {result.ExitCode}"
+        | Error _ -> Error "'dokimos version' did not run"
+
     let create (executable: Result<string, string>) (timeout: TimeSpan) : CompletionVerifier =
         fun packet authority ->
             match executable with
             | Error reason -> VerifierRun.Unavailable reason
             | Ok executable ->
-                let scratch = Path.Combine(Path.GetTempPath(), $"praxis-completion-{Guid.NewGuid():N}")
+                match (if authority.TrustedVerifierKeys.IsEmpty then Ok() else supportsAttestation executable timeout) with
+                | Error reason -> VerifierRun.AttestationUnsupported reason
+                | Ok() ->
+                    let scratch = Path.Combine(Path.GetTempPath(), $"praxis-completion-{Guid.NewGuid():N}")
 
-                try
-                    Directory.CreateDirectory scratch |> ignore
-                    let packetPath = Path.Combine(scratch, "packet.json")
-                    let authorityPath = Path.Combine(scratch, "authority.json")
-                    write packetPath (WorkClaimJson.packetNode packet)
-                    write authorityPath (WorkClaimJson.authorityNode authority)
-                    let arguments = [ "completion"; "verify"; "--packet"; packetPath; "--authority"; authorityPath ]
-
-                    let program, arguments =
-                        if executable.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) then "dotnet", executable :: arguments
-                        else executable, arguments
-
-                    match ClaimProcess.run program scratch [] None timeout arguments with
-                    | Error(ClaimProcessFailure.NotStarted reason) -> VerifierRun.Unavailable $"Dokimos could not start: {reason}"
-                    | Error(ClaimProcessFailure.TimedOut after) -> VerifierRun.TimedOut after
-                    | Ok result ->
-                        let digest = CompletionGate.sha256 (Encoding.UTF8.GetBytes result.Stdout)
-                        let detail = (result.Stderr + " " + result.Stdout).Trim()
-                        let detail = if detail.Length > 600 then detail.Substring(0, 600) else detail
-                        VerifierRun.Exited(result.ExitCode, WorkClaimJson.parseReceipt result.Stdout, digest, detail)
-                finally
                     try
-                        if Directory.Exists scratch then Directory.Delete(scratch, true)
-                    with _ ->
-                        ()
+                        Directory.CreateDirectory scratch |> ignore
+                        let packetPath = Path.Combine(scratch, "packet.json")
+                        let authorityPath = Path.Combine(scratch, "authority.json")
+                        write packetPath (WorkClaimJson.packetNode packet)
+                        write authorityPath (WorkClaimJson.authorityNode authority)
+                        let arguments = [ "completion"; "verify"; "--packet"; packetPath; "--authority"; authorityPath ]
 
-/// Appends I1 events to `.ros/events/events.jsonl` under the shared
-/// `work-protocol` lock and `work-state` journal, exactly like other work
-/// events. Idempotent: an event whose `eventId` is already present is not
-/// appended again.
+                        let program, arguments = command executable arguments
+
+                        match ClaimProcess.run program scratch [] None timeout arguments with
+                        | Error(ClaimProcessFailure.NotStarted reason) -> VerifierRun.Unavailable $"Dokimos could not start: {reason}"
+                        | Error(ClaimProcessFailure.TimedOut after) -> VerifierRun.TimedOut after
+                        | Ok result ->
+                            let digest = CompletionGate.sha256 (Encoding.UTF8.GetBytes result.Stdout)
+                            let detail = (result.Stderr + " " + result.Stdout).Trim()
+                            let detail = if detail.Length > 600 then detail.Substring(0, 600) else detail
+                            VerifierRun.Exited(result.ExitCode, WorkClaimJson.parseReceipt result.Stdout, digest, detail)
+                    finally
+                        try
+                            if Directory.Exists scratch then Directory.Delete(scratch, true)
+                        with _ ->
+                            ()
+
+/// I1 claim-protocol events. They go to the out-of-tree log
+/// `<store>/events.jsonl` (I8): claiming, validating and verifying never
+/// touch the tracked tree. Idempotent: an event whose `eventId` is already
+/// present is not appended again. Only the canonical completion event is
+/// tracked (`appendTracked`, `.ros/events/events.jsonl`, written by
+/// `complete-verified` into its metadata-only commit).
 [<RequireQualifiedAccess>]
 module FileWorkClaimEvents =
     let private eventsRelativePath = ".ros/events/events.jsonl"
@@ -108,26 +138,37 @@ module FileWorkClaimEvents =
                 File.Move(temporary, eventsPath, true)
                 Ok()
 
+    /// Whether the tracked log already holds `eventId`.
+    let trackedContains (root: string) (eventId: string) =
+        let path = Path.Combine(root, eventsRelativePath)
+        File.Exists path && present (File.ReadAllText path) eventId
+
+    /// Appends one event node to the tracked `.ros/events/events.jsonl` under
+    /// the shared `work-protocol` lock and `work-state` journal.
+    let appendTracked (root: string) (node: JsonNode) =
+        let eventId = node["eventId"].GetValue<string>()
+
+        match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
+        | Error failure -> Error failure.Message
+        | Ok lease ->
+            let result =
+                try
+                    WorkStateTransaction.recover root
+                    |> Result.mapError _.Message
+                    |> Result.bind (fun () -> append root (Praxis.Infrastructure.Json.CanonicalJson.serializeCompact node) eventId)
+                with error ->
+                    Error error.Message
+
+            lease.Release() |> ignore
+            result
+
     let create (root: string) (actor: Actor option) (execution: string option) : ClaimEvent -> Result<unit, string> =
         fun event ->
             let repository = FileWorkConfigRepository.readRepositoryId root
             let protocolVersion = FileWorkConfigRepository.readProtocolVersion root
             let node = WorkClaimJson.eventNode repository protocolVersion execution actor event
             let eventId = node["eventId"].GetValue<string>()
-
-            match RegistryLock.acquire root "work-protocol" RegistryLock.defaultSettings with
-            | Error failure -> Error failure.Message
-            | Ok lease ->
-                let result =
-                    try
-                        WorkStateTransaction.recover root
-                        |> Result.mapError _.Message
-                        |> Result.bind (fun () -> append root (Praxis.Infrastructure.Json.CanonicalJson.serializeCompact node) eventId)
-                    with error ->
-                        Error error.Message
-
-                lease.Release() |> ignore
-                result
+            TransientStore.appendEvent root eventId (Praxis.Infrastructure.Json.CanonicalJson.serializeCompact node)
 
 [<RequireQualifiedAccess>]
 type ClaimStoreChoice =
@@ -205,10 +246,9 @@ module FileWorkClaims =
         with error ->
             Error error.Message
 
-    /// `workProtocol.requireVerifiedCompletion` in ros.json. Absent: false
-    /// (legacy items stay completable). Present but not a boolean, or ros.json
-    /// unreadable: an error, so plain completion fails closed.
-    let readRequireVerifiedCompletion (root: string) : Result<bool, string> =
+    /// A boolean `workProtocol.<name>` in ros.json. Absent: false. Present but
+    /// not a boolean, or ros.json unreadable: an error, so callers fail closed.
+    let readProtocolFlag (name: string) (root: string) : Result<bool, string> =
         let path = Path.Combine(root, "ros.json")
 
         if not (File.Exists path) then
@@ -219,14 +259,24 @@ module FileWorkClaims =
 
                 match document.RootElement.TryGetProperty "workProtocol" with
                 | true, protocol when protocol.ValueKind = JsonValueKind.Object ->
-                    match protocol.TryGetProperty "requireVerifiedCompletion" with
+                    match protocol.TryGetProperty name with
                     | true, value when value.ValueKind = JsonValueKind.True -> Ok true
                     | true, value when value.ValueKind = JsonValueKind.False -> Ok false
-                    | true, _ -> Error "ros.json workProtocol.requireVerifiedCompletion must be a boolean"
+                    | true, _ -> Error $"ros.json workProtocol.{name} must be a boolean"
                     | _ -> Ok false
                 | _ -> Ok false
             with error ->
                 Error $"ros.json could not be read: {error.Message}"
+
+    /// `workProtocol.requireVerifiedCompletion` in ros.json (legacy items stay
+    /// completable when absent).
+    let readRequireVerifiedCompletion (root: string) = readProtocolFlag "requireVerifiedCompletion" root
+
+    /// `workProtocol.requireAttestedEvidence` in ros.json (PRAXIS-REL-006 rollout
+    /// gate): when set, a host authority that trusts no verifier key is refused,
+    /// so repository policy, not the per-run authority file, decides whether
+    /// unattested evidence can ever complete an item.
+    let readRequireAttestedEvidence (root: string) = readProtocolFlag "requireAttestedEvidence" root
 
     /// The Ordo contract bytes at `path` (interface I3).
     let private readOrdoContract (root: string) (path: string) =

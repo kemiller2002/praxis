@@ -48,6 +48,10 @@ type CompletionAuthority =
       /// every observation Dokimos receives is a recorded, bound, passed result.
       Evidence: ValidatedEvidence list
       ConsumedPacketDigests: string list
+      /// I6: non-empty means attested mode; omitted on the wire when empty.
+      TrustedVerifierKeys: TrustedVerifierKey list
+      /// I6: the host-owned validation policy every receipt must name.
+      ValidationPolicyDigest: string option
       /// Optional Dokimos 0.6.0 freshness members; omitted on the wire when `None`.
       ClaimAcquiredAt: DateTimeOffset option
       LeaseExpiresAt: DateTimeOffset option
@@ -66,7 +70,12 @@ type CompletionAuthorityInput =
       RequiredValidationNames: string list
       RequiredEvidenceIds: string list
       ExpectedCommit: string option
-      ExpectedVerificationRevision: string option }
+      ExpectedVerificationRevision: string option
+      /// I6 (PRAXIS-REL-009): host-trusted verifier keys. Non-empty switches
+      /// completion to attested mode: only verifier-signed receipts are evidence.
+      TrustedVerifierKeys: TrustedVerifierKey list
+      /// I6: the digest of the host-owned validation policy receipts must name.
+      ValidationPolicyDigest: string option }
 
 /// The completion authority the packet and authority builders accept
 /// (REL-GATE-002). It can only be constructed from an Ordo `ReadyScope`, so the
@@ -97,6 +106,9 @@ module BoundCompletionAuthority =
     let input (bound: BoundCompletionAuthority) = bound.Input
     let scope (bound: BoundCompletionAuthority) = bound.Scope
 
+    /// I6 attested mode: the host authority trusts at least one verifier key.
+    let isAttested (bound: BoundCompletionAuthority) = not bound.Input.TrustedVerifierKeys.IsEmpty
+
 type EvidenceSubmission =
     { Id: string
       Path: string
@@ -118,11 +130,15 @@ type CompletionRequest =
       TelemetryExecutions: string list }
 
 /// Praxis's independent observation of one evidence file. Only a parsed
-/// `praxis.validation-result/1` is `Observed`; any other readable file is
-/// `Unrecognized` and refused.
+/// `praxis.validation-result/1` is `Observed` and only a parsed DSSE envelope
+/// is `Enveloped` (whose digest is the receipt identity); any other readable
+/// file is `Unrecognized` and refused.
 [<RequireQualifiedAccess>]
 type EvidenceObservation =
     | Observed of digest: string * result: ValidationResult
+    | Enveloped of digest: string * envelope: ReceiptEnvelope
+    /// Shaped like a DSSE envelope (it names a `payloadType`) but unreadable as one.
+    | MalformedEnvelope of digest: string * reason: string
     | Unrecognized of digest: string * reason: string
     | Missing
     | Unreadable of reason: string
@@ -153,6 +169,8 @@ type VerifierRun =
     | Unavailable of reason: string
     | TimedOut of after: TimeSpan
     | Crashed of reason: string
+    /// Attested mode needs a Dokimos providing `completion.verify-attested/1`.
+    | AttestationUnsupported of reason: string
     | Exited of exitCode: int * receipt: Result<DokimosReceipt, string> * receiptDigest: string * diagnostics: string
 
 type VerifierIdentity = { Name: string; Version: string }
@@ -250,6 +268,7 @@ module CompletionGate =
         (claim: WorkClaim)
         (recorded: Result<RecordedValidation list, string>)
         (observations: Map<string, EvidenceObservation>)
+        (evaluatedAt: DateTimeOffset)
         : Result<ValidatedEvidence list, CompletionFinding list> =
         let input = BoundCompletionAuthority.input bound
         let submitted = request.Evidence |> List.map _.Id |> Set.ofList
@@ -269,10 +288,43 @@ module CompletionGate =
                   if not (submitted.Contains id) then
                       yield finding "PRX.COMPLETION.EVIDENCE_MISSING" $"required evidence '{id}' was not supplied (--evidence {id}=PATH)" ]
 
+        let attested = BoundCompletionAuthority.isAttested bound
+
+        let binding (evidence: EvidenceSubmission) evaluatedAt =
+            { WorkItemId = request.WorkItemId
+              Claimant = request.Fence.Claimant
+              FencingGeneration = request.Fence.Generation
+              Commit = request.VerificationRevision
+              OrdoContractDigest = input.OrdoContractDigest
+              ValidationPolicyDigest = input.ValidationPolicyDigest
+              EvidenceId = evidence.Id
+              CitedBy = citedBy evidence.Id
+              ClaimAcquiredAt = claim.Holder |> Option.map _.AcquiredAt
+              LeaseExpiresAt = claim.Holder |> Option.map _.LeaseExpiresAt
+              EvaluatedAt = evaluatedAt }
+
         let established =
             request.Evidence
             |> List.map (fun evidence ->
                 match observations |> Map.tryFind evidence.Id with
+                | Some(EvidenceObservation.Enveloped(_, envelope)) when attested ->
+                    ValidatedEvidence.attest input.TrustedVerifierKeys (binding evidence evaluatedAt) envelope
+                | Some(EvidenceObservation.Observed _) when attested ->
+                    Error
+                        [ finding
+                              VerificationReceipt.MissingCode
+                              $"evidence '{evidence.Id}' at '{evidence.Path}' is a {ValidationEvidence.SchemaVersion} document, not a verifier-signed receipt; attested mode accepts only receipts from 'praxis work verify'" ]
+                | Some(EvidenceObservation.MalformedEnvelope(_, reason)) when attested ->
+                    Error [ finding VerificationReceipt.MalformedCode $"evidence '{evidence.Id}' at '{evidence.Path}' is not a readable DSSE envelope ({reason})" ]
+                | Some(EvidenceObservation.MalformedEnvelope(_, reason)) ->
+                    Error [ finding ValidationEvidence.UnrecognizedCode $"evidence '{evidence.Id}' at '{evidence.Path}' is a malformed receipt envelope ({reason})" ]
+                | Some(EvidenceObservation.Unrecognized(_, reason)) when attested ->
+                    Error [ finding VerificationReceipt.MissingCode $"evidence '{evidence.Id}' at '{evidence.Path}' carries no attestation ({reason})" ]
+                | Some(EvidenceObservation.Enveloped _) ->
+                    Error
+                        [ finding
+                              ValidationEvidence.UnrecognizedCode
+                              $"evidence '{evidence.Id}' at '{evidence.Path}' is a verification receipt, but the host authority trusts no verifier key (TrustedVerifierKeys); produce a result with 'praxis work validate-run'" ]
                 | Some(EvidenceObservation.Observed(digest, result)) ->
                     ValidatedEvidence.establish
                         request.WorkItemId
@@ -311,7 +363,10 @@ module CompletionGate =
                 |> List.distinct
                 |> List.filter (fun name -> not (validated |> List.exists (fun evidence -> evidence.Validation = name)))
                 |> List.map (fun name ->
-                    finding UnprovenValidationCode $"required validation '{name}' has no recorded, passing result; run it with 'praxis work validate-run --validation {name}'")
+                    if attested then
+                        finding UnprovenValidationCode $"required validation '{name}' has no verified, passing receipt; run 'praxis work verify'"
+                    else
+                        finding UnprovenValidationCode $"required validation '{name}' has no recorded, passing result; run it with 'praxis work validate-run --validation {name}'")
 
         match revisionFindings @ evidenceFindings @ unproven with
         | [] -> Ok validated
@@ -344,6 +399,8 @@ module CompletionGate =
         draft input request (fun id ->
             match observations |> Map.tryFind id with
             | Some(EvidenceObservation.Observed(digest, _))
+            | Some(EvidenceObservation.Enveloped(digest, _))
+            | Some(EvidenceObservation.MalformedEnvelope(digest, _))
             | Some(EvidenceObservation.Unrecognized(digest, _)) -> digest
             | _ -> "")
         |> packetDigest
@@ -382,6 +439,8 @@ module CompletionGate =
           RequiredValidationNames = input.RequiredValidationNames
           Evidence = evidence |> List.distinctBy _.Id
           ConsumedPacketDigests = claim.ConsumedPacketDigests
+          TrustedVerifierKeys = input.TrustedVerifierKeys
+          ValidationPolicyDigest = if input.TrustedVerifierKeys.IsEmpty then None else input.ValidationPolicyDigest
           ClaimAcquiredAt = claim.Holder |> Option.map _.AcquiredAt
           LeaseExpiresAt = claim.Holder |> Option.map _.LeaseExpiresAt
           EvaluatedAt = Some evaluatedAt }
@@ -397,6 +456,7 @@ module CompletionGate =
         | VerifierRun.TimedOut after ->
             rejected [ finding "PRX.COMPLETION.VERIFIER_TIMEOUT" $"Dokimos did not finish within {after.TotalSeconds:F0}s" ] None
         | VerifierRun.Crashed reason -> rejected [ finding "PRX.COMPLETION.VERIFIER_FAILED" reason ] None
+        | VerifierRun.AttestationUnsupported reason -> rejected [ finding "PRX.COMPLETION.VERIFIER_ATTESTATION_UNSUPPORTED" reason ] None
         | VerifierRun.Exited(0, Ok receipt, receiptDigest, _) ->
             let mismatches =
                 [ "Contract", ReceiptContract, receipt.Contract

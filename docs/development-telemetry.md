@@ -596,7 +596,7 @@ unavailable.
 praxis telemetry reliability-report \
   [--events .ros/events/events.jsonl] [--executions .ros/telemetry/executions] \
   [--transcripts FILE|DIR]... [--discover-transcripts] \
-  [--price-table FILE] [--work-item ID]... \
+  [--price-table FILE] [--agent-binding FILE] [--work-item ID]... \
   [--attribution session-window|explicit-only] [--out report.json]
 ```
 
@@ -621,9 +621,50 @@ contributes nothing and is priced at nothing), which is different from
 unavailable. A bucket the provider did not report is unavailable: the total
 becomes `partial` (a labelled lower bound), never zero.
 
-**Cost.** `--price-table FILE` takes the operator-supplied, versioned table
-described under "Cumulative usage and cost attribution" (source, version,
-effective date, per-million-token rates by model). Praxis ships no prices.
+**Streamed entries and the output lower bound (PRAXIS-REL-010).** Claude
+Code writes one transcript line per content block of a message, each with
+the usage known when the block started, and does not rewrite them. Duplicate
+entries of one observation are merged bucket by bucket at the *maximum*
+(never "first entry wins"): counters only grow while a message streams.
+Even the maximum is not the final output count: on REL-001 run-01 the last
+message of each of 12 sub-agents read 3-24 `output_tokens` in its
+transcript against 120-761 in the usage the orchestrator received from the
+Agent tool, while input and cache counts matched exactly. Output read from
+Claude Code transcripts (and ledgers built from them) is therefore reported
+`partial` with that reason, and so are totals and estimated costs that
+include it.
+
+**Cost.** `--price-table FILE` takes an operator-supplied table: either the
+legacy table described under "Cumulative usage and cost attribution"
+(source, version, effective date, per-million-token rates by model), still
+read compatibly and applied from its effective date onward, or a versioned
+`praxis.price-table/1` table (PRAXIS-REL-013, F5). Praxis ships no prices;
+tables live with the consumer.
+
+```json
+{ "schema": "praxis.price-table/1", "tableVersion": "2026-10-20",
+  "entries": [ { "provider": "anthropic", "model": "MODEL",
+                 "effectiveFrom": "2026-10-01", "effectiveTo": null,
+                 "currency": "USD", "unit": "per-million-tokens",
+                 "input": 0, "output": 0, "cacheRead": 0,
+                 "cacheWrite5m": 0, "cacheWrite1h": 0,
+                 "source": { "url": "https://...", "retrievedAt": "2026-10-20" } } ] }
+```
+
+Each observation is priced with the one entry of its provider and model
+whose `[effectiveFrom, effectiveTo)` contains the observation's timestamp;
+`effectiveTo: null` is open-ended. An observation outside every range, or
+without a timestamp, is unpriced: its cost is unavailable (or the total a
+labelled lower bound) and its tokens are still reported. A price is never
+applied outside its range, so current prices never price historical runs.
+Cache writes are priced at `cacheWrite5m` / `cacheWrite1h` when the
+observation reports the TTL split (an optional `cacheWrite` rate prices an
+unsplit observation). The table is refused when two entries of one provider
+and model overlap, a range is empty, entries mix currencies, or an entry
+lacks `unit`, `currency` or `source.url`/`source.retrievedAt`. The report
+lists every entry under `inputs.priceTable.entries`. `telemetry usage
+--price-table` keeps reading only the legacy format: its ledger requests
+carry no timestamp, so it refuses a dated table with a clear message.
 Estimated cost is always `estimated`; `billed` is the sum of observed
 (provider/platform-reported) `cost.execution_total`. They are never summed.
 A missing table, model or rate leaves cost unavailable, or `partial` with
@@ -670,6 +711,71 @@ write from an expired owner is stale), `retries`), `perVerifiedRequirement`
 verification, `activeMs`, `blockedMs`, `wallMs`), `attributedCommits`,
 `agents`, `executions`, `workItems[]`, `requirements[]`, `allocationRules`.
 The event inputs are interface I1 (`work.claim.*`, `work.completion.*`).
+
+**Per-agent attribution (PRAXIS-REL-010, interface I7).** Claude Code
+sub-agents share the orchestrator's `sessionId`; only their transcript lines
+carry `agentId` (and `isSidechain: true`). In REL-001 run-01 every
+sub-agent observation was therefore `no-execution-for-session`. Two inputs
+close the gap:
+
+- Execution records (both the telemetry record and the `ordo.execution/1`
+  envelope) gain an additive `provider` member,
+  `{ "sessionId": $CLAUDE_CODE_SESSION_ID, "agentInstanceId": $PRAXIS_AGENT_INSTANCE_ID }`,
+  written only when the host sets either variable. An orchestrator that
+  launches sub-agents running Praxis gives each its own
+  `PRAXIS_AGENT_INSTANCE_ID`.
+- `--agent-binding FILE` (`praxis.agent-binding/1`) binds provider agent
+  instances to the scope and work items they worked on, for example from
+  the `agentId` the Agent tool returns:
+
+```json
+{ "schema": "praxis.agent-binding/1",
+  "bindings": [ { "agentId": "ab49075431f100bcb", "sessionId": "SESSION",
+                  "scope": "REL-001-D-T1-r1-treatment", "workItems": ["LEDGER-T1"] } ] }
+```
+
+With a binding the report adds `agentAttribution`, over the same
+deduplicated observations, resolved in this order (also emitted as
+`agentAttribution.rules`):
+
+1. a line whose `agentId` matches a binding (and its `sessionId`, when
+   stated) belongs to that agent; an `agentId` no binding names is
+   unattributed (`agent-not-bound`), never reassigned;
+2. a line with `isSidechain: false` and no `agentId` is the session's main
+   thread: reported under `orchestrators`, never as an agent or a
+   requirement's cost;
+3. otherwise, when every execution the observation belongs to (its ledger's
+   execution, else the session-window candidates) records the same bound
+   `provider.agentInstanceId`, that agent;
+4. otherwise, when exactly one bound agent ran in the observation's
+   session, that agent; none or several leave it unattributed
+   (`no-agent-for-session`, `ambiguous-agents`, `no-session-id`), reported
+   and never split.
+
+Observation identity is the provider message ID, else the request ID,
+across every file: sub-agent content echoed into the parent transcript
+(`progress` lines of older Claude Code releases, counted per file as
+`echoedUsageEntries`) is the same observation and keeps the sub-agent's
+`agentId`. The Agent tool result in the parent (`toolUseResult.usage`,
+`<usage>` totals of task notifications) carries no message ID and
+summarizes the sub-agent's last message: it is never read as an
+observation. Current Claude Code releases do not echo sub-agent messages
+into the parent at all (verified on the run-01 session: 0 cross-file
+duplicates). `duplicateEntriesExcluded` and `crossFileDuplicatesExcluded`
+(per observation, distinct files or records minus one) are reported.
+
+`agentAttribution` holds `tokens` (global), `agents[]`, `orchestrators[]`,
+`unattributed` (by reason, with unbound agent IDs) and `requirements[]`
+(an agent's usage split evenly over its bound work items, then over each
+work item's verified requirement IDs), each with tokens by kind (`input`,
+`output`, `cacheRead`, `cacheWrite`, `cacheWrite5m`, `cacheWrite1h`,
+`total`; the TTL split is unavailable when the provider did not report
+`cache_creation.ephemeral_5m/1h_input_tokens`) and `estimatedCost`, each a
+metric with explicit availability. `summaries` gives one compact object per
+agent, per orchestrator and per verified requirement (plain values; an
+incomplete kind is `null`; `lowerBounds` names kinds that are lower
+bounds). `conservation` proves that agents + orchestrators + unattributed
+equal the global deduplicated sum for every kind.
 
 **Determinism.** Keys are sorted ordinally, arrays sorted, numbers use the
 invariant culture, decimals are rounded half-to-even and printed with six

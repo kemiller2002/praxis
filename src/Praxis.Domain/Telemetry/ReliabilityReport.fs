@@ -29,6 +29,8 @@ type ReliabilityExecution =
       Provider: string option
       SessionId: string option
       AgentId: string option
+      /// `provider.agentInstanceId` (I7): the agent instance that ran it.
+      AgentInstanceId: string option
       WallMs: int64 option
       ActiveMs: int64 option
       BlockedMs: int64 option
@@ -52,6 +54,9 @@ type TranscriptSource =
       /// Usage entries without message or request ID: never counted,
       /// because they cannot be deduplicated.
       UnidentifiedUsageEntries: int
+      /// Sub-agent usage echoed in a parent transcript (`progress` lines):
+      /// read, then deduplicated with the sub-agent's own copy.
+      EchoedUsageEntries: int
       CounterResets: int }
 
 type ReliabilityInput =
@@ -61,7 +66,10 @@ type ReliabilityInput =
       Executions: ReliabilityExecution list
       Transcripts: UsageObservation list
       Sources: TranscriptSource list
-      PriceTable: PriceTable option
+      /// Legacy or `praxis.price-table/1`, normalized to dated entries.
+      PriceTable: PriceSchedule option
+      /// `--agent-binding` (I7): enables per-agent attribution.
+      AgentBinding: AgentBinding option
       /// Attribute session transcript usage to executions by session ID and
       /// execution time window (`--attribution explicit-only` disables it).
       SessionWindow: bool
@@ -85,6 +93,9 @@ type ReportNode =
 module ReliabilityReport =
     let schema = "praxis.telemetry-reliability-report"
     let schemaVersion = 1L
+
+    let private stamp (at: DateTimeOffset) =
+        at.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", Globalization.CultureInfo.InvariantCulture)
 
     let private ordinal (values: string list) = values |> List.distinct |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
     let private texts values = values |> ordinal |> List.map ReportNode.Text |> ReportNode.List
@@ -189,20 +200,29 @@ module ReliabilityReport =
 
     // ---- totals over pieces ------------------------------------------------
 
+    /// The TTL split partitions cache write: where cache write is not
+    /// applicable, neither is its split.
+    let private notApplicable (bucket: string) (observation: UsageObservation) =
+        observation.NotApplicable.Contains bucket
+        || ((bucket = "tokens.cache_write_5m" || bucket = "tokens.cache_write_1h") && observation.NotApplicable.Contains "tokens.cache_write")
+
     let private bucketValue (bucket: string) (piece: Piece) =
         match piece.Values |> Map.tryFind bucket with
         | Some value -> Some value
-        | None when piece.Observation.NotApplicable.Contains bucket -> Some 0L
+        | None when notApplicable bucket piece.Observation -> Some 0L
         | None -> None
 
     let private pieceTotal (piece: Piece) =
         ProviderUsage.buckets |> List.fold (fun sum bucket -> Option.map2 (+) sum (bucketValue bucket piece)) (Some 0L)
 
-    let private pieceCost (table: PriceTable) (piece: Piece) : Result<decimal, string> =
+    /// Priced with the entry effective at the observation's timestamp
+    /// (F5); a timestamp outside every entry's range is unpriced, never
+    /// priced at another date's rates.
+    let private pieceCost (table: PriceSchedule) (piece: Piece) : Result<decimal * PriceEntry, string> =
         let values =
             piece.Observation.NotApplicable |> Seq.fold (fun (map: Map<string, int64>) bucket -> if map.ContainsKey bucket then map else map.Add(bucket, 0L)) piece.Values
 
-        UsageCost.estimateRequest table { Key = piece.Observation.ObservationId; Model = piece.Observation.Model; AgentId = piece.Observation.AgentId; Values = values }
+        PriceSchedule.estimate table piece.Observation.Provider piece.Observation.Model piece.Observation.OccurredAt piece.Observation.ObservationId values
 
     type private Sum =
         { Value: int64
@@ -217,26 +237,56 @@ module ReliabilityReport =
           Observations = byObservation.Length
           Reporting = reporting }
 
+    /// Claude Code writes a transcript line per content block when the block
+    /// starts, with the usage known then, and does not rewrite it when the
+    /// message finishes: `output_tokens` there is a partial count. Verified
+    /// on REL-001 run-01: the last message of each of 12 sub-agents read
+    /// 3-24 output tokens in its transcript against 120-761 in the usage the
+    /// orchestrator received; input and cache counts matched exactly.
+    let streamedOutputReason =
+        "Claude Code transcripts record output_tokens before a message finishes streaming and never rewrite it; output (and any total or cost including it) is a lower bound"
+
+    let private hasStreamedOutput (pieces: Piece list) =
+        pieces
+        |> List.exists (fun piece ->
+            piece.Observation.Runtime = "claude-code"
+            && (piece.Observation.Origin = "claude-transcript" || piece.Observation.Origin = "execution-ledger")
+            && piece.Values.ContainsKey "tokens.output")
+
+    /// Downgrades an available value to a labelled lower bound.
+    let private lowerBound (bounded: bool) (availability: Availability, reason: string option) =
+        match bounded, availability with
+        | true, Available -> Partial, Some streamedOutputReason
+        | true, Partial -> Partial, reason |> Option.map (fun known -> $"{known}; {streamedOutputReason}")
+        | _ -> availability, reason
+
     /// Available only when every in-scope execution has usage and every
     /// observation reported the bucket; a partial value is a lower bound.
-    let private tokenMetric (scope: int) (covered: int) (definition: string) (sum: Sum) =
+    let private tokenMetricBounded (bounded: bool) (scope: int) (covered: int) (definition: string) (sum: Sum) =
         let availability, reason =
-            if sum.Observations = 0 then Unavailable, Some "no provider usage observation is attributable"
-            elif sum.Reporting < sum.Observations then Partial, Some $"reported on {sum.Reporting} of {sum.Observations} observations; value is a lower bound"
-            elif covered < scope then Partial, Some $"usage observed for {covered} of {scope} executions; value is a lower bound"
-            else Available, None
+            lowerBound bounded (
+                if sum.Observations = 0 then Unavailable, Some "no provider usage observation is attributable"
+                elif sum.Reporting = 0 then Unavailable, Some $"none of {sum.Observations} observations reported this bucket"
+                elif sum.Reporting < sum.Observations then Partial, Some $"reported on {sum.Reporting} of {sum.Observations} observations; value is a lower bound"
+                elif covered < scope then Partial, Some $"usage observed for {covered} of {scope} executions; value is a lower bound"
+                else Available, None
+            )
 
         metric availability (ReportNode.Integer sum.Value) "tokens" (countNode sum.Reporting) (countNode sum.Observations) definition reason
+
+    let private tokenMetric scope covered definition sum = tokenMetricBounded false scope covered definition sum
 
     type private CostSum =
         { Amount: decimal
           Priced: int
           Observed: int
-          Reasons: string list }
+          Reasons: string list
+          /// Price entries used (`PriceSchedule.entryKey`), ordinal.
+          Applied: string list }
 
     /// Priced per allocated share (linear, so shares sum to the whole); an
     /// observation counts as priced only when every one of its shares is.
-    let private estimatedCost (table: PriceTable option) (pieces: Piece list) =
+    let private estimatedCost (table: PriceSchedule option) (pieces: Piece list) =
         match table with
         | None -> None
         | Some priced ->
@@ -244,12 +294,15 @@ module ReliabilityReport =
             let byObservation = results |> List.groupBy fst
 
             Some
-                { Amount = results |> List.sumBy (function _, Ok value -> value | _, Error _ -> 0m)
+                { Amount = results |> List.sumBy (function _, Ok(value, _) -> value | _, Error _ -> 0m)
                   Priced = byObservation |> List.filter (fun (_, held) -> held |> List.forall (snd >> Result.isOk)) |> List.length
                   Observed = byObservation.Length
-                  Reasons = results |> List.choose (function _, Error reason -> Some reason | _, Ok _ -> None) |> ordinal }
+                  Reasons = results |> List.choose (function _, Error reason -> Some reason | _, Ok _ -> None) |> ordinal
+                  Applied = results |> List.choose (function _, Ok(_, entry) -> Some(PriceSchedule.entryKey entry) | _ -> None) |> ordinal }
 
-    let private costMetric (table: PriceTable option) (scope: int) (covered: int) (cost: CostSum option) =
+    let rec private costMetric (table: PriceSchedule option) (scope: int) (covered: int) (cost: CostSum option) = costMetricBounded false table scope covered cost
+
+    and private costMetricBounded (bounded: bool) (table: PriceSchedule option) (scope: int) (covered: int) (cost: CostSum option) =
         let definition = "sum of usage priced with the supplied, versioned price table (estimated, never billed)"
         let currency = table |> Option.map _.Currency |> Option.defaultValue "unknown"
 
@@ -259,9 +312,11 @@ module ReliabilityReport =
         | Some sum when sum.Priced = 0 -> metric Unavailable ReportNode.Missing currency (countNode 0) (countNode sum.Observed) definition (Some(String.concat "; " sum.Reasons))
         | Some sum ->
             let availability, reason =
-                if sum.Priced < sum.Observed then Partial, Some("lower bound; unpriced: " + String.concat "; " sum.Reasons)
-                elif covered < scope then Partial, Some $"usage observed for {covered} of {scope} executions; value is a lower bound"
-                else Available, None
+                lowerBound bounded (
+                    if sum.Priced < sum.Observed then Partial, Some("lower bound; unpriced: " + String.concat "; " sum.Reasons)
+                    elif covered < scope then Partial, Some $"usage observed for {covered} of {scope} executions; value is a lower bound"
+                    else Available, None
+                )
 
             metric availability (ReportNode.Number sum.Amount) currency (countNode sum.Priced) (countNode sum.Observed) definition reason
 
@@ -310,6 +365,17 @@ module ReliabilityReport =
           "R6 even split of integer tokens: quotient to every target, remainder one token each to the ordinally first targets, so shares sum exactly; estimated cost is priced per share (linear), so allocated costs sum to the total."
           "R7 numerator: total attributable usage/cost of every in-scope execution, including rejected and unverified work; denominator: distinct requirement IDs in work.completion.verified events. Zero verified requirements leaves every per-requirement ratio unavailable."
           "R8 cost basis: estimated (supplied price table) and billed (observed cost.execution_total) are separate totals and never summed; a missing price makes the cost unavailable or a labelled lower bound, never zero." ]
+
+    /// Token kinds in report order (I7): the four primary buckets, then the
+    /// cache-write TTL split, available only when the provider reports
+    /// `cache_creation.ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens`.
+    let tokenKinds =
+        [ "tokens.input", "input"
+          "tokens.output", "output"
+          "tokens.cache_read", "cacheRead"
+          "tokens.cache_write", "cacheWrite"
+          "tokens.cache_write_5m", "cacheWrite5m"
+          "tokens.cache_write_1h", "cacheWrite1h" ]
 
     let build (input: ReliabilityInput) : ReportNode =
         let filter = set input.WorkItemFilter
@@ -403,12 +469,12 @@ module ReliabilityReport =
         let scope = executions.Length
 
         let tokenMetrics (pieces: Piece list) (scope: int) (covered: int) =
-            [ for bucket, name in List.zip ProviderUsage.buckets [ "input"; "output"; "cacheRead"; "cacheWrite" ] ->
-                  name, tokenMetric scope covered $"sum of provider-reported {bucket} (observations reporting / observations)" (sumOf (bucketValue bucket) pieces) ]
-            @ [ "total", tokenMetric scope covered "input + output + cache read + cache write; an observation counts only when all four are reported or not applicable" (sumOf pieceTotal pieces) ]
+            [ for bucket, name in tokenKinds ->
+                  name, tokenMetricBounded (bucket = "tokens.output" && hasStreamedOutput pieces) scope covered $"sum of provider-reported {bucket} (observations reporting / observations)" (sumOf (bucketValue bucket) pieces) ]
+            @ [ "total", tokenMetricBounded (hasStreamedOutput pieces) scope covered "input + output + cache read + cache write; an observation counts only when all four are reported or not applicable" (sumOf pieceTotal pieces) ]
 
         let tokens = tokenMetrics allocated scope covered
-        let estimated = costMetric input.PriceTable scope covered (estimatedCost input.PriceTable allocated)
+        let estimated = costMetricBounded (hasStreamedOutput allocated) input.PriceTable scope covered (estimatedCost input.PriceTable allocated)
 
         let billed =
             let known = executions |> List.choose (fun execution -> execution.BilledCost |> Option.map (fun cost -> execution.ExecutionId, cost))
@@ -505,6 +571,179 @@ module ReliabilityReport =
         let methodCounts =
             attributed |> List.distinctBy (fun piece -> piece.Observation.ObservationId) |> List.countBy _.Method |> List.map (fun (method, n) -> method, countNode n) |> List.sortWith (fun (a, _) (b, _) -> String.CompareOrdinal(a, b))
 
+        // I7 (PRAXIS-REL-010): per-agent attribution over the same
+        // deduplicated universe; each observation goes whole to one agent,
+        // one orchestrator, or the unattributed set (never split).
+        let agentAttribution =
+            match input.AgentBinding with
+            | None -> ReportNode.Missing
+            | Some binding ->
+                let executionAgents (observation: UsageObservation) =
+                    let agentsOf ids = ids |> List.map (fun id -> executionById |> Map.tryFind id |> Option.bind _.AgentInstanceId)
+
+                    match observation.ExplicitExecution with
+                    | Some id when executionById.ContainsKey id -> Some(agentsOf [ id ])
+                    | Some _ -> None
+                    | None ->
+                        match candidates executions observation with
+                        | Ok ids -> Some(agentsOf ids)
+                        | Error _ -> None
+
+                // `Execution` holds the target label: `agent:ID`,
+                // `orchestrator:SESSION` or empty for unattributed.
+                let resolved =
+                    deduped.Observations
+                    |> List.map (fun observation ->
+                        let piece label method = { Observation = observation; Execution = label; Method = method; WorkItem = None; Requirement = None; Values = observation.Values }
+
+                        match AgentAttribution.resolve binding executionAgents observation with
+                        | AgentResolution.Attributed(AgentTarget.Agent agent, method) -> Choice1Of3(agent, piece agent method)
+                        | AgentResolution.Attributed(AgentTarget.Orchestrator session, method) -> Choice2Of3(session, piece session method)
+                        | AgentResolution.Unattributed reason -> Choice3Of3(piece "" reason))
+
+                let agentPieces = resolved |> List.choose (function Choice1Of3 value -> Some value | _ -> None)
+                let orchestratorPieces = resolved |> List.choose (function Choice2Of3 value -> Some value | _ -> None)
+                let unattributedPieces = resolved |> List.choose (function Choice3Of3 piece -> Some piece | _ -> None)
+                let currency = input.PriceTable |> Option.map _.Currency |> Option.defaultValue "unknown"
+
+                let kindMetric (bucket: string) (pieces: Piece list) =
+                    let sum = sumOf (bucketValue bucket) pieces
+                    let definition = $"sum of provider-reported {bucket} over deduplicated observations (observations reporting / observations)"
+
+                    let ttl = bucket = "tokens.cache_write_5m" || bucket = "tokens.cache_write_1h"
+
+                    let availability, reason =
+                        lowerBound (bucket = "tokens.output" && hasStreamedOutput pieces) (
+                            if sum.Observations = 0 then Unavailable, Some "no observation is attributed here"
+                            elif sum.Reporting = 0 && ttl then Unavailable, Some "the provider did not report the cache-write TTL split (cache_creation.ephemeral_5m/1h_input_tokens)"
+                            elif sum.Reporting = 0 then Unavailable, Some $"none of {sum.Observations} observations reported this bucket"
+                            elif sum.Reporting < sum.Observations then Partial, Some $"reported on {sum.Reporting} of {sum.Observations} observations; value is a lower bound"
+                            else Available, None
+                        )
+
+                    metric availability (ReportNode.Integer sum.Value) "tokens" (countNode sum.Reporting) (countNode sum.Observations) definition reason
+
+                let kinds (pieces: Piece list) =
+                    ReportNode.Object(
+                        [ for bucket, name in tokenKinds -> name, kindMetric bucket pieces ]
+                        @ [ "total", tokenMetricBounded (hasStreamedOutput pieces) 0 0 "input + output + cache read + cache write; an observation counts only when all four are reported or not applicable" (sumOf pieceTotal pieces) ]
+                    )
+
+                let cost (pieces: Piece list) = costMetricBounded (hasStreamedOutput pieces) input.PriceTable 0 0 (estimatedCost input.PriceTable pieces)
+
+                let methods (pieces: Piece list) =
+                    pieces |> List.countBy _.Method |> List.sortWith (fun (a, _) (b, _) -> String.CompareOrdinal(a, b)) |> List.map (fun (method, n) -> method, countNode n) |> ReportNode.Object
+
+                // Compact: plain values, null when unavailable, and one flag
+                // per summary saying whether every token kind is complete.
+                let summary (identity: (string * ReportNode) list) (pieces: Piece list) =
+                    let known bucket =
+                        let sum = sumOf (bucketValue bucket) pieces
+                        if sum.Observations > 0 && sum.Reporting = sum.Observations then ReportNode.Integer sum.Value else ReportNode.Missing
+
+                    let total = sumOf pieceTotal pieces
+                    let priced = estimatedCost input.PriceTable pieces
+
+                    ReportNode.Object(
+                        identity
+                        @ [ "observations", countNode (pieces |> List.distinctBy (fun piece -> piece.Observation.ObservationId) |> List.length) ]
+                        @ [ for bucket, name in tokenKinds -> name, known bucket ]
+                        @ [ "total", (if total.Observations > 0 && total.Reporting = total.Observations then ReportNode.Integer total.Value else ReportNode.Missing)
+                            "estimatedCost",
+                            (match priced with
+                             | Some sum when sum.Observed > 0 && sum.Priced = sum.Observed -> ReportNode.Number sum.Amount
+                             | _ -> ReportNode.Missing)
+                            "currency", ReportNode.Text currency
+                            // Values kept, but named: these kinds are lower bounds.
+                            "lowerBounds", texts (if hasStreamedOutput pieces then [ "output"; "total"; "estimatedCost" ] else []) ]
+                    )
+
+                let agentIds = (binding.Bindings |> List.map _.AgentId) @ (agentPieces |> List.map fst) |> ordinal
+
+                let agentEntries =
+                    agentIds
+                    |> List.map (fun agent ->
+                        let pieces = agentPieces |> List.filter (fst >> (=) agent) |> List.map snd
+                        let entries = binding.Bindings |> List.filter (fun entry -> entry.AgentId = agent)
+
+                        agent,
+                        pieces,
+                        [ "agentId", ReportNode.Text agent
+                          "sessionIds", texts (entries |> List.choose _.SessionId)
+                          "scopes", texts (entries |> List.choose _.Scope)
+                          "workItems", texts (AgentAttribution.workItems binding agent) ])
+
+                let orchestrators =
+                    orchestratorPieces |> List.map fst |> ordinal |> List.map (fun session -> session, orchestratorPieces |> List.filter (fst >> (=) session) |> List.map snd)
+
+                // A6: agent -> bound work items -> verified requirements.
+                let requirementPieces =
+                    agentPieces
+                    |> List.collect (fun (agent, piece) ->
+                        match AgentAttribution.workItems binding agent with
+                        | [] -> [ piece ]
+                        | items -> split (fun part item -> { part with WorkItem = Some item }) items piece)
+                    |> List.collect (fun piece ->
+                        match piece.WorkItem |> Option.bind requirementsOf.TryFind with
+                        | Some requirements when not requirements.IsEmpty -> split (fun part requirement -> { part with Requirement = Some requirement }) requirements piece
+                        | _ -> [ piece ])
+
+                let requirementEntries =
+                    verifiedRequirements
+                    |> List.map (fun requirement ->
+                        let pieces = requirementPieces |> List.filter (fun piece -> piece.Requirement = Some requirement)
+                        requirement, pieces, [ "requirementId", ReportNode.Text requirement; "workItems", texts (pieces |> List.choose _.WorkItem); "agents", texts (pieces |> List.map _.Execution) ])
+
+                let everything = deduped.Observations |> List.map (fun observation -> { Observation = observation; Execution = ""; Method = ""; WorkItem = None; Requirement = None; Values = observation.Values })
+                let raw (bucket: string) (pieces: Piece list) = pieces |> List.sumBy (fun piece -> piece.Values |> Map.tryFind bucket |> Option.defaultValue 0L)
+                let parts = (agentPieces |> List.map snd) @ (orchestratorPieces |> List.map snd) @ unattributedPieces
+
+                let conservation =
+                    let rows = [ for bucket, name in tokenKinds -> name, raw bucket everything, raw bucket parts ]
+
+                    ReportNode.Object
+                        [ "definition", ReportNode.Text "per token kind: agents + orchestrators + unattributed equals the global deduplicated sum (each observation counted once, whole)"
+                          "observations", ReportNode.Object [ "global", countNode everything.Length; "attributedParts", countNode parts.Length ]
+                          "global", ReportNode.Object(rows |> List.map (fun (name, global', _) -> name, ReportNode.Integer global'))
+                          "parts", ReportNode.Object(rows |> List.map (fun (name, _, part) -> name, ReportNode.Integer part))
+                          "balanced", ReportNode.Flag(everything.Length = parts.Length && rows |> List.forall (fun (_, global', part) -> global' = part)) ]
+
+                ReportNode.Object
+                    [ "bindingSchema", ReportNode.Text AgentAttribution.schema
+                      "bindingSha256", optText binding.Digest
+                      "bindings", countNode binding.Bindings.Length
+                      "observations", countNode deduped.Observations.Length
+                      "duplicateEntriesExcluded", countNode deduped.DuplicateEntries
+                      "crossFileDuplicatesExcluded", countNode deduped.CrossFileDuplicates
+                      "tokens", kinds everything
+                      "estimatedCost", cost everything
+                      "agents",
+                      agentEntries
+                      |> List.map (fun (_, pieces, identity) -> ReportNode.Object(identity @ [ "methods", methods pieces; "tokens", kinds pieces; "estimatedCost", cost pieces ]))
+                      |> ReportNode.List
+                      "orchestrators",
+                      orchestrators
+                      |> List.map (fun (session, pieces) -> ReportNode.Object [ "sessionId", ReportNode.Text session; "tokens", kinds pieces; "estimatedCost", cost pieces ])
+                      |> ReportNode.List
+                      "unattributed",
+                      ReportNode.Object
+                          [ "observations", countNode unattributedPieces.Length
+                            "byReason", methods unattributedPieces
+                            "agentIds", texts (unattributedPieces |> List.choose _.Observation.AgentId)
+                            "tokens", kinds unattributedPieces ]
+                      "requirements",
+                      requirementEntries
+                      |> List.map (fun (_, pieces, identity) -> ReportNode.Object(identity @ [ "tokens", kinds pieces; "estimatedCost", cost pieces ]))
+                      |> ReportNode.List
+                      "summaries",
+                      ReportNode.Object
+                          [ "perAgent", agentEntries |> List.map (fun (agent, pieces, _) -> summary [ "agentId", ReportNode.Text agent ] pieces) |> ReportNode.List
+                            "perOrchestrator", orchestrators |> List.map (fun (session, pieces) -> summary [ "sessionId", ReportNode.Text session ] pieces) |> ReportNode.List
+                            "perVerifiedRequirement", requirementEntries |> List.map (fun (requirement, pieces, _) -> summary [ "requirementId", ReportNode.Text requirement ] pieces) |> ReportNode.List
+                            "unattributed", summary [] unattributedPieces ]
+                      "conservation", conservation
+                      "rules", texts AgentAttribution.rules ]
+
         ReportNode.Object
             [ "schema", ReportNode.Text schema
               "schemaVersion", ReportNode.Integer schemaVersion
@@ -519,10 +758,24 @@ module ReliabilityReport =
                      | None -> ReportNode.Missing
                      | Some table ->
                          ReportNode.Object
-                             [ "source", ReportNode.Text table.Reference.Source
+                             [ "format", ReportNode.Text table.Format
+                               "source", ReportNode.Text table.Reference.Source
                                "version", ReportNode.Text table.Reference.Version
                                "effectiveDate", optText table.Reference.EffectiveDate
-                               "currency", ReportNode.Text table.Currency ])
+                               "currency", ReportNode.Text table.Currency
+                               "entries",
+                               table.Entries
+                               |> List.sortWith (fun a b -> String.CompareOrdinal(PriceSchedule.entryKey a, PriceSchedule.entryKey b))
+                               |> List.map (fun entry ->
+                                   ReportNode.Object
+                                       [ "key", ReportNode.Text(PriceSchedule.entryKey entry)
+                                         "provider", optText entry.Provider
+                                         "model", ReportNode.Text entry.Model
+                                         "effectiveFrom", ReportNode.Text(stamp entry.EffectiveFrom)
+                                         "effectiveTo", optText (entry.EffectiveTo |> Option.map stamp)
+                                         "sourceUrl", optText entry.SourceUrl
+                                         "retrievedAt", optText entry.RetrievedAt ])
+                               |> ReportNode.List ])
                     "transcripts",
                     input.Sources
                     |> List.sortWith (fun a b -> String.CompareOrdinal(a.Digest, b.Digest))
@@ -535,12 +788,14 @@ module ReliabilityReport =
                               "usageEntries", countNode source.UsageEntries
                               "malformedLines", countNode source.MalformedLines
                               "unidentifiedUsageEntries", countNode source.UnidentifiedUsageEntries
+                              "echoedUsageEntries", countNode source.EchoedUsageEntries
                               "counterResets", countNode source.CounterResets ])
                     |> ReportNode.List ]
               "usage",
               ReportNode.Object
                   [ "observations", countNode deduped.Observations.Length
                     "duplicateEntriesExcluded", countNode deduped.DuplicateEntries
+                    "crossFileDuplicatesExcluded", countNode deduped.CrossFileDuplicates
                     "conflictingObservationIds", texts deduped.ConflictingIds
                     "attributionMethods", ReportNode.Object methodCounts
                     "supersededRecordObservations", texts (superseded |> List.map (fun (execution, _) -> execution.ExecutionId))
@@ -588,7 +843,8 @@ module ReliabilityReport =
               "executions", texts (executions |> List.map _.ExecutionId)
               "workItems", ReportNode.List workItems
               "requirements", ReportNode.List requirements
-              "allocationRules", texts allocationRules ]
+              "allocationRules", texts allocationRules
+              "agentAttribution", agentAttribution ]
 
     /// Canonical JSON: object keys sorted ordinally, arrays in the order the
     /// report built them (already sorted), two-space indentation, `\n` line

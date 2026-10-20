@@ -28,7 +28,8 @@ module PraxisCli =
           "ROS_TELEMETRY_SESSION_ID"
           "ROS_TELEMETRY_CONVERSATION_ID"
           "ROS_TELEMETRY_RUN_ID"
-          "ROS_BASE_REF" ]
+          "ROS_BASE_REF"
+          "PRAXIS_AGENT_INSTANCE_ID" ]
 
     type Result =
         { ExitCode: int

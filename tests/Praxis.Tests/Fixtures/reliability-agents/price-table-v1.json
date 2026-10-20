@@ -1,0 +1,57 @@
+{
+  "schema": "praxis.price-table/1",
+  "tableVersion": "fixture-2026-10-20",
+  "entries": [
+    {
+      "provider": "anthropic",
+      "model": "claude-test-1",
+      "effectiveFrom": "2026-09-01",
+      "effectiveTo": "2026-10-01",
+      "currency": "USD",
+      "unit": "per-million-tokens",
+      "input": 100,
+      "output": 100,
+      "cacheRead": 100,
+      "cacheWrite5m": 100,
+      "cacheWrite1h": 100,
+      "source": {
+        "url": "https://example.invalid/test-fixture-prices-not-real",
+        "retrievedAt": "2026-10-20"
+      }
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-test-1",
+      "effectiveFrom": "2026-10-01",
+      "effectiveTo": null,
+      "currency": "USD",
+      "unit": "per-million-tokens",
+      "input": 1,
+      "output": 2,
+      "cacheRead": 0.1,
+      "cacheWrite5m": 1.25,
+      "cacheWrite1h": 2,
+      "source": {
+        "url": "https://example.invalid/test-fixture-prices-not-real",
+        "retrievedAt": "2026-10-20"
+      }
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-test-2",
+      "effectiveFrom": "2026-11-01",
+      "effectiveTo": null,
+      "currency": "USD",
+      "unit": "per-million-tokens",
+      "input": 1,
+      "output": 1,
+      "cacheRead": 1,
+      "cacheWrite5m": 1,
+      "cacheWrite1h": 1,
+      "source": {
+        "url": "https://example.invalid/test-fixture-prices-not-real",
+        "retrievedAt": "2026-10-20"
+      }
+    }
+  ]
+}

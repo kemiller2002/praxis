@@ -1,0 +1,25 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-046652470c22465c",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-20-REL-001-results-follow-ups.md",
+    "fileName": "2026-10-20-REL-001-results-follow-ups.md",
+    "sha256": "e9e80c685b5fa8be5d95c314f39ab245388048cfb7eef2d138cd060ee25bdf5a",
+    "size": 6078
+  },
+  "claimedAt": "2026-10-20T07:48:44.112Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}

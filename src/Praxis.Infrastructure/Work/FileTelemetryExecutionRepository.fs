@@ -467,6 +467,17 @@ module FileTelemetryExecutionRepository =
 
                                 record["identity"] <- identityNode
 
+                                // I7 (PRAXIS-REL-010): the provider session and the agent
+                                // instance, additive and only when the host sets them, so
+                                // usage of sub-agents sharing one session is attributable.
+                                let providerSession = Praxis.Domain.Execution.ProviderSession.fromLookup environmentVariable
+
+                                if not (Praxis.Domain.Execution.ProviderSession.isEmpty providerSession) then
+                                    let providerNode = JsonObject()
+                                    providerNode["sessionId"] <- optionalString providerSession.SessionId
+                                    providerNode["agentInstanceId"] <- optionalString providerSession.AgentInstanceId
+                                    record["provider"] <- providerNode
+
                                 RemoteIdentity.readExecutor environmentVariable
                                 |> Option.iter (fun facts -> record["executor"] <- executorNode facts)
 

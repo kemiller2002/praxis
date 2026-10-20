@@ -52,6 +52,9 @@ type ClaimHolder =
 type VerifiedCompletion =
     { PacketDigest: string
       ReceiptDigest: string
+      /// The digests of the evidence the completion verified: receipt
+      /// identities in attested mode, result digests otherwise.
+      EvidenceDigests: string list
       Commit: string
       VerificationRevision: string
       RequirementIds: string list

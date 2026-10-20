@@ -54,7 +54,9 @@ module ValidationEvidenceTests =
           RequiredValidationNames = [ "unit-tests" ]
           RequiredEvidenceIds = [ "EV-TESTS" ]
           ExpectedCommit = Some commit
-          ExpectedVerificationRevision = Some commit }
+          ExpectedVerificationRevision = Some commit 
+          TrustedVerifierKeys = []
+          ValidationPolicyDigest = None }
 
     /// The host input bound to a contract ready for it (REL-GATE-002).
     let private input = OrdoTestContracts.bind hostInput
@@ -334,7 +336,8 @@ module ValidationEvidenceTests =
 
               match ValidationRuns.run ports (ValidationEvidenceFixtures.runRequest claim "unit-tests" "EV-TESTS") with
               | ValidationRunOutcome.Observed(result, written) ->
-                  Assert.equal $".ros/claims/{item}/validations/EV-TESTS/1-aaaaaaaaaaaa-20261019T120000000Z.json" written.ResultPath
+                  // I8: results live in the out-of-tree store, never in the tracked tree.
+                  Assert.equal (Path.Combine(TransientStore.validations root, item, "EV-TESTS", "1-aaaaaaaaaaaa-20261019T120000000Z.json")) written.ResultPath
                   let bytes = File.ReadAllBytes(Path.Combine(root, written.ResultPath))
                   Assert.equal (CompletionGate.sha256 bytes) written.ResultDigest
                   Assert.equal (CompletionGate.sha256 (File.ReadAllBytes(Path.Combine(root, written.OutputPath)))) result.OutputSha256
@@ -393,10 +396,11 @@ module ValidationEvidenceTests =
               Assert.equal "passed" (document["status"].GetValue<string>())
               Assert.equal head ((at [ "result"; "revision" ] passed.Out).GetValue<string>())
               let resultPath = document["resultPath"].GetValue<string>()
-              Assert.isTrue (resultPath.StartsWith $".ros/claims/{item}/validations/EV-TESTS/1-{head.Substring(0, 12)}-") resultPath
+              Assert.isTrue (resultPath.StartsWith(Path.Combine(root, ".git", "praxis", "validations", item, "EV-TESTS", $"1-{head.Substring(0, 12)}-"))) resultPath
+              Assert.equal "" (CliHarness.git root [ "status"; "--porcelain" ])
               let digest = CompletionGate.sha256 (File.ReadAllBytes(Path.Combine(root, resultPath)))
               Assert.equal digest (document["resultDigest"].GetValue<string>())
-              let events = CliHarness.read root ".ros/events/events.jsonl"
+              let events = File.ReadAllText(TransientStore.events root)
               Assert.isTrue (events.Contains "\"type\":\"work.validation.observed\"" && events.Contains digest) events
               let failed = validate [ "false" ]
               Assert.equal 3 failed.Exit
@@ -417,13 +421,15 @@ module ValidationEvidenceTests =
               | None -> eprintfn "SKIP validation evidence cli: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
               | Some dll ->
                   // The ready contract, not the authority, supplies the contract identity (REL-GATE-002).
-                  CliHarness.write root "contract.json" (OrdoTestContracts.contract [ item ] [])
-                  CliHarness.write root "authority.json" $"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"]}}"
+                  // Host inputs live outside the candidate tree: a completion needs a clean worktree (I8).
+                  let host = CliHarness.temporaryDirectory "praxis-validate-host"
+                  CliHarness.write host "contract.json" (OrdoTestContracts.contract [ item ] [])
+                  CliHarness.write host "authority.json" $"{{\"OrdoContractVersion\":\"\",\"OrdoContractDigest\":\"\",\"SupportedOrdoContractVersions\":[\"ecir/1\"],\"RequiredRequirementIds\":[\"{item}\"],\"RequiredValidationNames\":[\"unit-tests\"],\"RequiredEvidenceIds\":[\"EV-TESTS\"]}}"
 
                   let complete evidence =
                       CliHarness.rosWith root (("PRAXIS_DOKIMOS_EXECUTABLE", dll) :: identity)
                           [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-a"; "--generation"; "1"; "--commit"; head; "--verification-revision"; head
-                            "--authority"; "authority.json"; "--ordo-contract"; "contract.json"; "--requirement"; item
+                            "--authority"; Path.Combine(host, "authority.json"); "--ordo-contract"; Path.Combine(host, "contract.json"); "--requirement"; item
                             "--validation"; "unit-tests=passed:EV-TESTS"; "--evidence"; $"EV-TESTS={evidence}" ]
 
                   let failedPath = (at [ "resultPath" ] failed.Out).GetValue<string>()

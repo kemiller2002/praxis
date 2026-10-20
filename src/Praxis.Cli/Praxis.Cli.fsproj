@@ -73,7 +73,10 @@
     <Compile Include="TutelaCommands.fs" />
     <Compile Include="TelemetryUsageCommands.fs" />
     <Compile Include="OrdoContractCommands.fs" />
+    <Compile Include="ClaimArguments.fs" />
     <Compile Include="WorkValidationCommands.fs" />
+    <Compile Include="WorkCompletionCommands.fs" />
+    <Compile Include="VerifierCommands.fs" />
     <Compile Include="WorkClaimCommands.fs" />
     <Compile Include="TelemetryReliabilityCommands.fs" />
     <Compile Include="Program.fs" />

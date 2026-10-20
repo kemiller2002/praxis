@@ -1,6 +1,6 @@
 # Atomic work ownership and verified completion
 
-Implements `RQ-ROS-2026-A032` (PRX-REL-001..007, 010, 011). Praxis gives every
+Implements `RQ-ROS-2026-A032` (PRX-REL-001..007, 010, 011; PRAXIS-REL-009, 011, 012). Praxis gives every
 work item an optional **claim**: one holder at a time, a lease, a fencing
 generation and a record revision. Completion through a claim is accepted only
 when the independent Dokimos verifier returns a receipt bound to exactly the
@@ -55,7 +55,8 @@ revision is still `expected` (`None`: no claim may exist yet).
 
 - **In-memory** (`InMemoryWorkClaimStore`): deterministic tests.
 - **Local file** (`--store local`, default; `FileWorkClaimStore`): each
-  revision is a directory `.ros/claims/<ID>/<revision>/claim.json`, staged
+  revision is a directory `<store>/claims/<ID>/<revision>/claim.json` in the
+  out-of-tree store (below), staged
   privately and published by an atomic directory rename. Revisions are dense,
   so exactly one writer can publish revision N+1. Single host only.
 - **Git ref** (`--store git [--remote origin]`; `GitRefWorkClaimStore`): the
@@ -63,6 +64,40 @@ revision is still `expected` (`None`: no claim may exist yet).
   published with `git push --force-with-lease=<ref>:<observed-oid>` (empty
   oid: the ref must not exist). The remote's ref update is the linearization
   point, so agents on different hosts never rely on a shared filesystem lock.
+
+## Out-of-tree transient state (I8, PRAXIS-REL-011)
+
+REL-001 run-01 found verified completions that left `.ros/` claim and
+validation state dirty (4 of 6 runs) or moved HEAD past the verified commit
+(2 of 6). Transient protocol state now lives in **the store**,
+`$(git rev-parse --git-common-dir)/praxis/`, which Git never tracks and every
+worktree of the repository shares:
+
+| Path | Holds |
+| --- | --- |
+| `claims/<ID>/<revision>/claim.json` | the local claim store |
+| `validations/<ID>/<EVIDENCE-ID>/…` | `validate-run` results and output |
+| `receipts/<ID>/<generation>-<commit12>-<receiptId>.json` | verifier receipts (DSSE envelopes, exact bytes) and `.output.txt` |
+| `events.jsonl` | claim-protocol events (I1), idempotent by `eventId`, behind a lock file |
+| `cache/ordo/<digest-hex>.json` | admitted Ordo contracts, canonical form, keyed by digest |
+
+A directory that is not yet a Git repository uses `<root>/.git/praxis/`,
+which is where `git init` puts the common directory, so initializing later
+loses nothing. The `--store git` claim refs are unchanged.
+
+**Legacy `.ros/claims`.** A claim that exists only in the pre-3.17 tracked
+store is never read as current and never silently lost: every command that
+reads it (and `work claims`) is refused with `PRX.CLAIM.LEGACY_STORE`
+(exit 3) until `praxis work claims migrate [--keep-legacy]` copies every
+revision and its validation results into the store, reads the latest
+revision back, and only then removes the legacy directory. An item present in
+both stores with diverging revisions is reported as `conflict` and left
+untouched.
+
+Only the **canonical completion event** is tracked (see "Clean completion
+identity"). To report on claim-protocol events, pass the store log to
+`telemetry reliability-report --events "$(git rev-parse --git-common-dir)/praxis/events.jsonl"`;
+the default tracked log holds the completion events only.
 
 ## Commands
 
@@ -79,10 +114,17 @@ praxis work expire --id ID
 praxis work claims [ID]
 praxis work validate-run --id ID --token T --generation N --validation NAME --evidence-id EVIDENCE-ID \
   [--timeout-seconds 1800] -- COMMAND [ARGUMENT...]
-praxis work complete-verified --id ID --token T --generation N \
-  --commit SHA40|SHA64 --verification-revision SHA --authority authority.json \
-  --requirement ID ... --validation NAME=passed:EVIDENCE-ID ... \
-  --evidence EVIDENCE-ID=RESULT.json[@sha256:HEX] ... [--telemetry-execution EXE-ID] [--timeout-seconds 120]
+praxis work verify --id ID --token T [--timeout-seconds 3600] [--store local|git] [--remote NAME]   # agent; PRAXIS_VERIFIER_SOCKET
+praxis work complete-verified --id ID --token T                        # PRAXIS_COMPLETION_AUTHORITY, PRAXIS_ORDO_CONTRACT
+  [--authority FILE] [--ordo-contract FILE] [--expected-ordo-digest sha256:HEX] [--claimant NAME] [--generation N]
+  [--commit SHA] [--verification-revision SHA] [--requirement ID]* [--decision ID]* [--conflict-resolution ID]*
+  [--validation NAME=STATUS:EVIDENCE-ID]* [--evidence EVIDENCE-ID=FILE[@sha256:HEX]]* [--telemetry-execution EXE-ID]*
+  [--timeout-seconds 120]
+praxis work completion-identity --id ID
+praxis work claims migrate [--keep-legacy]
+praxis verifier serve --socket PATH --policy FILE --contract-digest sha256:HEX [--key-file PEM]   # host
+praxis verifier run --repo PATH --commit SHA --work-item ID --claimant NAME --generation N \
+  --policy FILE --contract-digest sha256:HEX --key-file PEM --out FILE                             # host or CI
 ```
 
 `authority.json` is Praxis's minimal authoritative input (until Ordo
@@ -93,8 +135,14 @@ admission is wired in):
   "SupportedOrdoContractVersions": ["..."],
   "RequiredRequirementIds": [], "RequiredDecisionIds": [], "RequiredConflictResolutionIds": [],
   "RequiredValidationNames": [], "RequiredEvidenceIds": [],
-  "ExpectedCommit": "<optional; default Git HEAD>", "ExpectedVerificationRevision": "<optional; default Git HEAD>" }
+  "ExpectedCommit": "<optional; default Git HEAD>", "ExpectedVerificationRevision": "<optional; default Git HEAD>",
+  "TrustedVerifierKeys": [ { "KeyId": "sha256:<hex>", "Algorithm": "ecdsa-p256-sha256", "PublicKey": "<base64 SPKI DER>" } ],
+  "ValidationPolicyDigest": "sha256:<64 hex>" }
 ```
+
+`TrustedVerifierKeys` and `ValidationPolicyDigest` (I6) are optional. A
+non-empty `TrustedVerifierKeys` switches the item to **attested mode**
+(below). Without it, behaviour is the non-attested `validate-run` path.
 
 ## Evidence model (PRAXIS-REL-005, REL-GATE-001)
 
@@ -110,9 +158,9 @@ failing run, or no test run at all, completed work. Now:
    (untracked files are ignored). It runs the command as an argument list
    (never through a shell) in the repository root with the timeout (default
    1800 s), and writes:
-   - `.ros/claims/<ID>/validations/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.output.txt`
+   - `<store>/validations/<ID>/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.output.txt`
      (stdout followed by stderr), and
-   - `.ros/claims/<ID>/validations/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.json`,
+   - `<store>/validations/<ID>/<EVIDENCE-ID>/<generation>-<rev12>-<observedAt>.json`,
      a `praxis.validation-result/1` document with members, in this order:
      `schemaVersion, workItemId, claimant, claimToken, generation,
      validation, evidenceId, revision, observedAt, startedAt, status,
@@ -140,9 +188,10 @@ failing run, or no test run at all, completed work. Now:
    | `PRX.COMPLETION.VALIDATION_UNPROVEN` | all submitted evidence is valid but a required validation has none |
 
 3. **Invariant: passing evidence can only come from
-   `ValidatedEvidence.establish`.** `ValidatedEvidence`
-   (`src/Praxis.Domain/Work/ValidationResult.fs`) is a sealed type with a
-   private constructor; `establish` is its only constructor and returns
+   `ValidatedEvidence.establish`** (non-attested mode) **or
+   `ValidatedEvidence.attest`** (attested mode, below). `ValidatedEvidence`
+   (`src/Praxis.Domain/Work/VerificationReceipt.fs`) is a sealed type with a
+   private constructor; `establish` returns
    the codes above on its error side. `CompletionGate.preflight` returns
    `Result<ValidatedEvidence list, CompletionFinding list>`;
    `CompletionGate.packet` and `CompletionGate.authority` accept only
@@ -164,13 +213,117 @@ failing run, or no test run at all, completed work. Now:
    packet/1 and authority/1 schema versions are unchanged: the members are
    optional and additive in Dokimos 0.6.0.
 
-**Remaining risk.** The event log and result files are repository state. A
-principal with write access to that state can still forge a result
-document *and* a matching `work.validation.observed` event; Praxis
-detects inconsistency between them, not collusion. Results are as honest as
-the host that ran `validate-run`. CI-produced evidence (results run and
-signed by a CI identity the agent cannot write as) is the next hardening
-step.
+**Remaining risk in non-attested mode.** The event log and result files are
+repository state. A principal with write access to that state can still
+forge a result document *and* a matching `work.validation.observed` event
+(REL-001 case C3b); Praxis detects inconsistency between them, not
+collusion. Attested mode closes this.
+
+## Attested evidence and the trusted verifier (PRAXIS-REL-009, F1)
+
+In attested mode the only completion evidence is a **verification
+receipt** (`echelon.verification-receipt/1`, I4) signed by a verifier whose
+key the agent cannot use. A validation result, a forged event, or any file
+the agent can write is refused (`PRX.COMPLETION.RECEIPT_MISSING`).
+
+**Verifier engine** (`TrustedVerifierEngine`, shared by `serve` and `run`):
+
+1. Re-reads the claim from the store named in the request (the repository's
+   local claim store, or the Git-ref store on the named remote) and requires
+   the stated claimant and generation to be the current, unexpired holder
+   (`PRX.VERIFIER.STALE_CLAIM`). The request never carries the claim token.
+2. `git clone --no-hardlinks` into its own temporary directory and a detached
+   checkout of the commit (`PRX.VERIFIER.COMMIT_UNAVAILABLE`).
+3. Checks every protected path of the host-owned policy (I5) at that commit:
+   it must be a regular tracked file whose SHA-256 equals the pin. Otherwise
+   it runs **nothing** and signs one `unavailable` receipt per validation,
+   with `PRX.VERIFIER.PROTECTED_PATH` diagnostics in the response.
+4. Runs each policy validation in the clone, as an argument list (no shell)
+   with its timeout, and signs one receipt per validation: DSSE v1 PAE,
+   ECDSA P-256 / SHA-256, IEEE-P1363 (64-byte) signature, BCL only.
+
+**Host, long-running:** `praxis verifier serve` generates the key at start-up
+(or imports `--key-file` PEM), holds it only in memory, reads the policy
+once, prints one line `{ "keyId", "publicKey", "policyDigest" }`, and serves
+newline-delimited JSON on a Unix domain socket, one request per connection.
+The host copies `keyId`/`publicKey` into `TrustedVerifierKeys` and
+`policyDigest` into `ValidationPolicyDigest` of the authority.
+**One-shot:** `praxis verifier run … --key-file PEM --out FILE` is the same
+engine (CI, with the key from a secret).
+
+**Agent client:** `praxis work verify --id ID --token T` derives the
+claimant and generation from the claim store and the token, refuses a dirty
+worktree (`PRX.VALIDATION.DIRTY_WORKTREE`, `git status --porcelain`, untracked
+files included), sends `{ repoPath, workItemId, claimant, fencingGeneration,
+commit = HEAD }` to `PRAXIS_VERIFIER_SOCKET`, refuses a response bound to
+anything else (`PRX.VERIFIER.RESPONSE_MISMATCH`), stores the envelopes in
+`<store>/receipts/<ID>/`, and prints the receipt digests, statuses and
+durations (exit 0 when every receipt passed, 3 otherwise).
+
+**Completion in attested mode.** `ValidatedEvidence.attest` is the only
+constructor of attested evidence. It checks, in order, and maps each failure
+to its own code (the Dokimos code in brackets):
+
+| Code | When |
+| --- | --- |
+| `PRX.COMPLETION.RECEIPT_MISSING` [`EVIDENCE_UNATTESTED`] | the evidence is not a DSSE envelope (a validation result, a plain file) |
+| `PRX.COMPLETION.RECEIPT_MALFORMED` [`ATTESTATION_MALFORMED`] | the envelope, its `payloadType`, or the (signed) payload cannot be parsed |
+| `PRX.COMPLETION.RECEIPT_UNTRUSTED_KEY` [`ATTESTATION_UNTRUSTED_KEY`] | no signature names a trusted `KeyId` |
+| `PRX.COMPLETION.RECEIPT_INVALID_SIGNATURE` [`ATTESTATION_INVALID_SIGNATURE`] | no signature verifies under the trusted key it names (tampered payload, other key) |
+| `PRX.COMPLETION.RECEIPT_BINDING_MISMATCH` [`ATTESTATION_BINDING_MISMATCH`] | `workItemId`, `claimant`, `fencingGeneration`, `commit`, `ordoContractDigest`, `validationPolicyDigest`, `validation`, `evidenceId` or `verifier.keyId` differ from the authority, claim or citation; or the authority pins no `ValidationPolicyDigest` |
+| `PRX.COMPLETION.RECEIPT_NOT_PASSED` [`ATTESTATION_NOT_PASSED`] | `status` is `failed` or `unavailable` |
+| `PRX.COMPLETION.RECEIPT_STALE` [`ATTESTATION_STALE`] | `observedAt` is outside `[ClaimAcquiredAt, LeaseExpiresAt)` or after evaluation |
+
+The payload is only read after its signature verified, over the exact
+payload bytes (never re-serialized). Signed members beyond I4 are tolerated
+and bind nothing, as in Dokimos 0.7.0. Praxis also binds `claimant` and
+`verifier.keyId`, which Dokimos does not. The observation `Digest` is the
+receipt identity (`sha256:` over the payload bytes); the authority carries
+each receipt as the observation's `Attestation`, with `ObservedAt` and
+`Validation` from the receipt, plus `TrustedVerifierKeys` and
+`ValidationPolicyDigest`. Dokimos re-verifies everything independently.
+Attested mode needs a Dokimos that provides `completion.verify-attested/1`
+(0.7.0 or later): Praxis probes `dokimos version` first and otherwise refuses
+with `PRX.COMPLETION.VERIFIER_ATTESTATION_UNSUPPORTED` rather than send an
+authority Dokimos 0.6.0 would reject or ignore.
+
+**Trust boundary.** Receipts are exactly as trustworthy as the place the
+signing key lives and the policy and authority they are checked against.
+
+- The production trust root is a key available **only to the host or CI**:
+  the in-memory key of a `verifier serve` process the agent does not control,
+  or a GitHub Actions secret (or an environment restricted to the protected
+  default branch) read by `verifier run --key-file`. Never give an
+  implementation agent the key file, the secret, or write access to the
+  verifier process.
+- The validation policy and the completion authority (trusted keys, policy
+  digest, contract pin) come **only from the protected default branch** or
+  the host, never from the candidate tree or a branch the agent can push.
+  The policy is read from the host and pinned by digest; protected paths pin
+  the oracle (acceptance tests) so the agent cannot weaken it.
+- The verifier runs the candidate's code (that is what a test run is). Run it
+  as a separate OS user, in a container or a CI job, so candidate code cannot
+  read the key from the verifier's memory or environment.
+
+**Limits, stated honestly.**
+
+- A root-privileged process on the verifier host (or the same OS user as the
+  verifier) can read the private key from process memory and sign anything.
+  Attested mode moves trust from "anyone with repository write access" to
+  "whoever controls the verifier host or CI secret"; it does not remove it.
+- The verifier re-reads the claim through the store the agent claimed with:
+  `work verify [--store git] [--remote NAME]` sends the choice in the request
+  (`"store": "local"|"git"`, `"remote"`; absent means local), and the engine
+  reads `refs/praxis/claims/<ID>` from that remote, fetched into the
+  agent's repository, exactly as the Git-ref store does. The remote is the one
+  configured in the agent's clone, so — like the local store, which the agent
+  can also write — the claim re-read is a holder/generation consistency check,
+  not a trust root; the trust root is the key, the policy and the authority.
+- The socket path's permissions are the host's to restrict; Praxis does not
+  authenticate the caller. Any local caller can ask for receipts, but a
+  receipt binds the current holder, generation and commit, so it only helps
+  the actual holder.
+- Validations inherit the verifier's environment; keep secrets out of it.
 
 ## Completion gate
 
@@ -198,6 +351,68 @@ receipt all fail closed. A crash after verification and before the final CAS
 leaves `awaiting-verification`; the same holder retrying the same packet
 completes exactly once, and if the lease expires first, a new claimant
 recovers at generation + 1 and the old owner is refused.
+
+## Clean completion identity (PRAXIS-REL-011, F3)
+
+`complete-verified` runs, in this order:
+
+1. Requires HEAD to equal every cited receipt's (or result's) commit
+   (`PRX.COMPLETION.HEAD_MISMATCH`) and `git status --porcelain` to be empty,
+   untracked files included (`PRX.COMPLETION.DIRTY_WORKTREE`). A source change
+   after the receipt, committed or not, therefore fails closed.
+2. Verifies with Dokimos (the gate above).
+3. Appends the canonical tracked `work.completion.verified` event to
+   `.ros/events/events.jsonl`, carrying `verifiedCommit`, `receiptDigests`
+   and `packetDigest` (never the claim token).
+4. Makes a **metadata-only commit** whose parent is the verified commit and
+   which touches only `.ros/events/events.jsonl` (checked after the commit).
+5. Outputs `verifiedCommit` and `metadataCommit`; the worktree ends clean.
+6. If the commit cannot be made, restores the tracked files and reports
+   `PRX.COMPLETION.METADATA_COMMIT_FAILED`. The claim is already completed,
+   so running the same command again replays without re-verifying and
+   retries the publication (idempotent by event ID).
+
+`praxis work completion-identity --id ID` checks later that
+`git diff --name-only verifiedCommit..HEAD` touches only `.ros/`
+(`consistent`, exit 0; `PRX.COMPLETION.IDENTITY_VIOLATED`, exit 3, listing
+the source paths).
+
+## Derived completion (PRAXIS-REL-012, F4)
+
+`praxis work complete-verified --id ID --token TOKEN` is the whole command
+when `PRAXIS_COMPLETION_AUTHORITY` and `PRAXIS_ORDO_CONTRACT` are set:
+
+- claimant and generation come from the claim store (the token must be the
+  holder's);
+- commit and verification revision from the selected evidence (which must
+  equal HEAD);
+- the authority from `PRAXIS_COMPLETION_AUTHORITY`, the contract from
+  `PRAXIS_ORDO_CONTRACT` plus the authority's digest pin;
+- requirement IDs from the authority, else the contract; decisions and
+  conflict resolutions from the authority;
+- validations and evidence from the latest receipt per evidence ID for this
+  generation (attested mode), or the latest `validate-run` result per
+  evidence ID (non-attested mode).
+
+Explicit flags remain accepted, but each must equal the derived value
+(`PRX.COMPLETION.ARGUMENT_MISMATCH`): `--claimant`, `--generation`,
+`--commit`, `--verification-revision`, `--ordo-contract-version`,
+`--ordo-contract-digest`, the `--requirement`, `--decision` and
+`--conflict-resolution` sets, `--authority` / `--ordo-contract` against the
+environment, and `--validation` (names and evidence IDs) against the latest
+evidence. Explicit `--evidence` selects which stored results or receipts are
+cited instead of the latest; each is still verified by the gate, and
+`--validation` then describes them.
+
+**Contract cache.** An admitted contract's canonical form is stored under
+`<store>/cache/ordo/<digest-hex>.json`. When the authority pins a digest the
+cache holds, admission uses that entry and never reads or admits the source
+contract again (`admissionCache: "hit"`). The entry is content-addressed and
+re-admitted under the same pin, so a tampered entry can only fail as stale;
+REL-GATE-002 readiness is always recomputed.
+
+The output reports `timings` in milliseconds for `claim`, `admission`,
+`receipts`, `dokimos` and `metadataCommit`, and `admissionCache`.
 
 ## Ordo contract binding (PRX-REL-008)
 
@@ -253,12 +468,21 @@ refused, exit 1). Without `--requirement` it is admission only.
 `VERIFIER_UNAVAILABLE`, `VERIFIER_TIMEOUT`, `VERIFIER_FAILED`,
 `VERIFIER_INPUT_REJECTED`, `RECEIPT_UNPARSABLE`, `RECEIPT_MISMATCH`,
 `VERIFICATION_REJECTED` (followed by the receipt's `DOK.COMPLETION.*` codes
-verbatim), `CONFLICT`. `PRX.VALIDATION.DIRTY_WORKTREE` (`validate-run`).
+verbatim), `CONFLICT`, `RECEIPT_MISSING`, `RECEIPT_UNTRUSTED_KEY`,
+`RECEIPT_INVALID_SIGNATURE`, `RECEIPT_MALFORMED`, `RECEIPT_BINDING_MISMATCH`,
+`RECEIPT_NOT_PASSED`, `RECEIPT_STALE`, `VERIFIER_ATTESTATION_UNSUPPORTED`,
+`ARGUMENT_MISMATCH`, `DIRTY_WORKTREE`, `HEAD_MISMATCH`,
+`METADATA_COMMIT_FAILED`, `IDENTITY_VIOLATED`, `NOT_COMPLETED`.
+`PRX.VALIDATION.DIRTY_WORKTREE` (`validate-run`, `verify`).
+`PRX.CLAIM.LEGACY_STORE`. `PRX.VERIFIER.STALE_CLAIM`, `INVALID_REQUEST`,
+`COMMIT_UNAVAILABLE`, `UNAVAILABLE`, `RESPONSE_MISMATCH`, `PROTECTED_PATH`.
 Each refusal says how to refresh and replan.
 
 ## Events (I1)
 
-Appended to `.ros/events/events.jsonl` with the standard work-event envelope;
+Appended to the out-of-tree `<store>/events.jsonl` (I8) with the standard
+work-event envelope (the tracked `.ros/events/events.jsonl` receives only the
+canonical completion event of each metadata-only commit);
 an identical event (same content, same `eventId`) is recorded once:
 `work.claim.acquired`, `work.claim.rejected`, `work.claim.renewed`,
 `work.claim.released`, `work.completion.rejected`, `work.completion.verified`,
@@ -287,3 +511,12 @@ claim with its own evidence (`WorkClaims.acquireEach`); no ownership is shared.
 | 9 | Token usage present and attributed | Deduped per observation, attributed by ledger or session window | `reliability:` report tests |
 | 10 | Independent requirements concurrently | Each item claimed by its own agent in parallel, all at generation 1, no rejection events | `reliability pipeline: scenario 10`; `work claims: batched slices keep independent claims and evidence` |
 | 11 | Failing, unrelated, stale or mis-bound evidence (REL-GATE-001) | `EVIDENCE_UNRECOGNIZED` / `EVIDENCE_NOT_PASSED` / `EVIDENCE_STALE` / `EVIDENCE_VALIDATION_MISMATCH` before Dokimos; Dokimos 0.6.0 independently refuses such observations on the wire | `reliability pipeline: REL-GATE-001 ...`; `validation evidence:` tests |
+| 12 | C3b: forged result plus forged validation event (attested mode) | `RECEIPT_MISSING`; derived evidence finds no receipt (`EVIDENCE_MISSING`); nothing reaches Dokimos | `attested completion: C3b reproduced ...` |
+| 13 | Self-signed receipt; receipt claiming a trusted keyid | `RECEIPT_UNTRUSTED_KEY`; `RECEIPT_INVALID_SIGNATURE` | `attested completion: a self-signed receipt ...` |
+| 14 | Tampered payload or malformed envelope | `RECEIPT_INVALID_SIGNATURE`; `RECEIPT_MALFORMED` | `attested completion: a tampered payload ...` |
+| 15 | Receipt for another item, generation, commit, contract, policy, validation or evidence ID; stale | `RECEIPT_BINDING_MISMATCH`; `RECEIPT_STALE`; `RECEIPT_NOT_PASSED` | `attested completion: a genuine receipt for another ...` |
+| 16 | Genuine failing receipt; protected-path change | `RECEIPT_NOT_PASSED`; `unavailable` receipts, nothing run | `attested completion: a genuine failing receipt ...`, `... protected-path change ...` |
+| 17 | Genuine passing receipt | Completed; worktree clean; HEAD^ = `verifiedCommit`; diff limited to `.ros/`; replay idempotent; cache hit | `attested completion: a genuine passing receipt ...`; real Dokimos 0.7.0: `attested completion: end to end ...` |
+| 18 | Dirty worktree, moved HEAD, source change after the receipt | `DIRTY_WORKTREE`, `HEAD_MISMATCH` | `attested completion: a dirty worktree ...` |
+| 19 | Receipt replayed after re-claim; stale holder at the verifier | `RECEIPT_BINDING_MISMATCH` + `RECEIPT_STALE`; `PRX.VERIFIER.STALE_CLAIM` | `attested completion: a receipt replayed after re-claim ...` |
+| 20 | `complete-verified --id --token` alone | Verified, metadata commit, `timings` | `attested completion: F4 end to end ...` |
