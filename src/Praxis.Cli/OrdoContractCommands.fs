@@ -7,13 +7,16 @@ open Praxis.Domain.Ordo
 open Praxis.Infrastructure.Ordo
 
 /// `praxis ordo contract check`: admit an Ordo constructibility contract
-/// before any agent execution (PRX-REL-008, interface I3). Exit 0 admitted,
-/// 1 refused (stable ORDO.CONTRACT.* codes), 2 usage. Read-only; admission
-/// is never execution authority.
+/// before any agent execution (PRX-REL-008, interface I3). With
+/// `--requirement`, also report the readiness `work complete-verified` will
+/// require for those requirements under the `--authorized-decision` set the
+/// host authority grants (REL-GATE-002). Exit 0 admitted (ready), 1 refused
+/// (stable ORDO.CONTRACT.* codes), 2 usage. Read-only; neither admission nor
+/// readiness is execution authority.
 [<RequireQualifiedAccess>]
 module OrdoContractCommands =
     let usage =
-        "ordo contract check --contract FILE [--expected-digest sha256:HEX] [--supported-version VERSION]* [--json]"
+        "ordo contract check --contract FILE [--expected-digest sha256:HEX] [--supported-version VERSION]* [--requirement KEY]* [--authorized-decision ID]* [--json]"
 
     let rec private option (name: string) (arguments: string list) =
         match arguments with
@@ -49,6 +52,19 @@ module OrdoContractCommands =
             strings writer "decisionIds" admitted.DecisionIds
             strings writer "conflictResolutionIds" admitted.ConflictResolutionIds)
 
+    let renderReady (ready: OrdoContractAdmission.ReadyScope) =
+        let view = OrdoContractAdmission.readyScopeView ready
+        render (fun writer ->
+            writer.WriteString("status", "ready")
+            writer.WriteString("version", view.Contract.Version)
+            writer.WriteString("digest", view.Contract.Digest)
+            strings writer "requirementIds" view.RequirementKeys
+            strings writer "requiredRequirementIds" view.RequiredRequirementKeys
+            strings writer "requiredNodeIds" view.RequiredNodeIds
+            strings writer "requiredDecisionIds" view.RequiredDecisionIds
+            strings writer "requiredRationaleIds" view.RequiredRationaleIds
+            strings writer "authorizedDecisionIds" view.AuthorizedDecisionIds)
+
     let renderRefused (diagnostics: OrdoDiagnostic list) =
         render (fun writer ->
             writer.WriteString("status", "refused")
@@ -61,6 +77,13 @@ module OrdoContractCommands =
                 writer.WriteEndObject()
             writer.WriteEndArray())
 
+    let private refuse json diagnostics =
+        if json then printfn "%s" (renderRefused diagnostics)
+        else
+            for (diagnostic: OrdoDiagnostic) in diagnostics do
+                eprintfn "ERROR %s%s %s" diagnostic.Code (diagnostic.Subject |> Option.map (sprintf " [%s]") |> Option.defaultValue "") diagnostic.Message
+        1
+
     let run (root: string) (arguments: string list) =
         match arguments, option "--contract" arguments with
         | "check" :: rest, Some contract ->
@@ -69,17 +92,28 @@ module OrdoContractCommands =
                 match options "--supported-version" rest with
                 | [] -> OrdoContractAdmission.implementedVersions
                 | narrowed -> narrowed
-            match OrdoContractSource.check root contract supported (option "--expected-digest" rest) with
-            | Ok admitted when json -> printfn "%s" (renderAdmitted admitted); 0
-            | Ok admitted ->
-                printfn "Ordo contract admitted: %s %s; %d requirements, %d decisions, %d conflict resolutions. Execution authorization not granted."
-                    admitted.Version admitted.Digest admitted.RequirementIds.Length admitted.DecisionIds.Length admitted.ConflictResolutionIds.Length
-                0
-            | Error diagnostics when json -> printfn "%s" (renderRefused diagnostics); 1
-            | Error diagnostics ->
-                for diagnostic in diagnostics do
-                    eprintfn "ERROR %s%s %s" diagnostic.Code (diagnostic.Subject |> Option.map (sprintf " [%s]") |> Option.defaultValue "") diagnostic.Message
-                1
+            let expected = option "--expected-digest" rest
+            match options "--requirement" rest, options "--authorized-decision" rest with
+            | [], [] ->
+                match OrdoContractSource.check root contract supported expected with
+                | Ok admitted when json -> printfn "%s" (renderAdmitted admitted); 0
+                | Ok admitted ->
+                    printfn "Ordo contract admitted: %s %s; %d requirements, %d decisions, %d conflict resolutions. Execution authorization not granted."
+                        admitted.Version admitted.Digest admitted.RequirementIds.Length admitted.DecisionIds.Length admitted.ConflictResolutionIds.Length
+                    0
+                | Error diagnostics -> refuse json diagnostics
+            | [], _ ->
+                eprintfn "Usage: praxis %s (--authorized-decision needs --requirement)" usage
+                2
+            | requirements, authorized ->
+                match OrdoContractSource.checkReadiness root contract supported expected requirements authorized with
+                | Ok ready when json -> printfn "%s" (renderReady ready); 0
+                | Ok ready ->
+                    let view = OrdoContractAdmission.readyScopeView ready
+                    printfn "Ordo contract ready: %s %s; %d requirements executed, %d decisions authorized. Execution authorization not granted."
+                        view.Contract.Version view.Contract.Digest view.RequirementKeys.Length view.AuthorizedDecisionIds.Length
+                    0
+                | Error diagnostics -> refuse json diagnostics
         | _ ->
             eprintfn "Usage: praxis %s" usage
             2

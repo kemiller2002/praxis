@@ -228,20 +228,13 @@ module FileWorkClaims =
             with error ->
                 Error $"ros.json could not be read: {error.Message}"
 
-    /// The admitted Ordo contract at `path` (interface I3), refused with
-    /// Ordo's own diagnostics when unsupported, malformed or stale.
-    let admitOrdoContract (root: string) (supported: string list) (expectedDigest: string option) (path: string) =
+    /// The Ordo contract bytes at `path` (interface I3).
+    let private readOrdoContract (root: string) (path: string) =
         let file = if Path.IsPathRooted path then path else Path.Combine(root, path)
 
         try
-            if File.Exists file then
-                Praxis.Domain.Ordo.OrdoContractAdmission.admitPinned
-                    (if List.isEmpty supported then Praxis.Domain.Ordo.OrdoContractAdmission.implementedVersions else supported)
-                    expectedDigest
-                    (File.ReadAllText file)
-                |> Result.mapError (List.map (fun diagnostic -> { Code = diagnostic.Code; Detail = defaultArg diagnostic.Subject "" + " " + diagnostic.Message |> _.Trim() }))
-            else
-                Error [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = $"Ordo contract '{path}' does not exist" } ]
+            if File.Exists file then Ok(File.ReadAllText file)
+            else Error [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = $"Ordo contract '{path}' does not exist" } ]
         with error ->
             Error [ { Code = "PRX.COMPLETION.AUTHORITY_UNAVAILABLE"; Detail = $"Ordo contract '{path}' could not be read: {error.Message}" } ]
 
@@ -256,11 +249,11 @@ module FileWorkClaims =
             |> List.fold (fun acc id -> acc |> Result.bind (fun read -> claims.Read id |> Result.map (fun claim -> read @ [ id, claim ]))) (Ok [])
             |> Result.map (PlainCompletion.decideAll requireVerified))
 
-    /// The authority input bound to the admitted Ordo contract at `contract`
-    /// when one is given (PRX-REL-008); otherwise the input unchanged.
+    /// The authority input bound to the ready Ordo contract at `contract`
+    /// (PRX-REL-008, REL-GATE-002). Without a contract there is no ready
+    /// scope, so verified completion is refused rather than trusting a
+    /// declared identity.
     let bindOrdoContract (root: string) (contract: string option) (expectedDigest: string option) (input: CompletionAuthorityInput) =
         match contract with
-        | None -> Ok input
-        | Some path ->
-            admitOrdoContract root input.SupportedOrdoContractVersions expectedDigest path
-            |> Result.bind (fun admitted -> OrdoBoundAuthority.bind admitted input)
+        | None -> Error(OrdoBoundAuthority.missingContract ())
+        | Some path -> readOrdoContract root path |> Result.bind (fun json -> OrdoBoundAuthority.bind expectedDigest json input)

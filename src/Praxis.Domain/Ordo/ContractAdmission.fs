@@ -48,6 +48,35 @@ module OrdoContractAdmission =
     [<Literal>]
     let InvalidReferenceDigestCode = "ORDO.CONTRACT.INVALID_REFERENCE_DIGEST"
 
+    /// A `modeled` requirement links a conflict (admission), or a conflict is
+    /// reached in a readiness scope. ecir/1 carries no conflict resolution.
+    [<Literal>]
+    let UnresolvedConflictCode = "ORDO.CONTRACT.UNRESOLVED_CONFLICT"
+
+    [<Literal>]
+    let BlockedRequirementCode = "ORDO.CONTRACT.BLOCKED_REQUIREMENT"
+
+    [<Literal>]
+    let MissingDecisionAuthorizationCode = "ORDO.CONTRACT.MISSING_DECISION_AUTHORIZATION"
+
+    [<Literal>]
+    let MissingRationaleAuthorizationCode = "ORDO.CONTRACT.MISSING_RATIONALE_AUTHORIZATION"
+
+    [<Literal>]
+    let UnknownAuthorizationCode = "ORDO.CONTRACT.UNKNOWN_AUTHORIZATION"
+
+    [<Literal>]
+    let AuthorizationKindMismatchCode = "ORDO.CONTRACT.AUTHORIZATION_KIND_MISMATCH"
+
+    [<Literal>]
+    let AuthorizationOutsideScopeCode = "ORDO.CONTRACT.AUTHORIZATION_OUTSIDE_SCOPE"
+
+    [<Literal>]
+    let UnknownScopeRequirementCode = "ORDO.CONTRACT.UNKNOWN_SCOPE_REQUIREMENT"
+
+    [<Literal>]
+    let EmptyScopeCode = "ORDO.CONTRACT.EMPTY_SCOPE"
+
     // -- Decoded wire model ---------------------------------------------------
 
     type private Source =
@@ -308,6 +337,12 @@ module OrdoContractAdmission =
                 | Modeled ->
                     if not (hasKind VerificationObligation) then issue "ORDO.CONTRACT.MISSING_VERIFICATION" (Some key)
                     if not (hasKind Cohort) then issue "ORDO.CONTRACT.MISSING_OWNER_COHORT" (Some key)
+                    // Ordo `unresolvedConflicts` (REL-GATE-002): ecir/1 has no
+                    // in-contract resolution, so a linked conflict is open.
+                    for nodeId in requirement.NodeIds do
+                        match Map.tryFind nodeId nodeIndex with
+                        | Some node when node.Kind = Conflict -> issue UnresolvedConflictCode (Some(key + "->" + nodeId))
+                        | _ -> ()
                 | Deferred _ -> yield! missingNode Deferral
                 | Unresolved _ -> yield! missingNode Conflict
                 | Rejected _ -> yield! missingNode EngineeringRationale
@@ -482,9 +517,23 @@ module OrdoContractAdmission =
         | Ok blueprint -> Ok(canonicalText blueprint)
         | Error message -> Error [ diagnostic InvalidJsonCode None message ]
 
-    /// I3: strict, deterministic, side-effect-free admission of one published
-    /// Ordo contract. `supportedVersions` narrows `implementedVersions`.
-    let admit (supportedVersions: string list) (contractJson: string) : Result<AdmittedOrdoContract, OrdoDiagnostic list> =
+    let private identityOf (blueprint: Blueprint) =
+        let idsOf kind =
+            blueprint.Nodes |> List.filter (fun node -> node.Kind = kind) |> List.map _.Id |> List.distinct |> List.sort
+        { Version = blueprint.SchemaVersion
+          Digest = sha256 (canonicalText blueprint)
+          RequirementIds = blueprint.Requirements |> List.map _.Source.Key |> List.distinct |> List.sort
+          DecisionIds = idsOf Decision
+          ConflictResolutionIds = idsOf Conflict }
+
+    let private refusals (found: (string * string option) list) =
+        found
+        |> List.map (fun (code, subject) ->
+            diagnostic code subject (sprintf "%s%s" code (subject |> Option.map ((+) ": ") |> Option.defaultValue "")))
+        |> sorted
+
+    /// The admitted blueprint, for the rules that need more than its identity.
+    let private admitBlueprint (supportedVersions: string list) (contractJson: string) : Result<Blueprint, OrdoDiagnostic list> =
         let accepted = implementedVersions |> List.filter (fun version -> List.contains version supportedVersions)
         let unsupported version =
             Error [ diagnostic UnsupportedSchemaCode (Some version) ("supported schema versions: " + String.concat ", " accepted) ]
@@ -500,23 +549,16 @@ module OrdoContractAdmission =
                     | Ok blueprint when not (List.contains blueprint.SchemaVersion accepted) -> unsupported blueprint.SchemaVersion
                     | Ok blueprint ->
                         match violations blueprint with
-                        | [] ->
-                            let idsOf kind =
-                                blueprint.Nodes |> List.filter (fun node -> node.Kind = kind) |> List.map _.Id |> List.distinct |> List.sort
-                            Ok { Version = blueprint.SchemaVersion
-                                 Digest = sha256 (canonicalText blueprint)
-                                 RequirementIds = blueprint.Requirements |> List.map _.Source.Key |> List.distinct |> List.sort
-                                 DecisionIds = idsOf Decision
-                                 ConflictResolutionIds = idsOf Conflict }
-                        | found ->
-                            found
-                            |> List.map (fun (code, subject) ->
-                                diagnostic code subject (sprintf "%s%s" code (subject |> Option.map ((+) ": ") |> Option.defaultValue "")))
-                            |> sorted
-                            |> Error
+                        | [] -> Ok blueprint
+                        | found -> Error(refusals found)
         with :? InvalidOperationException as ex ->
             // e.g. an escaped lone surrogate that cannot be decoded to text.
             Error [ diagnostic InvalidJsonCode None ("invalid JSON: " + ex.Message) ]
+
+    /// I3: strict, deterministic, side-effect-free admission of one published
+    /// Ordo contract. `supportedVersions` narrows `implementedVersions`.
+    let admit (supportedVersions: string list) (contractJson: string) : Result<AdmittedOrdoContract, OrdoDiagnostic list> =
+        admitBlueprint supportedVersions contractJson |> Result.map identityOf
 
     let private isSha256 (value: string) =
         not (isNull value)
@@ -540,3 +582,142 @@ module OrdoContractAdmission =
         match admit supportedVersions contractJson, expectedDigest with
         | Ok admitted, Some expected -> checkReference expected admitted
         | outcome, _ -> outcome
+
+    // -- Requirement-scoped readiness (mirrors Ordo assessPinnedReadiness) ----
+
+    /// The sorted record of one ready requirement scope.
+    type ReadyScopeView =
+        { Contract: AdmittedOrdoContract
+          RequirementKeys: string list
+          RequiredRequirementKeys: string list
+          RequiredNodeIds: string list
+          RequiredDecisionIds: string list
+          RequiredRationaleIds: string list
+          AuthorizedDecisionIds: string list }
+
+    /// Constructed only by `assessReadiness` / `assessCompletionReadiness`:
+    /// holding one means every rule below found nothing to refuse.
+    type ReadyScope = private ReadyScope of ReadyScopeView
+
+    let readyScopeView (ReadyScope view) = view
+
+    let private isStandaloneRationale (node: Node) = node.Kind = EngineeringRationale && List.isEmpty node.RequirementKeys
+
+    /// Ordo `scopeClosure`: explicit dependencies, the decisions of every
+    /// reached requirement, and each reached cohort's own obligations.
+    let private scopeClosure (blueprint: Blueprint) (startIds: string list) =
+        let index = firstBy (fun (n: Node) -> n.Id) blueprint.Nodes
+        let rec visit seen pending =
+            match pending with
+            | [] -> seen
+            | id :: rest when Set.contains id seen -> visit seen rest
+            | id :: rest ->
+                let current: Node = index[id]
+                let decisions =
+                    blueprint.Nodes
+                    |> List.filter (fun n -> n.Kind = Decision && (n.RequirementKeys |> List.exists (fun key -> List.contains key current.RequirementKeys)))
+                    |> List.map _.Id
+                let obligations =
+                    if current.Kind <> Cohort then []
+                    else
+                        blueprint.Requirements
+                        |> List.filter (fun r -> List.contains r.Source.Key current.RequirementKeys)
+                        |> List.collect _.NodeIds
+                        |> List.filter (fun nodeId -> index[nodeId].Kind <> Cohort)
+                visit (Set.add id seen) (current.DependsOn @ decisions @ obligations @ rest)
+        visit Set.empty startIds
+
+    /// Ordo `validateRequirementScope` over an admitted blueprint.
+    let private scopeViolations (blueprint: Blueprint) (keys: Set<string>) (authorized: Set<string>) =
+        let known = blueprint.Requirements |> List.map _.Source.Key |> Set.ofList
+        if Set.isEmpty keys then [ EmptyScopeCode, None ]
+        else
+            match Set.difference keys known |> Set.toList with
+            | unknown when not unknown.IsEmpty -> unknown |> List.map (fun key -> UnknownScopeRequirementCode, Some key)
+            | _ ->
+                let scope =
+                    blueprint.Requirements
+                    |> List.filter (fun r -> Set.contains r.Source.Key keys)
+                    |> List.collect _.NodeIds
+                    |> List.distinct
+                    |> scopeClosure blueprint
+                let index = firstBy (fun (n: Node) -> n.Id) blueprint.Nodes
+                let inScope = blueprint.Nodes |> List.filter (fun n -> Set.contains n.Id scope)
+                let reachedKeys = inScope |> List.collect _.RequirementKeys |> Set.ofList
+                [ for r in blueprint.Requirements do
+                      if Set.contains r.Source.Key reachedKeys && r.Disposition <> Modeled then
+                          BlockedRequirementCode, Some r.Source.Key
+                  for id in authorized do
+                      match Map.tryFind id index with
+                      | None -> UnknownAuthorizationCode, Some id
+                      | Some node when node.Kind <> Decision && not (isStandaloneRationale node) ->
+                          AuthorizationKindMismatchCode, Some(id + "->" + kindCase node.Kind)
+                      | Some _ when not (Set.contains id scope) -> AuthorizationOutsideScopeCode, Some id
+                      | Some _ -> ()
+                  for node in inScope do
+                      if not (Set.contains node.Id authorized) then
+                          if node.Kind = Decision then MissingDecisionAuthorizationCode, Some node.Id
+                          elif isStandaloneRationale node then MissingRationaleAuthorizationCode, Some node.Id
+                      if node.Kind = Conflict then
+                          for key in node.RequirementKeys do
+                              UnresolvedConflictCode, Some(key + "->" + node.Id) ]
+                |> List.distinct
+
+    let private ready (blueprint: Blueprint) (keys: Set<string>) (authorized: Set<string>) =
+        match scopeViolations blueprint keys authorized with
+        | [] ->
+            let scope =
+                blueprint.Requirements
+                |> List.filter (fun r -> Set.contains r.Source.Key keys)
+                |> List.collect _.NodeIds
+                |> List.distinct
+                |> scopeClosure blueprint
+            let nodes = blueprint.Nodes |> List.filter (fun n -> Set.contains n.Id scope)
+            let sortedOf (values: string seq) = values |> Seq.distinct |> Seq.toList |> List.sortWith (fun a b -> String.CompareOrdinal(a, b))
+            Ok(ReadyScope
+                { Contract = identityOf blueprint
+                  RequirementKeys = sortedOf keys
+                  RequiredRequirementKeys = sortedOf (Seq.append keys (nodes |> Seq.collect _.RequirementKeys))
+                  RequiredNodeIds = sortedOf scope
+                  RequiredDecisionIds = nodes |> List.filter (fun n -> n.Kind = Decision) |> List.map _.Id |> sortedOf
+                  RequiredRationaleIds = nodes |> List.filter isStandaloneRationale |> List.map _.Id |> sortedOf
+                  AuthorizedDecisionIds = sortedOf authorized })
+        | found -> Error(refusals found)
+
+    let private admitPinnedBlueprint supportedVersions expectedDigest contractJson =
+        admitBlueprint supportedVersions contractJson
+        |> Result.bind (fun blueprint ->
+            match expectedDigest with
+            | Some expected -> checkReference expected (identityOf blueprint) |> Result.map (fun _ -> blueprint)
+            | None -> Ok blueprint)
+
+    /// Ordo `ConstructibilityContract.assessPinnedReadiness`, byte-for-byte on
+    /// the golden corpus: admission (and stale-reference detection when a pin
+    /// is held), then readiness of the work completing `requirementKeys` under
+    /// `authorizedDecisionIds`, which must come from the host's authority and
+    /// never from the agent whose work is judged.
+    let assessReadiness supportedVersions expectedDigest contractJson (requirementKeys: string list) (authorizedDecisionIds: string list) =
+        admitPinnedBlueprint supportedVersions expectedDigest contractJson
+        |> Result.bind (fun blueprint -> ready blueprint (Set.ofList requirementKeys) (Set.ofList authorizedDecisionIds))
+
+    /// The requirements a completion executes, out of those it must account
+    /// for: deferred, rejected and superseded requirements are explicitly out of
+    /// execution scope (ecir/1 dispositions) and are carried for lossless
+    /// accounting only. Unresolved requirements stay in scope, where they block.
+    let private executed (blueprint: Blueprint) (required: string list) =
+        let excluded =
+            blueprint.Requirements
+            |> List.filter (fun r ->
+                match r.Disposition with
+                | Deferred _ | Rejected _ | Superseded _ -> true
+                | Modeled | Unresolved _ -> false)
+            |> List.map _.Source.Key
+            |> Set.ofList
+        required |> List.filter (excluded.Contains >> not)
+
+    /// Praxis completion readiness (REL-GATE-002): `assessReadiness` over the
+    /// executed subset of the requirements a completion accounts for.
+    let assessCompletionReadiness supportedVersions expectedDigest contractJson (requiredRequirementIds: string list) (authorizedDecisionIds: string list) =
+        admitPinnedBlueprint supportedVersions expectedDigest contractJson
+        |> Result.bind (fun blueprint ->
+            ready blueprint (executed blueprint requiredRequirementIds |> Set.ofList) (Set.ofList authorizedDecisionIds))
