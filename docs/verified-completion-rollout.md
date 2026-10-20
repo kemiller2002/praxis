@@ -61,6 +61,6 @@ repository requires it.
 ## Known limits
 - **Key in memory.** A root-privileged process on the verifier host can read the key from memory. The
   gate's trust-root item is the mitigation.
-- **Local claim store only.** The verifier re-reads claims from the local file store, not `--store git`.
+- **Claim re-read is not a trust root.** The verifier re-reads the claim through the agent's chosen store (local or `--store git` on the clone's remote) only to check holder and generation are current. The trust root remains the key, the policy and the authority.
 - **Unauthenticated socket.** The verifier socket does not authenticate callers. That is acceptable because
   callers can only ask the verifier to run the host policy itself; they cannot supply results.
