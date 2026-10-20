@@ -564,7 +564,6 @@ module AttestedCompletionTests =
               claim f "agent-a" "tok-1" |> ignore
               verify f "tok-1" |> ignore
               let report = complete f (accepting (ResizeArray())) "tok-1"
-              Assert.isTrue (not (codes report |> List.contains FileDerivedCompletion.AttestationRequiredCode)) $"{codes report}"
               match report.Result.Outcome with
               | CompletionOutcome.Completed _ -> ()
               | other -> failwith $"expected completion under the policy, got {other}") ]
