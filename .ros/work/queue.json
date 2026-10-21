@@ -6783,6 +6783,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REL-TOKEN-003",
+      "title": "praxis work finish: one deterministic command for the dirty check, work verify and complete-verified, with compact output and a bounded failure excerpt",
+      "description": "Intake REL-TOKEN-003: compose work verify (fence, dirty-worktree refusal, host verifier receipts at HEAD) and work complete-verified (derived completion with every F1-F3 and REL-GATE-003/004 check) into one command; stop after a not-passed or refused verify; print one compact line on success and the refusal codes plus a bounded excerpt of the failing receipt output on failure; --json gives the full structured result; idempotent on replay.",
+      "tags": [
+        "completion",
+        "token-efficiency"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-21T06:51:01.595Z",
+      "updatedAt": "2026-10-21T06:51:02.017Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-TOKEN-003-work-finish.md"
     }
   ]
 }

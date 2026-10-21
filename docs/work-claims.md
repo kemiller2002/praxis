@@ -119,7 +119,8 @@ the default tracked log holds the completion events only.
 
 ## Commands
 
-All commands print one JSON document. Exit codes: `0` recorded or replayed,
+All commands print one JSON document (except `work finish`, which prints one
+compact line unless `--json` is given). Exit codes: `0` recorded or replayed,
 `2` invalid arguments, `3` refused (structured codes), `1` storage or event
 failure. `--claimant` defaults to the resolved actor ID.
 
@@ -138,6 +139,8 @@ praxis work complete-verified --id ID --token T                        # PRAXIS_
   [--commit SHA] [--verification-revision SHA] [--requirement ID]* [--decision ID]* [--conflict-resolution ID]*
   [--validation NAME=STATUS:EVIDENCE-ID]* [--evidence EVIDENCE-ID=FILE[@sha256:HEX]]* [--telemetry-execution EXE-ID]*
   [--timeout-seconds 120]
+praxis work finish --id ID --token T [--json] [--excerpt-lines 40] [--verify-timeout-seconds 3600]   # verify + complete-verified
+  [any work complete-verified flag]
 praxis work completion-identity --id ID
 praxis work claims migrate [--keep-legacy]
 praxis verifier serve --socket PATH --policy FILE --contract-digest sha256:HEX [--key-file PEM]   # host
@@ -440,6 +443,56 @@ The output reports `attestation` (`attested` or `unattested`) and
 `unattested` completion is not forgery-resistant against anyone with write
 access to the repository (REL-GATE-003).
 
+## One-command finish (REL-TOKEN-003)
+
+`praxis work finish --id ID --token TOKEN` replaces the separate `work verify`
+and `work complete-verified` turns after the agent's last commit. It runs, in
+order and through the same code as the separate commands:
+
+1. `work verify` at `HEAD`: the fence check on the claim and token, the
+   dirty-worktree refusal (`PRX.VALIDATION.DIRTY_WORKTREE`, untracked files
+   included), and the host verifier over `PRAXIS_VERIFIER_SOCKET`, whose
+   receipts are stored out of tree as before;
+2. only when every receipt passed, `work complete-verified` with the same
+   derivation (F4), so every F1-F3 check and the REL-GATE-003/004 checks
+   (protected policy, pinned verifier keys, the attestation label, the
+   authority location) apply unchanged. `finish` adds no check and removes
+   none: a completion `complete-verified` would refuse, `finish` refuses with
+   the same codes.
+
+A refused or not-passed verification stops `finish`; nothing is completed.
+`--authority` (or `PRAXIS_COMPLETION_AUTHORITY`) is checked before
+verification starts, so a missing authority is an argument error (exit 2)
+rather than a wasted test run. On a claim that is already completed, `finish`
+goes straight to `complete-verified`, which replays it without verifying
+again (the same idempotence, including the retry after
+`PRX.COMPLETION.METADATA_COMMIT_FAILED`). Each step records its own events and
+`timings` exactly as when run alone.
+
+**Output.** One line on success, for example
+`PRAXIS-1 verified (attested) commit 3f2a9c0d1e2b metadata 7c1d0e9f8a6b`.
+On a not-passed verification: one line naming each receipt's status and exit
+code, then for each failing receipt at most `--excerpt-lines` (default 40)
+lines of its stored output (`<receipts>/<item>/...output.txt`): the window
+starting just before the first failure marker (`failed`, `error`,
+`exception`, `assert`, `expected`), keeping the runner's final summary line,
+or the tail when there is no marker; long lines are clipped. The agent need
+not run the tests again to see what failed. On a refusal at either step: the
+step, the codes and their details. `--json` prints the full result instead:
+`outcome`, `step` (`verify` or `complete-verified`), `codes`, the complete
+`work verify` document (`verify`), the complete `complete-verified` document
+(`completion`, with `timings`), and `excerpts`. Exit codes are those of the
+step that ended the run: `0` verified or replayed, `3` refused or not passed,
+`2` invalid arguments, `1` storage failure.
+
+**Agent sequence.** Claim, implement, commit (`git add -A && git commit`),
+then `praxis work finish --id ID --token TOKEN`. Do not run the full test
+suite yourself immediately before `finish`: `finish` runs it through the host
+verifier and shows a bounded excerpt of any failure. On a refusal, read the
+codes (and the excerpt), fix the cause, commit and run `finish` again.
+`finish` needs the host verifier; a repository completing from `validate-run`
+results (non-attested mode) keeps `validate-run` and `complete-verified`.
+
 ## Ordo contract binding (PRX-REL-008)
 
 `work complete-verified --ordo-contract FILE [--expected-ordo-digest D]` admits
@@ -548,3 +601,6 @@ claim with its own evidence (`WorkClaims.acquireEach`); no ownership is shared.
 | 18 | Dirty worktree, moved HEAD, source change after the receipt | `DIRTY_WORKTREE`, `HEAD_MISMATCH` | `attested completion: a dirty worktree ...` |
 | 19 | Receipt replayed after re-claim; stale holder at the verifier | `RECEIPT_BINDING_MISMATCH` + `RECEIPT_STALE`; `PRX.VERIFIER.STALE_CLAIM` | `attested completion: a receipt replayed after re-claim ...` |
 | 20 | `complete-verified --id --token` alone | Verified, metadata commit, `timings` | `attested completion: F4 end to end ...` |
+| 21 | `finish` on a clean, passing HEAD (REL-TOKEN-003) | Same tracked events and claim records as `verify` then `complete-verified`; one compact line; replay idempotent | `attested completion: REL-TOKEN-003: finish on a clean passing HEAD ...`; real Dokimos 0.7.0: `... work finish through the CLI ...` |
+| 22 | `finish` with failing tests | Stops at verify, exit 3, nothing completed; at most 40 excerpt lines incl. the failure and the runner summary | `attested completion: REL-TOKEN-003: failing tests stop finish ...` |
+| 23 | `finish` against every `complete-verified` refusal | Dirty worktree, stale token, PROBE-3 `POLICY_CHANGED`, PROBE-4 `UNTRUSTED_AUTHORITY`, unattested under required attestation `ATTESTATION_REQUIRED` | `attested completion: REL-TOKEN-003 ...` refusal tests |

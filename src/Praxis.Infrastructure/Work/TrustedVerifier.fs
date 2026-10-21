@@ -454,7 +454,7 @@ module FileWorkVerification =
             let path = Path.Combine(folder, name + ".json")
             TransientStore.publish (Path.Combine(folder, name + ".output.txt")) (UTF8Encoding(false).GetBytes receipt.Output)
             TransientStore.publish path (UTF8Encoding(false).GetBytes(VerificationReceipt.renderEnvelope receipt.Envelope))
-            Ok { Path = path; Digest = VerificationReceipt.identity receipt.Envelope.Payload; Payload = payload }
+            Ok { Path = path; Digest = VerificationReceipt.identity receipt.Envelope.Payload; Payload = payload; Output = receipt.Output }
         with error ->
             Error error.Message
 

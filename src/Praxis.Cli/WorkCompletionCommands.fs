@@ -24,7 +24,7 @@ module WorkCompletionCommands =
     let private value = ClaimArguments.optionValue
     let private values = ClaimArguments.optionValues
 
-    let private parse (arguments: string list) : Result<CompletionArguments, string> =
+    let parse (arguments: string list) : Result<CompletionArguments, string> =
         ClaimArguments.required "--id" arguments
         |> Result.bind (fun id ->
             ClaimArguments.required "--token" arguments

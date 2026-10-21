@@ -111,6 +111,7 @@
     <Compile Include="Work/TrustedVerifier.fs" />
     <Compile Include="Work/FileDerivedCompletion.fs" />
     <Compile Include="Work/VerificationJson.fs" />
+    <Compile Include="Work/FileWorkFinish.fs" />
     <Compile Include="Planning/FilePlanningRepository.fs" />
     <Compile Include="Planning/FileGroupObservation.fs" />
     <Compile Include="Planning/FileWorkGroupFacts.fs" />

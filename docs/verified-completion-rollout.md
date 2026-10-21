@@ -106,6 +106,18 @@ that the recorded evidence was internally consistent, not that the validations r
 `allowUnattestedEvidence` as a statement that the repository accepts this, and record the reason in the
 change that sets it.
 
+## One-command finish (REL-TOKEN-003)
+
+`praxis work finish --id ID --token TOKEN` is `work verify` followed, only when every receipt passed, by
+`work complete-verified`, in one command and through the same code. It is not a bypass: the protected
+policy, the pinned `trustedVerifierKeyIds`, the authority location check, the attestation label and every
+F1-F3 refusal apply unchanged, with the same codes and exit codes, and a not-passed or refused
+verification completes nothing. It prints one line on success and, on a not-passed verification, at most
+40 lines of each failing receipt's stored output. Agent briefs for attested repositories should give the
+sequence claim, implement, commit, `work finish`, and say: do not run the full test suite yourself
+immediately before `finish`; `finish` runs it through the host verifier. See
+[`work-claims.md`](work-claims.md) ("One-command finish").
+
 ## Gate (all must hold, with evidence linked in the enabling change)
 1. **F1 attested evidence.**
    - The C3b reproduction is refused in attested mode, by Praxis and by Dokimos.

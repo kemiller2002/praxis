@@ -77,6 +77,7 @@
     <Compile Include="WorkValidationCommands.fs" />
     <Compile Include="WorkCompletionCommands.fs" />
     <Compile Include="VerifierCommands.fs" />
+    <Compile Include="WorkFinishCommands.fs" />
     <Compile Include="WorkClaimCommands.fs" />
     <Compile Include="TelemetryReliabilityCommands.fs" />
     <Compile Include="Program.fs" />

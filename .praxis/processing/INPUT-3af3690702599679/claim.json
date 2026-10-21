@@ -1,0 +1,106 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-3af3690702599679",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-20-REL-TOKEN-003-work-finish.md",
+    "fileName": "2026-10-20-REL-TOKEN-003-work-finish.md",
+    "sha256": "4bd90c9c6f04aca8713aaa84fc1d766cb2ba3a03464522362742b1f2364f979a",
+    "size": 2366
+  },
+  "claimedAt": "2026-10-21T06:50:56.621Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Application/Work/WorkFinish.fs",
+      "summary": "pure composition: verify, then complete-verified only when every receipt passed; replay of a completed claim; bounded failure excerpt (Expected behaviour 1, 2)",
+      "locator": null,
+      "recordedAt": "2026-10-21T07:00:19.613Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T065103492Z-2acecd00"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/FileWorkFinish.fs",
+      "summary": "finish composes the same WorkVerification.run and FileDerivedCompletion.run; compact line or --json output; exit code of the step that ended the run (Expected behaviour 2, 3)",
+      "locator": null,
+      "recordedAt": "2026-10-21T07:00:20.574Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T065103492Z-2acecd00"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Cli/WorkFinishCommands.fs",
+      "summary": "praxis work finish CLI wiring beside the work claim verbs",
+      "locator": null,
+      "recordedAt": "2026-10-21T07:00:21.481Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T065103492Z-2acecd00"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/AttestedCompletionTests.fs",
+      "summary": "acceptance: same records as verify + complete-verified, refusals (dirty, stale token, PROBE-3, PROBE-4, unattested under required attestation), failing tests stop with excerpt, CLI end to end with real Dokimos",
+      "locator": null,
+      "recordedAt": "2026-10-21T07:00:22.542Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T065103492Z-2acecd00"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "docs/work-claims.md",
+      "summary": "One-command finish section, agent sequence, scenarios 21-23",
+      "locator": null,
+      "recordedAt": "2026-10-21T07:00:23.542Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T065103492Z-2acecd00"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}

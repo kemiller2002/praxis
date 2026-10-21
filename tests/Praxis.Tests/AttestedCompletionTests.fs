@@ -1249,3 +1249,273 @@ module AttestedCompletionTests =
                   let probe4 = CliHarness.rosWith h.Root (environment @ identity) [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ]
                   Assert.equal 3 probe4.Exit
                   Assert.isTrue (probe4.Out.Contains ProtectedCompletionPolicy.UntrustedAuthorityCode) probe4.Out) ]
+
+    // ---- REL-TOKEN-003: `praxis work finish` ----------------------------
+
+    let private verifyPorts (f: Fixture) =
+        { FileWorkVerification.ports f.Root ClaimStoreChoice.Local None (TimeSpan.FromMinutes 5.0) with Request = fun request -> Ok(TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request) }
+
+    let private finishWith (f: Fixture) verifier (args: CompletionArguments) =
+        FileWorkFinish.run f.Root ClaimStoreChoice.Local None (verifyPorts f) (Some verifier) args
+
+    let private finish (f: Fixture) verifier token = finishWith f verifier (arguments f token)
+
+    /// The refusal codes of whichever step ended `finish`.
+    let private finishCodes (outcome: FinishOutcome<FinishCompletion>) =
+        match outcome with
+        | FinishOutcome.Stopped(WorkVerifyOutcome.Refused finding) -> [ finding.Code ]
+        | FinishOutcome.Finished(_, Ok report)
+        | FinishOutcome.Replayed(Ok report) -> codes report
+        | other -> failwith $"expected a refusal, got {other}"
+
+    let private completed (f: Fixture) =
+        match (FileWorkClaims.store f.Root ClaimStoreChoice.Local).Read item with
+        | Ok(Some claim) -> claim.Status = ClaimStatus.Completed
+        | _ -> false
+
+    /// The types of the tracked events and the statuses of the stored claim
+    /// records, in order: what `finish` must leave exactly as verify + complete-verified do.
+    let private records (f: Fixture) =
+        let tracked =
+            File.ReadAllLines(Path.Combine(f.Root, ".ros", "events", "events.jsonl"))
+            |> Array.map JsonNode.Parse
+            |> Array.choose (fun event -> event["type"] |> Option.ofObj |> Option.map text)
+            |> Array.toList
+
+        let stored =
+            Directory.GetFiles(FileWorkClaimStore.itemDirectory f.Root item, "*.json", SearchOption.AllDirectories)
+            |> Array.choose (fun path ->
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as record when not (isNull (field record "status")) && not (isNull (field record "revision")) ->
+                    Some(record["revision"].GetValue<int64>(), text (field record "status"))
+                | _ -> None)
+            |> Array.sortBy fst
+            |> Array.map snd
+            |> Array.toList
+
+        tracked, stored
+
+    /// A failing validation with long output: the failure sits mid-way, the runner's summary at the end.
+    let private failingCommand =
+        [ "sh"; "-c"; "seq 1 150; echo '  Failed Broken.Tests.adds [3 ms]'; echo '  Error Message:'; echo '   Assert.Equal() Failure: expected 4, actual 5'; seq 1000 1200; echo 'Failed!  - Failed: 1, Passed: 41, Skipped: 0, Total: 42'; exit 1" ]
+
+    let private serveVerifier (f: Fixture) =
+        let socket = Path.Combine(CliHarness.temporaryDirectory "praxis-verifier-socket", "v.sock")
+        let ready = new ManualResetEventSlim(false)
+        Thread((fun () -> VerifierSocket.serve socket f.Key f.Policy f.ContractDigest (fun _ -> ready.Set()) |> ignore), IsBackground = true).Start()
+        Assert.isTrue (ready.Wait(TimeSpan.FromSeconds 30.0)) "the verifier starts"
+        socket
+
+    let finishTests =
+        [ t "REL-TOKEN-003: finish on a clean passing HEAD leaves the same records as verify then complete-verified, and replays" (fun () ->
+              let a = fixture [ "true" ] true
+              let b = fixture [ "true" ] true
+
+              for f in [ a; b ] do
+                  CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+                  CliHarness.commitAll f.Root "policy"
+                  claim f "agent-a" "tok-1" |> ignore
+
+              // a: the two separate commands.
+              receipts (verify a "tok-1") |> ignore
+              let separate = complete a (accepting (ResizeArray())) "tok-1"
+              // b: one finish.
+              let verifiedCommit = head b
+              let outcome = finish b (accepting (ResizeArray())) "tok-1"
+
+              let report =
+                  match outcome with
+                  | FinishOutcome.Finished(WorkVerifyOutcome.Verified(_, stored, _), Ok report) ->
+                      Assert.isTrue (WorkVerification.allPassed stored) "every receipt passed"
+                      report
+                  | other -> failwith $"expected verify then completion, got {other}"
+
+              match separate.Result.Outcome, report.Result.Outcome with
+              | CompletionOutcome.Completed(_, x), CompletionOutcome.Completed(_, y) ->
+                  Assert.equal x.Attestation y.Attestation
+                  Assert.equal CompletionAttestation.Attested y.Attestation
+                  Assert.equal x.VerifierKeyIds.Length y.VerifierKeyIds.Length
+                  Assert.equal x.EvidenceDigests.Length y.EvidenceDigests.Length
+              | other -> failwith $"expected both to complete, got {other}"
+
+              Assert.equal (records a) (records b)
+              Assert.isTrue (fst (records b) |> List.contains "work.completion.verified") $"{records b}"
+              Assert.isTrue (snd (records b) |> List.contains "completed") $"{records b}"
+              Assert.equal (Some verifiedCommit) report.Result.VerifiedCommit
+              Assert.equal verifiedCommit (CliHarness.git b.Root [ "rev-parse"; "HEAD^" ])
+              Assert.equal "" (status b)
+              // Each step keeps its timing.
+              for step in [ "claim"; "admission"; "receipts"; "dokimos"; "metadataCommit" ] do
+                  Assert.isTrue (report.Timings |> List.exists (fst >> (=) step)) $"timing {step}"
+
+              let line, exit = WorkFinishOutput.text item WorkFinish.ExcerptLines outcome
+              Assert.equal 0 exit
+              Assert.equal 1 (line.Split('\n').Length)
+              Assert.isTrue (line.StartsWith $"{item} verified (attested) commit {verifiedCommit.Substring(0, 12)} metadata ") line
+              // Replay: no new verification, no new metadata commit, same records.
+              let metadata = head b
+              let before = records b
+              let replay = finish b (accepting (ResizeArray())) "tok-1"
+
+              match replay with
+              | FinishOutcome.Replayed(Ok again) ->
+                  match again.Result.Outcome with
+                  | CompletionOutcome.Replayed _ -> ()
+                  | other -> failwith $"expected a replay, got {other}"
+              | other -> failwith $"expected finish to replay, got {other}"
+
+              Assert.equal 0 (snd (WorkFinishOutput.text item WorkFinish.ExcerptLines replay))
+              Assert.equal metadata (head b)
+              Assert.equal before (records b))
+
+          t "REL-TOKEN-003: failing tests stop finish at verify with a bounded excerpt; nothing is completed" (fun () ->
+              let f = fixture failingCommand true
+              claim f "agent-a" "tok-1" |> ignore
+              let seen = ResizeArray()
+              let outcome = finish f (accepting seen) "tok-1"
+
+              match outcome with
+              | FinishOutcome.Stopped(WorkVerifyOutcome.Verified(_, [ receipt ], _)) -> Assert.equal CheckStatus.Failed receipt.Payload.Status
+              | other -> failwith $"expected a not-passed verification, got {other}"
+
+              Assert.equal 0 seen.Count
+              Assert.isTrue (not (completed f)) "the claim is not completed"
+              let shown, exit = WorkFinishOutput.text item WorkFinish.ExcerptLines outcome
+              Assert.equal 3 exit
+              let lines = shown.Split('\n')
+              Assert.isTrue (lines[0].StartsWith $"{item} not-passed at verify") lines[0]
+              Assert.isTrue (lines[0].Contains "EV-TESTS failed (exit 1)") lines[0]
+              Assert.isTrue (lines.Length <= 2 + WorkFinish.ExcerptLines) $"{lines.Length} lines"
+              Assert.isTrue (shown.Contains "Failed Broken.Tests.adds") shown
+              Assert.isTrue (shown.Contains "Assert.Equal() Failure: expected 4, actual 5") shown
+              Assert.isTrue (shown.Contains "Failed!  - Failed: 1, Passed: 41") shown
+              Assert.isTrue (not (shown.Contains "\n1\n")) "the leading noise is not shown"
+              // The excerpt names the full output stored beside the receipt.
+              let excerpt = (WorkFinish.excerpts WorkFinish.ExcerptLines (match outcome with FinishOutcome.Stopped v -> v | _ -> failwith "stopped")).Head
+              Assert.isTrue (File.Exists excerpt.OutputPath) excerpt.OutputPath
+              Assert.equal 355 excerpt.TotalLines
+              let json, jsonExit = WorkFinishOutput.json item WorkFinish.ExcerptLines outcome
+              Assert.equal 3 jsonExit
+              let document = CliHarness.json json
+              Assert.equal "not-passed" (text (field document "outcome"))
+              Assert.equal "verify" (text (field document "step"))
+              Assert.isTrue (isNull (field document "completion")) json
+              let shownLines = (field (first (field document "excerpts")) "lines").AsArray().Count
+              Assert.equal WorkFinish.ExcerptLines shownLines)
+
+          t "REL-TOKEN-003: finish refuses a dirty worktree and a stale token at verify, before anything runs" (fun () ->
+              let f = fixture [ "sh"; "-c"; "touch ran-validation" ] true
+              claim f "agent-a" "tok-1" |> ignore
+              let seen = ResizeArray()
+              CliHarness.write f.Root "notes.txt" "untracked\n"
+              Assert.equal [ ValidationEvidence.DirtyWorktreeCode ] (finishCodes (finish f (accepting seen) "tok-1"))
+              File.Delete(Path.Combine(f.Root, "notes.txt"))
+              Assert.equal [ ClaimConflict.code ClaimConflict.StaleToken ] (finishCodes (finish f (accepting seen) "tok-other"))
+              Assert.equal 0 seen.Count
+              Assert.isTrue (not (completed f)) "the claim is not completed")
+
+          t "REL-TOKEN-003 PROBE-3: finish refuses a committed ros.json that drops requireAttestedEvidence" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{}}"
+              CliHarness.commitAll f.Root "agent drops attestation"
+              forgeValidation f held |> ignore
+              let seen = ResizeArray()
+              let outcome = finish f (accepting seen) "tok-1"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (finishCodes outcome)
+              Assert.equal 3 (snd (WorkFinishOutput.text item WorkFinish.ExcerptLines outcome))
+              Assert.isTrue ((fst (WorkFinishOutput.text item WorkFinish.ExcerptLines outcome)).Contains ProtectedCompletionPolicy.PolicyChangedCode) "the code is shown"
+              Assert.equal 0 seen.Count
+              Assert.isTrue (not (completed f)) "the claim is not completed")
+
+          t "REL-TOKEN-003 PROBE-4: finish refuses an authority the protected policy does not pin" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              let own = VerifierKey.generate ()
+              let ownAuthority = authorityTrusting f [ own.Trusted ] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "own-key.json"))
+              let seen = ResizeArray()
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (finishCodes (finish f (accepting seen) "tok-1"))
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (finishCodes (finishWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some ownAuthority }))
+              Assert.equal 0 seen.Count
+              Assert.isTrue (not (completed f)) "the claim is not completed")
+
+          t "REL-TOKEN-003: finish refuses an unattested authority under required attestation" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              let seen = ResizeArray()
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (finishCodes (finish f (accepting seen) "tok-1"))
+              // REL-GATE-003: requireVerifiedCompletion alone implies it too.
+              let g = fixture [ "true" ] false
+              CliHarness.write g.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true}}"
+              CliHarness.commitAll g.Root "policy"
+              claim g "agent-a" "tok-1" |> ignore
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (finishCodes (finish g (accepting seen) "tok-1"))
+              Assert.equal 0 seen.Count)
+
+          t "REL-TOKEN-003: the excerpt is a pure, bounded window" (fun () ->
+              Assert.equal (0, 0, []) (WorkFinish.excerpt 40 "")
+              Assert.equal (1, 2, [ "a"; "b" ]) (WorkFinish.excerpt 40 "a\r\nb\n\n")
+              let noisy = [ for i in 1..100 -> $"line {i}" ] |> String.concat "\n"
+              Assert.equal (91, 100, [ for i in 91..100 -> $"line {i}" ]) (WorkFinish.excerpt 10 noisy)
+              let failing = ([ for i in 1..50 -> $"line {i}" ] @ [ "  Failed X"; "detail" ] @ [ for i in 1..50 -> $"tail {i}" ] @ [ "Failed!  - Failed: 1" ]) |> String.concat "\n"
+              let first, total, lines = WorkFinish.excerpt 5 failing
+              Assert.equal 49 first
+              Assert.equal 103 total
+              Assert.equal [ "line 49"; "line 50"; "  Failed X"; "detail"; "Failed!  - Failed: 1" ] lines
+              let _, _, wide = WorkFinish.excerpt 5 (String('x', 1000))
+              Assert.equal WorkFinish.LineWidth wide.Head.Length)
+
+          t "REL-TOKEN-003: work finish through the CLI with a host verifier: argument errors, failing tests, and the end to end success line" (fun () ->
+              let f = fixture failingCommand true
+              let socket = serveVerifier f
+              Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+              let verifierEnv = [ "PRAXIS_VERIFIER_SOCKET", socket ]
+              // No authority: invalid arguments before verification runs.
+              let missing = CliHarness.rosWith f.Root (verifierEnv @ identity) [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
+              Assert.equal 2 missing.Exit
+              Assert.isTrue (not (Directory.Exists(FileWorkVerification.directory f.Root item))) "nothing was verified"
+              let environment = verifierEnv @ [ FileDerivedCompletion.AuthorityVariable, f.Authority; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+              let failing = CliHarness.rosWith f.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
+              Assert.equal 3 failing.Exit
+              Assert.isTrue (failing.Out.Contains "not-passed at verify") failing.Out
+              Assert.isTrue (failing.Out.Contains "Assert.Equal() Failure: expected 4, actual 5") failing.Out
+              Assert.isTrue (failing.Out.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length <= 2 + WorkFinish.ExcerptLines) failing.Out
+              let json = CliHarness.rosWith f.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1"; "--json"; "--excerpt-lines"; "5" ]
+              Assert.equal 3 json.Exit
+              let shortExcerpt = (field (first (field (CliHarness.json json.Out) "excerpts")) "lines").AsArray().Count
+              Assert.equal 5 shortExcerpt
+
+              match attestedDokimos () with
+              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL does not provide completion.verify-attested/1"
+              | Some dll ->
+                  let g = fixture [ "true" ] true
+                  CliHarness.write g.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ g.Key.Trusted.KeyId ])
+                  CliHarness.commitAll g.Root "policy"
+                  let socket = serveVerifier g
+                  Assert.equal 0 (CliHarness.rosWith g.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  let verifiedCommit = head g
+                  let environment = [ "PRAXIS_VERIFIER_SOCKET", socket; "PRAXIS_DOKIMOS_EXECUTABLE", dll; FileDerivedCompletion.AuthorityVariable, g.Authority; FileDerivedCompletion.ContractVariable, g.Contract ] @ identity
+                  let run = CliHarness.rosWith g.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
+                  Assert.equal 0 run.Exit
+                  Assert.equal $"{item} verified (attested) commit {verifiedCommit.Substring(0, 12)} metadata {(head g).Substring(0, 12)}" (run.Out.Trim())
+                  Assert.equal verifiedCommit (CliHarness.git g.Root [ "rev-parse"; "HEAD^" ])
+                  Assert.equal "" (status g)
+                  let replay = CliHarness.rosWith g.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1"; "--json" ]
+                  Assert.equal 0 replay.Exit
+                  Assert.equal "replayed" (text (field (CliHarness.json replay.Out) "outcome"))
+                  // PROBE-4 through the CLI: an unpinned attested policy.
+                  let h = fixture [ "true" ] true
+                  CliHarness.write h.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+                  CliHarness.commitAll h.Root "policy"
+                  let socket = serveVerifier h
+                  Assert.equal 0 (CliHarness.rosWith h.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  let environment = [ "PRAXIS_VERIFIER_SOCKET", socket; "PRAXIS_DOKIMOS_EXECUTABLE", dll; FileDerivedCompletion.AuthorityVariable, h.Authority; FileDerivedCompletion.ContractVariable, h.Contract ] @ identity
+                  let probe4 = CliHarness.rosWith h.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
+                  Assert.equal 3 probe4.Exit
+                  Assert.isTrue (probe4.Out.Contains ProtectedCompletionPolicy.UntrustedAuthorityCode) probe4.Out) ]
