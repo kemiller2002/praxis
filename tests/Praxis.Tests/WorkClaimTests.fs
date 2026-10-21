@@ -549,7 +549,7 @@ module WorkClaimTests =
               let completed =
                   { PacketDigest = "sha256:" + String('1', 64); ReceiptDigest = "sha256:" + String('2', 64); EvidenceDigests = []; Commit = commit
                     VerificationRevision = commit; RequirementIds = [ item ]; TelemetryExecutions = [ "EXE-1" ]
-                    VerifierName = "dokimos"; VerifierVersion = "0.5.0"; Attestation = CompletionAttestation.Unattested; CompletedAt = t0 }
+                    VerifierName = "dokimos"; VerifierVersion = "0.5.0"; Attestation = CompletionAttestation.Unattested; VerifierKeyIds = []; CompletedAt = t0 }
 
               let envelope = set [ "schemaVersion"; "type"; "workItem"; "repository"; "protocolVersion"; "occurredAt"; "eventId" ]
 
@@ -568,6 +568,11 @@ module WorkClaimTests =
                   [ "attestation"; "claimToken"; "claimant"; "commit"; "generation"; "packetDigest"; "receiptDigest"; "requirementIds"; "telemetryExecutions"
                     "verificationRevision" ]
                   (keys (ClaimEventPayload.CompletionVerified("a", "t", 1L, completed)))
+              // REL-GATE-004: an attested completion also names its receipt keyids.
+              Assert.equal
+                  [ "attestation"; "claimToken"; "claimant"; "commit"; "generation"; "packetDigest"; "receiptDigest"; "requirementIds"; "telemetryExecutions"
+                    "verificationRevision"; "verifierKeyIds" ]
+                  (keys (ClaimEventPayload.CompletionVerified("a", "t", 1L, { completed with Attestation = CompletionAttestation.Attested; VerifierKeyIds = [ "sha256:" + String('3', 64) ] })))
               Assert.equal [ "claimToken"; "generation"; "packetDigest" ] (keys (ClaimEventPayload.CompletionReplayed("t", 1L, "sha256:x")))
               Assert.equal
                   [ "claimToken"; "claimant"; "evidenceId"; "generation"; "observedAt"; "resultDigest"; "revision"; "status"; "validation" ]

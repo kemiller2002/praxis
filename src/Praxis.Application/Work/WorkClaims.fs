@@ -256,6 +256,14 @@ module WorkClaims =
                                       VerifierName = "dokimos"
                                       VerifierVersion = receipt.DokimosVersion
                                       Attestation = CompletionAttestation.ofAttested (BoundCompletionAuthority.isAttested input)
+                                      VerifierKeyIds =
+                                        evidence
+                                        |> List.choose (fun item ->
+                                            match item.Proof with
+                                            | EvidenceProof.Attested(payload, _) -> Some payload.Verifier.KeyId
+                                            | EvidenceProof.Recorded _ -> None)
+                                        |> List.distinct
+                                        |> List.sort
                                       CompletedAt = ports.Claims.Now() }
 
                                 let verifier = Some { Name = "dokimos"; Version = receipt.DokimosVersion }

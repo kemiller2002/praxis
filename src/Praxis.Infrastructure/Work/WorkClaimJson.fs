@@ -52,6 +52,7 @@ module WorkClaimJson =
               "telemetryExecutions", strings completion.TelemetryExecutions
               "verifier", obj [ "name", str completion.VerifierName; "version", str completion.VerifierVersion ]
               "attestation", str (CompletionAttestation.code completion.Attestation)
+              "verifierKeyIds", strings completion.VerifierKeyIds
               "completedAt", time completion.CompletedAt ]
 
     let claimNode (claim: WorkClaim) =
@@ -146,6 +147,7 @@ module WorkClaimJson =
 
                         CompletionAttestation.tryParse label
                         |> Option.defaultWith (fun () -> failwith $"unknown completion attestation '{label}'")
+                  VerifierKeyIds = texts completion "verifierKeyIds"
                   CompletedAt = requireTime completion "completedAt" })
           UpdatedAt = requireTime root "updatedAt" }
 
@@ -196,6 +198,10 @@ module WorkClaimJson =
               "receiptDigest", str completion.ReceiptDigest
               "telemetryExecutions", strings completion.TelemetryExecutions
               "attestation", str (CompletionAttestation.code completion.Attestation) ]
+            // REL-GATE-004: present only when receipts were signed, so the
+            // event (and its content-derived eventId) of every completion
+            // recorded before the field is unchanged on replay.
+            @ (if completion.VerifierKeyIds.IsEmpty then [] else [ "verifierKeyIds", strings completion.VerifierKeyIds ])
         | ClaimEventPayload.CompletionReplayed(token, generation, digest) ->
             [ "claimToken", str token; "generation", num generation; "packetDigest", str digest ]
         | ClaimEventPayload.ValidationObserved(claimant, token, generation, validation, evidenceId, revision, status, observedAt, resultDigest) ->
@@ -458,6 +464,7 @@ module WorkClaimOutcomeJson =
                   "packetDigest", JsonValue.Create completion.PacketDigest
                   "receiptDigest", JsonValue.Create completion.ReceiptDigest
                   "attestation", JsonValue.Create(CompletionAttestation.code completion.Attestation)
+                  "verifierKeyIds", (completion.VerifierKeyIds |> List.map (fun key -> JsonValue.Create key :> JsonNode) |> Array.ofList |> JsonArray :> JsonNode)
                   "claim", view now claim ],
             0
         | CompletionOutcome.Rejected(items, current) ->

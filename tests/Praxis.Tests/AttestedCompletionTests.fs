@@ -232,6 +232,43 @@ module AttestedCompletionTests =
         let output, _ = VerificationJson.completion report
         stored, tracked, text (field (CliHarness.json output) "attestation")
 
+    /// A ros.json whose workProtocol holds `members` and pins `keys`.
+    let private pinnedPolicy (members: string) (keys: string list) =
+        let pinned = keys |> List.map (sprintf "\"%s\"") |> String.concat ","
+        $"{{\"workProtocol\":{{{members},\"trustedVerifierKeyIds\":[{pinned}]}}}}"
+
+    /// A copy of `f`'s authority at `path` that trusts `keys` (none: keyless).
+    let private authorityTrusting (f: Fixture) (keys: TrustedVerifierKey list) (path: string) =
+        let node = JsonNode.Parse(File.ReadAllText f.Authority).AsObject()
+        node.Remove "TrustedVerifierKeys" |> ignore
+        node.Remove "ValidationPolicyDigest" |> ignore
+
+        if not keys.IsEmpty then
+            node["TrustedVerifierKeys"] <-
+                JsonArray(
+                    keys
+                    |> List.map (fun key -> JsonObject(dict [ "KeyId", JsonValue.Create key.KeyId :> JsonNode; "Algorithm", JsonValue.Create key.Algorithm; "PublicKey", JsonValue.Create key.PublicKey ]) :> JsonNode)
+                    |> Array.ofList
+                )
+
+            node["ValidationPolicyDigest"] <- JsonValue.Create f.Policy.Digest
+
+        Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+        File.WriteAllText(path, node.ToJsonString())
+        path
+
+    let private claimIn (root: string) claimant token =
+        match WorkClaims.acquire (FileWorkClaims.ports root ClaimStoreChoice.Local None None) { WorkItemId = item; Claimant = claimant; ClaimToken = token; LeaseDuration = lease; ExpectedRevision = None; RecoverOnly = false } with
+        | ClaimOutcome.Succeeded(claim, _) -> claim
+        | other -> failwith $"expected a claim, got {other}"
+
+    let private completeIn (root: string) (f: Fixture) verifier (args: CompletionArguments) =
+        FileDerivedCompletion.run root ClaimStoreChoice.Local None (Some verifier) args |> Result.defaultWith failwith
+
+    let private policy members = { ProtectedCompletionPolicy.empty with RequireVerifiedCompletion = List.contains "verified" members; RequireAttestedEvidence = List.contains "attested" members; AllowUnattestedEvidence = List.contains "optout" members }
+
+    let private key c = "sha256:" + String(c, 64)
+
     let tests =
         [ t "C3b reproduced: a forged validation result plus a forged validation event is refused in attested mode" (fun () ->
               let f = fixture [ "true" ] true
@@ -614,7 +651,8 @@ module AttestedCompletionTests =
 
           t "workProtocol.requireAttestedEvidence admits an authority that pins verifier keys" (fun () ->
               let f = fixture [ "true" ] true
-              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              // REL-GATE-004: the host verifier's key is pinned in protected policy.
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
               CliHarness.commitAll f.Root "policy"
               claim f "agent-a" "tok-1" |> ignore
               verify f "tok-1" |> ignore
@@ -701,7 +739,8 @@ module AttestedCompletionTests =
 
           t "REL-GATE-003: requireVerifiedCompletion admits an attested authority and labels the completion attested" (fun () ->
               let f = fixture [ "true" ] true
-              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true}}"
+              // REL-GATE-004: the host verifier's key is pinned in protected policy.
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireVerifiedCompletion\":true" [ f.Key.Trusted.KeyId ])
               CliHarness.commitAll f.Root "policy"
               claim f "agent-a" "tok-1" |> ignore
               receipts (verify f "tok-1") |> ignore
@@ -796,4 +835,343 @@ module AttestedCompletionTests =
               // The CLI parses --store git for verify (no socket here: refused as unavailable, not as a local NOT_HELD).
               let cli = CliHarness.rosWith b identity [ "work"; "verify"; "--id"; item; "--token"; "tok-2"; "--store"; "git"; "--remote"; "origin" ]
               Assert.equal 3 cli.Exit
-              Assert.equal VerifierEngine.UnavailableCode (text (field (CliHarness.json cli.Out) "code"))) ]
+              Assert.equal VerifierEngine.UnavailableCode (text (field (CliHarness.json cli.Out) "code")))
+
+          // ---- REL-GATE-004: protected policy and a pinned trust root ----
+
+          t "REL-GATE-004 PROBE-3: a committed ros.json that drops requireAttestedEvidence is refused as a policy change" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              // The agent weakens repository policy in its own commit, then forges store evidence.
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{}}"
+              CliHarness.commitAll f.Root "agent drops attestation"
+              forgeValidation f held |> ignore
+              let seen = ResizeArray()
+              let report = complete f (accepting seen) "tok-1"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes report)
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Rejected(findings, _) -> Assert.isTrue (findings.Head.Detail.Contains "requireAttestedEvidence was removed") findings.Head.Detail
+              | other -> failwith $"expected a refusal, got {other}"
+
+              Assert.equal 0 seen.Count
+              // Deleting ros.json outright, or only in the worktree, is the same change.
+              File.Delete(Path.Combine(f.Root, "ros.json"))
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (complete f (accepting seen) "tok-1"))
+              CliHarness.git f.Root [ "checkout"; "-q"; "HEAD~1"; "--"; "ros.json" ] |> ignore
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true,\"allowUnattestedEvidence\":true}}"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (complete f (accepting seen) "tok-1"))
+              Assert.equal 0 seen.Count)
+
+          t "REL-GATE-004: editing ros.json in the claimed branch cannot disable requireAttestedEvidence set on the protected branch" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "policy on main"
+              let a, _ = shared f
+              CliHarness.git a [ "checkout"; "-q"; "-b"; "agent/work" ] |> ignore
+              let held = claimIn a "agent-a" "tok-1"
+              let keyless = authorityTrusting f [] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "keyless.json"))
+              let seen = ResizeArray()
+
+              for weakened in [ "{\"workProtocol\":{}}"; "{\"workProtocol\":{\"requireAttestedEvidence\":false,\"trustedVerifierKeyIds\":[]}}"; "{}" ] do
+                  CliHarness.write a "ros.json" weakened
+                  CliHarness.commitAll a "agent weakens policy"
+                  let forgedHead = CliHarness.git a [ "rev-parse"; "HEAD" ]
+                  let forged =
+                      { WorkItemId = item; Claimant = "agent-a"; ClaimToken = "tok-1"; Generation = held.Generation; Validation = "unit-tests"; EvidenceId = "EV-TESTS"
+                        Revision = forgedHead; ObservedAt = DateTimeOffset.UtcNow; StartedAt = DateTimeOffset.UtcNow; Status = CheckStatus.Passed; ExitCode = Some 0
+                        Command = [ "true" ]; OutputSha256 = "sha256:" + String('0', 64) }
+                  let path = Path.Combine(TransientStore.validations a, item, "EV-TESTS", "forged.json")
+                  Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+                  File.WriteAllText(path, ValidationResultJson.render forged)
+                  let report = completeIn a f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some keyless }
+                  Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes report)
+
+              // Moving the upstream locator in the branch is a policy change too.
+              CliHarness.write a "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true,\"upstreamSync\":{\"remote\":\"origin\",\"branch\":\"agent/work\"}" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "agent moves the protected branch"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeIn a f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some keyless }))
+              Assert.equal 0 seen.Count
+              // Restoring the protected policy restores the genuine path.
+              CliHarness.write a "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "restore policy"
+              receipts (verifyIn f a ClaimStoreChoice.Local "tok-1") |> ignore
+
+              match (completeIn a f (accepting seen) (arguments f "tok-1")).Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) -> Assert.equal [ f.Key.Trusted.KeyId ] completion.VerifierKeyIds
+              | other -> failwith $"expected the protected policy to admit the host verifier, got {other}")
+
+          t "REL-GATE-004: strengthening the policy in the branch is not a policy change" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId; key 'e' ])
+              CliHarness.commitAll f.Root "policy on main"
+              let a, _ = shared f
+              claimIn a "agent-a" "tok-1" |> ignore
+              CliHarness.write a "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true,\"requireVerifiedCompletion\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "stricter"
+              receipts (verifyIn f a ClaimStoreChoice.Local "tok-1") |> ignore
+
+              match (completeIn a f (accepting (ResizeArray())) (arguments f "tok-1")).Result.Outcome with
+              | CompletionOutcome.Completed _ -> ()
+              | other -> failwith $"expected a stricter branch policy to complete, got {other}")
+
+          t "REL-GATE-004 PROBE-4: an authority that pins the caller's own key is untrusted" (fun () ->
+              let f = fixture [ "true" ] true
+              // No trust root pinned: the caller-chosen authority cannot be one.
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              let own = VerifierKey.generate ()
+              let stored = receipts (verify f "tok-1")
+              storeEnvelope f "self-signed" (signed own stored.Head.Payload) |> ignore
+              let ownAuthority = authorityTrusting f [ own.Trusted ] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "own-key.json"))
+              let seen = ResizeArray()
+              let refused = complete f (accepting seen) "tok-1" |> codes
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] refused
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some ownAuthority }))
+              // Adding a pin later is itself a policy change: required attestation with no pin trusts no key.
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ own.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "agent pins its own key"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some ownAuthority }))
+              // With the host key pinned from the start, an authority adding the caller's key is still untrusted ...
+              let g = fixture [ "true" ] true
+              CliHarness.write g.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ g.Key.Trusted.KeyId ])
+              CliHarness.commitAll g.Root "policy pins the host verifier"
+              claim g "agent-a" "tok-1" |> ignore
+              receipts (verify g "tok-1") |> ignore
+              let ownOnly = authorityTrusting g [ own.Trusted ] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "own-key.json"))
+              let both = authorityTrusting g [ g.Key.Trusted; own.Trusted ] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "both.json"))
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith g (accepting seen) { arguments g "tok-1" with AuthorityPath = Some ownOnly }))
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith g (accepting seen) { arguments g "tok-1" with AuthorityPath = Some both }))
+              // ... and adding the caller's key to the pin in a later commit is a policy change.
+              CliHarness.write g.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ g.Key.Trusted.KeyId; own.Trusted.KeyId ])
+              CliHarness.commitAll g.Root "agent adds its own key"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeWith g (accepting seen) { arguments g "tok-1" with AuthorityPath = Some both }))
+              Assert.equal 0 seen.Count
+              ignore held)
+
+          t "REL-GATE-004: under required attestation an authority inside the worktree or the Git directory is untrusted" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "policy"
+              let inTree = authorityTrusting f [ f.Key.Trusted ] (Path.Combine(f.Root, "host", "authority.json"))
+              CliHarness.commitAll f.Root "an authority in the tree"
+              claim f "agent-a" "tok-1" |> ignore
+              receipts (verify f "tok-1") |> ignore
+              let seen = ResizeArray()
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some inTree }))
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some "host/authority.json" }))
+              let gitDir = CliHarness.git f.Root [ "rev-parse"; "--path-format=absolute"; "--git-common-dir" ]
+              let inGit = authorityTrusting f [ f.Key.Trusted ] (Path.Combine(gitDir, "praxis", "authority.json"))
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some inGit }))
+              // A symbolic link outside the repository that points into it is followed.
+              let link = Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "authority.json")
+              File.CreateSymbolicLink(link, inTree) |> ignore
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some link }))
+              let linkedDirectory = Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "linked")
+              Directory.CreateSymbolicLink(linkedDirectory, Path.Combine(f.Root, "host")) |> ignore
+              Assert.equal [ ProtectedCompletionPolicy.UntrustedAuthorityCode ] (codes (completeWith f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some(Path.Combine(linkedDirectory, "authority.json")) }))
+              Assert.equal 0 seen.Count
+              // The host-held authority completes, and the completion names the receipt keyid.
+              let report = complete f (accepting seen) "tok-1"
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) ->
+                  Assert.equal CompletionAttestation.Attested completion.Attestation
+                  Assert.equal [ f.Key.Trusted.KeyId ] completion.VerifierKeyIds
+              | other -> failwith $"expected the host-held authority to complete, got {other}"
+
+              let output, _ = VerificationJson.completion report
+              Assert.equal f.Key.Trusted.KeyId (text (first (field (CliHarness.json output) "verifierKeyIds"))))
+
+          t "REL-GATE-004: the completion record and event name the receipt keyid" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              receipts (verify f "tok-1") |> ignore
+              complete f (accepting (ResizeArray())) "tok-1" |> ignore
+
+              let stored =
+                  Directory.GetFiles(FileWorkClaimStore.itemDirectory f.Root item, "*.json", SearchOption.AllDirectories)
+                  |> Array.choose (fun path ->
+                      match JsonNode.Parse(File.ReadAllText path) with
+                      | :? JsonObject as record when not (isNull (field record "completion")) -> Some(text (first (field (field record "completion") "verifierKeyIds")))
+                      | _ -> None)
+                  |> Array.distinct
+                  |> Array.toList
+
+              let tracked =
+                  File.ReadAllLines(Path.Combine(f.Root, ".ros", "events", "events.jsonl"))
+                  |> Array.map JsonNode.Parse
+                  |> Array.filter (fun event -> not (isNull (field event "type")) && text (field event "type") = "work.completion.verified")
+                  |> Array.map (fun event -> text (first (field event "verifierKeyIds")))
+                  |> Array.toList
+
+              Assert.equal [ f.Key.Trusted.KeyId ] stored
+              Assert.equal [ f.Key.Trusted.KeyId ] tracked)
+
+          t "REL-GATE-004: an unattested completion records no verifier keyid, and an older record reads as none" (fun () ->
+              let f = fixture [ "true" ] false
+              let held = claim f "agent-a" "tok-1"
+              forgeValidation f held |> ignore
+
+              match (complete f (accepting (ResizeArray())) "tok-1").Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) -> Assert.equal [] completion.VerifierKeyIds
+              | other -> failwith $"expected the unattested completion of a policy-free repository, got {other}"
+
+              let record =
+                  { WorkItemId = item; Revision = 1L; Generation = 1L; Status = ClaimStatus.Completed; Holder = None; PreviousClaimant = None; PendingPacketDigest = None
+                    ConsumedPacketDigests = []; UpdatedAt = DateTimeOffset.UtcNow
+                    Completion =
+                      Some
+                          { PacketDigest = key 'a'; ReceiptDigest = key 'b'; EvidenceDigests = []; Commit = String('c', 40); VerificationRevision = String('c', 40)
+                            RequirementIds = []; TelemetryExecutions = []; VerifierName = "dokimos"; VerifierVersion = "0.7.0"; Attestation = CompletionAttestation.Attested
+                            VerifierKeyIds = [ key 'd' ]; CompletedAt = DateTimeOffset.UtcNow } }
+
+              let node = WorkClaimJson.claimNode record
+              Assert.equal (Ok [ key 'd' ]) (WorkClaimJson.parseClaim (node.ToJsonString()) |> Result.map (fun claim -> claim.Completion.Value.VerifierKeyIds))
+              (node["completion"].AsObject()).Remove "verifierKeyIds" |> ignore
+              Assert.equal (Ok []) (WorkClaimJson.parseClaim (node.ToJsonString()) |> Result.map (fun claim -> claim.Completion.Value.VerifierKeyIds)))
+
+          t "REL-GATE-004: a malformed protected base or trust pin fails closed" (fun () ->
+              // Malformed ros.json on the protected branch.
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":\"yes\"}}"
+              CliHarness.commitAll f.Root "malformed policy on main"
+              let a, _ = shared f
+              claimIn a "agent-a" "tok-1" |> ignore
+              CliHarness.write a "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "agent repairs policy in its branch"
+              receipts (verifyIn f a ClaimStoreChoice.Local "tok-1") |> ignore
+              let seen = ResizeArray()
+              Assert.equal [ ProtectedCompletionPolicy.PolicyUnavailableCode ] (codes (completeIn a f (accepting seen) (arguments f "tok-1")))
+              // A branch with no history in common with the protected branch.
+              CliHarness.git a [ "checkout"; "-q"; "--orphan"; "agent/orphan" ] |> ignore
+              CliHarness.commitAll a "orphan"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyUnavailableCode ] (codes (completeIn a f (accepting seen) (arguments f "tok-1")))
+              Assert.equal 0 seen.Count
+              // A malformed trust pin in the worktree fails closed as before.
+              for pin in [ "\"sha256:abc\""; "1"; "\"SHA256:" + String('A', 64) + "\"" ] do
+                  let g = fixture [ "true" ] true
+                  CliHarness.write g.Root "ros.json" $"{{\"workProtocol\":{{\"requireAttestedEvidence\":true,\"trustedVerifierKeyIds\":[{pin}]}}}}"
+                  CliHarness.commitAll g.Root "policy"
+                  claim g "agent-a" "tok-1" |> ignore
+                  Assert.equal [ ProtectedCompletionPolicy.AttestationRequiredCode ] (codes (complete g (accepting seen) "tok-1"))
+
+              Assert.equal 0 seen.Count
+              // Outside any Git repository there is no protected policy to read.
+              match ProtectedCompletionPolicy.decide (Ok(policy [ "attested" ])) (FileWorkClaims.protectedPolicySource (CliHarness.temporaryDirectory "praxis-no-git") ("origin", "main")) with
+              | Error finding -> Assert.equal ProtectedCompletionPolicy.PolicyUnavailableCode finding.Code
+              | Ok _ -> failwith "expected an unavailable protected policy to fail closed")
+
+          t "REL-GATE-004: plain work complete cannot bypass a requireVerifiedCompletion the worktree dropped" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{}}"
+              CliHarness.commitAll f.Root "agent drops verified completion"
+
+              match FileWorkClaims.plainCompletion f.Root ClaimStoreChoice.Local [ item ] with
+              | Ok(PlainCompletion.Refused finding) -> Assert.equal ProtectedCompletionPolicy.PolicyChangedCode finding.Code
+              | other -> failwith $"expected the dropped requirement to be refused, got {other}"
+
+              // Outside Git the worktree policy alone decides, as before.
+              let bare = CliHarness.temporaryDirectory "praxis-no-git"
+              Assert.equal (Ok PlainCompletion.Permitted) (FileWorkClaims.plainCompletion bare ClaimStoreChoice.Local [ item ]))
+
+          t "REL-GATE-004: weakenings is a pure function of the protected and candidate policy" (fun () ->
+              let all = [ "verified"; "attested"; "optout" ]
+              let subsets = [ for v in [ false; true ] do for a in [ false; true ] do for o in [ false; true ] do yield all |> List.filter (fun m -> (m = "verified" && v) || (m = "attested" && a) || (m = "optout" && o)) ]
+
+              for p in subsets do
+                  for c in subsets do
+                      let weaker = ProtectedCompletionPolicy.weakenings (policy p) (policy c)
+                      let expected =
+                          (List.contains "verified" p && not (List.contains "verified" c))
+                          || (List.contains "attested" p && not (List.contains "attested" c))
+                          || (not (List.contains "optout" p) && List.contains "optout" c)
+                          // Required attestation with no pin trusts no key; dropping the requirement drops that constraint.
+                          || ((ProtectedCompletionPolicy.requirement (policy p)).IsSome && (ProtectedCompletionPolicy.requirement (policy c)).IsNone)
+                      Assert.equal expected (not weaker.IsEmpty)
+                      // Identical policy is never weaker.
+                      Assert.equal [] (ProtectedCompletionPolicy.weakenings (policy p) (policy p))
+
+              // Trust pins: a subset is stronger, any added key is weaker.
+              let pinned keys = { policy [ "attested" ] with TrustedVerifierKeyIds = Some keys }
+              Assert.equal [] (ProtectedCompletionPolicy.weakenings (pinned [ key 'a'; key 'b' ]) (pinned [ key 'a' ]))
+              Assert.equal 1 (ProtectedCompletionPolicy.weakenings (pinned [ key 'a' ]) (pinned [ key 'a'; key 'b' ])).Length
+              Assert.equal 1 (ProtectedCompletionPolicy.weakenings (policy [ "attested" ]) (pinned [ key 'a' ])).Length
+              Assert.equal [] (ProtectedCompletionPolicy.weakenings (policy []) (pinned [ key 'a' ]))
+              Assert.equal 1 (ProtectedCompletionPolicy.weakenings { policy [] with TrustedVerifierKeyIds = Some [ key 'a' ] } (policy [])).Length
+              // decide: the worktree's policy when no weaker; a locator move is a change.
+              let protectedBase = ProtectedPolicySource.Base(String('b', 40), Ok(pinned [ key 'a' ]))
+              Assert.equal (Ok(pinned [ key 'a' ])) (ProtectedCompletionPolicy.decide (Ok(pinned [ key 'a' ])) protectedBase)
+              let moved = { pinned [ key 'a' ] with Upstream = "origin", "agent" }
+              Assert.equal (Error ProtectedCompletionPolicy.PolicyChangedCode) (ProtectedCompletionPolicy.decide (Ok moved) protectedBase |> Result.mapError _.Code)
+              Assert.equal (Error ProtectedCompletionPolicy.AttestationRequiredCode) (ProtectedCompletionPolicy.decide (Error "malformed") protectedBase |> Result.mapError _.Code)
+              Assert.equal (Error ProtectedCompletionPolicy.PolicyUnavailableCode) (ProtectedCompletionPolicy.decide (Ok(policy [])) (ProtectedPolicySource.Base(String('b', 40), Error "malformed")) |> Result.mapError _.Code)
+              Assert.equal (Error ProtectedCompletionPolicy.PolicyUnavailableCode) (ProtectedCompletionPolicy.decide (Ok(policy [])) (ProtectedPolicySource.Unavailable "no git") |> Result.mapError _.Code)
+              // History: every committed version binds.
+              let history = ProtectedPolicySource.History [ String('2', 40), policy []; String('1', 40), policy [ "attested" ] ]
+              Assert.equal (Error ProtectedCompletionPolicy.PolicyChangedCode) (ProtectedCompletionPolicy.decide (Ok(policy [])) history |> Result.mapError _.Code)
+              Assert.equal (Ok(policy [])) (ProtectedCompletionPolicy.decide (Ok(policy [])) (ProtectedPolicySource.History []))
+              // trust: keyless, unpinned, outside the pin, inside the repository, and the genuine case.
+              let code result = result |> Result.mapError _.Code
+              Assert.equal (Error ProtectedCompletionPolicy.AttestationRequiredCode) (code (ProtectedCompletionPolicy.trust (pinned [ key 'a' ]) [] None))
+              Assert.equal (Error ProtectedCompletionPolicy.UntrustedAuthorityCode) (code (ProtectedCompletionPolicy.trust (policy [ "attested" ]) [ key 'a' ] None))
+              Assert.equal (Error ProtectedCompletionPolicy.UntrustedAuthorityCode) (code (ProtectedCompletionPolicy.trust (pinned [ key 'a' ]) [ key 'a'; key 'b' ] None))
+              Assert.equal (Error ProtectedCompletionPolicy.UntrustedAuthorityCode) (code (ProtectedCompletionPolicy.trust (pinned [ key 'a' ]) [ key 'a' ] (Some "/repo")))
+              Assert.equal (Ok()) (code (ProtectedCompletionPolicy.trust (pinned [ key 'a'; key 'b' ]) [ key 'a' ] None))
+              // Not required: unattested is allowed; a present pin still binds an attested authority.
+              Assert.equal (Ok()) (code (ProtectedCompletionPolicy.trust (policy []) [] None))
+              Assert.equal (Ok()) (code (ProtectedCompletionPolicy.trust (policy []) [ key 'a' ] (Some "/repo")))
+              Assert.equal (Error ProtectedCompletionPolicy.UntrustedAuthorityCode) (code (ProtectedCompletionPolicy.trust { policy [] with TrustedVerifierKeyIds = Some [ key 'a' ] } [ key 'b' ] None)))
+
+          t "REL-GATE-004 end to end through the real Dokimos: a pinned host verifier completes, PROBE-3 and PROBE-4 are refused" (fun () ->
+              match attestedDokimos () with
+              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL does not provide completion.verify-attested/1"
+              | Some dll ->
+                  let dokimos = DokimosCompletionVerifier.create (Ok dll) (TimeSpan.FromSeconds 120.0)
+                  // Genuine: the host verifier's key pinned in protected policy.
+                  let f = fixture [ "true" ] true
+                  CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+                  CliHarness.commitAll f.Root "policy"
+                  Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  receipts (verify f "tok-1") |> ignore
+                  let verifiedCommit = head f
+                  let report = complete f dokimos "tok-1"
+
+                  match report.Result.Outcome with
+                  | CompletionOutcome.Completed(_, completion) ->
+                      Assert.isTrue (completion.VerifierVersion.StartsWith "0.7") completion.VerifierVersion
+                      Assert.equal [ f.Key.Trusted.KeyId ] completion.VerifierKeyIds
+                  | other -> failwith $"expected the real Dokimos to verify the pinned attested completion, got {other}"
+
+                  Assert.equal verifiedCommit (CliHarness.git f.Root [ "rev-parse"; "HEAD^" ])
+                  Assert.equal "" (status f)
+                  // PROBE-3 through the CLI: the agent drops attestation in a commit and forges store evidence.
+                  let g = fixture [ "true" ] false
+                  CliHarness.write g.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+                  CliHarness.commitAll g.Root "policy"
+                  Assert.equal 0 (CliHarness.rosWith g.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  CliHarness.write g.Root "ros.json" "{\"workProtocol\":{}}"
+                  CliHarness.commitAll g.Root "agent drops attestation"
+                  let validate = [ "work"; "validate-run"; "--id"; item; "--token"; "tok-1"; "--generation"; "1"; "--validation"; "unit-tests"; "--evidence-id"; "EV-TESTS"; "--"; "true" ]
+                  Assert.equal 0 (CliHarness.rosWith g.Root identity validate).Exit
+                  let environment = [ "PRAXIS_DOKIMOS_EXECUTABLE", dll; FileDerivedCompletion.AuthorityVariable, g.Authority; FileDerivedCompletion.ContractVariable, g.Contract ]
+                  let probe3 = CliHarness.rosWith g.Root (environment @ identity) [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ]
+                  Assert.equal 3 probe3.Exit
+                  Assert.isTrue (probe3.Out.Contains ProtectedCompletionPolicy.PolicyChangedCode) probe3.Out
+                  // PROBE-4 through the CLI: an own-key authority under an unpinned attested policy.
+                  let h = fixture [ "true" ] true
+                  CliHarness.write h.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
+                  CliHarness.commitAll h.Root "policy"
+                  Assert.equal 0 (CliHarness.rosWith h.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  receipts (verify h "tok-1") |> ignore
+                  let environment = [ "PRAXIS_DOKIMOS_EXECUTABLE", dll; FileDerivedCompletion.AuthorityVariable, h.Authority; FileDerivedCompletion.ContractVariable, h.Contract ]
+                  let probe4 = CliHarness.rosWith h.Root (environment @ identity) [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ]
+                  Assert.equal 3 probe4.Exit
+                  Assert.isTrue (probe4.Out.Contains ProtectedCompletionPolicy.UntrustedAuthorityCode) probe4.Out) ]

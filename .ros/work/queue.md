@@ -231,6 +231,7 @@
 | PRAXIS-WORK-ABANDON-01 | work abandon: cancel live (ready/active/blocked) work items truthfully | complete | work-protocol, cli | high |
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | REL-GATE-003 | Label verified completions attested/unattested; requireVerifiedCompletion implies requireAttestedEvidence | complete | completion, security | high |
+| REL-GATE-004 | Attested completion: read completion policy from the protected base and pin the verifier trust root in protected policy | ready | completion, security | high |
 | RELEASE-3-10-0 | Release Praxis 3.10.0 | complete |  | medium |
 | RELEASE-3-11-0 | Release Praxis 3.11.0 | complete |  | medium |
 | RELEASE-3-12-0 | Release Praxis 3.12.0 | complete |  | medium |

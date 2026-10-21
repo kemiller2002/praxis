@@ -14,6 +14,20 @@ to every item, and implies `requireAttestedEvidence` unless
 [`verified-completion-rollout.md`](verified-completion-rollout.md)).
 Unreadable policy or claim state, or a malformed flag, fails closed.
 
+These flags are decided against the **protected policy** (REL-GATE-004):
+`ros.json` at the merge base of `HEAD` and the configured upstream branch
+(`workProtocol.upstreamSync`, default `origin/main`), or, with no such branch,
+every committed version in `HEAD`'s history. A worktree or branch `ros.json`
+that weakens any of them relative to that source is refused with
+`PRX.COMPLETION.POLICY_CHANGED`; strengthening is allowed; an unreadable
+protected `ros.json` or unrelated history refuses `complete-verified` with
+`PRX.COMPLETION.POLICY_UNAVAILABLE`. When attestation is required, the
+authority's `TrustedVerifierKeys` must all be pinned in protected policy
+(`workProtocol.trustedVerifierKeyIds`) and the authority file must resolve
+outside the worktree and Git directory, or completion is refused with
+`PRX.COMPLETION.UNTRUSTED_AUTHORITY`. Attested mode resists forgery only
+with this host-controlled trust root; see the rollout document for its limits.
+
 ## Claim record
 
 A claim (`praxis.work-claim/1`) is stored apart from `.ros/work/queue.json`,
@@ -28,7 +42,7 @@ are unaffected.
 | `holder` | claimant, single-use claim token, `acquiredAt`, `leaseExpiresAt` |
 | `pendingPacketDigest` | the packet being verified (crash recovery) |
 | `consumedPacketDigests` | packets already accepted (replay protection) |
-| `completion` | commit, verification revision, requirement IDs, packet and receipt digests, verifier, and `attestation` (`attested` or `unattested`; REL-GATE-003) |
+| `completion` | commit, verification revision, requirement IDs, packet and receipt digests, verifier, `attestation` (`attested` or `unattested`; REL-GATE-003) and `verifierKeyIds` (the key IDs that signed the receipts of an attested completion, empty otherwise; REL-GATE-004) |
 
 `effectiveStatus` in command output reports `expired` for an active claim
 whose lease has passed, even before anyone records that durably.
@@ -146,6 +160,11 @@ admission is wired in):
 `TrustedVerifierKeys` and `ValidationPolicyDigest` (I6) are optional. A
 non-empty `TrustedVerifierKeys` switches the item to **attested mode**
 (below). Without it, behaviour is the non-attested `validate-run` path.
+The authority file is caller-chosen, so it is not the trust root
+(REL-GATE-004): every key it trusts must be pinned in protected policy
+(`workProtocol.trustedVerifierKeyIds`) whenever that list is present or
+attestation is required, and under required attestation the file must live
+outside the repository and its Git directory.
 
 ## Evidence model (PRAXIS-REL-005, REL-GATE-001)
 
@@ -366,7 +385,7 @@ recovers at generation + 1 and the old owner is refused.
 2. Verifies with Dokimos (the gate above).
 3. Appends the canonical tracked `work.completion.verified` event to
    `.ros/events/events.jsonl`, carrying `verifiedCommit`, `receiptDigests`,
-   `packetDigest` and `attestation` (never the claim token).
+   `packetDigest`, `attestation` and, for an attested completion, `verifierKeyIds` (never the claim token).
 4. Makes a **metadata-only commit** whose parent is the verified commit and
    which touches only `.ros/events/events.jsonl` (checked after the commit).
 5. Outputs `verifiedCommit` and `metadataCommit`; the worktree ends clean.
@@ -414,8 +433,8 @@ contract again (`admissionCache: "hit"`). The entry is content-addressed and
 re-admitted under the same pin, so a tampered entry can only fail as stale;
 REL-GATE-002 readiness is always recomputed.
 
-The output reports `attestation` (`attested` or `unattested`) for a verified
-or replayed completion, `timings` in milliseconds for `claim`, `admission`,
+The output reports `attestation` (`attested` or `unattested`) and
+`verifierKeyIds` for a verified or replayed completion, `timings` in milliseconds for `claim`, `admission`,
 `receipts`, `dokimos` and `metadataCommit`, and `admissionCache`. An
 `unattested` completion is not forgery-resistant against anyone with write
 access to the repository (REL-GATE-003).
@@ -478,7 +497,9 @@ verbatim), `CONFLICT`, `RECEIPT_MISSING`, `RECEIPT_UNTRUSTED_KEY`,
 `RECEIPT_INVALID_SIGNATURE`, `RECEIPT_MALFORMED`, `RECEIPT_BINDING_MISMATCH`,
 `RECEIPT_NOT_PASSED`, `RECEIPT_STALE`, `VERIFIER_ATTESTATION_UNSUPPORTED`,
 `ARGUMENT_MISMATCH`, `DIRTY_WORKTREE`, `HEAD_MISMATCH`,
-`METADATA_COMMIT_FAILED`, `IDENTITY_VIOLATED`, `NOT_COMPLETED`.
+`METADATA_COMMIT_FAILED`, `IDENTITY_VIOLATED`, `NOT_COMPLETED`,
+`ATTESTATION_REQUIRED`, `POLICY_CHANGED`, `POLICY_UNAVAILABLE`,
+`UNTRUSTED_AUTHORITY` (REL-GATE-004).
 `PRX.VALIDATION.DIRTY_WORKTREE` (`validate-run`, `verify`).
 `PRX.CLAIM.LEGACY_STORE`. `PRX.VERIFIER.STALE_CLAIM`, `INVALID_REQUEST`,
 `COMMIT_UNAVAILABLE`, `UNAVAILABLE`, `RESPONSE_MISMATCH`, `PROTECTED_PATH`.
