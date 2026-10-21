@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-5d2d693879d4ecf3",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-20-REL-GATE-004-attested-trust-root-not-enforced.md",
     "fileName": "2026-10-20-REL-GATE-004-attested-trust-root-not-enforced.md",
@@ -180,7 +180,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-21T03:34:12.832Z",
   "releaseReason": null,
   "rejectionReason": null
 }
