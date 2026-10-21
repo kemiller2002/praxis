@@ -29,17 +29,21 @@ comes from protected policy, not from the authority file.
 **Protected source.** `complete-verified`, and the plain `work complete` guard for
 `requireVerifiedCompletion`, compare the worktree's completion policy with:
 
-1. `ros.json` at the merge base of `HEAD` and `refs/remotes/<remote>/<branch>`, where remote and branch
-   are `workProtocol.upstreamSync.remote` and `.branch` (default `origin`/`main`, as `praxis sync` reads
-   them). A change to the merged protected branch moves the base forward, so a reviewed change applies
-   once it is merged.
-2. When that branch does not exist locally, every readable committed version of `ros.json` in `HEAD`'s
-   history. Each version binds: a policy once committed cannot be weakened by a later commit. Rotating the
+1. `ros.json` at the merge base of `HEAD` and the protected branch. The branch is located with a fixed
+   bootstrap locator, the target of `refs/remotes/origin/HEAD` (else `origin/main`), never with the
+   `upstreamSync` of the worktree or candidate commit, which the completing process controls. If the
+   protected `ros.json` found there configures another `workProtocol.upstreamSync` remote and branch,
+   the base is re-located there exactly once (no further hops); if that ref does not exist locally, the
+   bootstrap base stands. A change to the merged protected branch moves the base forward, so a reviewed
+   change applies once it is merged.
+2. When the bootstrap branch does not exist locally, every readable committed version of `ros.json` in
+   `HEAD`'s history. Each version binds: a policy once committed cannot be weakened by a later commit. Rotating the
    trust root or relaxing policy in such a repository needs a protected branch to compare with.
 
 The worktree's policy applies only if it is no weaker than the protected source: no requirement removed,
 `allowUnattestedEvidence` not added, no verifier key trusted that the protected policy does not trust, and
-(against a merge base) the same `upstreamSync` remote and branch. Strengthening is allowed. Anything else
+(against a merge base) the same `upstreamSync` remote and branch as the protected policy, so pointing
+`upstreamSync` at another branch, the agent's own or one that does not exist, is a policy change. Strengthening is allowed. Anything else
 is refused with `PRX.COMPLETION.POLICY_CHANGED`. A protected `ros.json` that is malformed, or a `HEAD`
 that shares no history with the protected branch or does not resolve, refuses `complete-verified` with
 `PRX.COMPLETION.POLICY_UNAVAILABLE`. Outside Git the plain `work complete` guard keeps reading the
@@ -75,9 +79,10 @@ attested completion; until then attested completion fails closed with `PRX.COMPL
 
 **What this does and does not stop.** Attested mode resists forgery only with a host-controlled trust root:
 the verifier key held outside the agent's reach, and the pin on a protected branch. Praxis reads the
-protected branch from the local repository. A process that can rewrite that local ref or the history it
-points to (for example `git update-ref refs/remotes/origin/main`, a rewritten root commit, or pushing to
-the protected branch) controls the protected source too. Where the completing process is agent-controlled,
+protected branch from the local repository. The remaining limit is a process that can rewrite
+`refs/remotes/origin/HEAD`, `refs/remotes/origin/main` or the protected branch's local ref, or the
+history they point to (for example `git update-ref refs/remotes/origin/main HEAD`, a rewritten root
+commit, or pushing to the protected branch): it controls the protected source too. Where the completing process is agent-controlled,
 the host must also check, after the fact, that the completion's `verifierKeyIds` match the host verifier's
 key, that the authority path the process used is the host's, and that the agent's commits do not change
 `ros.json`.
@@ -147,7 +152,8 @@ change that sets it.
 - **Unattested mode is forgeable by a repository writer.** See "Attested and unattested completion"
   above. Only `attested` completions resist a writer who forges store evidence.
 - **The protected source is local.** See "Protected policy and trust root" above: a process that can
-  rewrite the local protected ref or its history defeats it, so agent-controlled completions also need the
+  rewrite `refs/remotes/origin/HEAD`, `origin/main` or the protected branch's local ref, or its history,
+  defeats it, so agent-controlled completions also need the
   host-side audit described there.
 - **Key in memory.** A root-privileged process on the verifier host can read the key from memory. The
   gate's trust-root item is the mitigation.

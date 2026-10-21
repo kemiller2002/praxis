@@ -46,6 +46,28 @@ module ProtectedCompletionPolicy =
 
     let private finding code detail : CompletionFinding = { Code = code; Detail = detail }
 
+    /// The fixed locator the protected base is first looked up with
+    /// (REL-GATE-004): the remote's default branch when `origin/HEAD`
+    /// names one, else origin/main. Never the worktree's or the candidate
+    /// commit's `upstreamSync`, which the completing process controls.
+    let bootstrapLocator (originHead: (string * string) option) : string * string =
+        originHead |> Option.defaultValue empty.Upstream
+
+    /// `refs/remotes/origin/HEAD`'s symbolic target as a locator, if it is one.
+    let parseOriginHead (target: string) : (string * string) option =
+        let prefix = "refs/remotes/origin/"
+        let target = target.Trim()
+
+        if target.StartsWith(prefix, StringComparison.Ordinal) && target.Length > prefix.Length then
+            Some("origin", target.Substring prefix.Length)
+        else
+            None
+
+    /// The one re-location allowed: when the protected policy found at the
+    /// bootstrap base configures another upstream, look there exactly once.
+    let relocation (bootstrap: string * string) (protectedPolicy: CompletionPolicy) : (string * string) option =
+        if protectedPolicy.Upstream = bootstrap then None else Some protectedPolicy.Upstream
+
     /// Why the policy requires attested evidence, if it does (REL-GATE-003):
     /// `requireAttestedEvidence`, or `requireVerifiedCompletion` without the
     /// `allowUnattestedEvidence` opt-out.

@@ -917,6 +917,80 @@ module AttestedCompletionTests =
               | CompletionOutcome.Completed _ -> ()
               | other -> failwith $"expected a stricter branch policy to complete, got {other}")
 
+          t "REL-GATE-004: an upstreamSync pointing at the agent's own branch cannot make its policy the protected one" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "policy on main"
+              let a, _ = shared f
+              CliHarness.git a [ "checkout"; "-q"; "-b"; "agent/x" ] |> ignore
+              claimIn a "agent-a" "tok-1" |> ignore
+              let keyless = authorityTrusting f [] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "keyless.json"))
+              let own = VerifierKey.generate ()
+              let ownAuthority = authorityTrusting f [ own.Trusted ] (Path.Combine(CliHarness.temporaryDirectory "praxis-agent-host", "own-key.json"))
+              let seen = ResizeArray()
+              let locator branch = $"\"upstreamSync\":{{\"remote\":\"origin\",\"branch\":\"{branch}\"}}"
+
+              let attempts =
+                  [ "{\"workProtocol\":{" + locator "agent/x" + "}}", keyless
+                    "{\"workProtocol\":{\"requireVerifiedCompletion\":true,\"allowUnattestedEvidence\":true," + locator "agent/x" + "}}", keyless
+                    pinnedPolicy ("\"requireAttestedEvidence\":true," + locator "agent/x") [ f.Key.Trusted.KeyId; own.Trusted.KeyId ], ownAuthority ]
+
+              for weakened, authority in attempts do
+                  CliHarness.write a "ros.json" weakened
+                  CliHarness.commitAll a "agent weakens policy and points upstreamSync at its own branch"
+                  // The remote-tracking ref of the agent's branch is HEAD: by update-ref, then by an ordinary push.
+                  CliHarness.git a [ "update-ref"; "refs/remotes/origin/agent/x"; "HEAD" ] |> ignore
+                  Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeIn a f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some authority }))
+                  CliHarness.git a [ "push"; "-q"; "origin"; "agent/x" ] |> ignore
+                  Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeIn a f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some authority }))
+
+              // A locator naming a branch that does not exist is a moved locator, not a history pass.
+              CliHarness.write a "ros.json" (pinnedPolicy ("\"requireAttestedEvidence\":true," + locator "nowhere") [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "agent points upstreamSync at a missing branch"
+              let report = completeIn a f (accepting seen) { arguments f "tok-1" with AuthorityPath = Some keyless }
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes report)
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Rejected(findings, _) -> Assert.isTrue (findings.Head.Detail.Contains "upstreamSync moved from origin/main") findings.Head.Detail
+              | other -> failwith $"expected a moved-locator refusal, got {other}"
+
+              Assert.equal 0 seen.Count)
+
+          t "REL-GATE-004: a protected policy that configures a non-main upstream is located there once and still completes" (fun () ->
+              let f = fixture [ "true" ] true
+              let develop = $"\"upstreamSync\":{{\"remote\":\"origin\",\"branch\":\"develop\"}}"
+              CliHarness.write f.Root "ros.json" (pinnedPolicy ("\"requireAttestedEvidence\":true," + develop) [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll f.Root "policy on main names develop"
+              let a, _ = shared f
+              CliHarness.git a [ "push"; "-q"; "origin"; "main:develop" ] |> ignore
+              CliHarness.git a [ "fetch"; "-q"; "origin" ] |> ignore
+              CliHarness.git a [ "checkout"; "-q"; "-b"; "develop"; "origin/develop" ] |> ignore
+              // develop moves ahead of main with a stricter policy; the relocated base is develop's.
+              CliHarness.write a "ros.json" (pinnedPolicy ("\"requireAttestedEvidence\":true,\"requireVerifiedCompletion\":true," + develop) [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "develop: stricter"
+              CliHarness.git a [ "push"; "-q"; "origin"; "develop" ] |> ignore
+              CliHarness.git a [ "checkout"; "-q"; "-b"; "feature" ] |> ignore
+              claimIn a "agent-a" "tok-1" |> ignore
+              // Dropping develop's stricter flag in the feature branch is a change relative to develop, not to main.
+              CliHarness.write a "ros.json" (pinnedPolicy ("\"requireAttestedEvidence\":true," + develop) [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "feature drops requireVerifiedCompletion"
+              Assert.equal [ ProtectedCompletionPolicy.PolicyChangedCode ] (codes (completeIn a f (accepting (ResizeArray())) (arguments f "tok-1")))
+              CliHarness.write a "ros.json" (pinnedPolicy ("\"requireAttestedEvidence\":true,\"requireVerifiedCompletion\":true," + develop) [ f.Key.Trusted.KeyId ])
+              CliHarness.commitAll a "feature restores develop's policy"
+              receipts (verifyIn f a ClaimStoreChoice.Local "tok-1") |> ignore
+
+              match (completeIn a f (accepting (ResizeArray())) (arguments f "tok-1")).Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) -> Assert.equal [ f.Key.Trusted.KeyId ] completion.VerifierKeyIds
+              | other -> failwith $"expected the develop-configured protected policy to complete, got {other}")
+
+          t "REL-GATE-004: the bootstrap locator and the single re-location are pure" (fun () ->
+              Assert.equal ("origin", "main") (ProtectedCompletionPolicy.bootstrapLocator None)
+              Assert.equal ("origin", "trunk") (ProtectedCompletionPolicy.bootstrapLocator (ProtectedCompletionPolicy.parseOriginHead "refs/remotes/origin/trunk\n"))
+              Assert.equal None (ProtectedCompletionPolicy.parseOriginHead "refs/heads/main")
+              Assert.equal None (ProtectedCompletionPolicy.parseOriginHead "refs/remotes/origin/")
+              Assert.equal None (ProtectedCompletionPolicy.relocation ("origin", "main") (policy []))
+              Assert.equal (Some("origin", "develop")) (ProtectedCompletionPolicy.relocation ("origin", "main") { policy [] with Upstream = "origin", "develop" }))
+
           t "REL-GATE-004 PROBE-4: an authority that pins the caller's own key is untrusted" (fun () ->
               let f = fixture [ "true" ] true
               // No trust root pinned: the caller-chosen authority cannot be one.
@@ -1063,7 +1137,7 @@ module AttestedCompletionTests =
 
               Assert.equal 0 seen.Count
               // Outside any Git repository there is no protected policy to read.
-              match ProtectedCompletionPolicy.decide (Ok(policy [ "attested" ])) (FileWorkClaims.protectedPolicySource (CliHarness.temporaryDirectory "praxis-no-git") ("origin", "main")) with
+              match ProtectedCompletionPolicy.decide (Ok(policy [ "attested" ])) (FileWorkClaims.protectedPolicySource (CliHarness.temporaryDirectory "praxis-no-git")) with
               | Error finding -> Assert.equal ProtectedCompletionPolicy.PolicyUnavailableCode finding.Code
               | Ok _ -> failwith "expected an unavailable protected policy to fail closed")
 

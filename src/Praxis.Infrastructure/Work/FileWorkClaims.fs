@@ -382,20 +382,48 @@ module FileWorkClaims =
             if String.IsNullOrWhiteSpace listed then Ok ProtectedCompletionPolicy.empty
             else gitText root [ "show"; $"{commit}:ros.json" ] |> Result.bind parseCompletionPolicy)
 
+    /// The merge base of HEAD and `refs/remotes/<remote>/<branch>`: `None`
+    /// when that ref does not exist, an error when they share no history.
+    let private mergeBase (root: string) (remote: string, branch: string) : Result<string, string> option =
+        match gitText root [ "rev-parse"; "--verify"; "--quiet"; $"refs/remotes/{remote}/{branch}^{{commit}}" ] with
+        | Error _ -> None
+        | Ok upstream ->
+            gitText root [ "merge-base"; "HEAD"; upstream.Trim() ]
+            |> Result.map _.Trim()
+            |> Result.mapError (fun reason -> $"HEAD shares no history with {remote}/{branch}: {reason}")
+            |> Some
+
     /// The protected source the completion policy is compared with
-    /// (REL-GATE-004): ros.json at the merge base of HEAD and
-    /// `refs/remotes/<remote>/<branch>`, or, with no such branch, every
-    /// readable committed version of ros.json in HEAD's history.
-    let protectedPolicySource (root: string) (remote: string, branch: string) : ProtectedPolicySource =
+    /// (REL-GATE-004). The base is located with a fixed bootstrap locator
+    /// (`refs/remotes/origin/HEAD`'s target, else origin/main), never with
+    /// the worktree's or candidate's `upstreamSync`. When the protected
+    /// policy found there configures another upstream, the base is
+    /// re-located there exactly once; if that ref is absent the bootstrap
+    /// base stands. With no bootstrap ref, every readable committed version
+    /// of ros.json in HEAD's history binds.
+    let protectedPolicySource (root: string) : ProtectedPolicySource =
         match gitText root [ "rev-parse"; "--verify"; "--quiet"; "HEAD^{commit}" ] with
         | Error reason -> ProtectedPolicySource.Unavailable $"HEAD does not resolve: {reason}"
         | Ok _ ->
-            match gitText root [ "rev-parse"; "--verify"; "--quiet"; $"refs/remotes/{remote}/{branch}^{{commit}}" ] with
-            | Ok upstream ->
-                match gitText root [ "merge-base"; "HEAD"; upstream.Trim() ] with
-                | Ok commit -> ProtectedPolicySource.Base(commit.Trim(), committedPolicy root (commit.Trim()))
-                | Error reason -> ProtectedPolicySource.Unavailable $"HEAD shares no history with {remote}/{branch}: {reason}"
-            | Error _ ->
+            let bootstrap =
+                gitText root [ "symbolic-ref"; "--quiet"; "refs/remotes/origin/HEAD" ]
+                |> Result.toOption
+                |> Option.bind ProtectedCompletionPolicy.parseOriginHead
+                |> ProtectedCompletionPolicy.bootstrapLocator
+
+            let based commit = ProtectedPolicySource.Base(commit, committedPolicy root commit)
+
+            match mergeBase root bootstrap with
+            | Some(Error reason) -> ProtectedPolicySource.Unavailable reason
+            | Some(Ok commit) ->
+                match based commit with
+                | ProtectedPolicySource.Base(_, Ok protectedPolicy) as source ->
+                    match ProtectedCompletionPolicy.relocation bootstrap protectedPolicy |> Option.bind (mergeBase root) with
+                    | None -> source
+                    | Some(Error reason) -> ProtectedPolicySource.Unavailable reason
+                    | Some(Ok relocated) -> based relocated
+                | source -> source
+            | None ->
                 match gitText root [ "log"; "--format=%H"; "HEAD"; "--"; "ros.json" ] with
                 | Error reason -> ProtectedPolicySource.Unavailable $"the history of ros.json could not be read: {reason}"
                 | Ok listed ->
@@ -407,9 +435,7 @@ module FileWorkClaims =
     /// The effective completion policy (REL-GATE-004): the worktree's, once it
     /// is shown to be no weaker than the protected source.
     let effectivePolicy (root: string) : Result<CompletionPolicy, CompletionFinding> =
-        let worktree = readWorktreePolicy root
-        let upstream = worktree |> Result.map _.Upstream |> Result.defaultValue ProtectedCompletionPolicy.empty.Upstream
-        ProtectedCompletionPolicy.decide worktree (protectedPolicySource root upstream)
+        ProtectedCompletionPolicy.decide (readWorktreePolicy root) (protectedPolicySource root)
 
     /// `path` with every symbolic link along it resolved.
     let rec private canonical (path: string) : string =
@@ -469,8 +495,8 @@ module FileWorkClaims =
         // to plain completion. Outside Git there is nothing to compare with.
         let source =
             worktree
-            |> Result.map (fun policy ->
-                match protectedPolicySource root policy.Upstream with
+            |> Result.map (fun _ ->
+                match protectedPolicySource root with
                 | ProtectedPolicySource.Unavailable _ -> ProtectedPolicySource.History []
                 | source -> source)
 

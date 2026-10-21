@@ -6738,6 +6738,30 @@
       },
       "source": "intake",
       "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-GATE-004-attested-trust-root-not-enforced.md"
+    },
+    {
+      "id": "REL-GATE-004-LOCATOR",
+      "title": "REL-GATE-004 follow-up: locate the protected completion-policy base with a fixed bootstrap locator, never the worktree's upstreamSync",
+      "description": "Review of 41dac7dc: effectivePolicy and plain completion located the protected base with the worktree ros.json upstreamSync locator, so an agent pointing upstreamSync.branch at its own branch (remote-tracking ref = HEAD) made its own policy the protected one. Locate with refs/remotes/origin/HEAD (else origin/main), re-locate once with the protected policy's own upstreamSync, keep the History fallback.",
+      "tags": [
+        "completion",
+        "security"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-21T03:36:00.235Z",
+      "updatedAt": "2026-10-21T03:36:00.721Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "review",
+      "sourceReference": "coordinator review of 41dac7dc (REL-GATE-004)"
     }
   ]
 }

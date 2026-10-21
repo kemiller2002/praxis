@@ -15,9 +15,10 @@ to every item, and implies `requireAttestedEvidence` unless
 Unreadable policy or claim state, or a malformed flag, fails closed.
 
 These flags are decided against the **protected policy** (REL-GATE-004):
-`ros.json` at the merge base of `HEAD` and the configured upstream branch
-(`workProtocol.upstreamSync`, default `origin/main`), or, with no such branch,
-every committed version in `HEAD`'s history. A worktree or branch `ros.json`
+`ros.json` at the merge base of `HEAD` and the protected branch, located with
+`refs/remotes/origin/HEAD` (else `origin/main`) and re-located once to the
+protected policy's own `workProtocol.upstreamSync` (never the worktree's), or,
+with no such branch, every committed version in `HEAD`'s history. A worktree or branch `ros.json`
 that weakens any of them relative to that source is refused with
 `PRX.COMPLETION.POLICY_CHANGED`; strengthening is allowed; an unreadable
 protected `ros.json` or unrelated history refuses `complete-verified` with
