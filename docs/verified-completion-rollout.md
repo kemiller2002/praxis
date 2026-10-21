@@ -10,15 +10,82 @@ controls that keep a later configuration change from silently weakening it.
 | `requireVerifiedCompletion` | Plain `work complete` is refused for every item unless `complete-verified` recorded a Dokimos-accepted completion. It **implies** `requireAttestedEvidence` unless `allowUnattestedEvidence` is also `true` (REL-GATE-003) | the value is not a boolean, or `ros.json` is unreadable |
 | `requireAttestedEvidence` | `complete-verified` is refused (`PRX.COMPLETION.ATTESTATION_REQUIRED`) unless the host authority pins `TrustedVerifierKeys`, so only verifier-signed receipts can complete an item (F1) | same as above |
 | `allowUnattestedEvidence` | The explicit, reviewed opt-out: with `requireVerifiedCompletion`, lets an authority without `TrustedVerifierKeys` complete items with unattested evidence. It never overrides `requireAttestedEvidence: true` | same as above; a malformed value refuses every `complete-verified` with `PRX.COMPLETION.ATTESTATION_REQUIRED` |
+| `trustedVerifierKeyIds` | The trust root (REL-GATE-004): the verifier key IDs (`sha256:<hex>` over the key's SPKI, as `praxis verifier serve` prints them) that a completion authority may trust. When attestation is required, an authority is refused (`PRX.COMPLETION.UNTRUSTED_AUTHORITY`) unless this list is non-empty and contains every key the authority names. When present without a requirement, it still binds an attested authority | not an array of `sha256:` + 64 lowercase hex key IDs (`PRX.COMPLETION.ATTESTATION_REQUIRED`) |
 
 Adoption is gradual and per repository: each repository opts in through its own `ros.json`.
 
 Setting `requireVerifiedCompletion` alone requires attestation: an authority with no `TrustedVerifierKeys`
 is refused with `PRX.COMPLETION.ATTESTATION_REQUIRED`. Without attestation, the evidence is produced by the
 implementation agent itself, which experiment REL-001 case C3b and gate case GATE-3 showed can be forged.
-`ros.json` lives on the protected default branch, so any of these flags can change only through a reviewed
-change. No per-run file, environment variable or CLI flag can switch attestation off once the repository
-requires it.
+## Protected policy and trust root (REL-GATE-004)
+
+Praxis 3.17.0 read these flags from the `ros.json` in the worktree being completed and trusted whichever
+authority file the caller named (`--authority`, `PRAXIS_COMPLETION_AUTHORITY`). A process that could run
+`complete-verified` could therefore commit a `ros.json` without `requireAttestedEvidence` (cohort probe
+PROBE-3), or sign a receipt with its own key and name an authority that trusts it (PROBE-4), and complete
+as `verified` without any test run. Completion now decides against a protected source, and the trust root
+comes from protected policy, not from the authority file.
+
+**Protected source.** `complete-verified`, and the plain `work complete` guard for
+`requireVerifiedCompletion`, compare the worktree's completion policy with:
+
+1. `ros.json` at the merge base of `HEAD` and the protected branch. The branch is located with a fixed
+   bootstrap locator, the target of `refs/remotes/origin/HEAD` (else `origin/main`), never with the
+   `upstreamSync` of the worktree or candidate commit, which the completing process controls. If the
+   protected `ros.json` found there configures another `workProtocol.upstreamSync` remote and branch,
+   the base is re-located there exactly once (no further hops); if that ref does not exist locally, the
+   bootstrap base stands. A change to the merged protected branch moves the base forward, so a reviewed
+   change applies once it is merged.
+2. When the bootstrap branch does not exist locally, every readable committed version of `ros.json` in
+   `HEAD`'s history. Each version binds: a policy once committed cannot be weakened by a later commit. Rotating the
+   trust root or relaxing policy in such a repository needs a protected branch to compare with.
+
+The worktree's policy applies only if it is no weaker than the protected source: no requirement removed,
+`allowUnattestedEvidence` not added, no verifier key trusted that the protected policy does not trust, and
+(against a merge base) the same `upstreamSync` remote and branch as the protected policy, so pointing
+`upstreamSync` at another branch, the agent's own or one that does not exist, is a policy change. Strengthening is allowed. Anything else
+is refused with `PRX.COMPLETION.POLICY_CHANGED`. A protected `ros.json` that is malformed, or a `HEAD`
+that shares no history with the protected branch or does not resolve, refuses `complete-verified` with
+`PRX.COMPLETION.POLICY_UNAVAILABLE`. Outside Git the plain `work complete` guard keeps reading the
+worktree policy alone, as before.
+
+**Trust root.** When attestation is required (`requireAttestedEvidence`, or `requireVerifiedCompletion`
+without the opt-out):
+
+1. an authority with no `TrustedVerifierKeys` is refused with `PRX.COMPLETION.ATTESTATION_REQUIRED`
+   (unchanged; PROBE-1);
+2. an authority file that resolves, after following symbolic links, inside the worktree or the Git
+   directory is refused with `PRX.COMPLETION.UNTRUSTED_AUTHORITY`, because the completing process can write
+   it;
+3. the effective policy must pin `trustedVerifierKeyIds`, and every key the authority trusts must be in
+   it; otherwise `PRX.COMPLETION.UNTRUSTED_AUTHORITY`. With attestation required and no pin, no key is
+   trusted, so adding a pin later is itself a policy change: introduce the pin together with the
+   requirement, or merge it to the protected branch first.
+
+The pin is a key ID, not the authority file's digest, because the authority also carries per-contract
+requirements that change between runs while the verifier key does not. Key IDs are the SHA-256 of the
+public key's SPKI and are re-checked against the key whenever a signature is verified, so a key cannot be
+substituted under a pinned ID (gate case GATE-A2B).
+
+**Audit.** An attested completion records the verifier key IDs that signed its receipts as
+`verifierKeyIds` on the claim record's `completion`, on the `work.completion.verified` event and in the
+`complete-verified` output, so a post-hoc audit can compare them with the host verifier's key. An
+unattested completion, or a record written before this field, has an empty list, and its event omits the
+member so that its content-derived `eventId` is unchanged on replay.
+
+**Migration.** A repository that already sets `requireAttestedEvidence` or `requireVerifiedCompletion`
+must add `trustedVerifierKeyIds` with its host verifier's key ID through a reviewed change before its next
+attested completion; until then attested completion fails closed with `PRX.COMPLETION.UNTRUSTED_AUTHORITY`.
+
+**What this does and does not stop.** Attested mode resists forgery only with a host-controlled trust root:
+the verifier key held outside the agent's reach, and the pin on a protected branch. Praxis reads the
+protected branch from the local repository. The remaining limit is a process that can rewrite
+`refs/remotes/origin/HEAD`, `refs/remotes/origin/main` or the protected branch's local ref, or the
+history they point to (for example `git update-ref refs/remotes/origin/main HEAD`, a rewritten root
+commit, or pushing to the protected branch): it controls the protected source too. Where the completing process is agent-controlled,
+the host must also check, after the fact, that the completion's `verifierKeyIds` match the host verifier's
+key, that the authority path the process used is the host's, and that the agent's commits do not change
+`ros.json`.
 
 ## Attested and unattested completion (REL-GATE-003)
 
@@ -62,7 +129,8 @@ change that sets it.
 7. **Trust root in place.**
    - The verifier key is held by the host or CI (a GitHub Actions secret or environment restricted to the
      protected branch), never on an implementation agent's machine.
-   - Policy and authority files come only from the protected branch.
+   - Policy and authority files come only from the protected branch, and protected policy pins the
+     verifier key (`trustedVerifierKeyIds`, REL-GATE-004).
 
 ## Compatibility
 - Requires Praxis ≥ the release containing PRAXIS-REL-009/011/012, and Dokimos ≥ 0.7.0. In attested mode
@@ -83,6 +151,10 @@ change that sets it.
 ## Known limits
 - **Unattested mode is forgeable by a repository writer.** See "Attested and unattested completion"
   above. Only `attested` completions resist a writer who forges store evidence.
+- **The protected source is local.** See "Protected policy and trust root" above: a process that can
+  rewrite `refs/remotes/origin/HEAD`, `origin/main` or the protected branch's local ref, or its history,
+  defeats it, so agent-controlled completions also need the
+  host-side audit described there.
 - **Key in memory.** A root-privileged process on the verifier host can read the key from memory. The
   gate's trust-root item is the mitigation.
 - **Claim re-read is not a trust root.** The verifier re-reads the claim through the agent's chosen store (local or `--store git` on the clone's remote) only to check holder and generation are current. The trust root remains the key, the policy and the authority.

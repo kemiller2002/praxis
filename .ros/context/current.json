@@ -11063,11 +11063,101 @@
         }
       },
       "completedAt": "2026-10-21T01:07:21.006Z"
+    },
+    {
+      "id": "REL-GATE-004",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/ProtectedCompletionPolicy.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AttestedCompletionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-21T03:33:57.533Z",
+      "telemetryExecutionIds": [
+        "EXE-20261021T021759961Z-c8023c01"
+      ],
+      "latestCheckpoint": {
+        "id": "69980221a10481c9e480695a",
+        "recordedAt": "2026-10-21T03:33:53.798Z",
+        "executionId": "EXE-20261021T021759961Z-c8023c01",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-parallel-research-aikt36",
+        "commit": "e981254e3bee23f545617f089b1d5634ade0bb80",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-parallel-research-aikt36",
+        "remoteCommit": "e981254e3bee23f545617f089b1d5634ade0bb80",
+        "summary": "Protected-base completion policy (POLICY_CHANGED/POLICY_UNAVAILABLE), pinned verifier trust root (UNTRUSTED_AUTHORITY), receipt keyids on completions; docs and tests; full suite 2347/2347 passed with PRAXIS_TEST_DOKIMOS_DLL (Dokimos 0.7.0); probes PROBE-3/PROBE-4 refused; validate passed",
+        "nextAction": "Complete REL-GATE-004, complete intake INPUT-5d2d693879d4ecf3, registry build, validate, push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-21T03:33:57.533Z"
+    },
+    {
+      "id": "REL-GATE-004-LOCATOR",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/ProtectedCompletionPolicy.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AttestedCompletionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-21T04:13:11.062Z",
+      "telemetryExecutionIds": [
+        "EXE-20261021T033602295Z-8bc63eb6"
+      ],
+      "latestCheckpoint": {
+        "id": "b8159355ccde393d0d52fed1",
+        "recordedAt": "2026-10-21T04:13:07.371Z",
+        "executionId": "EXE-20261021T033602295Z-8bc63eb6",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-parallel-research-aikt36",
+        "commit": "5cbaa3c483f58035764f89e6756bb600947f9463",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-parallel-research-aikt36",
+        "remoteCommit": "5cbaa3c483f58035764f89e6756bb600947f9463",
+        "summary": "Protected base located with origin/HEAD (else origin/main) and re-located once to the protected policy's upstreamSync; locator attack, missing-branch and develop tests; full suite 2350/2350 with PRAXIS_TEST_DOKIMOS_DLL; PROBE-1..4 and pinned GATE-A1..A4 as expected; validate passed",
+        "nextAction": "Complete REL-GATE-004-LOCATOR, registry build, validate, push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-21T04:13:11.062Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-21T01:07:21.006Z",
+  "updatedAt": "2026-10-21T04:13:11.062Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

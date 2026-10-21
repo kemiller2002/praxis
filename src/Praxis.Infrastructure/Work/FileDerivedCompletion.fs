@@ -247,7 +247,7 @@ type DerivedCompletionReport =
 /// F4 composition of `praxis work complete-verified`.
 [<RequireQualifiedAccess>]
 module FileDerivedCompletion =
-    let AttestationRequiredCode = "PRX.COMPLETION.ATTESTATION_REQUIRED"
+    let AttestationRequiredCode = ProtectedCompletionPolicy.AttestationRequiredCode
 
     let AuthorityVariable = "PRAXIS_COMPLETION_AUTHORITY"
     let ContractVariable = "PRAXIS_ORDO_CONTRACT"
@@ -308,14 +308,18 @@ module FileDerivedCompletion =
             match FileWorkClaims.readAuthorityInput root authorityPath with
             | Error message -> Error message
             | Ok input ->
-                match FileWorkClaims.readAttestationRequirement root with
-                | Error message -> report (rejected [ { Code = AttestationRequiredCode; Detail = message } ]) None
-                | Ok(Some source) when input.TrustedVerifierKeys.IsEmpty ->
-                    report
-                        (rejected
-                            [ { Code = AttestationRequiredCode
-                                Detail = $"{source} requires a host authority that pins TrustedVerifierKeys; unattested evidence cannot complete this item" } ])
-                        None
+                // REL-GATE-004: the policy is the protected one, and the
+                // authority is trusted only within what that policy pins.
+                let trusted =
+                    FileWorkClaims.effectivePolicy root
+                    |> Result.bind (fun policy ->
+                        let inside =
+                            if (ProtectedCompletionPolicy.requirement policy).IsSome then FileWorkClaims.authorityInside root authorityPath else None
+
+                        ProtectedCompletionPolicy.trust policy (input.TrustedVerifierKeys |> List.map _.KeyId) inside)
+
+                match trusted with
+                | Error finding -> report (rejected [ finding ]) None
                 | Ok _ ->
                     match OrdoContractCache.bind root contract arguments.ExpectedOrdoDigest input with
                     | Error findings ->

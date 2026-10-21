@@ -287,15 +287,12 @@ module FileWorkClaims =
     /// (REL-GATE-003): `requireAttestedEvidence`, or `requireVerifiedCompletion`
     /// without the `allowUnattestedEvidence` opt-out.
     let attestationRequirement (requireAttested: bool) (requireVerified: bool) (allowUnattested: bool) : string option =
-        if requireAttested then
-            Some "ros.json workProtocol.requireAttestedEvidence"
-        elif requireVerified && not allowUnattested then
-            Some "ros.json workProtocol.requireVerifiedCompletion (which implies requireAttestedEvidence unless workProtocol.allowUnattestedEvidence is true)"
-        else
-            None
+        ProtectedCompletionPolicy.attestationRequirement requireAttested requireVerified allowUnattested
 
-    /// The effective attestation requirement read from ros.json. Any malformed
-    /// flag, the opt-out included, is an error, so callers fail closed.
+    /// The effective attestation requirement read from the worktree ros.json.
+    /// Any malformed flag, the opt-out included, is an error, so callers fail
+    /// closed. Completion decides against the protected policy instead
+    /// (`effectivePolicy`, REL-GATE-004).
     let readAttestationRequirement (root: string) : Result<string option, string> =
         readRequireAttestedEvidence root
         |> Result.bind (fun requireAttested ->
@@ -303,6 +300,179 @@ module FileWorkClaims =
             |> Result.bind (fun requireVerified ->
                 readAllowUnattestedEvidence root
                 |> Result.map (attestationRequirement requireAttested requireVerified)))
+
+    /// The completion-policy members of one ros.json document (REL-GATE-004).
+    /// A malformed flag or key list is an error, so callers fail closed; the
+    /// upstream locator falls back to `workProtocol.upstreamSync`'s defaults
+    /// exactly as `praxis sync` reads it.
+    let parseCompletionPolicy (json: string) : Result<CompletionPolicy, string> =
+        let keyId = Text.RegularExpressions.Regex("^sha256:[0-9a-f]{64}$")
+
+        try
+            use document = JsonDocument.Parse json
+
+            match document.RootElement.TryGetProperty "workProtocol" with
+            | true, protocol when protocol.ValueKind = JsonValueKind.Object ->
+                let flag (name: string) =
+                    match protocol.TryGetProperty name with
+                    | true, value when value.ValueKind = JsonValueKind.True -> Ok true
+                    | true, value when value.ValueKind = JsonValueKind.False -> Ok false
+                    | true, _ -> Error $"ros.json workProtocol.{name} must be a boolean"
+                    | _ -> Ok false
+
+                let keys =
+                    match protocol.TryGetProperty "trustedVerifierKeyIds" with
+                    | false, _ -> Ok None
+                    | true, value when value.ValueKind = JsonValueKind.Array ->
+                        let entries = value.EnumerateArray() |> Seq.toList
+
+                        if entries |> List.forall (fun entry -> entry.ValueKind = JsonValueKind.String && keyId.IsMatch(entry.GetString())) then
+                            Ok(Some(entries |> List.map _.GetString() |> List.distinct))
+                        else
+                            Error "ros.json workProtocol.trustedVerifierKeyIds must be an array of 'sha256:<64 lowercase hex>' verifier key IDs"
+                    | true, _ -> Error "ros.json workProtocol.trustedVerifierKeyIds must be an array of 'sha256:<64 lowercase hex>' verifier key IDs"
+
+                let locator =
+                    let text (sync: JsonElement) (name: string) fallback =
+                        match sync.TryGetProperty name with
+                        | true, field when field.ValueKind = JsonValueKind.String && not (String.IsNullOrWhiteSpace(field.GetString())) -> field.GetString()
+                        | _ -> fallback
+
+                    match protocol.TryGetProperty "upstreamSync" with
+                    | true, sync when sync.ValueKind = JsonValueKind.Object ->
+                        text sync "remote" (fst ProtectedCompletionPolicy.empty.Upstream), text sync "branch" (snd ProtectedCompletionPolicy.empty.Upstream)
+                    | _ -> ProtectedCompletionPolicy.empty.Upstream
+
+                flag "requireVerifiedCompletion"
+                |> Result.bind (fun verified ->
+                    flag "requireAttestedEvidence"
+                    |> Result.bind (fun attested ->
+                        flag "allowUnattestedEvidence"
+                        |> Result.bind (fun allow ->
+                            keys
+                            |> Result.map (fun pinned ->
+                                { RequireVerifiedCompletion = verified
+                                  RequireAttestedEvidence = attested
+                                  AllowUnattestedEvidence = allow
+                                  TrustedVerifierKeyIds = pinned
+                                  Upstream = locator }))))
+            | _ -> Ok ProtectedCompletionPolicy.empty
+        with error ->
+            Error $"ros.json could not be read: {error.Message}"
+
+    /// The completion policy in the worktree's ros.json (absent: empty).
+    let readWorktreePolicy (root: string) : Result<CompletionPolicy, string> =
+        let path = Path.Combine(root, "ros.json")
+
+        try
+            if File.Exists path then parseCompletionPolicy (File.ReadAllText path) else Ok ProtectedCompletionPolicy.empty
+        with error ->
+            Error $"ros.json could not be read: {error.Message}"
+
+    let private gitText (root: string) (arguments: string list) =
+        match ClaimProcess.run "git" root [] None gitTimeout arguments with
+        | Ok result when result.ExitCode = 0 -> Ok result.Stdout
+        | Ok result -> Error(result.Stderr.Trim())
+        | Error _ -> Error "git is unavailable"
+
+    /// ros.json committed at `commit`: absent is the empty policy.
+    let private committedPolicy (root: string) (commit: string) : Result<CompletionPolicy, string> =
+        gitText root [ "ls-tree"; "--name-only"; commit; "--"; "ros.json" ]
+        |> Result.bind (fun listed ->
+            if String.IsNullOrWhiteSpace listed then Ok ProtectedCompletionPolicy.empty
+            else gitText root [ "show"; $"{commit}:ros.json" ] |> Result.bind parseCompletionPolicy)
+
+    /// The merge base of HEAD and `refs/remotes/<remote>/<branch>`: `None`
+    /// when that ref does not exist, an error when they share no history.
+    let private mergeBase (root: string) (remote: string, branch: string) : Result<string, string> option =
+        match gitText root [ "rev-parse"; "--verify"; "--quiet"; $"refs/remotes/{remote}/{branch}^{{commit}}" ] with
+        | Error _ -> None
+        | Ok upstream ->
+            gitText root [ "merge-base"; "HEAD"; upstream.Trim() ]
+            |> Result.map _.Trim()
+            |> Result.mapError (fun reason -> $"HEAD shares no history with {remote}/{branch}: {reason}")
+            |> Some
+
+    /// The protected source the completion policy is compared with
+    /// (REL-GATE-004). The base is located with a fixed bootstrap locator
+    /// (`refs/remotes/origin/HEAD`'s target, else origin/main), never with
+    /// the worktree's or candidate's `upstreamSync`. When the protected
+    /// policy found there configures another upstream, the base is
+    /// re-located there exactly once; if that ref is absent the bootstrap
+    /// base stands. With no bootstrap ref, every readable committed version
+    /// of ros.json in HEAD's history binds.
+    let protectedPolicySource (root: string) : ProtectedPolicySource =
+        match gitText root [ "rev-parse"; "--verify"; "--quiet"; "HEAD^{commit}" ] with
+        | Error reason -> ProtectedPolicySource.Unavailable $"HEAD does not resolve: {reason}"
+        | Ok _ ->
+            let bootstrap =
+                gitText root [ "symbolic-ref"; "--quiet"; "refs/remotes/origin/HEAD" ]
+                |> Result.toOption
+                |> Option.bind ProtectedCompletionPolicy.parseOriginHead
+                |> ProtectedCompletionPolicy.bootstrapLocator
+
+            let based commit = ProtectedPolicySource.Base(commit, committedPolicy root commit)
+
+            match mergeBase root bootstrap with
+            | Some(Error reason) -> ProtectedPolicySource.Unavailable reason
+            | Some(Ok commit) ->
+                match based commit with
+                | ProtectedPolicySource.Base(_, Ok protectedPolicy) as source ->
+                    match ProtectedCompletionPolicy.relocation bootstrap protectedPolicy |> Option.bind (mergeBase root) with
+                    | None -> source
+                    | Some(Error reason) -> ProtectedPolicySource.Unavailable reason
+                    | Some(Ok relocated) -> based relocated
+                | source -> source
+            | None ->
+                match gitText root [ "log"; "--format=%H"; "HEAD"; "--"; "ros.json" ] with
+                | Error reason -> ProtectedPolicySource.Unavailable $"the history of ros.json could not be read: {reason}"
+                | Ok listed ->
+                    listed.Split('\n', StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions.TrimEntries)
+                    |> Array.toList
+                    |> List.choose (fun commit -> committedPolicy root commit |> Result.toOption |> Option.map (fun policy -> commit, policy))
+                    |> ProtectedPolicySource.History
+
+    /// The effective completion policy (REL-GATE-004): the worktree's, once it
+    /// is shown to be no weaker than the protected source.
+    let effectivePolicy (root: string) : Result<CompletionPolicy, CompletionFinding> =
+        ProtectedCompletionPolicy.decide (readWorktreePolicy root) (protectedPolicySource root)
+
+    /// `path` with every symbolic link along it resolved.
+    let rec private canonical (path: string) : string =
+        let full = Path.GetFullPath path
+
+        match Path.GetDirectoryName full with
+        | null -> full
+        | parent ->
+            let candidate = Path.Combine(canonical parent, Path.GetFileName full)
+            let info : FileSystemInfo = if Directory.Exists candidate then DirectoryInfo candidate else FileInfo candidate
+
+            match info.LinkTarget with
+            | null -> candidate
+            | _ ->
+                match info.ResolveLinkTarget true with
+                | null -> candidate
+                | target -> canonical target.FullName
+
+    /// The repository location (worktree or Git directory) that the completion
+    /// authority at `path` resolves inside, following symbolic links, if any
+    /// (REL-GATE-004): a file there is writable by the completing process.
+    let authorityInside (root: string) (path: string) : string option =
+        let file = canonical (if Path.IsPathRooted path then path else Path.Combine(root, path))
+
+        let locations =
+            [ Some root
+              gitText root [ "rev-parse"; "--show-toplevel" ] |> Result.toOption
+              gitText root [ "rev-parse"; "--path-format=absolute"; "--git-common-dir" ] |> Result.toOption
+              gitText root [ "rev-parse"; "--path-format=absolute"; "--git-dir" ] |> Result.toOption ]
+            |> List.choose id
+            |> List.map (fun location -> canonical (location.Trim()))
+            |> List.distinct
+
+        let separator = string Path.DirectorySeparatorChar
+
+        locations
+        |> List.tryFind (fun location -> file = location || file.StartsWith(location.TrimEnd(Path.DirectorySeparatorChar) + separator, StringComparison.Ordinal))
 
     /// The Ordo contract bytes at `path` (interface I3).
     let private readOrdoContract (root: string) (path: string) =
@@ -318,12 +488,28 @@ module FileWorkClaims =
     /// item's claim from the selected store (fails closed on any read error).
     let plainCompletion (root: string) (choice: ClaimStoreChoice) (ids: string list) : Result<PlainCompletion, string> =
         let claims = store root choice
+        let worktree = readWorktreePolicy root
 
-        readRequireVerifiedCompletion root
-        |> Result.bind (fun requireVerified ->
-            ids
-            |> List.fold (fun acc id -> acc |> Result.bind (fun read -> claims.Read id |> Result.map (fun claim -> read @ [ id, claim ]))) (Ok [])
-            |> Result.map (PlainCompletion.decideAll requireVerified))
+        // REL-GATE-004: requireVerifiedCompletion is decided against the
+        // protected policy too, so a worktree that drops it cannot fall back
+        // to plain completion. Outside Git there is nothing to compare with.
+        let source =
+            worktree
+            |> Result.map (fun _ ->
+                match protectedPolicySource root with
+                | ProtectedPolicySource.Unavailable _ -> ProtectedPolicySource.History []
+                | source -> source)
+
+        match worktree, source with
+        | Error message, _
+        | _, Error message -> Error message
+        | Ok _, Ok source ->
+            match ProtectedCompletionPolicy.decide worktree source with
+            | Error finding -> Ok(PlainCompletion.Refused finding)
+            | Ok policy ->
+                ids
+                |> List.fold (fun acc id -> acc |> Result.bind (fun read -> claims.Read id |> Result.map (fun claim -> read @ [ id, claim ]))) (Ok [])
+                |> Result.map (PlainCompletion.decideAll policy.RequireVerifiedCompletion)
 
     /// The authority input bound to the ready Ordo contract at `contract`
     /// (PRX-REL-008, REL-GATE-002). Without a contract there is no ready

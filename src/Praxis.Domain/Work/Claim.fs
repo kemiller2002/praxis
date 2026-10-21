@@ -86,6 +86,10 @@ type VerifiedCompletion =
       VerifierVersion: string
       /// Whether the evidence was verifier-signed receipts (REL-GATE-003).
       Attestation: CompletionAttestation
+      /// The verifier key IDs that signed the receipts an attested completion
+      /// verified (REL-GATE-004), for audit against the host verifier's key.
+      /// Empty for an unattested completion or a record written before it.
+      VerifierKeyIds: string list
       CompletedAt: DateTimeOffset }
 
 /// One work item's claim record. `Revision` increases by exactly one on

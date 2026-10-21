@@ -1,0 +1,186 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-5d2d693879d4ecf3",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-20-REL-GATE-004-attested-trust-root-not-enforced.md",
+    "fileName": "2026-10-20-REL-GATE-004-attested-trust-root-not-enforced.md",
+    "sha256": "76873f02d4668ff8d71c6d0e189e02464edec4b659f2357e6c6f9f3d79c24e71",
+    "size": 3903
+  },
+  "claimedAt": "2026-10-21T02:17:58.447Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Application/Work/ProtectedCompletionPolicy.fs",
+      "summary": "pure policy decision: worktree policy no weaker than the protected source (POLICY_CHANGED / POLICY_UNAVAILABLE), and the trust root check (UNTRUSTED_AUTHORITY) (Expected behaviour 1, 2)",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:31.265Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs",
+      "summary": "reads ros.json at the merge base with the configured upstream branch, else every committed version; trustedVerifierKeyIds parsing; authority location check following symlinks; plain completion uses the protected policy",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:32.085Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/FileDerivedCompletion.fs",
+      "summary": "complete-verified decides attestation against the protected policy and trusts only pinned verifier keys",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:32.902Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Domain/Work/Claim.fs",
+      "summary": "VerifiedCompletion.VerifierKeyIds names the receipt keyids (Expected behaviour 3)",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:33.711Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Application/Work/WorkClaims.fs",
+      "summary": "the completion gate records the keyids that signed the attested receipts",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:34.509Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/WorkClaimJson.fs",
+      "summary": "verifierKeyIds in the claim record, the work.completion.verified event (when non-empty) and the complete-verified output",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:35.322Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/AttestedCompletionTests.fs",
+      "summary": "REL-GATE-004 acceptance tests: PROBE-3 and PROBE-4 refused, branch ros.json cannot disable requireAttestedEvidence, authority inside the repository refused, pinned host verifier completes (in process and real Dokimos), policy truth table, malformed base fails closed",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:36.103Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/WorkClaimTests.fs",
+      "summary": "frozen I1 completion-verified members: verifierKeyIds only for attested completions",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:36.818Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "constraint",
+      "targetKind": "path",
+      "target": "docs/verified-completion-rollout.md",
+      "summary": "attested mode resists forgery only with a host-controlled trust root; protected policy, trustedVerifierKeyIds, new codes, migration and limits",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:37.624Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    },
+    {
+      "kind": "constraint",
+      "targetKind": "path",
+      "target": "docs/work-claims.md",
+      "summary": "protected policy, trust pin, verifierKeyIds and the new refusal codes",
+      "locator": null,
+      "recordedAt": "2026-10-21T02:31:38.442Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261021T021759961Z-c8023c01"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-21T03:34:12.832Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}
