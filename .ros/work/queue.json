@@ -6679,10 +6679,10 @@
         "security"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-20T22:47:35.008Z",
-      "updatedAt": "2026-10-20T22:47:40.743Z",
+      "updatedAt": "2026-10-21T00:22:08.949Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

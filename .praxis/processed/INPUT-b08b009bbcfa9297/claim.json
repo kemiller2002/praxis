@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-b08b009bbcfa9297",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-20-REL-GATE-003-non-attested-forgery.md",
     "fileName": "2026-10-20-REL-GATE-003-non-attested-forgery.md",
@@ -164,7 +164,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-21T00:22:24.768Z",
   "releaseReason": null,
   "rejectionReason": null
 }
