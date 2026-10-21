@@ -6769,10 +6769,10 @@
       "description": "Bump release.json from 3.18.0 to 3.19.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-21T06:40:59.835Z",
-      "updatedAt": "2026-10-21T06:40:59.967Z",
+      "updatedAt": "2026-10-21T06:41:06.076Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",
