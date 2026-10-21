@@ -278,6 +278,32 @@ module FileWorkClaims =
     /// unattested evidence can ever complete an item.
     let readRequireAttestedEvidence (root: string) = readProtocolFlag "requireAttestedEvidence" root
 
+    /// `workProtocol.allowUnattestedEvidence` in ros.json (REL-GATE-003): the
+    /// explicit, reviewed opt-out that lets `requireVerifiedCompletion` accept
+    /// unattested evidence. It never overrides `requireAttestedEvidence`.
+    let readAllowUnattestedEvidence (root: string) = readProtocolFlag "allowUnattestedEvidence" root
+
+    /// Why repository policy requires attested evidence, if it does
+    /// (REL-GATE-003): `requireAttestedEvidence`, or `requireVerifiedCompletion`
+    /// without the `allowUnattestedEvidence` opt-out.
+    let attestationRequirement (requireAttested: bool) (requireVerified: bool) (allowUnattested: bool) : string option =
+        if requireAttested then
+            Some "ros.json workProtocol.requireAttestedEvidence"
+        elif requireVerified && not allowUnattested then
+            Some "ros.json workProtocol.requireVerifiedCompletion (which implies requireAttestedEvidence unless workProtocol.allowUnattestedEvidence is true)"
+        else
+            None
+
+    /// The effective attestation requirement read from ros.json. Any malformed
+    /// flag, the opt-out included, is an error, so callers fail closed.
+    let readAttestationRequirement (root: string) : Result<string option, string> =
+        readRequireAttestedEvidence root
+        |> Result.bind (fun requireAttested ->
+            readRequireVerifiedCompletion root
+            |> Result.bind (fun requireVerified ->
+                readAllowUnattestedEvidence root
+                |> Result.map (attestationRequirement requireAttested requireVerified)))
+
     /// The Ordo contract bytes at `path` (interface I3).
     let private readOrdoContract (root: string) (path: string) =
         let file = if Path.IsPathRooted path then path else Path.Combine(root, path)

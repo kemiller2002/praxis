@@ -549,7 +549,7 @@ module WorkClaimTests =
               let completed =
                   { PacketDigest = "sha256:" + String('1', 64); ReceiptDigest = "sha256:" + String('2', 64); EvidenceDigests = []; Commit = commit
                     VerificationRevision = commit; RequirementIds = [ item ]; TelemetryExecutions = [ "EXE-1" ]
-                    VerifierName = "dokimos"; VerifierVersion = "0.5.0"; CompletedAt = t0 }
+                    VerifierName = "dokimos"; VerifierVersion = "0.5.0"; Attestation = CompletionAttestation.Unattested; CompletedAt = t0 }
 
               let envelope = set [ "schemaVersion"; "type"; "workItem"; "repository"; "protocolVersion"; "occurredAt"; "eventId" ]
 
@@ -565,7 +565,8 @@ module WorkClaimTests =
               Assert.equal [ "claimToken"; "claimant"; "codes"; "generation"; "packetDigest"; "verifier" ]
                   (keys (ClaimEventPayload.CompletionRejected("a", "t", 1L, [ "PRX.X" ], Some "sha256:x", None)))
               Assert.equal
-                  [ "claimToken"; "claimant"; "commit"; "generation"; "packetDigest"; "receiptDigest"; "requirementIds"; "telemetryExecutions"; "verificationRevision" ]
+                  [ "attestation"; "claimToken"; "claimant"; "commit"; "generation"; "packetDigest"; "receiptDigest"; "requirementIds"; "telemetryExecutions"
+                    "verificationRevision" ]
                   (keys (ClaimEventPayload.CompletionVerified("a", "t", 1L, completed)))
               Assert.equal [ "claimToken"; "generation"; "packetDigest" ] (keys (ClaimEventPayload.CompletionReplayed("t", 1L, "sha256:x")))
               Assert.equal

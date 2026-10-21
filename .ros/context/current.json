@@ -10990,11 +10990,84 @@
         }
       },
       "completedAt": "2026-10-20T12:26:01.386Z"
+    },
+    {
+      "id": "REL-GATE-003",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AttestedCompletionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-21T00:22:08.949Z",
+      "telemetryExecutionIds": [
+        "EXE-20261020T224742490Z-428829b5"
+      ],
+      "latestCheckpoint": {
+        "id": "06602ef49b9f089df4dd95cf",
+        "recordedAt": "2026-10-21T00:22:05.239Z",
+        "executionId": "EXE-20261020T224742490Z-428829b5",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-reliability-integration-g8x7vn",
+        "commit": "4936677ed9ae555819d36f8bd19a4af05c7b8f99",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-reliability-integration-g8x7vn",
+        "remoteCommit": "4936677ed9ae555819d36f8bd19a4af05c7b8f99",
+        "summary": "Attestation label on completion record/event/output; requireVerifiedCompletion implies attestation unless allowUnattestedEvidence; docs and tests; full suite 2336/2336 passed; validate passed",
+        "nextAction": "Complete REL-GATE-003, complete the intake claim, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-21T00:22:08.949Z"
+    },
+    {
+      "id": "RELEASE-3-18-0",
+      "type": "mechanical",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [],
+      "updatedAt": "2026-10-21T01:07:21.006Z",
+      "telemetryExecutionIds": [
+        "EXE-20261021T010714753Z-2738c0de"
+      ],
+      "latestCheckpoint": {
+        "id": "397f85123353588eaea34fd0",
+        "recordedAt": "2026-10-21T01:07:18.508Z",
+        "executionId": "EXE-20261021T010714753Z-2738c0de",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "3bf2819c2b1df11f1560dc45608866c6b5756d4d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "3bf2819c2b1df11f1560dc45608866c6b5756d4d",
+        "summary": "Bumped the package version from 3.17.0 to 3.18.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-21T01:07:21.006Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-20T12:26:01.386Z",
+  "updatedAt": "2026-10-21T01:07:21.006Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
