@@ -6693,6 +6693,27 @@
       },
       "source": "intake",
       "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-GATE-003-non-attested-forgery.md"
+    },
+    {
+      "id": "RELEASE-3-18-0",
+      "title": "Release Praxis 3.18.0",
+      "description": "Bump release.json from 3.17.0 to 3.18.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-21T01:07:13.250Z",
+      "updatedAt": "2026-10-21T01:07:13.446Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
