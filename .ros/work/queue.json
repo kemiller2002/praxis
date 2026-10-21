@@ -6748,10 +6748,10 @@
         "security"
       ],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-21T03:36:00.235Z",
-      "updatedAt": "2026-10-21T03:36:00.721Z",
+      "updatedAt": "2026-10-21T04:13:11.062Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -232,7 +232,7 @@
 | PROJECT-ADMIN-HUB | PROJECT-ADMIN-HUB | complete |  |  |
 | REL-GATE-003 | Label verified completions attested/unattested; requireVerifiedCompletion implies requireAttestedEvidence | complete | completion, security | high |
 | REL-GATE-004 | Attested completion: read completion policy from the protected base and pin the verifier trust root in protected policy | complete | completion, security | high |
-| REL-GATE-004-LOCATOR | REL-GATE-004 follow-up: locate the protected completion-policy base with a fixed bootstrap locator, never the worktree's upstreamSync | ready | completion, security | high |
+| REL-GATE-004-LOCATOR | REL-GATE-004 follow-up: locate the protected completion-policy base with a fixed bootstrap locator, never the worktree's upstreamSync | complete | completion, security | high |
 | RELEASE-3-10-0 | Release Praxis 3.10.0 | complete |  | medium |
 | RELEASE-3-11-0 | Release Praxis 3.11.0 | complete |  | medium |
 | RELEASE-3-12-0 | Release Praxis 3.12.0 | complete |  | medium |

@@ -11112,18 +11112,52 @@
     {
       "id": "REL-GATE-004-LOCATOR",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-21T03:36:01.085Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Application/Work/ProtectedCompletionPolicy.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AttestedCompletionTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-21T04:13:11.062Z",
       "telemetryExecutionIds": [
         "EXE-20261021T033602295Z-8bc63eb6"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "b8159355ccde393d0d52fed1",
+        "recordedAt": "2026-10-21T04:13:07.371Z",
+        "executionId": "EXE-20261021T033602295Z-8bc63eb6",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-parallel-research-aikt36",
+        "commit": "5cbaa3c483f58035764f89e6756bb600947f9463",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-parallel-research-aikt36",
+        "remoteCommit": "5cbaa3c483f58035764f89e6756bb600947f9463",
+        "summary": "Protected base located with origin/HEAD (else origin/main) and re-located once to the protected policy's upstreamSync; locator attack, missing-branch and develop tests; full suite 2350/2350 with PRAXIS_TEST_DOKIMOS_DLL; PROBE-1..4 and pinned GATE-A1..A4 as expected; validate passed",
+        "nextAction": "Complete REL-GATE-004-LOCATOR, registry build, validate, push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-21T04:13:11.062Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-21T03:36:01.085Z",
+  "updatedAt": "2026-10-21T04:13:11.062Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
