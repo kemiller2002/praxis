@@ -48,7 +48,10 @@ type VerifierResponse =
 type StoredReceipt =
     { Path: string
       Digest: string
-      Payload: ReceiptPayload }
+      Payload: ReceiptPayload
+      /// The combined output of the run, as stored beside the receipt
+      /// (`.output.txt`, I8). Read for failure excerpts, never trusted.
+      Output: string }
 
 type WorkVerifyPorts =
     { Claims: WorkClaimStore
@@ -124,6 +127,10 @@ module WorkVerification =
         claim.Holder
         |> Option.filter (fun holder -> holder.ClaimToken = token)
         |> Option.map (fun holder -> { Claimant = holder.Claimant; ClaimToken = token; Generation = claim.Generation })
+
+    /// `work verify` passed: at least one receipt, and every receipt passed.
+    let allPassed (receipts: StoredReceipt list) =
+        not receipts.IsEmpty && receipts |> List.forall (fun receipt -> receipt.Payload.Status = CheckStatus.Passed)
 
     let private binds (request: VerifyRequest) (payload: ReceiptPayload) =
         payload.WorkItemId = request.WorkItemId

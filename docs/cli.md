@@ -267,6 +267,7 @@ praxis registry build [--dry-run] | registry check
 praxis git status [--json]
 praxis sync status [--json] | sync check [--start] [--json]
 praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
+praxis work <claim|verify|complete-verified|finish|completion-identity|claims|...>   # see work-claims.md
 praxis add "..."
 praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkpoint|link|list|show>
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
@@ -395,6 +396,25 @@ shallow boundary, unavailable Git) is rejected with exit `1` and nothing is
 recorded; argument errors exit `2`. `--dry-run` shows the assessment without
 recording. See "Post-hoc attribution reconciliation" in
 [`work-protocol.md`](work-protocol.md) for when to use it and when not to.
+
+### `work finish`
+
+```
+praxis work finish --id ID --token TOKEN [--json] [--excerpt-lines N] [--verify-timeout-seconds N]
+  [--store local|git] [--remote NAME] [any work complete-verified flag]
+```
+
+One deterministic command for the end of claimed, verified work
+(REL-TOKEN-003): `work verify` at `HEAD` (claim fence, dirty-worktree refusal,
+host verifier over `PRAXIS_VERIFIER_SOCKET`), then, only when every receipt
+passed, `work complete-verified` with the same derivation and every
+protected-policy and trust-root check. Default output is one line on success,
+or the refusal codes plus a bounded excerpt (default 40 lines) of each
+failing receipt's stored test output; `--json` prints the full result with
+both steps' documents. Exit codes: `0` verified or replayed, `3` refused or
+not passed, `2` invalid arguments, `1` storage failure. Do not run the full
+test suite yourself immediately before `finish`; it runs it. See
+[`work-claims.md`](work-claims.md) ("One-command finish").
 
 ### `work checkpoint`, `work checkpoint show`, `work continue`
 

@@ -52,7 +52,7 @@ module VerificationJson =
                     :> JsonNode
                 )
 
-            let passed = not receipts.IsEmpty && receipts |> List.forall (fun receipt -> receipt.Payload.Status = CheckStatus.Passed)
+            let passed = WorkVerification.allPassed receipts
 
             render (
                 objectOf

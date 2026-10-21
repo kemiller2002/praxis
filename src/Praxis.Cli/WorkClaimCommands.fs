@@ -6,7 +6,7 @@ open Praxis.Domain.Work
 open Praxis.Infrastructure.Work
 
 /// `praxis work claim|renew|release|recover|expire|claims|validate-run`
-/// (PRX-REL-001..011), and the router for `work complete-verified`,
+/// (PRX-REL-001..011), and the router for `work complete-verified`, `work finish`,
 /// `work completion-identity`, `work verify`, `work claims migrate` and
 /// `verifier serve|run`: parse, call the claim services, render one JSON
 /// document. Exit codes: 0 done or replayed, 2 invalid arguments, 3 refused
@@ -21,10 +21,10 @@ module WorkClaimCommands =
         $"work claim --id ID [--claimant NAME] [--token TOKEN] [--lease-seconds N] [--expected-revision N] {store} | "
         + $"work recover --id ID [--claimant NAME] [--token TOKEN] [--lease-seconds N] {store} | "
         + $"work renew {fence} [--lease-seconds N] [--running] {store} | work release {fence} [--failed] {store} | "
-        + $"work expire --id ID {store} | work claims [ID] {store} | {WorkCompletionCommands.usage} | {WorkValidationCommands.usage} | {VerifierCommands.usage}"
+        + $"work expire --id ID {store} | work claims [ID] {store} | {WorkCompletionCommands.usage} | {WorkFinishCommands.usage} | {WorkValidationCommands.usage} | {VerifierCommands.usage}"
 
     let verbs =
-        set [ "claim"; "recover"; "renew"; "release"; "expire"; "claims"; "complete-verified"; "validate-run"; "verify"; "completion-identity" ]
+        set [ "claim"; "recover"; "renew"; "release"; "expire"; "claims"; "complete-verified"; "validate-run"; "verify"; "completion-identity"; "finish" ]
 
     /// `work <verb> ...` for a claim verb, or `verifier <verb> ...`.
     let (|Routed|_|) (arguments: string list) =
@@ -134,6 +134,7 @@ module WorkClaimCommands =
         | _, Error message -> invalid message
         | "claims", Ok choice -> inspect root choice arguments
         | "complete-verified", Ok choice -> withActor arguments (fun actor -> WorkCompletionCommands.completeVerified root actor choice arguments)
+        | "finish", Ok choice -> withActor arguments (fun actor -> WorkFinishCommands.run root actor choice arguments)
         | "completion-identity", Ok choice -> WorkCompletionCommands.completionIdentity root choice arguments
         | "validate-run", Ok choice -> withActor options (fun actor -> WorkValidationCommands.run root actor choice options command)
         | _, Ok choice -> withActor arguments (fun actor -> mutate root actor choice verb arguments)
