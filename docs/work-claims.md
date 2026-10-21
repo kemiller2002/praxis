@@ -9,7 +9,10 @@ the legacy `work complete` transition is refused
 (`PRX.COMPLETION.VERIFIED_COMPLETION_REQUIRED`, exit 3) until
 `work complete-verified` has recorded a Dokimos-accepted completion; setting
 `workProtocol.requireVerifiedCompletion: true` in `ros.json` extends that rule
-to every item. Unreadable policy or claim state fails closed.
+to every item, and implies `requireAttestedEvidence` unless
+`workProtocol.allowUnattestedEvidence: true` is also set (REL-GATE-003; see
+[`verified-completion-rollout.md`](verified-completion-rollout.md)).
+Unreadable policy or claim state, or a malformed flag, fails closed.
 
 ## Claim record
 
@@ -25,7 +28,7 @@ are unaffected.
 | `holder` | claimant, single-use claim token, `acquiredAt`, `leaseExpiresAt` |
 | `pendingPacketDigest` | the packet being verified (crash recovery) |
 | `consumedPacketDigests` | packets already accepted (replay protection) |
-| `completion` | commit, verification revision, requirement IDs, packet and receipt digests, verifier |
+| `completion` | commit, verification revision, requirement IDs, packet and receipt digests, verifier, and `attestation` (`attested` or `unattested`; REL-GATE-003) |
 
 `effectiveStatus` in command output reports `expired` for an active claim
 whose lease has passed, even before anyone records that durably.
@@ -362,8 +365,8 @@ recovers at generation + 1 and the old owner is refused.
    after the receipt, committed or not, therefore fails closed.
 2. Verifies with Dokimos (the gate above).
 3. Appends the canonical tracked `work.completion.verified` event to
-   `.ros/events/events.jsonl`, carrying `verifiedCommit`, `receiptDigests`
-   and `packetDigest` (never the claim token).
+   `.ros/events/events.jsonl`, carrying `verifiedCommit`, `receiptDigests`,
+   `packetDigest` and `attestation` (never the claim token).
 4. Makes a **metadata-only commit** whose parent is the verified commit and
    which touches only `.ros/events/events.jsonl` (checked after the commit).
 5. Outputs `verifiedCommit` and `metadataCommit`; the worktree ends clean.
@@ -411,8 +414,11 @@ contract again (`admissionCache: "hit"`). The entry is content-addressed and
 re-admitted under the same pin, so a tampered entry can only fail as stale;
 REL-GATE-002 readiness is always recomputed.
 
-The output reports `timings` in milliseconds for `claim`, `admission`,
-`receipts`, `dokimos` and `metadataCommit`, and `admissionCache`.
+The output reports `attestation` (`attested` or `unattested`) for a verified
+or replayed completion, `timings` in milliseconds for `claim`, `admission`,
+`receipts`, `dokimos` and `metadataCommit`, and `admissionCache`. An
+`unattested` completion is not forgery-resistant against anyone with write
+access to the repository (REL-GATE-003).
 
 ## Ordo contract binding (PRX-REL-008)
 

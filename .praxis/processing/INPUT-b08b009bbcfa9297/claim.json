@@ -1,0 +1,170 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-b08b009bbcfa9297",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-20-REL-GATE-003-non-attested-forgery.md",
+    "fileName": "2026-10-20-REL-GATE-003-non-attested-forgery.md",
+    "sha256": "b2578e683d1967e8dbcd4da65e2c2845d99f7f403101f6a876e3649c7a762ef8",
+    "size": 2468
+  },
+  "claimedAt": "2026-10-20T22:47:36.914Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/FileWorkClaims.fs",
+      "summary": "requireVerifiedCompletion implies requireAttestedEvidence unless allowUnattestedEvidence; malformed opt-out fails closed (Expected behaviour 2)",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:29.638Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/FileDerivedCompletion.fs",
+      "summary": "complete-verified refuses an authority without TrustedVerifierKeys with PRX.COMPLETION.ATTESTATION_REQUIRED under the effective attestation requirement",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:30.214Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Domain/Work/Claim.fs",
+      "summary": "CompletionAttestation (attested|unattested) label on every VerifiedCompletion (Expected behaviour 1)",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:30.854Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Application/Work/WorkClaims.fs",
+      "summary": "the completion gate labels each completion from the bound authority's attestation",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:31.430Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "src/Praxis.Infrastructure/Work/WorkClaimJson.fs",
+      "summary": "attestation label in the claim record, the work.completion.verified event and the complete-verified output",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:32.046Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/AttestedCompletionTests.fs",
+      "summary": "REL-GATE-003 acceptance tests: ATTESTATION_REQUIRED with requireVerifiedCompletion alone, opt-out GATE-3 forgery labelled unattested, malformed opt-out fails closed, attested label",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:32.700Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "path",
+      "target": "tests/Praxis.Tests/WorkClaimTests.fs",
+      "summary": "frozen I1 completion-verified event members now include attestation",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:33.406Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "constraint",
+      "targetKind": "path",
+      "target": "docs/verified-completion-rollout.md",
+      "summary": "non-attested verified completion is not forgery-resistant against a repository writer (Expected behaviour 3)",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:34.101Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    },
+    {
+      "kind": "constraint",
+      "targetKind": "path",
+      "target": "docs/work-claims.md",
+      "summary": "claim record, event and output document the attestation label and the implied attestation requirement",
+      "locator": null,
+      "recordedAt": "2026-10-20T22:53:34.716Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261020T224742490Z-428829b5"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}
