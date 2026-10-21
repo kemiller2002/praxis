@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-3af3690702599679",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-20-REL-TOKEN-003-work-finish.md",
     "fileName": "2026-10-20-REL-TOKEN-003-work-finish.md",
@@ -100,7 +100,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-21T07:33:30.766Z",
   "releaseReason": null,
   "rejectionReason": null
 }
