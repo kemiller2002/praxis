@@ -308,13 +308,13 @@ module FileDerivedCompletion =
             match FileWorkClaims.readAuthorityInput root authorityPath with
             | Error message -> Error message
             | Ok input ->
-                match FileWorkClaims.readRequireAttestedEvidence root with
+                match FileWorkClaims.readAttestationRequirement root with
                 | Error message -> report (rejected [ { Code = AttestationRequiredCode; Detail = message } ]) None
-                | Ok true when input.TrustedVerifierKeys.IsEmpty ->
+                | Ok(Some source) when input.TrustedVerifierKeys.IsEmpty ->
                     report
                         (rejected
                             [ { Code = AttestationRequiredCode
-                                Detail = "ros.json workProtocol.requireAttestedEvidence requires a host authority that pins TrustedVerifierKeys; unattested evidence cannot complete this item" } ])
+                                Detail = $"{source} requires a host authority that pins TrustedVerifierKeys; unattested evidence cannot complete this item" } ])
                         None
                 | Ok _ ->
                     match OrdoContractCache.bind root contract arguments.ExpectedOrdoDigest input with

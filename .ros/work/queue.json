@@ -6669,6 +6669,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REL-GATE-003",
+      "title": "Label verified completions attested/unattested; requireVerifiedCompletion implies requireAttestedEvidence",
+      "description": "Intake REL-GATE-003: non-attested verified completion accepts forged store evidence. Label completion record, event and complete-verified output with attestation; requireVerifiedCompletion implies requireAttestedEvidence unless workProtocol.allowUnattestedEvidence (fails closed when malformed); document that non-attested mode is not forgery-resistant.",
+      "tags": [
+        "completion",
+        "security"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-20T22:47:35.008Z",
+      "updatedAt": "2026-10-21T00:22:08.949Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-GATE-003-non-attested-forgery.md"
     }
   ]
 }

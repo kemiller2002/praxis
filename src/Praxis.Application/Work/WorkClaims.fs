@@ -255,6 +255,7 @@ module WorkClaims =
                                       TelemetryExecutions = request.TelemetryExecutions
                                       VerifierName = "dokimos"
                                       VerifierVersion = receipt.DokimosVersion
+                                      Attestation = CompletionAttestation.ofAttested (BoundCompletionAuthority.isAttested input)
                                       CompletedAt = ports.Claims.Now() }
 
                                 let verifier = Some { Name = "dokimos"; Version = receipt.DokimosVersion }

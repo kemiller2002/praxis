@@ -51,6 +51,7 @@ module WorkClaimJson =
               "requirementIds", strings completion.RequirementIds
               "telemetryExecutions", strings completion.TelemetryExecutions
               "verifier", obj [ "name", str completion.VerifierName; "version", str completion.VerifierVersion ]
+              "attestation", str (CompletionAttestation.code completion.Attestation)
               "completedAt", time completion.CompletedAt ]
 
     let claimNode (claim: WorkClaim) =
@@ -135,6 +136,16 @@ module WorkClaimJson =
                   TelemetryExecutions = texts completion "telemetryExecutions"
                   VerifierName = requireText verifier "name"
                   VerifierVersion = requireText verifier "version"
+                  // A record written before REL-GATE-003 carries no label; it
+                  // cannot be shown to be attested, so it reads as unattested.
+                  Attestation =
+                    match property completion "attestation" with
+                    | None -> CompletionAttestation.Unattested
+                    | Some _ ->
+                        let label = requireText completion "attestation"
+
+                        CompletionAttestation.tryParse label
+                        |> Option.defaultWith (fun () -> failwith $"unknown completion attestation '{label}'")
                   CompletedAt = requireTime completion "completedAt" })
           UpdatedAt = requireTime root "updatedAt" }
 
@@ -183,7 +194,8 @@ module WorkClaimJson =
               "requirementIds", strings completion.RequirementIds
               "packetDigest", str completion.PacketDigest
               "receiptDigest", str completion.ReceiptDigest
-              "telemetryExecutions", strings completion.TelemetryExecutions ]
+              "telemetryExecutions", strings completion.TelemetryExecutions
+              "attestation", str (CompletionAttestation.code completion.Attestation) ]
         | ClaimEventPayload.CompletionReplayed(token, generation, digest) ->
             [ "claimToken", str token; "generation", num generation; "packetDigest", str digest ]
         | ClaimEventPayload.ValidationObserved(claimant, token, generation, validation, evidenceId, revision, status, observedAt, resultDigest) ->
@@ -445,6 +457,7 @@ module WorkClaimOutcomeJson =
                 [ "outcome", JsonValue.Create(if replayed then "replayed" else "verified")
                   "packetDigest", JsonValue.Create completion.PacketDigest
                   "receiptDigest", JsonValue.Create completion.ReceiptDigest
+                  "attestation", JsonValue.Create(CompletionAttestation.code completion.Attestation)
                   "claim", view now claim ],
             0
         | CompletionOutcome.Rejected(items, current) ->

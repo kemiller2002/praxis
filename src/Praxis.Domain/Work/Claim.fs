@@ -48,6 +48,29 @@ type ClaimHolder =
       AcquiredAt: DateTimeOffset
       LeaseExpiresAt: DateTimeOffset }
 
+/// Whether a verified completion's evidence was verifier-signed
+/// (REL-GATE-003). `Unattested` evidence is produced and recorded by the
+/// process the implementation agent controls, so it is not forgery-resistant
+/// against anyone who can write to the repository.
+[<RequireQualifiedAccess>]
+type CompletionAttestation =
+    | Attested
+    | Unattested
+
+[<RequireQualifiedAccess>]
+module CompletionAttestation =
+    let code attestation =
+        match attestation with
+        | CompletionAttestation.Attested -> "attested"
+        | CompletionAttestation.Unattested -> "unattested"
+
+    let all = [ CompletionAttestation.Attested; CompletionAttestation.Unattested ]
+
+    let tryParse (text: string) = all |> List.tryFind (fun attestation -> code attestation = text)
+
+    let ofAttested attested =
+        if attested then CompletionAttestation.Attested else CompletionAttestation.Unattested
+
 /// What a successful, Dokimos-verified completion bound (PRX-REL-006).
 type VerifiedCompletion =
     { PacketDigest: string
@@ -61,6 +84,8 @@ type VerifiedCompletion =
       TelemetryExecutions: string list
       VerifierName: string
       VerifierVersion: string
+      /// Whether the evidence was verifier-signed receipts (REL-GATE-003).
+      Attestation: CompletionAttestation
       CompletedAt: DateTimeOffset }
 
 /// One work item's claim record. `Revision` increases by exactly one on

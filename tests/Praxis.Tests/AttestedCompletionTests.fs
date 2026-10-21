@@ -188,27 +188,55 @@ module AttestedCompletionTests =
         let ports = { FileWorkVerification.ports root choice None (TimeSpan.FromMinutes 5.0) with Request = fun request -> Ok(TrustedVerifierEngine.run f.Key f.Policy f.ContractDigest request) }
         WorkVerification.run ports item token
 
+    /// GATE-3 / C3b: the writer forges a passing result in the validation
+    /// store and the event that "records" it. Returns the forged file.
+    let private forgeValidation (f: Fixture) (held: WorkClaim) =
+        let commit = head f
+
+        let forged =
+            { WorkItemId = item; Claimant = "agent-a"; ClaimToken = "tok-1"; Generation = held.Generation; Validation = "unit-tests"; EvidenceId = "EV-TESTS"
+              Revision = commit; ObservedAt = DateTimeOffset.UtcNow; StartedAt = DateTimeOffset.UtcNow; Status = CheckStatus.Passed; ExitCode = Some 0
+              Command = [ "dotnet"; "test" ]; OutputSha256 = "sha256:" + String('0', 64) }
+
+        let path = Path.Combine(TransientStore.validations f.Root, item, "EV-TESTS", "forged.json")
+        Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
+        File.WriteAllText(path, ValidationResultJson.render forged)
+        let digest = CompletionGate.sha256 (File.ReadAllBytes path)
+
+        let event =
+            { WorkItemId = item; OccurredAt = forged.ObservedAt
+              Payload = ClaimEventPayload.ValidationObserved("agent-a", "tok-1", held.Generation, "unit-tests", "EV-TESTS", commit, CheckStatus.Passed, forged.ObservedAt, digest) }
+
+        Assert.equal (Ok()) ((claimPorts f).Emit event)
+        path
+
+    /// REL-GATE-003: the `attestation` label as the stored claim record, the
+    /// tracked completion event and the `complete-verified` output carry it.
+    let private labels (f: Fixture) (report: DerivedCompletionReport) =
+        let stored =
+            Directory.GetFiles(FileWorkClaimStore.itemDirectory f.Root item, "*.json", SearchOption.AllDirectories)
+            |> Array.choose (fun path ->
+                match JsonNode.Parse(File.ReadAllText path) with
+                | :? JsonObject as record when not (isNull (field record "completion")) -> Some(text (field (field record "completion") "attestation"))
+                | _ -> None)
+            |> Array.distinct
+            |> Array.toList
+
+        let tracked =
+            File.ReadAllLines(Path.Combine(f.Root, ".ros", "events", "events.jsonl"))
+            |> Array.map JsonNode.Parse
+            |> Array.filter (fun event -> not (isNull (field event "type")) && text (field event "type") = "work.completion.verified")
+            |> Array.map (fun event -> text (field event "attestation"))
+            |> Array.toList
+
+        let output, _ = VerificationJson.completion report
+        stored, tracked, text (field (CliHarness.json output) "attestation")
+
     let tests =
         [ t "C3b reproduced: a forged validation result plus a forged validation event is refused in attested mode" (fun () ->
               let f = fixture [ "true" ] true
               let held = claim f "agent-a" "tok-1"
-              let commit = head f
-              // The writer forges a passing result in the validation store and the event that "records" it.
-              let forged =
-                  { WorkItemId = item; Claimant = "agent-a"; ClaimToken = "tok-1"; Generation = held.Generation; Validation = "unit-tests"; EvidenceId = "EV-TESTS"
-                    Revision = commit; ObservedAt = DateTimeOffset.UtcNow; StartedAt = DateTimeOffset.UtcNow; Status = CheckStatus.Passed; ExitCode = Some 0
-                    Command = [ "dotnet"; "test" ]; OutputSha256 = "sha256:" + String('0', 64) }
-
-              let path = Path.Combine(TransientStore.validations f.Root, item, "EV-TESTS", "forged.json")
-              Directory.CreateDirectory(Path.GetDirectoryName path) |> ignore
-              File.WriteAllText(path, ValidationResultJson.render forged)
-              let digest = CompletionGate.sha256 (File.ReadAllBytes path)
-
-              let event =
-                  { WorkItemId = item; OccurredAt = forged.ObservedAt
-                    Payload = ClaimEventPayload.ValidationObserved("agent-a", "tok-1", held.Generation, "unit-tests", "EV-TESTS", commit, CheckStatus.Passed, forged.ObservedAt, digest) }
-
-              Assert.equal (Ok()) ((claimPorts f).Emit event)
+              let path = forgeValidation f held
               let seen = ResizeArray()
               // Cited explicitly: refused as unattested, before any verifier runs.
               let explicitly = completeWith f (accepting seen) { arguments f "tok-1" with ExplicitEvidence = [ { Id = "EV-TESTS"; Path = path; ClaimedDigest = None } ] }
@@ -286,7 +314,10 @@ module AttestedCompletionTests =
               | CompletionOutcome.Completed(completed, completion) ->
                   Assert.equal ClaimStatus.Completed completed.Status
                   Assert.equal (stored |> List.map _.Digest) completion.EvidenceDigests
+                  Assert.equal CompletionAttestation.Attested completion.Attestation
               | other -> failwith $"expected a verified completion, got {other}"
+
+              Assert.equal ([ "attested" ], [ "attested" ], "attested") (labels f report)
 
               Assert.equal (Some verifiedCommit) report.Result.VerifiedCommit
               let metadata = report.Result.MetadataCommit.Value
@@ -591,6 +622,108 @@ module AttestedCompletionTests =
               match report.Result.Outcome with
               | CompletionOutcome.Completed _ -> ()
               | other -> failwith $"expected completion under the policy, got {other}")
+
+          t "REL-GATE-003: workProtocol.requireVerifiedCompletion alone implies requireAttestedEvidence" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              forgeValidation f held |> ignore
+              let seen = ResizeArray()
+              let report = complete f (accepting seen) "tok-1"
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes report)
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Rejected(findings, _) ->
+                  Assert.isTrue (findings.Head.Detail.Contains "requireVerifiedCompletion") findings.Head.Detail
+              | other -> failwith $"expected a refusal, got {other}"
+
+              Assert.equal 0 seen.Count
+              Assert.equal "" (status f)
+              // An explicit allowUnattestedEvidence: false is the same as absent.
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true,\"allowUnattestedEvidence\":false}}"
+              CliHarness.commitAll f.Root "policy: explicit false"
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes (complete f (accepting seen) "tok-1"))
+              Assert.equal 0 seen.Count)
+
+          t "REL-GATE-003: with the allowUnattestedEvidence opt-out the GATE-3 forgery completes and is labelled unattested" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true,\"allowUnattestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              forgeValidation f held |> ignore
+              let report = complete f (accepting (ResizeArray())) "tok-1"
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) -> Assert.equal CompletionAttestation.Unattested completion.Attestation
+              | other -> failwith $"expected the opt-out to admit unattested evidence, got {other}"
+
+              Assert.equal ([ "unattested" ], [ "unattested" ], "unattested") (labels f report)
+              Assert.equal "" (status f)
+              // The label survives a replay.
+              let replay = complete f (accepting (ResizeArray())) "tok-1"
+
+              match replay.Result.Outcome with
+              | CompletionOutcome.Replayed(_, completion) -> Assert.equal CompletionAttestation.Unattested completion.Attestation
+              | other -> failwith $"expected an idempotent replay, got {other}"
+
+              let _, _, replayed = labels f replay
+              Assert.equal "unattested" replayed)
+
+          t "REL-GATE-003: a malformed allowUnattestedEvidence fails closed" (fun () ->
+              for value in [ "\"yes\""; "1"; "null"; "{}" ] do
+                  let f = fixture [ "true" ] false
+                  CliHarness.write f.Root "ros.json" $"{{\"workProtocol\":{{\"requireVerifiedCompletion\":true,\"allowUnattestedEvidence\":{value}}}}}"
+                  CliHarness.commitAll f.Root "policy"
+                  let held = claim f "agent-a" "tok-1"
+                  forgeValidation f held |> ignore
+                  let seen = ResizeArray()
+                  Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes (complete f (accepting seen) "tok-1"))
+                  Assert.equal 0 seen.Count
+
+              // Malformed is refused even when the authority is attested and nothing else is required.
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"allowUnattestedEvidence\":\"yes\"}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              verify f "tok-1" |> ignore
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes (complete f (accepting (ResizeArray())) "tok-1")))
+
+          t "REL-GATE-003: allowUnattestedEvidence never overrides requireAttestedEvidence" (fun () ->
+              let f = fixture [ "true" ] false
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true,\"requireAttestedEvidence\":true,\"allowUnattestedEvidence\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              let held = claim f "agent-a" "tok-1"
+              forgeValidation f held |> ignore
+              let seen = ResizeArray()
+              Assert.equal [ FileDerivedCompletion.AttestationRequiredCode ] (codes (complete f (accepting seen) "tok-1"))
+              Assert.equal 0 seen.Count)
+
+          t "REL-GATE-003: requireVerifiedCompletion admits an attested authority and labels the completion attested" (fun () ->
+              let f = fixture [ "true" ] true
+              CliHarness.write f.Root "ros.json" "{\"workProtocol\":{\"requireVerifiedCompletion\":true}}"
+              CliHarness.commitAll f.Root "policy"
+              claim f "agent-a" "tok-1" |> ignore
+              receipts (verify f "tok-1") |> ignore
+              let report = complete f (accepting (ResizeArray())) "tok-1"
+
+              match report.Result.Outcome with
+              | CompletionOutcome.Completed(_, completion) -> Assert.equal CompletionAttestation.Attested completion.Attestation
+              | other -> failwith $"expected an attested completion under the policy, got {other}"
+
+              Assert.equal ([ "attested" ], [ "attested" ], "attested") (labels f report))
+
+          t "REL-GATE-003: the attestation policy is a pure function of the three flags" (fun () ->
+              let required a v o = (FileWorkClaims.attestationRequirement a v o).IsSome
+
+              Assert.equal
+                  [ false; false; true; false; true; true; true; true ]
+                  [ for a in [ false; true ] do
+                        for v in [ false; true ] do
+                            for o in [ false; true ] do
+                                yield required a v o ]
+              // Absent ros.json: nothing required.
+              Assert.equal (Ok None) (FileWorkClaims.readAttestationRequirement (CliHarness.temporaryDirectory "praxis-no-policy")))
 
           t "git store: a claim on the shared remote is verified and completed from a clone with no local claim" (fun () ->
               let f = fixture [ "true" ] true
