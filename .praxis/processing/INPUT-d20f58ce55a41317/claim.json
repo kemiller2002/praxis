@@ -17,7 +17,40 @@
     "runtime": "claude-code"
   },
   "executionId": null,
-  "derivations": [],
+  "derivations": [
+    {
+      "kind": "evidence",
+      "targetKind": "artifact",
+      "target": "EV-ROS-2026-A077",
+      "summary": "VAC-001 recorded as evidence for the DF-ROS-2026-A053 / PRAXIS-PLAN-11 review, scoped to one fixture, 8-item chains, ceiling correctness and cache condition K0 (VAC-CONT-001-R1)",
+      "locator": "## Requirements (proposed): VAC-CONT-001-R1",
+      "recordedAt": "2026-10-22T20:18:48.680Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261022T201717327Z-94a467d8"
+    },
+    {
+      "kind": "question",
+      "targetKind": "path",
+      "target": "docs/planning.md",
+      "summary": "Deferred: no restart or compaction policy change on VAC-001; revisit after VAC R-EXP-2 (VAC-CONT-001-R3, captured and blocked)",
+      "locator": "## Requirements (proposed): VAC-CONT-001-R3",
+      "recordedAt": "2026-10-22T20:18:49.316Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261022T201717327Z-94a467d8"
+    }
+  ],
   "noDerivationReason": null,
   "closedAt": null,
   "releaseReason": null,
