@@ -495,3 +495,15 @@ No external dependency was added (PRX-PLAN-004).
   `PRAXIS-PLAN-10` (measurement) can start at once, but its group-execution
   parts (GRP-153, 154) need `PRAXIS-GROUP-09`; `PRAXIS-PLAN-11` reviews
   the default at its trigger.
+- Agent continuity across successive items (`EV-ROS-2026-A077`,
+  `VAC-CONT-001-R1`): evidence for the `PRAXIS-PLAN-11` review, not a change
+  to the default. In one fixture of 8-item chains with correctness at ceiling
+  and a shared sub-agent prompt cache (K0), one agent continued across the
+  items cost about 40% less per accepted requirement than a fresh agent per
+  item, through fewer cache writes and requests, while token totals differed
+  by at most about 10%. Reviews of grouped against independent cost should
+  read cost and cache-write tokens, not token totals alone.
+- Deferred, open question (`VAC-CONT-001-R3`, blocked): restart and
+  compaction policy does not change on this evidence. No failure and no
+  compaction occurred in 96 units, so no restart trigger is supported.
+  Revisit after the longer-chain experiment VAC R-EXP-2.

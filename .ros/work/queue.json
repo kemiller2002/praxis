@@ -6818,10 +6818,10 @@
         "grouping"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-22T20:15:45.839Z",
-      "updatedAt": "2026-10-22T20:15:45.839Z",
+      "updatedAt": "2026-10-22T20:17:15.525Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6842,10 +6842,10 @@
         "attribution"
       ],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-10-22T20:15:46.323Z",
-      "updatedAt": "2026-10-22T20:15:46.323Z",
+      "updatedAt": "2026-10-22T20:17:15.525Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6866,10 +6866,10 @@
         "deferred"
       ],
       "priority": "low",
-      "status": "captured",
+      "status": "blocked",
       "attachments": [],
       "createdAt": "2026-10-22T20:15:46.848Z",
-      "updatedAt": "2026-10-22T20:15:46.848Z",
+      "updatedAt": "2026-10-22T20:17:27.616Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -6879,7 +6879,8 @@
         "runtime": "claude-code"
       },
       "source": "intake",
-      "sourceReference": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md"
+      "sourceReference": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md",
+      "blockedReason": "Deferred by VAC-CONT-001-R3: no restart or compaction policy change on VAC-001 (0 failures, 0 compactions in 96 units); revisit after VAC R-EXP-2"
     }
   ]
 }

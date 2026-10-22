@@ -2338,5 +2338,60 @@
     "title": "Cumulative transcript usage in Praxis equals the CONSTRUCT-008 harness on six recorded runs",
     "updated": "2026-10-13",
     "version": "1.0.0"
+  },
+  {
+    "confidence": "low",
+    "contradicts": [],
+    "created": "2026-10-22",
+    "derived_from": [
+      "INPUT-d20f58ce55a41317"
+    ],
+    "evidence_type": "secondary",
+    "id": "EV-ROS-2026-A077",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/evidence/EV-ROS-2026-A077--vac-001-agent-continuity-across-successive-items.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261022T201717327Z-94a467d8": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-22T20:18:09.840Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "VAC-CONT-001-R1: record VAC-001 as scoped evidence for the DF-ROS-2026-A053 / PRAXIS-PLAN-11 review"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A053",
+      "EV-ROS-2026-A064",
+      "EV-ROS-2026-A070",
+      "EV-ROS-2026-A075",
+      "requirements/PLANNING-WORK-GROUPS.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "review",
+    "supports": [],
+    "tags": [
+      "planning",
+      "grouping",
+      "continuity",
+      "agents",
+      "cost",
+      "cache",
+      "experiment",
+      "vac-001"
+    ],
+    "title": "VAC-001 — one agent continued across 8 successive work items cost about 40% less per accepted requirement than a fresh agent per item, with no observed reliability cost (one fixture, ceiling correctness, cache condition K0)",
+    "updated": "2026-10-22",
+    "version": "1.0.0"
   }
 ]
