@@ -6807,6 +6807,79 @@
       },
       "source": "intake",
       "sourceReference": ".praxis/inbox/documents/2026-10-20-REL-TOKEN-003-work-finish.md"
+    },
+    {
+      "id": "VAC-CONT-001-R1",
+      "title": "Record VAC-001 agent-continuity results as evidence for the DF-ROS-2026-A053 / PRAXIS-PLAN-11 review",
+      "description": "Intake VAC-CONT-001-R1 (INPUT-d20f58ce55a41317): an evidence record citing cohort-based-engineering VAC-001 (agent-longevity-analysis.md sections 2-3, results/pooled-P1-R1.json, evidence-index.json TE-H21/TE-H22), linked to DF-ROS-2026-A053 and PRAXIS-PLAN-11, scoped to one fixture, 8-item chains, ceiling correctness and sub-agent cache condition K0. It does not change the grouped-execution default.",
+      "tags": [
+        "evidence",
+        "planning",
+        "grouping"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-22T20:15:45.839Z",
+      "updatedAt": "2026-10-22T20:15:45.839Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md"
+    },
+    {
+      "id": "VAC-CONT-001-R2",
+      "title": "Per-work-item usage when one agent session executes successive ungrouped work items",
+      "description": "Intake VAC-CONT-001-R2 (INPUT-d20f58ce55a41317): attribute a continued session's usage to each non-group work item from its own begin and complete window; record continuation index, prompt size at the first and last request, compactions in the window, cache-write and cache-read tokens; never apportion across items; values that cannot be attributed are unavailable, never zero. Exposed as praxis telemetry continuation.",
+      "tags": [
+        "telemetry",
+        "attribution"
+      ],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-22T20:15:46.323Z",
+      "updatedAt": "2026-10-22T20:15:46.323Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md"
+    },
+    {
+      "id": "VAC-CONT-001-R3",
+      "title": "Revisit restart/compaction policy after VAC R-EXP-2 (deferred; no policy change on VAC-001)",
+      "description": "Intake VAC-CONT-001-R3 (INPUT-d20f58ce55a41317): do not change restart or compaction policy on VAC-001. No failure or compaction occurred in 96 units, so no restart trigger is supported. Revisit after the longer-chain experiment VAC R-EXP-2.",
+      "tags": [
+        "planning",
+        "deferred"
+      ],
+      "priority": "low",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-22T20:15:46.848Z",
+      "updatedAt": "2026-10-22T20:15:46.848Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md"
     }
   ]
 }

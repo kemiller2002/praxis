@@ -260,6 +260,9 @@
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
 | ROS-AUTHORITY-SWITCH-DECISION | Open the ./ros authority-switch decision track (command-parity evidence + phased plan) | complete |  | high |
 | TASK-20260816-PROMPTS | TASK-20260816-PROMPTS | complete |  |  |
+| VAC-CONT-001-R1 | Record VAC-001 agent-continuity results as evidence for the DF-ROS-2026-A053 / PRAXIS-PLAN-11 review | captured | evidence, planning, grouping | medium |
+| VAC-CONT-001-R2 | Per-work-item usage when one agent session executes successive ungrouped work items | captured | telemetry, attribution | medium |
+| VAC-CONT-001-R3 | Revisit restart/compaction policy after VAC R-EXP-2 (deferred; no policy change on VAC-001) | captured | planning, deferred | low |
 | WEB-INTERFACE | WEB-INTERFACE | complete |  |  |
 | WI-0001 | This is a test entry. | abandoned | code, testing | high |
 | WI-0002 | Register other ~/dev ROS repos in the project-administration hub | captured | hub, follow-up | medium |

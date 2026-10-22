@@ -1,0 +1,25 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-d20f58ce55a41317",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md",
+    "fileName": "2026-10-21-VAC-CONT-001-continuity-evidence-and-per-item-usage.md",
+    "sha256": "7a72649b9ec4934c348d7a2fffc88f8410025e28df507691a367ed5a1b1b6308",
+    "size": 3849
+  },
+  "claimedAt": "2026-10-22T20:15:37.971Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "unknown",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}
