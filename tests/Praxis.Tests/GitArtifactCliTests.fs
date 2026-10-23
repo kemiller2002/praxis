@@ -100,7 +100,19 @@ module GitArtifactCliTests =
                       Assert.equal "unavailable" (json.["outcome"].GetValue<string>())
                       Assert.equal "not-repository" (json.["failure"].["reason"].GetValue<string>())
                       Assert.equal 128 (json.["failure"].["exitCode"].GetValue<int>())
-                      CliGolden.jsonEqual (gitGolden "unavailable") json
+                      // Git's wording after the stable "not a git repository"
+                      // prefix varies by version: "(or any of the parent
+                      // directories): .git" before 2.55, "(or any parent up to
+                      // mount point /) Stopping at filesystem boundary ..." after.
+                      // Pin the prefix, and every other field through the golden.
+                      let message = json.["failure"].["message"].GetValue<string>()
+
+                      Assert.isTrue
+                          (message.StartsWith("fatal: not a git repository", StringComparison.Ordinal))
+                          $"the message must carry Git's stable not-a-repository prefix: {message}"
+
+                      let withoutMessage = CliGolden.without (Set.singleton "message")
+                      CliGolden.jsonEqual (withoutMessage (gitGolden "unavailable")) (withoutMessage json)
                   finally
                       CliHarness.removeDirectory root } ]
 

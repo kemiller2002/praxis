@@ -183,9 +183,12 @@ module PremergeReleaseTests =
                       let info = System.Diagnostics.ProcessStartInfo("bash", RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false)
                       info.ArgumentList.Add "-c"
                       info.ArgumentList.Add(definition + "\nfor _ in 1 2 3 4; do now; sleep 0.02; done")
+                      let utcNow () = System.DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture)
+                      let before = utcNow ()
                       use proc = System.Diagnostics.Process.Start info
                       let output = proc.StandardOutput.ReadToEnd()
                       proc.WaitForExit()
+                      let after = utcNow ()
                       Assert.equal 0 proc.ExitCode
 
                       let stamps = output.Split('\n', System.StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
@@ -193,6 +196,11 @@ module PremergeReleaseTests =
 
                       for stamp in stamps do
                           Assert.isTrue (Regex.IsMatch(stamp, @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")) $"not a millisecond UTC timestamp: {stamp}"
+                          // The stamp is the real time, not a mis-rendered one: uutils
+                          // `date +%3N` printed 01.0955 as 01.955, up to 0.9s late.
+                          Assert.isTrue
+                              (System.String.CompareOrdinal(before, stamp) <= 0 && System.String.CompareOrdinal(stamp, after) <= 0)
+                              $"timestamp {stamp} is outside the call's real window {before} .. {after}"
 
                       // Calls 20ms apart must be distinct and ordered, which a
                       // whole-second clock padded with .000 cannot be.
