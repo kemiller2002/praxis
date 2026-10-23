@@ -417,8 +417,8 @@ module ValidationEvidenceTests =
               Assert.equal "PRX.CLAIM.STALE_TOKEN" ((at [ "code" ] stale.Out).GetValue<string>())
 
               // With a built Dokimos, the recorded passing result verifies end to end.
-              match Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists with
-              | None -> eprintfn "SKIP validation evidence cli: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              match DokimosTestRuntime.dll () with
+              | None -> DokimosTestRuntime.skip "validation evidence cli"
               | Some dll ->
                   // The ready contract, not the authority, supplies the contract identity (REL-GATE-002).
                   // Host inputs live outside the candidate tree: a completion needs a clean worktree (I8).

@@ -14,13 +14,52 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # 8.0.x runs the pinned Dokimos CLI below (its tool targets net8.0);
+      # Praxis itself builds and runs on 10.0.x.
       - uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: |
+            8.0.x
+            10.0.x
       - run: dotnet restore Praxis.slnx
       - run: dotnet build Praxis.slnx --configuration Release --no-restore
+      # EP-A3-R2: the real-Dokimos completion cases (AttestedCompletionTests,
+      # ReliabilityPipelineTests, ValidationEvidenceTests, WorkClaimTests
+      # integration) run here instead of skipping. Dokimos is a test
+      # dependency of Praxis CI, not a Registry selection: the Registry's
+      # approved set pins Dokimos 0.6.0, but the attested cases need
+      # completion.verify-attested/1, first released in 0.7.0. The release's
+      # tool package is pinned by version and SHA-256 (matching the release's
+      # dokimos-checksums.txt) and its Dokimos.Cli.dll runs under `dotnet`.
+      - name: Provision pinned Dokimos for the completion tests
+        env:
+          DOKIMOS_VERSION: "0.7.0"
+          DOKIMOS_NUPKG_SHA256: aa367020de24ebaf9a492200fedc3cde4411b16df0a310af319904e727d60399
+        run: |
+          set -euo pipefail
+          directory="$RUNNER_TEMP/dokimos-$DOKIMOS_VERSION"
+          package="$directory/EchelonFoundry.Dokimos.Cli.$DOKIMOS_VERSION.nupkg"
+          mkdir -p "$directory/package"
+          curl --fail --silent --show-error --location --retry 3 --output "$package" \
+            "https://github.com/kemiller2002/dokimos/releases/download/dokimos-v$DOKIMOS_VERSION/EchelonFoundry.Dokimos.Cli.$DOKIMOS_VERSION.nupkg"
+          echo "$DOKIMOS_NUPKG_SHA256  $package" | sha256sum --check --strict
+          unzip -q "$package" -d "$directory/package"
+          dll="$directory/package/tools/net8.0/any/Dokimos.Cli.dll"
+          test -f "$dll"
+          test "$(dotnet "$dll" version | jq -r .ReleaseVersion)" = "$DOKIMOS_VERSION"
+          echo "PRAXIS_TEST_DOKIMOS_DLL=$dll" >> "$GITHUB_ENV"
+      # With PRAXIS_TEST_DOKIMOS_DLL set, a real-Dokimos case whose Dokimos is
+      # missing or lacks attested mode fails (DokimosTestRuntime); a SKIP line
+      # for one fails the job too, so a misconfiguration never passes silently.
       - name: F# tests
-        run: dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll
+        run: |
+          set -o pipefail
+          test -n "$PRAXIS_TEST_DOKIMOS_DLL"
+          dotnet tests/Praxis.Tests/bin/Release/net10.0/Praxis.Tests.dll 2>&1 | tee "$RUNNER_TEMP/praxis-tests.log"
+          if grep -E '^SKIP .*PRAXIS_TEST_DOKIMOS_DLL' "$RUNNER_TEMP/praxis-tests.log"; then
+            echo "Real-Dokimos completion cases skipped although PRAXIS_TEST_DOKIMOS_DLL is set."
+            exit 1
+          fi
       # Tests use isolated scratch roots. A test that writes into the checkout
       # (for example fixture work items in canonical `.ros/` state, as
       # WI-READY/WI-ACTIVE once were: PRAXIS-HYG-01) fails here.
