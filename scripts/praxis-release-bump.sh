@@ -19,7 +19,10 @@ set -euo pipefail
 usage() { echo "usage: $0 patch|minor|major|X.Y.Z" >&2; exit 2; }
 # Millisecond precision: a whole-second timestamp can predate the execution
 # that `work start` opened moments earlier, which validation rejects.
-now() { date -u +%Y-%m-%dT%H:%M:%S.%3NZ; }
+# Real UTC time to the millisecond from bash's own EPOCHREALTIME (bash 5+;
+# '.' or ',' per locale). Not `date +%3N`: GNU-only, and uutils date (Ubuntu
+# 26.04's default) drops the leading zeros, so 01.0955 printed as 01.955.
+now() { local t="${EPOCHREALTIME:?now() needs bash 5 or later (EPOCHREALTIME)}"; local f="${t#*[.,]}"; TZ=UTC0 printf '%(%Y-%m-%dT%H:%M:%S)T.%sZ\n' "${t%[.,]*}" "${f:0:3}"; }
 fail() { echo "ERROR $*" >&2; exit 1; }
 
 [ "$#" -eq 1 ] || usage
