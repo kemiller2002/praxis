@@ -82,12 +82,16 @@ JSON and names its versioned schema in `schema`. Schemas live in `schemas/`.
 
 - **Requirement.** Each inventoried requirement has these fields:
   - a stable `id`, a `title` and a `priority`;
-  - the verbatim `heading` line that opens its section;
+  - the verbatim `heading`: the line that opens its section. This is a
+    markdown heading, or a bold paragraph or list item that opens a
+    requirement, such as `**PF-001 [P0] ...**` or `- EXT-DATA-001 [P0] ...`;
   - `sectionSha256`, the hash of that section;
   - one or more mandatory **obligations**.
-- **Section.** A section runs from the heading line to the line before the
-  next heading of the same or a higher level. Trailing blank lines are
-  removed.
+- **Section.** A section starts at its anchor line. A heading anchor runs
+  to the line before the next heading of the same or a higher level. Any
+  other anchor runs to the line before the next heading. Either ends early
+  at the next line from which the document's `requirementPattern` captures
+  a requirement id. Trailing blank lines are removed.
 - **Hashes.** Every hash is lowercase hex SHA-256 of the UTF-8 text, with
   CRLF and CR normalized to LF. Use `praxis requirements preservation
   sections` to compute them; never write them by hand.
@@ -146,9 +150,16 @@ Each source requirement gets exactly one disposition:
   Use this for a read-only scope that drops the write part of a mixed
   requirement. The approval must cover that obligation id or its requirement
   id.
-- **Equivalence review.** An obligation without tokens can only be accepted
-  by a `review: { reviewer, date, basis }` recorded by a person who judged
-  the equivalence. A review never overrides missing tokens.
+- **Verbatim carriage.** An obligation without tokens is decided
+  deterministically when a mapped criterion contains its verbatim text and
+  the obligation is at least five words long. Shorter fragments occur
+  everywhere, so they still need a review. Whitespace is collapsed before
+  the comparison, and for an `acceptance` obligation only an acceptance
+  criterion counts. The report shows
+  `decidedBy: verbatim`.
+- **Equivalence review.** Any other obligation without tokens can only be
+  accepted by a `review: { reviewer, date, basis }` recorded by a person who
+  judged the equivalence. A review never overrides missing tokens.
 
 ### Approval records
 
@@ -190,7 +201,7 @@ Each source requirement gets exactly one disposition:
   before `--`.
 - **Criteria.** Each markdown table whose first header cell is `ID` holds
   criteria. A row's first cell is the criterion id and the remaining cells
-  are its text.
+  are its text. An escaped `\|` inside a cell is a literal pipe.
 - **Acceptance criteria.** When the second header cell contains
   "acceptance", the table holds acceptance criteria; otherwise its criteria
   are statements.
@@ -251,8 +262,8 @@ praxis requirements preservation sections --source DIR --document PATH [--patter
     approvals and each derived file;
   - the pinned and observed hash of each source document;
   - per-requirement and per-obligation outcomes: the mapped criteria, each
-    token found or missing, and `decidedBy` (`tokens`, `review`, `exclusion`
-    or `undecided`);
+    token found or missing, and `decidedBy` (`tokens`, `verbatim`, `review`,
+    `exclusion` or `undecided`);
   - every exclusion, with its full approval record;
   - every conflict;
   - every finding;
@@ -343,9 +354,12 @@ A future rehearsal begins implementation only after the gate passes.
     alone") fails.
   - Choose tokens that are exact, such as values, thresholds and named
     artifacts, and leave judgement to reviews.
-- **Obligations without tokens.** These are undecidable by construction. They
-  stay `needs-review` until a person records an equivalence review, and the
-  gate checks only that the review is complete, not that it is right.
+- **Obligations without tokens.** Unless a mapped criterion carries one
+  verbatim, it is undecidable by construction. It stays `needs-review` until
+  a person records an equivalence review, and the gate checks only that the
+  review is complete, not that it is right. Verbatim carriage, like tokens,
+  is literal: a criterion that quotes an obligation in order to reject it
+  still matches.
 - **Inventory completeness.** The gate checks that the inventory is verbatim,
   hash-pinned and complete at the level of requirement ids
   (`requirementPattern`). It cannot know whether every mandatory sentence of

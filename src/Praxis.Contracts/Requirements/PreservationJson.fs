@@ -474,6 +474,7 @@ module PreservationJson =
 
                     match o.Decision with
                     | Decision.Tokens -> writer.WriteString("decidedBy", "tokens")
+                    | Decision.Verbatim -> writer.WriteString("decidedBy", "verbatim")
                     | Decision.Review review ->
                         writer.WriteString("decidedBy", "review")
                         writer.WriteStartObject "review"

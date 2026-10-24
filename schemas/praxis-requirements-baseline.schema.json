@@ -24,7 +24,7 @@
               "path": { "type": "string", "minLength": 1, "description": "Path under the --source root." },
               "upstreamPath": { "type": ["string", "null"], "description": "Path in the authoritative repository, when it differs." },
               "sha256": { "$ref": "#/$defs/sha256" },
-              "requirementPattern": { "type": ["string", "null"], "description": "A .NET regular expression whose first group captures a requirement id from a heading line; every id it finds must be inventoried." }
+              "requirementPattern": { "type": ["string", "null"], "description": "A .NET regular expression whose first group captures a requirement id from a line (a heading, bold paragraph or list item); every id it finds must be inventoried, and each such line also bounds the section before it." }
             },
             "additionalProperties": false
           }
@@ -42,7 +42,7 @@
           "title": { "type": "string", "minLength": 1 },
           "priority": { "type": "string", "minLength": 1 },
           "document": { "type": "string", "minLength": 1 },
-          "heading": { "type": "string", "minLength": 1, "description": "The verbatim markdown heading line that opens the requirement's section." },
+          "heading": { "type": "string", "minLength": 1, "description": "The verbatim line that opens the requirement's section: a markdown heading, or a bold paragraph or list item matched by the document's requirementPattern." },
           "sectionSha256": { "$ref": "#/$defs/sha256" },
           "obligations": {
             "type": "array",

@@ -255,6 +255,9 @@ type Verdict =
 [<RequireQualifiedAccess>]
 type Decision =
     | Tokens
+    /// The obligation's verbatim text (whitespace collapsed) appears in a
+    /// mapped criterion: deterministic, no review needed.
+    | Verbatim
     | Review of EquivalenceReview
     | Exclusion of approval: string
     | Undecided
@@ -313,62 +316,94 @@ module Preservation =
         let level = line |> Seq.takeWhile ((=) '#') |> Seq.length
         if level > 0 && line.Length > level && line[level] = ' ' then Some level else None
 
-    /// The section a heading opens: the heading line through the line before
-    /// the next heading of the same or a higher level, trailing blank lines
-    /// removed. `None` when no line equals the heading exactly.
-    let section (heading: string) (text: string) =
-        let lines = (normalize text).Split('\n') |> Array.map _.TrimEnd()
+    let private regexOf (pattern: string option) =
+        pattern |> Option.map (fun p -> Regex(p, RegexOptions.CultureInvariant, TimeSpan.FromSeconds 1.0))
+
+    let private captured (regex: Regex option) (line: string) =
+        regex
+        |> Option.bind (fun r ->
+            let m = r.Match line
+            if m.Success && m.Groups.Count > 1 then Some m.Groups[1].Value else None)
+
+    let private sectionIn (regex: Regex option) (lines: string array) (start: int) =
+        let bounds (line: string) =
+            captured regex line |> Option.isSome
+            || match headingLevel lines[start], headingLevel line with
+               | Some level, Some other -> other <= level
+               | None, Some _ -> true
+               | _, None -> false
+
+        let finish =
+            lines
+            |> Array.skip (start + 1)
+            |> Array.tryFindIndex bounds
+            |> Option.map (fun offset -> start + 1 + offset)
+            |> Option.defaultValue lines.Length
+
+        lines[start .. finish - 1]
+        |> Array.rev
+        |> Array.skipWhile String.IsNullOrWhiteSpace
+        |> Array.rev
+        |> String.concat "\n"
+
+    let private linesOf (text: string) = (normalize text).Split('\n') |> Array.map _.TrimEnd()
+
+    /// The section an anchor line opens, trailing blank lines removed; `None`
+    /// when no line equals the anchor exactly. A markdown heading anchor runs
+    /// to the next heading of the same or a higher level; any other anchor
+    /// (a bold paragraph or list item that opens a requirement) runs to the
+    /// next heading. Either ends early at the next line `pattern` captures a
+    /// requirement id from.
+    let section (pattern: string option) (heading: string) (text: string) =
+        let lines = linesOf text
         let wanted = heading.Trim()
 
-        match lines |> Array.tryFindIndex (fun line -> line = wanted), headingLevel wanted with
-        | Some start, Some level ->
-            let finish =
-                lines
-                |> Array.skip (start + 1)
-                |> Array.tryFindIndex (fun line ->
-                    match headingLevel line with
-                    | Some other -> other <= level
-                    | None -> false)
-                |> Option.map (fun offset -> start + 1 + offset)
-                |> Option.defaultValue lines.Length
-
-            lines[start .. finish - 1]
-            |> Array.rev
-            |> Array.skipWhile String.IsNullOrWhiteSpace
-            |> Array.rev
-            |> String.concat "\n"
-            |> Some
-        | _ -> None
+        lines
+        |> Array.tryFindIndex (fun line -> line = wanted)
+        |> Option.map (sectionIn (regexOf pattern) lines)
 
     type SectionEntry =
         { Id: string option
           Heading: string
           Sha256: string }
 
-    /// Every heading section in a document, with the id `pattern` captures
-    /// from it; the inventory helper behind `requirements preservation sections`.
+    /// Every section anchor in a document (each heading, and each line the
+    /// pattern captures an id from), with its id and section hash; the
+    /// inventory helper behind `requirements preservation sections`.
     let sections (pattern: string option) (text: string) =
-        let lines = (normalize text).Split('\n') |> Array.map _.TrimEnd()
-        let regex = pattern |> Option.map (fun p -> Regex(p, RegexOptions.CultureInvariant, TimeSpan.FromSeconds 1.0))
+        let lines = linesOf text
+        let regex = regexOf pattern
 
         lines
-        |> Array.filter (headingLevel >> Option.isSome)
-        |> Array.map (fun heading ->
-            let id =
-                regex
-                |> Option.bind (fun r ->
-                    let m = r.Match heading
-                    if m.Success && m.Groups.Count > 1 then Some m.Groups[1].Value else None)
-
-            { Id = id
-              Heading = heading
-              Sha256 = section heading text |> Option.defaultValue "" |> sha256Text })
+        |> Array.indexed
+        |> Array.filter (fun (_, line) -> (headingLevel line).IsSome || (captured regex line).IsSome)
+        |> Array.map (fun (index, line) ->
+            { Id = captured regex line
+              Heading = line
+              Sha256 = sectionIn regex lines index |> sha256Text })
         |> Array.toList
 
+    /// Table cells split on unescaped pipes; `\|` is a literal pipe.
     let private cells (line: string) =
         let trimmed = line.Trim()
-        let inner = trimmed.Substring(1, (if trimmed.EndsWith "|" && trimmed.Length > 1 then trimmed.Length - 2 else trimmed.Length - 1))
-        inner.Split('|') |> Array.map _.Trim() |> Array.toList
+        let inner = trimmed.Substring(1, (if trimmed.EndsWith "|" && not (trimmed.EndsWith "\\|") && trimmed.Length > 1 then trimmed.Length - 2 else trimmed.Length - 1))
+
+        let folded =
+            inner
+            |> Seq.fold
+                (fun (cellsSoFar: string list, current: StringBuilder, escaped: bool) c ->
+                    match c with
+                    | '|' when escaped ->
+                        current.Length <- current.Length - 1
+                        current.Append('|') |> ignore
+                        cellsSoFar, current, false
+                    | '|' -> current.ToString() :: cellsSoFar, StringBuilder(), false
+                    | '\\' -> cellsSoFar, current.Append(c), true
+                    | _ -> cellsSoFar, current.Append(c), false)
+                ([], StringBuilder(), false)
+
+        let cellsSoFar, last, _ = folded
+        last.ToString() :: cellsSoFar |> List.rev |> List.map _.Trim()
 
     let private isSeparator (line: string) =
         let t = line.Trim()
@@ -472,6 +507,12 @@ module Preservation =
                 let reasons = String.concat "; " problems
                 Error [ finding FindingCode.ApprovalInvalid FindingStatus.Fail requirement obligation $"approval record '{reference}' is not valid here: {reasons}" ]
 
+    /// The requirement pattern of the document a requirement lives in.
+    let private patternOf (baseline: Baseline) (requirement: SourceRequirement) =
+        baseline.Documents
+        |> List.tryFind (fun d -> d.Path = requirement.Document)
+        |> Option.bind _.RequirementPattern
+
     /// Self-consistency of the baseline: unique ids, verbatim obligation
     /// text, tokens drawn from the source, value obligations with tokens.
     let private validateBaseline (baseline: Baseline) (observations: SourceObservation list) =
@@ -485,7 +526,7 @@ module Preservation =
             observations
             |> List.tryFind (fun o -> o.Path = requirement.Document)
             |> Option.bind _.Text
-            |> Option.bind (section requirement.Heading)
+            |> Option.bind (section (patternOf baseline requirement) requirement.Heading)
             |> Option.filter (fun s -> sha256Text s = requirement.SectionSha256)
 
         [ for id in duplicates (baseline.Requirements |> List.map _.Id) do
@@ -547,7 +588,7 @@ module Preservation =
                   match observed requirement.Document with
                   | None -> ()
                   | Some text ->
-                      match section requirement.Heading text with
+                      match section (patternOf baseline requirement) requirement.Heading text with
                       | None ->
                           yield finding FindingCode.SourceSectionMissing FindingStatus.Drift (Some requirement.Id) None $"source section '{requirement.Heading}' no longer exists in '{requirement.Document}'"
                       | Some s when sha256Text s <> requirement.SectionSha256 ->
@@ -645,8 +686,16 @@ module Preservation =
 
             let structural = emptyFindings @ missingFindings @ acceptanceFindings @ tokenFindings
 
+            let collapse (text: string) = Regex.Replace(text, @"\s+", " ").Trim()
+            // Short fragments ("hypotheses") occur everywhere, so verbatim
+            // carriage decides only an obligation of at least five words.
+            let verbatim =
+                (collapse obligation.Text).Split(' ').Length >= 5
+                && carriers |> List.exists (fun c -> (collapse c.Text).Contains(collapse obligation.Text, ordinal))
+
             let decision, reviewFindings =
                 match obligation.Tokens, review with
+                | [], _ when verbatim -> Decision.Verbatim, []
                 | [], Some r when not (blank r.Reviewer) && not (blank r.Basis) && isIsoDate r.Date ->
                     Decision.Review r,
                     [ at FindingCode.EquivalenceReviewed FindingStatus.Info $"obligation '{obligation.Id}' has no deterministic tokens; accepted by the equivalence review of {r.Reviewer} on {r.Date}: {r.Basis}" ]

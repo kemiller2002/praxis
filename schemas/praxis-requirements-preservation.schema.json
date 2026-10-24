@@ -117,7 +117,7 @@
                     "additionalProperties": false
                   }
                 },
-                "decidedBy": { "enum": ["tokens", "review", "exclusion", "undecided"] },
+                "decidedBy": { "enum": ["tokens", "verbatim", "review", "exclusion", "undecided"] },
                 "review": {
                   "type": "object",
                   "required": ["reviewer", "date", "basis"],

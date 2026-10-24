@@ -311,7 +311,7 @@ module RequirementsPreservationTests =
 
               // The section hash recorded in both baselines is the hash of
               // UI-016 in Indy-init at fc5df1c9 (checked when the fixture was made).
-              let section = Preservation.section "## UI-016: Causa semantic color system [P0]" (File.ReadAllText(fixture "r3/source/CAUSA-UI-016-section.md"))
+              let section = Preservation.section None "## UI-016: Causa semantic color system [P0]" (File.ReadAllText(fixture "r3/source/CAUSA-UI-016-section.md"))
               Assert.equal (Some "53e5178f38722dcbcbabb33bf6fbbacba8e91e4db0330bbb9aaf80d4600f5685") (section |> Option.map Preservation.sha256Text))
 
           t "the gate is deterministic: identical inputs give byte-identical evidence, and --output writes the same document" (fun () ->
@@ -538,3 +538,78 @@ module RequirementsPreservationTests =
                   |> Set.ofArray
 
               Assert.equal schemaCodes emitted) ]
+
+    /// REQ-PRES-003: requirements opened by a bold paragraph or a list item
+    /// (Indy-init PF-001..021, EXT-DATA-001..012) are sections bounded by
+    /// the next requirement or heading, and criteria tables honour `\|`.
+    let anchorTests =
+        [ t "a paragraph-anchored requirement runs to the next requirement line or heading" (fun () ->
+              let text =
+                  "## Architectural contract\n\n**PF-001 [P0] One.** Define a port.\n\n**PF-002 [P0] Two.** Levels:\n1. Domain.\n2. UI.\n\nEach level must have a command.\n\n## Fixture catalog\n\n**PF-003 [P0] Three.** Last.\n"
+
+              let pattern = Some "^\\*\\*(PF-\\d{3}) "
+              Assert.equal (Some "**PF-001 [P0] One.** Define a port.") (Preservation.section pattern "**PF-001 [P0] One.** Define a port." text)
+
+              Assert.equal
+                  (Some "**PF-002 [P0] Two.** Levels:\n1. Domain.\n2. UI.\n\nEach level must have a command.")
+                  (Preservation.section pattern "**PF-002 [P0] Two.** Levels:" text)
+
+              Assert.equal (Some "**PF-003 [P0] Three.** Last.") (Preservation.section pattern "**PF-003 [P0] Three.** Last." text)
+
+              let ids = Preservation.sections pattern text |> List.choose _.Id
+              Assert.equal [ "PF-001"; "PF-002"; "PF-003" ] ids)
+
+          t "a list-item requirement runs to the next requirement item or heading" (fun () ->
+              let text = "## Requirements\n- EXT-DATA-001 [P0] First MUST hold.\n- EXT-DATA-002 [P0] Second MUST hold.\n\n## Acceptance\nA clean build.\n"
+              let pattern = Some "^- (EXT-DATA-\\d{3}) "
+              Assert.equal (Some "- EXT-DATA-001 [P0] First MUST hold.") (Preservation.section pattern "- EXT-DATA-001 [P0] First MUST hold." text)
+              Assert.equal (Some "- EXT-DATA-002 [P0] Second MUST hold.") (Preservation.section pattern "- EXT-DATA-002 [P0] Second MUST hold." text))
+
+          t "criteria cells keep escaped pipes as literal text" (fun () ->
+              let text =
+                  "| ID | Acceptance criterion |\n|---|---|\n| UIX-016 | Palette \\| Deep navy \\| `#14283F` \\| Teal `#087F8C` |\n"
+
+              let criterion = Assert.single (Preservation.parseDerived "RQ-X-0001--x.md" text)
+              Assert.equal "UIX-016" criterion.Id
+              Assert.equal "Palette | Deep navy | `#14283F` | Teal `#087F8C`" criterion.Text
+              Assert.equal CriterionKind.Acceptance criterion.Kind) ]
+
+    /// REQ-PRES-003: a criterion that carries the obligation verbatim
+    /// decides it deterministically; anything less still needs a review.
+    let verbatimTests =
+        [ t "an obligation carried verbatim (whitespace collapsed) needs no review" (fun () ->
+              let baseline, disposition, observations, criteria = decoded ()
+              let o1 = baseline.Requirements |> List.find (fun r -> r.Id = "UI-016") |> _.Obligations |> List.find (fun o -> o.Id = "UI-016-O1")
+
+              let unreviewed =
+                  { disposition with
+                      Entries =
+                          disposition.Entries
+                          |> List.map (fun e ->
+                              match e.Disposition with
+                              | Disposition.Preserved mappings when e.Requirement = "UI-016" ->
+                                  { e with
+                                      Disposition =
+                                          Disposition.Preserved(
+                                              mappings
+                                              |> List.map (fun m ->
+                                                  match m.Coverage with
+                                                  | ObligationCoverage.Mapped(c, _) -> { m with Coverage = ObligationCoverage.Mapped(c, None) }
+                                                  | other -> m)
+                                          ) }
+                              | _ -> e) }
+
+              let paraphrased = Preservation.evaluate baseline observations unreviewed [] criteria
+              Assert.equal Verdict.Blocked paraphrased.Verdict
+
+              let verbatimCriteria =
+                  criteria
+                  |> List.map (fun c -> if c.Id = "COL-01" then { c with Text = "Carried:   " + o1.Text.Replace(" ", "\n  ") } else c)
+
+              let verbatim = Preservation.evaluate baseline observations unreviewed [] verbatimCriteria
+              Assert.equal Verdict.Pass verbatim.Verdict
+
+              let outcome =
+                  verbatim.Requirements |> List.find (fun r -> r.Requirement.Id = "UI-016") |> _.Obligations |> List.find (fun o -> o.Obligation.Id = "UI-016-O1")
+
+              Assert.equal Decision.Verbatim outcome.Decision) ]

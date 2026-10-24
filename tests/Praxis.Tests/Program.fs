@@ -50,6 +50,8 @@ let main argv =
     @ TutelaMetricsTests.tests
     @ RequirementsPreservationTests.tests
     @ RequirementsPreservationTests.schemaTests
+    @ RequirementsPreservationTests.anchorTests
+    @ RequirementsPreservationTests.verbatimTests
     @ TelemetryFinalizeTargetTests.tests
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests
