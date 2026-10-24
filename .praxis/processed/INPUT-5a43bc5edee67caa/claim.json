@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-5a43bc5edee67caa",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-requirements-preservation-gate.md",
     "fileName": "2026-10-24-REQ-PRES-001-requirements-preservation-gate.md",
@@ -52,7 +52,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-24T16:36:30.140Z",
   "releaseReason": null,
   "rejectionReason": null
 }

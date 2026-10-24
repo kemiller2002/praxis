@@ -11275,18 +11275,56 @@
     {
       "id": "REQ-PRES-001",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-24T14:33:19.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Requirements/Preservation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementsPreservationTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/requirements-preservation.md"
+        },
+        {
+          "type": "requirement",
+          "path": "research/requirements/RQ-ROS-2026-A034--requirements-preservation-gate.md"
+        }
+      ],
+      "updatedAt": "2026-10-24T16:36:13.000Z",
       "telemetryExecutionIds": [
         "EXE-20261024T143321807Z-6c3cd34a"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "f54ee0118f4de4d62e5aff5a",
+        "recordedAt": "2026-10-24T16:36:03.000Z",
+        "executionId": "EXE-20261024T143321807Z-6c3cd34a",
+        "repository": "repository-operating-system",
+        "branch": "claude/requirements-preservation-gate",
+        "commit": "28670bcb6eaa4079cb038fb1fde5779795214e13",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/requirements-preservation-gate",
+        "remoteCommit": "28670bcb6eaa4079cb038fb1fde5779795214e13",
+        "summary": "Requirements-preservation gate implemented (Domain/Contracts/Application/Infrastructure/CLI), schemas, docs, tests A-L; full suite 2401/2401 passed with pinned Dokimos 0.7.0",
+        "nextAction": "Complete REQ-PRES-001, complete intake INPUT-5a43bc5edee67caa, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-24T16:36:13.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-24T14:33:19.000Z",
+  "updatedAt": "2026-10-24T16:36:13.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
