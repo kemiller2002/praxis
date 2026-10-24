@@ -2,11 +2,11 @@
 id: GV-START-001
 title: Agent Startup Guide
 status: canonical
-version: 1.11.0
+version: 1.12.0
 owners:
   - repository-governance
 created: 2026-07-22
-updated: 2026-10-01
+updated: 2026-10-24
 review_cycle: quarterly
 supersedes: []
 superseded_by: []
@@ -64,6 +64,10 @@ Older installations may have `./ros`, a compatibility alias of `./praxis`; new i
 Detailed rules are in the [Agent Operating Manual](docs/00-governance/Agent-Operating-Manual.md). Research packages follow the [REP Specification](docs/00-governance/Research-Execution-Package-Specification.md); engineering follows the [Engineering Standards](docs/00-governance/Engineering-Standards.md).
 
 ## Authority
+
+The quoted contract below is a statement of existing policy (cohort-based-engineering principle 3, `VAC-CBE-001-R2`), adopted by owner decision OD-6 from `VAC-002-P3-01` R-PRAX-1. It is not a demonstrated reliability control: VAC-002 P3 observed 3/18 unauthorized decisions with it versus 7/18 without (p = 0.125, inconclusive). Its wording is frozen; do not paraphrase it without a new decision. `work begin` records its SHA-256 as `authorityContract.sha256` in the execution record.
+
+> Implement only behavior supported by requirements or accepted decisions. Do not invent exceptions, precedence rules, or business policies. Record unsupported interpretations as unresolved questions. Do not treat your own proposed decisions as authorized.
 
 Apply, in descending order: explicit user instruction; applicable safety, legal, and platform constraints; canonical governance; accepted domain REPs and theory; accepted architecture and decision records; current implementation; local convention; agent preference. A higher authority cannot authorize a violation of an applicable safety or legal constraint. When same-level sources conflict, prefer the narrower and newer accepted record and document the resolution; escalate if the outcome materially changes the authorized goal.
 

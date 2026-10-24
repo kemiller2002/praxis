@@ -99,6 +99,7 @@ let main argv =
     @ InstalledRepositoryTests.tests
     @ RemoteProtocolTests.tests
     @ RemoteIdentityTests.tests
+    @ AuthorityContractTests.tests
     @ RemoteExecutionTests.tests
     @ RemoteExecuteCliTests.tests
     @ RemotePersistScriptTests.tests

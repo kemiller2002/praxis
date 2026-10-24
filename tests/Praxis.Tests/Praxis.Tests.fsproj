@@ -106,6 +106,7 @@
     <Compile Include="InstalledRepositoryTests.fs" />
     <Compile Include="RemoteProtocolTests.fs" />
     <Compile Include="RemoteIdentityTests.fs" />
+    <Compile Include="AuthorityContractTests.fs" />
     <Compile Include="RemoteExecutionTests.fs" />
     <Compile Include="RemoteExecuteCliTests.fs" />
     <Compile Include="RemotePersistScriptTests.fs" />

@@ -42,6 +42,20 @@
       },
       "additionalProperties": true
     },
+    "authorityContract": {
+      "description": "VAC-002-P3-01 R-PRAX-1 (OD-6): the authority contract the implementation brief (AGENTS.md) carried when the execution started. `present` names the SHA-256 of the contract text actually found; `absent` names why and never carries a digest. Missing on executions started before it was recorded: unknown, not absent.",
+      "type": "object",
+      "required": ["status", "source"],
+      "properties": {
+        "status": {"enum": ["present", "absent"]},
+        "source": {"type": "string", "minLength": 1},
+        "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "frozenVersion": {"type": "string"},
+        "matchesFrozen": {"type": "boolean"},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
     "executor": {
       "description": "Observed facts about the runner that executed a praxis.remote request (DF-ROS-2026-A041 section 7). Recorded next to, never instead of, the identity; absent on local executions.",
       "type": "object",

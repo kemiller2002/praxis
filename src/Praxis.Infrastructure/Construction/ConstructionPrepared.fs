@@ -281,7 +281,12 @@ module ConstructionPrepared =
                                                 "maxBytes", JsonValue.Create slot.MaxBytes
                                                 "kind", str (if ConstructionRouting.isAcceptance routing slot then "acceptanceAdapter" else "constructionContract") ] :> JsonNode))
                                       "handoff", ConstructionHandoff.toJson handoff
-                                      "handoffMarkdown", str (ConstructionHandoff.toMarkdown handoff) ]
+                                      "handoffMarkdown", str (ConstructionHandoff.toMarkdown handoff)
+                                      // The contract version the brief carries (VAC-002-P3-01 R-PRAX-1, OD-6).
+                                      "authorityContract",
+                                      obj [ "status", str "present"
+                                            "sha256", str (Praxis.Domain.Work.AuthorityContract.digest Praxis.Domain.Work.AuthorityContract.Text)
+                                            "frozenVersion", str Praxis.Domain.Work.AuthorityContract.Version ] ]
                             artifact.ToJsonString options + "\n")))
 
     // ------------------------------------------------------------- reading
