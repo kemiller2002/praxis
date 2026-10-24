@@ -258,7 +258,7 @@
 | REMOTE-ENABLE-3-8-0 | Pin Praxis 3.8.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | REQ-PRES-001 | Deterministic requirements-preservation gate (DC-008) | complete | requirements, preservation | high |
 | REQ-PRES-002 | Decision record for the requirements-preservation schemas | complete | requirements, preservation | medium |
-| REQ-PRES-003 | Preservation gate: paragraph and list requirement anchors, escaped table pipes | ready | requirements, preservation | high |
+| REQ-PRES-003 | Preservation gate: paragraph and list requirement anchors, escaped table pipes | complete | requirements, preservation | high |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |

@@ -11365,18 +11365,52 @@
     {
       "id": "REQ-PRES-003",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-24T16:47:12.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Requirements/Preservation.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementsPreservationTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/requirements-preservation.md"
+        }
+      ],
+      "updatedAt": "2026-10-24T17:40:15.000Z",
       "telemetryExecutionIds": [
         "EXE-20261024T164713723Z-2c7c25f3"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "de836c910c16d53fd08f497b",
+        "recordedAt": "2026-10-24T17:40:11.000Z",
+        "executionId": "EXE-20261024T164713723Z-2c7c25f3",
+        "repository": "repository-operating-system",
+        "branch": "claude/requirements-preservation-gate",
+        "commit": "65d3b4711677370e8a9c963398fdee3804e2effc",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/requirements-preservation-gate",
+        "remoteCommit": "65d3b4711677370e8a9c963398fdee3804e2effc",
+        "summary": "Paragraph/list anchors, escaped pipes, verbatim carriage; full suite 2405/2405 with pinned Dokimos 0.7.0",
+        "nextAction": "Complete REQ-PRES-003",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-24T17:40:15.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-24T16:47:12.000Z",
+  "updatedAt": "2026-10-24T17:40:15.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
