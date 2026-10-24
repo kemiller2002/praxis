@@ -11239,11 +11239,22 @@
       },
       "completedAt": "2026-10-21T07:33:17.578Z",
       "conclusion": "praxis work finish composes work verify and complete-verified; full suite 2358/2358 with Dokimos 0.7.0"
+    },
+    {
+      "id": "RELEASE-3-20-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-24T11:02:49.360Z",
+      "telemetryExecutionIds": [
+        "EXE-20261024T110249909Z-993dcd2b"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-21T07:33:17.578Z",
+  "updatedAt": "2026-10-24T11:02:49.360Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
