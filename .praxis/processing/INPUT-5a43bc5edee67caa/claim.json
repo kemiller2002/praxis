@@ -1,0 +1,58 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-5a43bc5edee67caa",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-requirements-preservation-gate.md",
+    "fileName": "2026-10-24-REQ-PRES-001-requirements-preservation-gate.md",
+    "sha256": "88cac5176d1fa870c17dc578565cc070ac7bf7024a0b489bb92ac6278190ac64",
+    "size": 5700
+  },
+  "claimedAt": "2026-10-24T14:33:11.942Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "unknown",
+    "runtime": "claude-code"
+  },
+  "executionId": null,
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "artifact",
+      "target": "RQ-ROS-2026-A034",
+      "summary": "REQ-PRES-001: deterministic requirements-preservation gate (praxis requirements preservation verify)",
+      "locator": "## Requirement",
+      "recordedAt": "2026-10-24T15:04:19.829Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261024T143321807Z-6c3cd34a"
+    },
+    {
+      "kind": "requirement",
+      "targetKind": "path",
+      "target": "docs/requirements-preservation.md",
+      "summary": "REQ-PRES-001 contract: data model, dispositions, approvals, drift, exit codes, ownership boundary, rehearsal initialisation",
+      "locator": "## Requirement 6",
+      "recordedAt": "2026-10-24T15:04:20.651Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261024T143321807Z-6c3cd34a"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}

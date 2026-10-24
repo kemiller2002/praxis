@@ -1,0 +1,9 @@
+{
+  "schema": "praxis.requirements-disposition/1",
+  "baseline": {
+    "id": "BL-CAUSA-R3-UI016",
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492"
+  },
+  "package": "causa-rehearsal-003-original",
+  "dispositions": []
+}

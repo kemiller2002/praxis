@@ -6828,6 +6828,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REQ-PRES-001",
+      "title": "Deterministic requirements-preservation gate (DC-008)",
+      "description": "Intake REQ-PRES-001: praxis requirements preservation verify — baseline manifest, disposition file, approval records, drift, conflicts, NeedsReview; tests A-L; contract doc.",
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-24T14:33:12.000Z",
+      "updatedAt": "2026-10-24T14:33:18.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-requirements-preservation-gate.md"
     }
   ]
 }

@@ -1,0 +1,181 @@
+{
+  "schema": "praxis.requirements-baseline/1",
+  "id": "BL-CAUSA-UI-TEST-001",
+  "source": {
+    "repository": "kemiller2002/indy-init",
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492",
+    "documents": [
+      {
+        "path": "CAUSA-UI-EXCERPT.md",
+        "upstreamPath": "docs/CAUSA-UI-EXPERIENCE-REQUIREMENTS.md",
+        "sha256": "336903badda1d4b1ba5298cd9b7f1806552dc5439d7aa394ed010514189f5c8e",
+        "requirementPattern": "^## (UI-\\d{3}):"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "UI-004",
+      "title": "Contextual command interface",
+      "priority": "P0",
+      "document": "CAUSA-UI-EXCERPT.md",
+      "heading": "## UI-004: Contextual command interface [P0]",
+      "sectionSha256": "c3edffcfe87779809a7b63dcebe18e1706c9ed5b7dbf25bb679f2f9737c9885b",
+      "obligations": [
+        {
+          "id": "UI-004-O1",
+          "kind": "constraint",
+          "text": "Render only policy-authorized commands returned by the F# engine for the current version.",
+          "tokens": ["policy-authorized"]
+        },
+        {
+          "id": "UI-004-O2",
+          "kind": "constraint",
+          "text": "Reject stale-version submissions, show domain fault messages safely, and avoid duplicate submission.",
+          "tokens": ["stale-version", "duplicate submission"]
+        }
+      ]
+    },
+    {
+      "id": "UI-005",
+      "title": "Evidence inspector",
+      "priority": "P0",
+      "document": "CAUSA-UI-EXCERPT.md",
+      "heading": "## UI-005: Evidence inspector [P0]",
+      "sectionSha256": "b49901dd9c67191073d338c6b39cf71901355246b1d7811d04819b9b09755445",
+      "obligations": [
+        {
+          "id": "UI-005-O1",
+          "kind": "constraint",
+          "text": "Never alter or overwrite the original evidence when interpretations change.",
+          "tokens": ["original evidence"]
+        },
+        {
+          "id": "UI-005-O2",
+          "kind": "constraint",
+          "text": "Sanitize untrusted text/URLs; clearly label missing provenance.",
+          "tokens": ["Sanitize", "missing provenance"]
+        }
+      ]
+    },
+    {
+      "id": "UI-006",
+      "title": "Save, sync and conflict status",
+      "priority": "P0",
+      "document": "CAUSA-UI-EXCERPT.md",
+      "heading": "## UI-006: Save, sync and conflict status [P0]",
+      "sectionSha256": "103e8e987f350864ff1419aa222487f14d237e980201ccbd20c9ee0c5f2d0b26",
+      "obligations": [
+        {
+          "id": "UI-006-O1",
+          "kind": "constraint",
+          "text": "Only claim remote synchronization after confirmed provider acknowledgement.",
+          "tokens": ["acknowledgement"]
+        },
+        {
+          "id": "UI-006-O2",
+          "kind": "constraint",
+          "text": "On expected-version conflict, preserve local edits and provide a recoverable compare/retry flow; do not overwrite remote history.",
+          "tokens": ["local edits", "remote history"]
+        },
+        {
+          "id": "UI-006-O3",
+          "kind": "constraint",
+          "text": "Never expose tokens.",
+          "tokens": ["Never expose tokens"]
+        }
+      ]
+    },
+    {
+      "id": "UI-011",
+      "title": "Keyboard, accessibility and iPad usability",
+      "priority": "P0",
+      "document": "CAUSA-UI-EXCERPT.md",
+      "heading": "## UI-011: Keyboard, accessibility and iPad usability [P0]",
+      "sectionSha256": "e548dda65a14d43b5baa996b0cc542f1a28571eae0291317375ec0ae4cd6368e",
+      "obligations": [
+        {
+          "id": "UI-011-O1",
+          "kind": "constraint",
+          "text": "Support keyboard-only navigation, visible focus, skip-to-content, appropriate landmarks, semantic status announcements, labeled controls, non-color-only states, and minimum usable touch targets.",
+          "tokens": ["keyboard", "visible focus", "landmarks"]
+        },
+        {
+          "id": "UI-011-O2",
+          "kind": "constraint",
+          "text": "Support iPad portrait/landscape, narrow mobile screens, desktop, 200% text reflow, reduced motion, and screen readers.",
+          "tokens": ["200%", "reduced motion", "screen reader"]
+        },
+        {
+          "id": "UI-011-O3",
+          "kind": "constraint",
+          "text": "No essential operation may require drag-and-drop or hover.",
+          "tokens": ["drag-and-drop", "hover"]
+        }
+      ]
+    },
+    {
+      "id": "UI-016",
+      "title": "Causa semantic color system",
+      "priority": "P0",
+      "document": "CAUSA-UI-EXCERPT.md",
+      "heading": "## UI-016: Causa semantic color system [P0]",
+      "sectionSha256": "53e5178f38722dcbcbabb33bf6fbbacba8e91e4db0330bbb9aaf80d4600f5685",
+      "obligations": [
+        {
+          "id": "UI-016-O1",
+          "kind": "constraint",
+          "text": "The interface MUST have a deliberate, visibly colored Causa identity, not an effectively monochrome black/gray/white presentation."
+        },
+        {
+          "id": "UI-016-O2",
+          "kind": "value",
+          "text": "| Deep navy | Deep navy | `#14283F` | Primary navigation, masthead, structural emphasis |\n| Teal | Teal | `#087F8C` | Primary investigation actions, active selection and positive workflow emphasis |\n| Amber | Amber | `#E9A23B` | Unresolved unknowns, pending review and attention |\n| Coral | Coral | `#D66B58` | Contradictions, material conflicts and critical investigation alerts |\n| Soft ivory | Soft ivory | `#F5F3ED` | Main workspace surface and light backgrounds |",
+          "tokens": ["#14283F", "#087F8C", "#E9A23B", "#D66B58", "#F5F3ED"]
+        },
+        {
+          "id": "UI-016-O3",
+          "kind": "constraint",
+          "text": "All colors MUST be mapped to named, semantic Forma theme tokens, not scattered hardcoded CSS declarations.",
+          "tokens": ["Forma", "theme tokens"]
+        },
+        {
+          "id": "UI-016-O4",
+          "kind": "value",
+          "text": "Ensure WCAG AA contrast for normal text (4.5:1), large text (3:1), and relevant non-text indicators (3:1).",
+          "tokens": ["WCAG AA", "4.5:1", "3:1"]
+        },
+        {
+          "id": "UI-016-O5",
+          "kind": "constraint",
+          "text": "Do not convey lifecycle, confidence, danger, verification or sync status through color alone: pair color with text and/or icons, and distinguish causal semantics from decorative accents.",
+          "tokens": ["color alone"]
+        },
+        {
+          "id": "UI-016-O6",
+          "kind": "constraint",
+          "text": "Print/Folio output MUST remain legible in grayscale.",
+          "tokens": ["grayscale"]
+        },
+        {
+          "id": "UI-016-O7",
+          "kind": "acceptance",
+          "text": "Acceptance MUST include actual screenshots from the deployed exact SHA at desktop, iPad portrait/landscape and mobile sizes",
+          "tokens": ["screenshots", "deployed", "exact SHA", "desktop", "iPad portrait", "landscape", "mobile"]
+        },
+        {
+          "id": "UI-016-O8",
+          "kind": "acceptance",
+          "text": "plus automated token presence and contrast checks, keyboard focus checks, reduced-motion checks and independent visual review.",
+          "tokens": ["token presence", "contrast checks", "independent visual review"]
+        },
+        {
+          "id": "UI-016-O9",
+          "kind": "acceptance",
+          "text": "A grayscale-only interface is a failed UI-016 acceptance even if functional tests pass.",
+          "tokens": ["grayscale-only"]
+        }
+      ]
+    }
+  ]
+}
