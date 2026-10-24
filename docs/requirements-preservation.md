@@ -1,6 +1,6 @@
 # Requirements preservation
 
-Implements `RQ-ROS-2026-A034` (intake `REQ-PRES-001`, defect DC-008).
+Implements `RQ-ROS-2026-A034` (intake `REQ-PRES-001`, defect DC-008); the contracts are recorded in `DF-ROS-2026-A075` (draft).
 `praxis requirements preservation verify` is a deterministic gate that checks a
 derived requirements package against the authoritative requirements it was
 derived from. It refuses a derivation that silently drops, weakens or falsely

@@ -257,6 +257,7 @@
 | REMOTE-ENABLE-3-6-0 | Pin Praxis 3.6.0 for remote execution (praxis.remote 1.3) | complete |  | high |
 | REMOTE-ENABLE-3-8-0 | Pin Praxis 3.8.0 and enable remote execution (read,mutate,complete) (GH-90) | complete |  | high |
 | REQ-PRES-001 | Deterministic requirements-preservation gate (DC-008) | complete | requirements, preservation | high |
+| REQ-PRES-002 | Decision record for the requirements-preservation schemas | ready | requirements, preservation | medium |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |
