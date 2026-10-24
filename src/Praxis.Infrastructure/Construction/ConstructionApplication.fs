@@ -143,11 +143,10 @@ module ConstructionApplication =
                         if IO.File.ReadAllBytes path = bytes then Ok path
                         else Error "a different plan record already exists under this plan digest"
                     else
-                        do
-                            use output = new IO.FileStream(path, IO.FileMode.CreateNew, IO.FileAccess.Write, IO.FileShare.None)
-                            output.Write(bytes, 0, bytes.Length)
-                            output.Flush true
-                        Ok path
+                        try
+                            LocalHostJournalFiles.publish root path bytes
+                            Ok path
+                        with :? IO.IOException when IO.File.ReadAllBytes path = bytes -> Ok path
             with error -> Error("plan record refused: " + error.Message)
 
     /// Entries whose target already names their candidate were applied before

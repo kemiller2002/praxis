@@ -8,8 +8,8 @@ open Praxis.Domain.Work
 
 /// Isolated host-journal mechanism. The host must provision/protect its root
 /// outside the repository; this implementation does not establish OS trust.
-/// CreateNew plus disk flush prevents competing accepted reservations/events.
-/// Partial files remain evidence and refuse recovery, never get overwritten.
+/// Flushed staging published without replacement prevents competing accepted
+/// reservations/events and partial records; records are never overwritten.
 [<RequireQualifiedAccess>]
 module FileLocalDispatchJournal =
     let private noLinks = LocalHostJournalFiles.noLinks
@@ -46,7 +46,7 @@ module FileLocalDispatchJournal =
                     if not (noLinks file) then invalidOp "dispatch reservation contains a link"
                     try
                         if Directory.GetFileSystemEntries(target).Length <> 0 then raise (IOException "dispatch already reserved or incomplete")
-                        writeExclusive file (LocalDispatchJournalJson.renderReservation reservation)
+                        writeExclusive root file (LocalDispatchJournalJson.renderReservation reservation)
                         Ok LocalDispatchReservationOutcome.Created
                     with :? IOException ->
                         load p.RepositoryIdentity p.DispatchId |> Result.bind (fun existing ->
@@ -57,7 +57,7 @@ module FileLocalDispatchJournal =
                     LocalDispatchJournal.append journal event |> Result.bind (fun _ ->
                         let path = Path.Combine(directory repositoryIdentity dispatchId, sprintf "event-%06d.json" event.Sequence)
                         if not (noLinks path) then invalidOp "dispatch event contains a link"
-                        writeExclusive path (LocalDispatchJournalJson.renderEvent event)
+                        writeExclusive root path (LocalDispatchJournalJson.renderEvent event)
                         Ok())))
             Ok { Reserve = reserve; Load = load; Append = append }
         with e -> Error("cannot configure local dispatch journal: " + e.Message)

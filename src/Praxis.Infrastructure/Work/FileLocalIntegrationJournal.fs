@@ -38,7 +38,7 @@ module FileLocalIntegrationJournal =
                     Directory.CreateDirectory target |> ignore
                     try
                         if Directory.GetFileSystemEntries(target).Length <> 0 then raise (IOException "integration already exists or is partial")
-                        LocalHostJournalFiles.writeExclusive (Path.Combine(target, "plan.json")) (LocalIntegrationJournalJson.renderPlan plan)
+                        LocalHostJournalFiles.writeExclusive root (Path.Combine(target, "plan.json")) (LocalIntegrationJournalJson.renderPlan plan)
                         Ok LocalIntegrationPrepareOutcome.Created
                     with :? IOException ->
                         load plan.RepositoryIdentity plan.DispatchId |> Result.bind (function
@@ -50,11 +50,11 @@ module FileLocalIntegrationJournal =
                         | Some journal when journal.Plan = plan ->
                             if journal.AppliedAt.IsSome then Ok()
                             else
-                                LocalHostJournalFiles.writeExclusive (Path.Combine(directory plan.RepositoryIdentity plan.DispatchId, "applied.json")) (LocalIntegrationJournalJson.renderApplied plan at)
+                                LocalHostJournalFiles.writeExclusive root (Path.Combine(directory plan.RepositoryIdentity plan.DispatchId, "applied.json")) (LocalIntegrationJournalJson.renderApplied plan at)
                                 Ok()
                         | _ -> Error "applied observation differs from prepared integration")))
             let pending repo = guarded (fun () ->
-                let paths = Directory.GetFileSystemEntries root
+                let paths = Directory.GetFileSystemEntries root |> Array.filter (LocalHostJournalFiles.isStaging >> not)
                 if paths.Length > 256 then invalidOp "integration recovery inventory exceeds bound"
                 let mutable result = []
                 for path in paths do

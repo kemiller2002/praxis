@@ -9,7 +9,8 @@ open Praxis.Domain.Work
 /// protected root outside the repository; this mechanism does not supply trust.
 [<RequireQualifiedAccess>]
 module FileLocalWorkerSubmissions =
-    let create repositoryRoot storeRoot : Result<LocalWorkerSubmissionStore, string> =
+    /// `staged` observes each complete, unpublished staging file (test seam).
+    let internal createWith staged repositoryRoot storeRoot : Result<LocalWorkerSubmissionStore, string> =
         try
             let root = LocalHostJournalFiles.rootOutside repositoryRoot storeRoot
             let directory repositoryIdentity dispatchId = LocalHostJournalFiles.directory root repositoryIdentity dispatchId
@@ -33,7 +34,7 @@ module FileLocalWorkerSubmissions =
                     if not (LocalHostJournalFiles.noLinks file) then invalidOp "submission archive contains a link"
                     try
                         if Directory.GetFileSystemEntries(target).Length <> 0 then raise (IOException "submission already saved or incomplete")
-                        LocalHostJournalFiles.writeExclusive file (LocalWorkerSubmissionJson.render submission)
+                        LocalHostJournalFiles.writeExclusiveWith staged root file (LocalWorkerSubmissionJson.render submission)
                         Ok LocalSubmissionSaveOutcome.Created
                     with :? IOException ->
                         load submission.RepositoryIdentity submission.DispatchId |> Result.bind (fun existing ->
@@ -41,3 +42,4 @@ module FileLocalWorkerSubmissions =
                             else Error "dispatch submission cannot be replaced"))
             Ok { Save = save; Load = load }
         with e -> Error("cannot configure local submission archive: " + e.Message)
+    let create repositoryRoot storeRoot = createWith ignore repositoryRoot storeRoot

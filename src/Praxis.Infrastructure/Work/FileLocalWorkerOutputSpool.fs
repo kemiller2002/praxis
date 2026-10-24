@@ -76,7 +76,7 @@ module FileLocalWorkerOutputSpool =
                     let target = directory packet.RepositoryIdentity packet.DispatchId
                     Directory.CreateDirectory target |> ignore
                     if Directory.GetFileSystemEntries(target).Length <> 0 then invalidOp "existing output spool requires recovery; reopening refused"
-                    LocalHostJournalFiles.writeExclusive (Path.Combine(target, "reservation.json")) (LocalDispatchJournalJson.renderReservation reservation)
+                    LocalHostJournalFiles.writeExclusive root (Path.Combine(target, "reservation.json")) (LocalDispatchJournalJson.renderReservation reservation)
                     let stdout = new FileStream(Path.Combine(target, "stdout.bin"), FileMode.CreateNew, FileAccess.Write, FileShare.Read)
                     let stderr =
                         try new FileStream(Path.Combine(target, "stderr.bin"), FileMode.CreateNew, FileAccess.Write, FileShare.Read)
@@ -125,7 +125,7 @@ module FileLocalWorkerOutputSpool =
                                               controllerSessionId = reservation.ControllerSessionId; processIdentity = identity; exitCode = exitCode
                                               stdoutDigest = LocalWorkerSubmission.digest outputBytes; stderrDigest = LocalWorkerSubmission.digest errorBytes
                                               stdoutBytes = outputBytes.Length; stderrBytes = errorBytes.Length |}
-                            LocalHostJournalFiles.writeExclusive (Path.Combine(target, "seal.json")) json
+                            LocalHostJournalFiles.writeExclusive root (Path.Combine(target, "seal.json")) json
                             Ok()
                         with e -> failed <- true; Error("output spool seal failed: " + e.Message))
                     Ok { Write = write; Seal = seal; Close = close }))

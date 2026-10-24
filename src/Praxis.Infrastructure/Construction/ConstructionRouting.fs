@@ -208,6 +208,8 @@ module ConstructionRouting =
                         if LocalHostJournalFiles.readBounded path = content then Ok path
                         else Error "a different routing record already exists under this route ID"
                     else
-                        LocalHostJournalFiles.writeExclusive path content
-                        Ok path
+                        try
+                            LocalHostJournalFiles.writeExclusive root path content
+                            Ok path
+                        with :? IOException when LocalHostJournalFiles.readBounded path = content -> Ok path
             with error -> Error("routing record refused: " + error.Message)

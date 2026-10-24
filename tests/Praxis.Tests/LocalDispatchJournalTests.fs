@@ -103,6 +103,32 @@ module LocalDispatchJournalTests =
               Task.WaitAll [| left :> Task; right :> Task |]
               Assert.equal 1 ([ left.Result; right.Result ] |> List.filter Result.isOk |> List.length)
               Assert.equal [ intent ] (store.Load packet.RepositoryIdentity packet.DispatchId |> ok).Events))
+          t "appends under concurrent journal readers never leave an empty or partial event" (fun () -> fixture (fun _ host store ->
+              store.Reserve reservation |> ok |> ignore
+              use stop = new ManualResetEventSlim(false)
+              let reader = Task.Run(fun () ->
+                  Seq.initInfinite (fun _ -> stop.IsSet, store.Load packet.RepositoryIdentity packet.DispatchId)
+                  |> Seq.takeWhile (fst >> not) |> Seq.map snd |> Seq.filter Result.isError |> Seq.truncate 1 |> Seq.toList)
+              try
+                  for next in [ intent; started; exited ] do store.Append packet.RepositoryIdentity packet.DispatchId next |> ok
+              finally stop.Set()
+              Assert.empty reader.Result
+              Assert.equal [ intent; started; exited ] (store.Load packet.RepositoryIdentity packet.DispatchId |> ok).Events
+              Assert.empty (Directory.GetFiles host |> Array.toList)))
+          t "host record publication refuses a taken name and oversized content without replacing or leaving staging" (fun () -> fixture (fun _ host _ ->
+              let root = Path.TrimEndingDirectorySeparator(Path.GetFullPath host)
+              let directory = Directory.CreateDirectory(Path.Combine(root, "record")).FullName
+              let path = Path.Combine(directory, "record.json")
+              LocalHostJournalFiles.writeExclusive root path "first"
+              let collided = try LocalHostJournalFiles.writeExclusive root path "second"; None with error -> Some error
+              Assert.isTrue (collided |> Option.exists (fun error -> error :? IOException)) "a taken name was not reported as a collision"
+              Assert.equal "first" (File.ReadAllText path)
+              let oversized = Path.Combine(directory, "oversized.json")
+              let refused = try LocalHostJournalFiles.writeExclusive root oversized (String('x', 131073)); None with error -> Some error
+              Assert.isTrue (refused |> Option.exists (fun error -> error :? InvalidOperationException)) "oversized content was not refused"
+              Assert.isTrue (not (File.Exists oversized)) "oversized content became visible"
+              Assert.equal [ "record.json" ] (Directory.GetFileSystemEntries directory |> Array.map Path.GetFileName |> Array.toList)
+              Assert.empty (Directory.GetFiles root |> Array.toList)))
           t "partial reservations and events are retained and refuse recovery or overwrite" (fun () -> fixture (fun _ host store ->
               store.Reserve reservation |> ok |> ignore
               let target = Directory.GetDirectories(host) |> Array.exactlyOne
