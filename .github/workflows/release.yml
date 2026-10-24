@@ -30,7 +30,8 @@ concurrency:
 jobs:
   release:
     if: github.repository == 'kemiller2002/praxis' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    # Pinned (decision OD-5, program EXECUTION-STATE): release-gating jobs use an explicit image; revisit when ubuntu-26.04 nears deprecation or ubuntu-latest moves past it.
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
         with:
