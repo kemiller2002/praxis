@@ -23,13 +23,14 @@ module ConstructionHostStore =
         | None, _ -> Error "construction is disabled: the host configuration names no construction root"
         | _, None -> Error "record key is not a SHA-256 digest"
         | Some store, Some name ->
-            let directory = Path.Combine(LocalHostJournalFiles.rootOutside configuration.RepositoryRoot store, folder)
-            Ok(directory, Path.Combine(directory, name + ".json"))
+            let root = LocalHostJournalFiles.rootOutside configuration.RepositoryRoot store
+            let directory = Path.Combine(root, folder)
+            Ok(root, directory, Path.Combine(directory, name + ".json"))
 
     /// Exact text stored under `key`, or None.
     let read (configuration: LocalHostConfiguration) (folder: string) (key: string) : Result<string option, string> =
         try
-            located configuration folder key |> Result.bind (fun (_, path) ->
+            located configuration folder key |> Result.bind (fun (_, _, path) ->
                 if not (LocalHostJournalFiles.noLinks path) then Error "host record path contains a link"
                 elif not (File.Exists path) then Ok None
                 elif FileInfo(path).Length > int64 maxBytes then Error "host record exceeds 4 MiB"
@@ -40,7 +41,7 @@ module ConstructionHostStore =
     /// record is accepted, a different one refused.
     let writeOnce (configuration: LocalHostConfiguration) (folder: string) (key: string) (content: string) : Result<string, string> =
         try
-            located configuration folder key |> Result.bind (fun (directory, path) ->
+            located configuration folder key |> Result.bind (fun (root, directory, path) ->
                 let bytes = UTF8Encoding(false).GetBytes content
                 if bytes.Length > maxBytes then Error "host record exceeds 4 MiB"
                 elif not (LocalHostJournalFiles.noLinks directory) then Error "host record directory contains a link"
@@ -50,11 +51,10 @@ module ConstructionHostStore =
                     elif File.Exists path then
                         if File.ReadAllBytes path = bytes then Ok path else Error "a different host record already exists under this key"
                     else
-                        do
-                            use output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)
-                            output.Write(bytes, 0, bytes.Length)
-                            output.Flush true
-                        Ok path)
+                        try
+                            LocalHostJournalFiles.publish root path bytes
+                            Ok path
+                        with :? IOException when File.ReadAllBytes path = bytes -> Ok path)
         with error -> Error(error.Message)
 
 /// The envelope of an `ordo.construction-decisions/1` record set as Praxis

@@ -97,7 +97,7 @@ module ConstructionScope =
     /// under its own identity; links, partial or foreign layouts refuse.
     let private inventory (root: string) : Result<LocalIntegrationJournal list, string> =
         try
-            let paths = Directory.GetFileSystemEntries root |> Array.sort |> Array.toList
+            let paths = Directory.GetFileSystemEntries root |> Array.filter (LocalHostJournalFiles.isStaging >> not) |> Array.sort |> Array.toList
             if paths.Length > 512 then invalidOp "the journal inventory exceeds its bound"
             paths |> List.choose (fun path ->
                 let name = Path.GetFileName path
@@ -123,14 +123,15 @@ module ConstructionScope =
         with error -> Error("construction-scope-journal-unreadable: " + error.Message)
 
     /// Path and SHA-256 of every file under the construction root except
-    /// locks: any change to host evidence changes the pinned input digest.
+    /// locks and transient staging files: any change to host evidence changes
+    /// the pinned input digest.
     let private fingerprint (root: string) =
         let rec walk (directory: string) (depth: int) : string list =
             if depth > 4 then [ "too-deep:" + directory ]
             else
                 Directory.GetFileSystemEntries directory |> Array.sort |> Array.toList |> List.collect (fun path ->
                     let relative = Path.GetRelativePath(root, path).Replace('\\', '/')
-                    if relative = "locks" then []
+                    if relative = "locks" || (directory = root && LocalHostJournalFiles.isStaging path) then []
                     elif not (LocalHostJournalFiles.noLinks path) then [ "link:" + relative ]
                     elif Directory.Exists path then walk path (depth + 1)
                     else

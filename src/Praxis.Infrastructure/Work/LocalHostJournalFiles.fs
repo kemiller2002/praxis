@@ -2,6 +2,7 @@ namespace Praxis.Infrastructure.Work
 
 open System
 open System.IO
+open System.Runtime.InteropServices
 open System.Security.Cryptography
 open System.Text
 
@@ -40,16 +41,56 @@ module internal LocalHostJournalFiles =
             if read = 0 then finished <- true else count <- count + read
         if count > 131072 then invalidOp "oversized host journal"
         UTF8Encoding(false, true).GetString(buffer, 0, count)
-    let writeExclusive path content =
-        let created = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)
+    let private stagingPrefix = ".praxis-staging-"
+    /// A transient staging file of `publish`: a regular, unlinked file named
+    /// for staging directly in a host root. Root inventories skip it; it is
+    /// never read as a record (a vanished one also qualifies).
+    let isStaging (path: string) =
+        let name = Path.GetFileName path
+        name.StartsWith(stagingPrefix, StringComparison.Ordinal) && name.EndsWith(".tmp", StringComparison.Ordinal)
+        && not (Directory.Exists path) && isNull (FileInfo(path).LinkTarget)
+    module private Posix =
+        [<DllImport("libc", EntryPoint = "link", SetLastError = true)>]
+        extern int link([<MarshalAs(UnmanagedType.LPUTF8Str)>] string existing, [<MarshalAs(UnmanagedType.LPUTF8Str)>] string created)
+    /// Give `staged` the name `path` atomically, never replacing an existing
+    /// name. Unix `File.Move(.., overwrite = false)` is lstat-then-rename,
+    /// which replaces a racing winner, so Unix uses link(2) (EEXIST is the
+    /// collision); Windows MoveFileEx without REPLACE_EXISTING is atomic.
+    let private link staged path =
+        if OperatingSystem.IsWindows() then File.Move(staged, path, false)
+        elif Posix.link(staged, path) <> 0 then
+            match Marshal.GetLastPInvokeError() with
+            | 17 -> raise (IOException("host record already exists: " + path))
+            | errno -> invalidOp (sprintf "host record publication failed (errno %d)" errno)
+    /// Write-once publication. The bytes are written and flushed to disk under
+    /// a unique staging name in `root` (the same filesystem as `path`, which
+    /// lies under it, and outside every record directory), then published
+    /// with no-replace semantics, so `path` only ever names complete content
+    /// and its name is never opened for writing. A Unix FileStream takes its
+    /// FileShare flock only after open(O_CREAT|O_EXCL), so a reader's shared
+    /// lock in that gap used to fail the creator and leave an empty record.
+    /// Only an existing `path` raises IOException (a collision the caller may
+    /// resolve by reading); every other failure is InvalidOperationException.
+    /// The staging file is removed on every path. `staged` is a test seam
+    /// observing the complete, not yet published, staging file.
+    let publishWith (staged: string -> unit) root path (bytes: byte array) =
+        let staging = Path.Combine(root, stagingPrefix + Guid.NewGuid().ToString("N") + ".tmp")
         try
-            use output = created
-            let bytes = Encoding.UTF8.GetBytes(content: string)
-            if bytes.Length > 131072 then invalidOp "oversized host journal"
-            output.Write(bytes, 0, bytes.Length)
-            output.Flush(true)
-        with e ->
-            // Only failure to open exclusively may be interpreted as collision.
-            // Once created, a failed write/flush must remain a failure even if
-            // a subsequent reader could decode the bytes left on disk.
-            raise (InvalidOperationException("host journal write failed after exclusive creation", e))
+            try
+                do
+                    use output = new FileStream(staging, FileMode.CreateNew, FileAccess.Write, FileShare.None)
+                    output.Write(bytes, 0, bytes.Length)
+                    output.Flush(true)
+                staged staging
+            with e -> raise (InvalidOperationException("host record staging failed", e))
+            link staging path
+        finally
+            // Best effort: a staging file left by a failed unlink is never
+            // read as a record and is skipped by root inventories.
+            try File.Delete staging with :? IOException | :? UnauthorizedAccessException -> ()
+    let publish root path bytes = publishWith ignore root path bytes
+    let writeExclusiveWith staged root path content =
+        let bytes = Encoding.UTF8.GetBytes(content: string)
+        if bytes.Length > 131072 then invalidOp "oversized host journal"
+        publishWith staged root path bytes
+    let writeExclusive root path content = writeExclusiveWith ignore root path content

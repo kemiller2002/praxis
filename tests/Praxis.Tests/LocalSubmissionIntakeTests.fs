@@ -57,6 +57,8 @@ module LocalSubmissionIntakeTests =
             test repo journals submissions journal store
         finally Directory.Delete(root, true)
     let private save journal store text exitCode = LocalSubmissionIntake.capture (capturePorts journal store) packet (report text exitCode)
+    let private archiveDirectory (submissions: string) dispatchId =
+        LocalHostJournalFiles.directory (Path.TrimEndingDirectorySeparator(Path.GetFullPath submissions)) packet.RepositoryIdentity dispatchId
     let private load (store: LocalWorkerSubmissionStore) = store.Load packet.RepositoryIdentity packet.DispatchId |> ok
     let private mutate (json: string) edit =
         let node = JsonNode.Parse json
@@ -259,6 +261,74 @@ module LocalSubmissionIntakeTests =
                   Task.WaitAll [| left :> Task; right :> Task |]
                   Assert.equal 1 ([ left.Result; right.Result ] |> List.filter ((=) (Ok LocalSubmissionSaveOutcome.Created)) |> List.length)
                   Assert.equal candidate (store.Load packet.RepositoryIdentity candidate.DispatchId |> ok)))
+          t "an interleaved identical archival is Existing even while a reader holds the published record" (fun () -> fixture true (fun repo _ submissions journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let candidate = { load store with DispatchId = "archive-interleaved" }
+              let file = Path.Combine(archiveDirectory submissions candidate.DispatchId, "submission.json")
+              let reader = ref None
+              let winner = ref None
+              // Both contenders passed the empty-directory check; the winner
+              // publishes and a reader takes a shared handle before the loser.
+              let staged path =
+                  Assert.equal (LocalWorkerSubmissionJson.render candidate) (File.ReadAllText path)
+                  Assert.isTrue (not (File.Exists file)) "an unpublished record is visible"
+                  winner.Value <- Some(store.Save candidate)
+                  reader.Value <- Some(new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+                  // The shared handle is what used to fail the creator's
+                  // exclusive open after it had already created the name.
+                  let refused =
+                      try (new FileStream(file, FileMode.Open, FileAccess.Write, FileShare.None)).Dispose(); false
+                      with :? IOException -> true
+                  Assert.isTrue refused "an exclusive open coexisted with a shared reader"
+              let loser = FileLocalWorkerSubmissions.createWith staged repo submissions |> ok
+              try
+                  Assert.equal (Ok LocalSubmissionSaveOutcome.Existing) (loser.Save candidate)
+              finally reader.Value |> Option.iter _.Dispose()
+              Assert.equal (Some(Ok LocalSubmissionSaveOutcome.Created)) winner.Value
+              Assert.equal candidate (store.Load packet.RepositoryIdentity candidate.DispatchId |> ok)
+              Assert.empty (Directory.GetFiles submissions |> Array.toList)))
+          t "an interleaved changed archival is refused and leaves only the winner's complete record" (fun () -> fixture true (fun repo _ submissions journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let candidate = { load store with DispatchId = "archive-interleaved-changed" }
+              let changed = { candidate with ExitCode = 1 }
+              let winner = ref None
+              let loser = FileLocalWorkerSubmissions.createWith (fun _ -> winner.Value <- Some(store.Save candidate)) repo submissions |> ok
+              rejects (loser.Save changed)
+              Assert.equal (Some(Ok LocalSubmissionSaveOutcome.Created)) winner.Value
+              Assert.equal candidate (store.Load packet.RepositoryIdentity candidate.DispatchId |> ok)
+              Assert.equal [ "submission.json" ] (Directory.GetFileSystemEntries(archiveDirectory submissions candidate.DispatchId) |> Array.map Path.GetFileName |> Array.toList)
+              Assert.empty (Directory.GetFiles submissions |> Array.toList)))
+          t "failed staging publishes nothing, removes its staging file and permits a later archival" (fun () -> fixture true (fun repo _ submissions journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let candidate = { load store with DispatchId = "archive-staging-failure" }
+              let failing = FileLocalWorkerSubmissions.createWith (fun _ -> raise (IOException "simulated disk failure")) repo submissions |> ok
+              rejects (failing.Save candidate)
+              Assert.empty (Directory.GetFileSystemEntries(archiveDirectory submissions candidate.DispatchId) |> Array.toList)
+              Assert.empty (Directory.GetFiles submissions |> Array.toList)
+              Assert.equal (Ok LocalSubmissionSaveOutcome.Created) (store.Save candidate)
+              Assert.equal candidate (store.Load packet.RepositoryIdentity candidate.DispatchId |> ok)))
+          t "concurrent archival under readers never exposes an empty or partial record" (fun () -> fixture true (fun _ _ submissions journal store ->
+              save journal store payload 0 |> ok |> ignore
+              let original = load store
+              for iteration in 1..50 do
+                  let candidate = { original with DispatchId = "archive-read-race-" + string iteration }
+                  let expected = LocalWorkerSubmissionJson.render candidate
+                  let file = Path.Combine(archiveDirectory submissions candidate.DispatchId, "submission.json")
+                  use barrier = new Barrier(3)
+                  use finished = new CountdownEvent(2)
+                  let contender () = Task.Run(fun () -> try barrier.SignalAndWait() |> ignore; store.Save candidate finally finished.Signal() |> ignore)
+                  let observe () =
+                      try Some(LocalHostJournalFiles.readBounded file)
+                      with :? FileNotFoundException | :? DirectoryNotFoundException -> None
+                  let reader = Task.Run(fun () ->
+                      barrier.SignalAndWait() |> ignore
+                      Seq.initInfinite (fun _ -> finished.IsSet, observe()) |> Seq.takeWhile (fst >> not) |> Seq.choose snd |> Seq.toList)
+                  let left, right = contender(), contender()
+                  Task.WaitAll [| left :> Task; right :> Task; reader :> Task |]
+                  Assert.equal [ Ok LocalSubmissionSaveOutcome.Created; Ok LocalSubmissionSaveOutcome.Existing ] ([ left.Result; right.Result ] |> List.sortBy (function Ok LocalSubmissionSaveOutcome.Created -> 0 | _ -> 1))
+                  reader.Result |> List.iter (Assert.equal expected)
+                  Assert.equal expected (File.ReadAllText file)
+              Assert.empty (Directory.GetFiles submissions |> Array.toList)))
           t "repository roots, extra entries and observed links refuse archival access" (fun () -> fixture true (fun repo _ submissions journal store ->
               rejects (FileLocalWorkerSubmissions.create repo repo)
               save journal store payload 0 |> ok |> ignore
