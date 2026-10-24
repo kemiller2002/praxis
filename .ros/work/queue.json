@@ -6862,10 +6862,10 @@
         "preservation"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-24T16:41:34.000Z",
-      "updatedAt": "2026-10-24T16:41:34.000Z",
+      "updatedAt": "2026-10-24T16:42:57.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -11324,18 +11324,48 @@
     {
       "id": "REQ-PRES-002",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-24T16:41:35.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A075--requirements-preservation-contracts.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementsPreservationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-10-24T16:42:57.000Z",
       "telemetryExecutionIds": [
         "EXE-20261024T164136513Z-323cd830"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "837231f90b2a33d4029ef957",
+        "recordedAt": "2026-10-24T16:42:54.000Z",
+        "executionId": "EXE-20261024T164136513Z-323cd830",
+        "repository": "repository-operating-system",
+        "branch": "claude/requirements-preservation-gate",
+        "commit": "89755d439f4838b75964de8b48720d44c47d9ab5",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/requirements-preservation-gate",
+        "remoteCommit": "89755d439f4838b75964de8b48720d44c47d9ab5",
+        "summary": "DF-ROS-2026-A075 (draft) recorded for the four requirements-preservation contracts",
+        "nextAction": "Complete REQ-PRES-002",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-24T16:42:57.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-24T16:41:35.000Z",
+  "updatedAt": "2026-10-24T16:42:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
