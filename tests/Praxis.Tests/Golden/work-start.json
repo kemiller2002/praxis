@@ -203,6 +203,13 @@
       "actorKind": "unknown",
       "orchestration": {}
     },
+    "authorityContract": {
+      "source": "AGENTS.md",
+      "status": "present",
+      "sha256": "2af405073b299f562a8321feac875d2b9a9ae6d94171475a59a60a416784862d",
+      "frozenVersion": "VAC-002-P3",
+      "matchesFrozen": true
+    },
     "provenance": {
       "collector": "ros",
       "collectorVersion": "1.0.0",

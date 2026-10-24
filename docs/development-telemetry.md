@@ -290,6 +290,33 @@ Cross-provider comparisons must account for semantic differences. Providers may 
 
 Step-attributed observations participate in execution and work-item aggregation because they are canonical execution metrics carrying `stepId`, not copied rollups. Parent grouping steps never carry or implicitly include child measurements. `telemetry summary` adds an exact `stepCount` when matching executions contain steps; token and cost totals remain grouped by metric/unit/currency/quality semantics rather than collapsed into a misleading scalar. Step views retain per-measurement quality and availability, so future analysis can derive tokens or cost per completed step, accepted requirement, defect, successful test, or transition, and can compare rework/implementation/testing shares without storing those ratios prematurely.
 
+## Authority contract version (VAC-002-P3-01 R-PRAX-1)
+
+Owner decision OD-6 adds the frozen four-sentence authority contract of
+VAC-002 P3 to the `## Authority` section of `AGENTS.md`, the brief every
+implementation agent reads at work start, and to the construction handoff
+brief (`handoffMarkdown`). It states existing policy (cohort-based-engineering
+principle 3, `VAC-CBE-001-R2`); it is not a demonstrated reliability control
+(P3: 3/18 versus 7/18 unauthorized decisions, p = 0.125, inconclusive).
+
+Every execution record created by `work begin`, `work continue` or
+`telemetry start` carries `authorityContract`, observed from the repository's
+`AGENTS.md` (`Praxis.Domain.Work.AuthorityContract`):
+
+| Field | Meaning |
+| --- | --- |
+| `authorityContract.status` | `present` or `absent` |
+| `authorityContract.source` | the brief read: `AGENTS.md` |
+| `authorityContract.sha256` | SHA-256 (UTF-8, no trailing newline) of the first block quote in the brief's `## Authority` section; `null` when absent, never a placeholder |
+| `authorityContract.matchesFrozen` | whether that digest is the frozen `2af405073b299f562a8321feac875d2b9a9ae6d94171475a59a60a416784862d` |
+| `authorityContract.reason` | when absent: `brief-missing` or `no-authority-contract` |
+
+A different wording is recorded as `present` with its own digest and
+`matchesFrozen: false`, so a paraphrase stays visible. A record started before
+this field existed has no `authorityContract`: that is unknown, not absent.
+The construction prepared artifact records the same digest as
+`authorityContract.sha256` beside `handoffMarkdown`.
+
 ## Fallback execution
 
 New execution records carry `workItem`, the canonical work-item reference `{repositoryId, repository, localId}` (`repositoryId: null` while the repository identity is not established), beside the legacy `workItemId` ([`identity.md`](identity.md)).

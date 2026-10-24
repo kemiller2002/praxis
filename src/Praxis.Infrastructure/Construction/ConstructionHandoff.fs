@@ -605,6 +605,14 @@ module ConstructionHandoff =
           yield ""
           for operation in handoff.Operations do yield "- " + operation
           yield ""
+          // The frozen authority contract (VAC-002-P3-01 R-PRAX-1, OD-6), after
+          // the task and before every other section, as P3 placed it.
+          yield Praxis.Domain.Work.AuthorityContract.Heading
+          yield ""
+          yield Praxis.Domain.Work.AuthorityContract.Note
+          yield ""
+          yield Praxis.Domain.Work.AuthorityContract.Text
+          yield ""
           yield "## Obligations"
           yield ""
           if handoff.WorkItems.IsEmpty then yield "None." ; yield ""

@@ -145,6 +145,37 @@ module FileTelemetryExecutionRepository =
         | Some text -> JsonValue.Create text
         | None -> null
 
+    /// The brief an implementation agent reads at work start: the governed
+    /// repository's `AGENTS.md` (CLAUDE.md, GEMINI.md and the Copilot
+    /// instructions all defer to it).
+    [<Literal>]
+    let AuthorityBriefPath = "AGENTS.md"
+
+    /// `authorityContract` of an execution record (VAC-002-P3-01 R-PRAX-1,
+    /// OD-6): the digest of the contract the brief actually carries, or an
+    /// explicit absence -- never a digest the brief does not hold.
+    let authorityContractNode (observation: Praxis.Domain.Work.AuthorityContract.Observation) : JsonObject =
+        let node = JsonObject()
+        node["source"] <- JsonValue.Create AuthorityBriefPath
+
+        match observation with
+        | Praxis.Domain.Work.AuthorityContract.Present sha256 ->
+            node["status"] <- JsonValue.Create "present"
+            node["sha256"] <- JsonValue.Create sha256
+            node["frozenVersion"] <- JsonValue.Create Praxis.Domain.Work.AuthorityContract.Version
+            node["matchesFrozen"] <- JsonValue.Create(Praxis.Domain.Work.AuthorityContract.isFrozen sha256)
+        | Praxis.Domain.Work.AuthorityContract.Absent reason ->
+            node["status"] <- JsonValue.Create "absent"
+            node["sha256"] <- null
+            node["reason"] <- JsonValue.Create reason
+
+        node
+
+    /// Observes the authority contract of the brief at `root`.
+    let observeAuthorityContract (root: string) : Praxis.Domain.Work.AuthorityContract.Observation =
+        let path = Path.Combine(root, AuthorityBriefPath)
+        Praxis.Domain.Work.AuthorityContract.observe (if File.Exists path then Some(File.ReadAllText path) else None)
+
     let stringArrayNode (values: string list) : JsonArray =
         let array = JsonArray()
         values |> List.iter (fun value -> array.Add(JsonValue.Create value: JsonNode))
@@ -480,6 +511,8 @@ module FileTelemetryExecutionRepository =
 
                                 RemoteIdentity.readExecutor environmentVariable
                                 |> Option.iter (fun facts -> record["executor"] <- executorNode facts)
+
+                                record["authorityContract"] <- authorityContractNode (observeAuthorityContract root)
 
                                 let provenanceNode = JsonObject()
                                 provenanceNode["collector"] <- JsonValue.Create "ros"
