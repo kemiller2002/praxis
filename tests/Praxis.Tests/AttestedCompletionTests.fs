@@ -16,7 +16,8 @@ open Praxis.Infrastructure.Work
 /// signing, and the out-of-tree store. Praxis-side refusals use an in-process
 /// Dokimos stand-in, so they never depend on a Dokimos build; the end-to-end
 /// cases run the real Dokimos (`PRAXIS_TEST_DOKIMOS_DLL`) when it provides
-/// `completion.verify-attested/1` and report themselves skipped otherwise.
+/// `completion.verify-attested/1`, report themselves skipped while it is unset,
+/// and fail when it is set but unusable (EP-A3-R2, `DokimosTestRuntime`).
 [<RequireQualifiedAccess>]
 module AttestedCompletionTests =
     let private t name run = { Name = $"attested completion: {name}"; Run = run }
@@ -158,11 +159,7 @@ module AttestedCompletionTests =
         | Ok _ -> []
         | Error findings -> findings |> List.map _.Code |> List.distinct
 
-    let private attestedDokimos () =
-        Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL"
-        |> Option.ofObj
-        |> Option.filter File.Exists
-        |> Option.filter (fun dll -> DokimosCompletionVerifier.supportsAttestation dll (TimeSpan.FromSeconds 60.0) |> Result.isOk)
+    let private attestedDokimos () = DokimosTestRuntime.attested ()
 
     /// A bare remote seeded from `f.Root`, and two clones of it (agents A and B).
     let private shared (f: Fixture) =
@@ -571,8 +568,8 @@ module AttestedCompletionTests =
               Assert.equal "" (status f))
 
           t "F4 end to end: complete-verified --id --token alone, through the real Dokimos" (fun () ->
-              match Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists with
-              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              match DokimosTestRuntime.dll () with
+              | None -> DokimosTestRuntime.skip "attested completion"
               | Some dll ->
                   // Non-attested mode: the validate-run path, with its state out of tree.
                   let f = fixture [ "true" ] false
@@ -595,7 +592,7 @@ module AttestedCompletionTests =
 
           t "end to end through a Dokimos with attested mode: genuine receipts verify, forged ones are refused by Dokimos too" (fun () ->
               match attestedDokimos () with
-              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL does not provide completion.verify-attested/1"
+              | None -> DokimosTestRuntime.skip "attested completion"
               | Some dll ->
                   let f = fixture [ "true" ] true
                   Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
@@ -1206,7 +1203,7 @@ module AttestedCompletionTests =
 
           t "REL-GATE-004 end to end through the real Dokimos: a pinned host verifier completes, PROBE-3 and PROBE-4 are refused" (fun () ->
               match attestedDokimos () with
-              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL does not provide completion.verify-attested/1"
+              | None -> DokimosTestRuntime.skip "attested completion"
               | Some dll ->
                   let dokimos = DokimosCompletionVerifier.create (Ok dll) (TimeSpan.FromSeconds 120.0)
                   // Genuine: the host verifier's key pinned in protected policy.
@@ -1492,7 +1489,7 @@ module AttestedCompletionTests =
               Assert.equal 5 shortExcerpt
 
               match attestedDokimos () with
-              | None -> eprintfn "SKIP attested completion: PRAXIS_TEST_DOKIMOS_DLL does not provide completion.verify-attested/1"
+              | None -> DokimosTestRuntime.skip "attested completion"
               | Some dll ->
                   let g = fixture [ "true" ] true
                   CliHarness.write g.Root "ros.json" (pinnedPolicy "\"requireAttestedEvidence\":true" [ g.Key.Trusted.KeyId ])
@@ -1506,9 +1503,14 @@ module AttestedCompletionTests =
                   Assert.equal $"{item} verified (attested) commit {verifiedCommit.Substring(0, 12)} metadata {(head g).Substring(0, 12)}" (run.Out.Trim())
                   Assert.equal verifiedCommit (CliHarness.git g.Root [ "rev-parse"; "HEAD^" ])
                   Assert.equal "" (status g)
+                  let recordsBefore, metadata = records g, head g
                   let replay = CliHarness.rosWith g.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1"; "--json" ]
                   Assert.equal 0 replay.Exit
                   Assert.equal "replayed" (text (field (CliHarness.json replay.Out) "outcome"))
+                  // EP-A3-R3: the CLI replay adds no completion record and no metadata commit.
+                  Assert.equal recordsBefore (records g)
+                  Assert.equal metadata (head g)
+                  Assert.equal 1 (fst (records g) |> List.filter ((=) "work.completion.verified") |> List.length)
                   // PROBE-4 through the CLI: an unpinned attested policy.
                   let h = fixture [ "true" ] true
                   CliHarness.write h.Root "ros.json" "{\"workProtocol\":{\"requireAttestedEvidence\":true}}"
@@ -1519,3 +1521,160 @@ module AttestedCompletionTests =
                   let probe4 = CliHarness.rosWith h.Root environment [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
                   Assert.equal 3 probe4.Exit
                   Assert.isTrue (probe4.Out.Contains ProtectedCompletionPolicy.UntrustedAuthorityCode) probe4.Out) ]
+
+    // ---- EP-A3-R3: idempotence contract, end to end through the CLI -----
+
+    /// Every file under `directory` that `keep` accepts, as (relative path, content digest), sorted.
+    let private filesUnder (directory: string) (keep: string -> bool) =
+        if Directory.Exists directory then
+            Directory.GetFiles(directory, "*", SearchOption.AllDirectories)
+            |> Array.filter keep
+            |> Array.map (fun path -> Path.GetRelativePath(directory, path), hex (File.ReadAllText path))
+            |> Array.sort
+            |> Array.toList
+        else
+            []
+
+    /// The repository's completion state: HEAD, the worktree, tracked `.ros/`
+    /// state, and the out-of-tree claim, validation and receipt stores. The
+    /// admission cache and lock files are bookkeeping, not state. The
+    /// transient event log is returned apart, because a refusal is audited.
+    let private completionState (f: Fixture) =
+        let store = TransientStore.directory f.Root
+        let stores = [ TransientStore.claims f.Root; TransientStore.validations f.Root; TransientStore.receipts f.Root ]
+        let underStores (path: string) = stores |> List.exists (fun s -> path.StartsWith(s + string Path.DirectorySeparatorChar, StringComparison.Ordinal))
+        head f, status f, filesUnder (Path.Combine(f.Root, ".ros")) (fun _ -> true), filesUnder store (fun path -> underStores path && not (path.EndsWith ".lock"))
+
+    /// The transient claim-protocol events, as types, in order.
+    let private transientEvents (f: Fixture) =
+        let path = TransientStore.events f.Root
+
+        if File.Exists path then
+            File.ReadAllLines path
+            |> Array.filter (String.IsNullOrWhiteSpace >> not)
+            |> Array.choose (fun line -> (JsonNode.Parse line)["type"] |> Option.ofObj |> Option.map text)
+            |> Array.toList
+        else
+            []
+
+    /// The distinct `PRX.*` codes a run printed, sorted: what a repeat must reproduce.
+    let private printedCodes (run: CliHarness.Run) =
+        RegularExpressions.Regex.Matches(run.Out + run.Err, @"\b(?:PRX|DOK)\.[A-Z0-9_.]*[A-Z0-9_]")
+        |> Seq.map _.Value
+        |> Seq.distinct
+        |> Seq.sort
+        |> Seq.toList
+
+    /// A Dokimos stand-in that must never run: it leaves a marker and fails.
+    let private untouchableDokimos () =
+        let directory = CliHarness.temporaryDirectory "praxis-untouchable-dokimos"
+        let marker = Path.Combine(directory, "ran")
+        let script = Path.Combine(directory, "dokimos")
+        File.WriteAllText(script, $"#!/bin/sh\ntouch '{marker}'\nexit 9\n")
+        File.SetUnixFileMode(script, UnixFileMode.UserRead ||| UnixFileMode.UserWrite ||| UnixFileMode.UserExecute)
+        script, marker
+
+    /// Runs `arguments` twice and asserts the refusal contract: exit 3 both
+    /// times, the same non-empty codes, no change to the completion state,
+    /// and at most audit events of type `work.completion.rejected` added.
+    let private refusesIdempotently (f: Fixture) environment arguments =
+        let before = completionState f
+        let eventsBefore = transientEvents f
+        let first = CliHarness.rosWith f.Root environment arguments
+        let afterFirst = completionState f
+        let second = CliHarness.rosWith f.Root environment arguments
+        Assert.equal 3 first.Exit
+        Assert.equal 3 second.Exit
+        let codes = printedCodes first
+        Assert.isTrue (not codes.IsEmpty) $"the refusal names its codes: {first.Out}{first.Err}"
+        Assert.equal codes (printedCodes second)
+        Assert.equal before afterFirst
+        Assert.equal before (completionState f)
+        let added = transientEvents f |> List.skip eventsBefore.Length
+        Assert.equal eventsBefore (transientEvents f |> List.truncate eventsBefore.Length)
+        Assert.isTrue (added |> List.forall ((=) "work.completion.rejected")) $"only refusals are audited: {added}"
+        Assert.isTrue (not (completed f)) "the claim is not completed"
+        codes
+
+    let idempotenceTests =
+        [ t "EP-A3-R3 cli: complete-verified with missing evidence exits 3, repeats the same codes, and changes no state" (fun () ->
+              let f = fixture [ "true" ] false
+              Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+              let dokimos, marker = untouchableDokimos ()
+              let environment = [ "PRAXIS_DOKIMOS_EXECUTABLE", dokimos; FileDerivedCompletion.AuthorityVariable, f.Authority; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+              let codes = refusesIdempotently f environment [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ]
+              Assert.isTrue (codes |> List.forall (fun code -> code.StartsWith "PRX.")) $"{codes}"
+              Assert.isTrue (not (File.Exists marker)) "Dokimos is never asked")
+
+          t "EP-A3-R3 cli: complete-verified with evidence stale against HEAD exits 3, repeats the same codes, and changes no state" (fun () ->
+              let f = fixture [ "true" ] false
+              Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+              let validate = [ "work"; "validate-run"; "--id"; item; "--token"; "tok-1"; "--generation"; "1"; "--validation"; "unit-tests"; "--evidence-id"; "EV-TESTS"; "--"; "true" ]
+              Assert.equal 0 (CliHarness.rosWith f.Root identity validate).Exit
+              // The candidate moves on after the evidence was recorded.
+              CliHarness.write f.Root "src/code.txt" "v2\n"
+              CliHarness.commitAll f.Root "change after validation"
+              let dokimos, marker = untouchableDokimos ()
+              let environment = [ "PRAXIS_DOKIMOS_EXECUTABLE", dokimos; FileDerivedCompletion.AuthorityVariable, f.Authority; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+              refusesIdempotently f environment [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ] |> ignore
+              Assert.isTrue (not (File.Exists marker)) "Dokimos is never asked")
+
+          t "EP-A3-R3 cli: work finish refused before verification (stale token) exits 3, repeats the same codes, and changes no state" (fun () ->
+              let f = fixture [ "sh"; "-c"; "touch ran-validation" ] true
+              let socket = serveVerifier f
+              Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+              let dokimos, marker = untouchableDokimos ()
+              let environment = [ "PRAXIS_VERIFIER_SOCKET", socket; "PRAXIS_DOKIMOS_EXECUTABLE", dokimos; FileDerivedCompletion.AuthorityVariable, f.Authority; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+              let codes = refusesIdempotently f environment [ "work"; "finish"; "--id"; item; "--token"; "tok-other" ]
+              Assert.equal [ ClaimConflict.code ClaimConflict.StaleToken ] codes
+              Assert.isTrue (not (File.Exists marker)) "Dokimos is never asked")
+
+          t "EP-A3-R3 cli: work finish with required evidence missing from the policy exits 3, repeats the same codes, and changes no claim or tracked state" (fun () ->
+              let f = fixture [ "true" ] true
+              let socket = serveVerifier f
+              Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+              // The host demands evidence the validation policy never produces.
+              let demanding = Path.Combine(f.Host, "demanding.json")
+              File.WriteAllText(demanding, File.ReadAllText(f.Authority).Replace("\"RequiredEvidenceIds\":[\"EV-TESTS\"]", "\"RequiredEvidenceIds\":[\"EV-TESTS\",\"EV-MISSING\"]"))
+              let dokimos, marker = untouchableDokimos ()
+              let environment = [ "PRAXIS_VERIFIER_SOCKET", socket; "PRAXIS_DOKIMOS_EXECUTABLE", dokimos; FileDerivedCompletion.AuthorityVariable, demanding; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+              let arguments = [ "work"; "finish"; "--id"; item; "--token"; "tok-1" ]
+              let claimState () = let h, s, ros, stores = completionState f in h, s, ros, stores |> List.filter (fst >> fun path -> not (path.StartsWith "receipts"))
+              let before = claimState ()
+              let first = CliHarness.rosWith f.Root environment arguments
+              let second = CliHarness.rosWith f.Root environment arguments
+              Assert.equal 3 first.Exit
+              Assert.equal 3 second.Exit
+              Assert.isTrue (not (printedCodes first).IsEmpty) $"{first.Out}{first.Err}"
+              Assert.equal (printedCodes first) (printedCodes second)
+              // finish re-verifies, so receipts may be added; the claim, tracked state and HEAD do not move.
+              Assert.equal before (claimState ())
+              Assert.isTrue (not (completed f)) "the claim is not completed"
+              Assert.isTrue (not (File.Exists marker)) "Dokimos is never asked")
+
+          t "EP-A3-R3 cli: valid evidence completed twice through the real Dokimos replays with exit 0 and no duplicate records" (fun () ->
+              match DokimosTestRuntime.dll () with
+              | None -> DokimosTestRuntime.skip "attested completion"
+              | Some dll ->
+                  let f = fixture [ "true" ] false
+                  Assert.equal 0 (CliHarness.rosWith f.Root identity [ "work"; "claim"; "--id"; item; "--token"; "tok-1" ]).Exit
+                  let validate = [ "work"; "validate-run"; "--id"; item; "--token"; "tok-1"; "--generation"; "1"; "--validation"; "unit-tests"; "--evidence-id"; "EV-TESTS"; "--"; "true" ]
+                  Assert.equal 0 (CliHarness.rosWith f.Root identity validate).Exit
+                  let environment = [ "PRAXIS_DOKIMOS_EXECUTABLE", dll; FileDerivedCompletion.AuthorityVariable, f.Authority; FileDerivedCompletion.ContractVariable, f.Contract ] @ identity
+                  let arguments = [ "work"; "complete-verified"; "--id"; item; "--token"; "tok-1" ]
+                  let first = CliHarness.rosWith f.Root environment arguments
+                  Assert.equal 0 first.Exit
+                  Assert.equal "verified" (text (field (CliHarness.json first.Out) "outcome"))
+                  let afterFirst = completionState f
+                  let recordsAfterFirst = records f
+                  let eventsAfterFirst = transientEvents f
+                  let second = CliHarness.rosWith f.Root environment arguments
+                  Assert.equal 0 second.Exit
+                  Assert.equal "replayed" (text (field (CliHarness.json second.Out) "outcome"))
+                  Assert.equal afterFirst (completionState f)
+                  Assert.equal recordsAfterFirst (records f)
+                  Assert.equal 1 (fst (records f) |> List.filter ((=) "work.completion.verified") |> List.length)
+                  Assert.equal 1 (transientEvents f |> List.filter ((=) "work.completion.verified") |> List.length)
+                  let added = transientEvents f |> List.skip eventsAfterFirst.Length
+                  Assert.isTrue (added |> List.forall ((=) "work.completion.replayed")) $"a replay adds no completion record: {added}"
+                  Assert.equal "" (status f)) ]

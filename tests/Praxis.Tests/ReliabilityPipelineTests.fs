@@ -97,9 +97,7 @@ module ReliabilityPipelineTests =
           TelemetryExecutions = [ "EXE-PIPELINE" ] }
 
     let private realDokimos () =
-        Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL"
-        |> Option.ofObj
-        |> Option.filter File.Exists
+        DokimosTestRuntime.dll ()
         |> Option.map (fun dll -> DokimosCompletionVerifier.create (Ok dll) (TimeSpan.FromSeconds 120.0))
 
     let private completionPorts (events: ResizeArray<ClaimEvent>) claimPorts verifier =
@@ -119,7 +117,7 @@ module ReliabilityPipelineTests =
         | Error findings -> failwith $"the evidence must be established: {findings}"
 
     let private dokimosDll () =
-        Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists
+        DokimosTestRuntime.dll ()
 
     /// Runs the real Dokimos CLI on wire documents edited after Praxis built
     /// them: an authority Praxis's types cannot express (a failed or stale
@@ -228,7 +226,7 @@ module ReliabilityPipelineTests =
 
           t "scenarios 1, 5, 7, 8: one requirement through the real Dokimos verifier, with telemetry" (fun () ->
               match realDokimos () with
-              | None -> eprintfn "SKIP reliability pipeline: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              | None -> DokimosTestRuntime.skip "reliability pipeline"
               | Some dokimos ->
                   let input = boundInput ()
                   let events = ResizeArray()
@@ -316,7 +314,7 @@ module ReliabilityPipelineTests =
                   Assert.equal "unavailable" (at("perVerifiedRequirement.tokensTotal.availability").GetValue<string>()))
           t "REL-GATE-001: failing, unrelated, stale and mis-bound evidence never verifies through the real Dokimos" (fun () ->
               match realDokimos () with
-              | None -> eprintfn "SKIP reliability pipeline: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              | None -> DokimosTestRuntime.skip "reliability pipeline"
               | Some dokimos ->
                   let input = boundInput ()
                   let events = ResizeArray()
@@ -416,7 +414,7 @@ module ReliabilityPipelineTests =
 
           t "REL-GATE-002: B5b and B6a are refused end to end and a ready contract verifies through the real Dokimos" (fun () ->
               match dokimosDll () with
-              | None -> eprintfn "SKIP reliability pipeline: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              | None -> DokimosTestRuntime.skip "reliability pipeline"
               | Some dll ->
                   let root = CliHarness.temporaryDirectory "praxis-pipeline-readiness"
                   let item = "PRAXIS-PIPE-RG2"

@@ -189,6 +189,7 @@
     <Compile Include="IdentityTests.fs" />
     <Compile Include="ProvenanceAcknowledgementTests.fs" />
     <Compile Include="OrdoTestContracts.fs" />
+    <Compile Include="DokimosTestRuntime.fs" />
     <Compile Include="ValidationEvidenceFixtures.fs" />
     <Compile Include="WorkClaimTests.fs" />
     <Compile Include="ValidationEvidenceTests.fs" />

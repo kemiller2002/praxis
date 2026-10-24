@@ -663,8 +663,8 @@ module WorkClaimTests =
     /// names a built `Dokimos.Cli.dll`; otherwise it reports itself skipped.
     let integration =
         [ t "integration: the real Dokimos CLI verifies a Praxis-built packet and authority" (fun () ->
-              match Environment.GetEnvironmentVariable "PRAXIS_TEST_DOKIMOS_DLL" |> Option.ofObj |> Option.filter File.Exists with
-              | None -> eprintfn "SKIP work claims integration: PRAXIS_TEST_DOKIMOS_DLL is not set to a built Dokimos.Cli.dll"
+              match DokimosTestRuntime.dll () with
+              | None -> DokimosTestRuntime.skip "work claims integration"
               | Some dll ->
                   let h, _, _, completion = prepared ()
                   let calls = ref 0
