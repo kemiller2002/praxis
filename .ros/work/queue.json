@@ -6814,10 +6814,10 @@
       "description": "Bump release.json from 3.19.0 to 3.20.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-24T11:02:49.001Z",
-      "updatedAt": "2026-10-24T11:02:49.139Z",
+      "updatedAt": "2026-10-24T11:02:55.563Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",
