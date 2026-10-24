@@ -419,6 +419,11 @@ module AttestedCompletionTests =
               let f = fixture [ "true" ] true
               let first = claim f "agent-a" "tok-1"
               let old = (receipts (verify f "tok-1")).Head
+              // Stamps are millisecond-precise and the lease window is half-open
+              // [acquired, expires): a re-claim in the same millisecond as the old
+              // observation would make it look fresh. Start the next lease strictly later.
+              let observed = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+              SpinWait.SpinUntil(fun () -> DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() > observed) |> ignore
               let fence = { Claimant = "agent-a"; ClaimToken = "tok-1"; Generation = first.Generation }
               WorkClaims.release (claimPorts f) item fence false |> ignore
               let second = claim f "agent-a" "tok-2"
