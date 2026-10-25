@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 103,
+  "nextSeq": 104,
   "items": [
     {
       "id": "WI-0001",
@@ -6825,6 +6825,27 @@
         "provider": "github",
         "model": "unknown",
         "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0103",
+      "title": "Verify Dokimos published release attestation and evidence-bound Praxis completion (Task 3A)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-25T13:14:06.442Z",
+      "updatedAt": "2026-10-25T13:14:18.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "openai/codex",
+        "provider": "openai",
+        "model": "unknown",
+        "runtime": "codex"
       },
       "source": "manual",
       "sourceReference": null

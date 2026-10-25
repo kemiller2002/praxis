@@ -1,0 +1,142 @@
+{
+  "schema": "praxis.dokimos-attestation-verification/1",
+  "workItemId": "WI-0103",
+  "fixtureId": "TASK3A-FIXTURE-20261025",
+  "executedAt": "2026-10-25",
+  "releaseBaseline": {
+    "dokimos": {
+      "version": "0.7.0",
+      "tag": "dokimos-v0.7.0",
+      "releaseCommit": "04b5f856367b47a087285109c1fc5923ec351389",
+      "artifact": "dokimos-osx-arm64.tar.gz",
+      "artifactSha256": "45d8bb4d3ac0da8b9ba58a1e29d369eee9ef546b73860057488961d447c6ef69"
+    },
+    "praxis": {
+      "version": "3.20.0",
+      "tag": "v3.20.0",
+      "releaseCommit": "ee6430af3c03aa958c4e5663d65269457269db3d",
+      "artifact": "praxis-osx-arm64.tar.gz",
+      "artifactSha256": "56b61dff5c147464e45dcb4f090ec0cfb827e4bd457692a47b0534faf82a1149"
+    },
+    "completionContract": "dokimos.completion-verification/1",
+    "authorityContract": "dokimos.completion-authority/1",
+    "ordoContract": "ecir/1",
+    "ordoContractDigest": "sha256:4150ccaea61ac92479911c55ff90f1410b46f641bacd80ddb740daa9b8e48c9e",
+    "freshnessEnforcementAvailable": true,
+    "compatible": true
+  },
+  "matrix": [
+    {
+      "id": "B1",
+      "name": "Valid completion",
+      "expected": "ACCEPT",
+      "praxisExitCode": 0,
+      "praxisCode": "completed",
+      "dokimosExitCode": 0,
+      "dokimosVerdict": "verified",
+      "dokimosCodes": [],
+      "state": "completed",
+      "result": "PASS"
+    },
+    {
+      "id": "B2",
+      "name": "Missing attestation",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.EVIDENCE_MISSING",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.EVIDENCE_UNATTESTED"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B3",
+      "name": "Stale verification",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.HEAD_MISMATCH",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.ATTESTATION_BINDING_MISMATCH", "DOK.COMPLETION.STALE_EVIDENCE"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B4",
+      "name": "Blocked verification",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.RECEIPT_NOT_PASSED",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.ATTESTATION_NOT_PASSED", "DOK.COMPLETION.EVIDENCE_UNAVAILABLE", "DOK.COMPLETION.VALIDATION_UNAVAILABLE"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B5",
+      "name": "Failed verification",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.RECEIPT_NOT_PASSED",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.ATTESTATION_NOT_PASSED", "DOK.COMPLETION.EVIDENCE_FAILED", "DOK.COMPLETION.VALIDATION_FAILED"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B6",
+      "name": "Wrong work item",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.RECEIPT_BINDING_MISMATCH",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.WORK_ITEM_MISMATCH"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B7",
+      "name": "Wrong source SHA",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.HEAD_MISMATCH",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.ATTESTATION_BINDING_MISMATCH"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B8",
+      "name": "Missing evidence artifact",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.EVIDENCE_MISSING",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.EVIDENCE_UNOBSERVED"],
+      "state": "claimed",
+      "result": "PASS"
+    },
+    {
+      "id": "B9",
+      "name": "Unauthorized override",
+      "expected": "REJECT",
+      "praxisExitCode": 3,
+      "praxisCode": "PRX.COMPLETION.RECEIPT_MISSING; PRX.COMPLETION.VERIFIED_COMPLETION_REQUIRED",
+      "dokimosExitCode": 4,
+      "dokimosVerdict": "rejected",
+      "dokimosCodes": ["DOK.COMPLETION.EVIDENCE_UNATTESTED"],
+      "state": "claimed",
+      "result": "PASS"
+    }
+  ],
+  "implementationChanges": [],
+  "repairRequired": false,
+  "remainingBlockers": [],
+  "verdict": "PASS"
+}
