@@ -6938,6 +6938,30 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REQ-PRES-005",
+      "title": "Record the owner's acceptance of DF-ROS-2026-A075 (requirements-preservation contracts)",
+      "description": null,
+      "tags": [
+        "requirements",
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-26T22:24:24.000Z",
+      "updatedAt": "2026-10-26T22:24:25.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
