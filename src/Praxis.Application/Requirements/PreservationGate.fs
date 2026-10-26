@@ -24,6 +24,10 @@ module PreservationGate =
         { Baseline: string
           Disposition: string
           Approvals: string option
+          /// The approvals digest the approving authority published (REQ-PRES-001-R2).
+          ApprovalsSha256: string option
+          /// Identities whose approvals and reviews the gate honours.
+          TrustedApprovers: string list
           Derived: string
           Source: string }
 
@@ -86,6 +90,12 @@ module PreservationGate =
                        Requirement = c |> List.tryHead |> Option.map _.Requirement
                        Criteria = c.Length }: PreservationJson.DerivedFile))
 
+            let trust: InputTrust =
+                { BaselineSha256 = baselineFile.Sha256
+                  ApprovalsSha256 = approvalsFile |> Option.map _.Sha256
+                  PinnedApprovalsSha256 = request.ApprovalsSha256
+                  TrustedApprovers = request.TrustedApprovers }
+
             return
                 { Inputs =
                     { Baseline = baselineFile
@@ -93,10 +103,12 @@ module PreservationGate =
                       Disposition = dispositionFile
                       Package = dispositions.Package
                       Approvals = approvalsFile
+                      Trust = trust
+                      RecordedBaselineSha256 = dispositions.BaselineSha256
                       DerivedRoot = request.Derived
                       DerivedFiles = derived
                       SourceRoot = request.Source }
-                  Report = Preservation.evaluate baseline observations dispositions approvals criteria }
+                  Report = Preservation.evaluate trust baseline observations dispositions approvals criteria }
         }
 
     /// `requirements preservation sections`: the heading sections of one

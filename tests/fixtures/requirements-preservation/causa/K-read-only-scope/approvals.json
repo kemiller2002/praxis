@@ -6,7 +6,8 @@
       "authority": "operator (test fixture)",
       "scope": "Read-only rehearsal: exclude write workflows (commands, save and sync); UI, security and accessibility obligations stay mandatory.",
       "covers": ["UI-004", "UI-006-O1", "UI-006-O2"],
-      "date": "2026-10-24"
+      "date": "2026-10-24",
+      "approvedBy": { "id": "fixture-operator", "kind": "human" }
     }
   ]
 }

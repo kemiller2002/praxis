@@ -42,6 +42,12 @@ module RequirementsPreservationTests =
                 | _ -> n.[segment])
             node
 
+    let private fixtureOperator = "fixture-operator"
+    let private fixtureReviewer = "fixture-reviewer (human, test fixture)"
+
+    let private sha256File (path: string) =
+        File.ReadAllBytes path |> SHA256.HashData |> Convert.ToHexString |> _.ToLowerInvariant()
+
     type private Run =
         { Exit: int
           Out: string
@@ -63,7 +69,10 @@ module RequirementsPreservationTests =
               fixture $"{set}/{derived}"
               "--source"
               fixture $"{set}/{source}" ]
-            @ (approvals |> Option.map (fun a -> [ "--approvals"; fixture $"{set}/{a}" ]) |> Option.defaultValue [])
+            @ (approvals
+               |> Option.map (fun a -> [ "--approvals"; fixture $"{set}/{a}"; "--approvals-sha256"; sha256File (fixture $"{set}/{a}") ])
+               |> Option.defaultValue [])
+            @ [ "--trusted-approver"; fixtureOperator; "--trusted-approver"; fixtureReviewer ]
             @ (if text then [] else [ "--json" ])
 
         let result = CliHarness.run "dotnet" arguments []
@@ -146,9 +155,54 @@ module RequirementsPreservationTests =
           Scope = "test scope"
           Covers = covers
           Date = "2026-10-24"
-          OrdoDecision = None }
+          OrdoDecision = None
+          ApprovedBy = Some { Id = fixtureOperator; Kind = ActorKind.Human } }
+
+    /// The pure gate under the trust the fixtures establish: the baseline
+    /// digest the disposition records, an approvals digest that matches its
+    /// pin, and the fixture operator and reviewer as trusted identities.
+    let private evaluate baseline observations (disposition: DispositionSet) approvals criteria =
+        let trust: InputTrust =
+            { BaselineSha256 = disposition.BaselineSha256 |> Option.defaultValue ""
+              ApprovalsSha256 = Some "pinned"
+              PinnedApprovalsSha256 = Some "pinned"
+              TrustedApprovers = [ fixtureOperator; fixtureReviewer ] }
+
+        Preservation.evaluate trust baseline observations disposition approvals criteria
 
     let private codes (report: PreservationReport) = report.Findings |> List.map (fun f -> f.Code, f.Status)
+
+    // REQ-PRES-004 scenarios run the real CLI on variants written to a
+    // scratch directory, so every variant is an ordinary input file.
+    let private verifyArgs (arguments: string list) =
+        let result = CliHarness.run "dotnet" ([ CliHarness.cli; "requirements"; "preservation"; "verify" ] @ arguments @ [ "--json" ]) []
+
+        { Exit = result.Exit
+          Out = result.Out
+          Document = (if result.Exit = 2 then None else Some(JsonNode.Parse result.Out)) }
+
+    let private causaArgs (baseline: string) (disposition: string) (derived: string) =
+        [ "--baseline"; baseline; "--disposition"; disposition; "--derived"; derived; "--source"; fixture "causa/source" ]
+
+    let private trusted = [ "--trusted-approver"; fixtureOperator; "--trusted-approver"; fixtureReviewer ]
+
+    let private inScratch (body: string -> unit) =
+        let directory = Path.Combine(Path.GetTempPath(), $"praxis-preservation-{Guid.NewGuid():N}")
+        Directory.CreateDirectory directory |> ignore
+
+        try
+            body directory
+        finally
+            Directory.Delete(directory, true)
+
+    /// `relative` fixture text with `edit` applied, written under `directory`.
+    let private variant (directory: string) (relative: string) (edit: string -> string) =
+        let original = File.ReadAllText(fixture relative)
+        let edited = edit original
+        Assert.isTrue (edited <> original) $"the edit of {relative} changed nothing"
+        let path = Path.Combine(directory, relative.Replace('/', '_'))
+        File.WriteAllText(path, edited)
+        path
 
     let tests =
         [ t "A complete preservation passes, and the one token-less obligation is accepted only by its recorded review" (fun () ->
@@ -325,12 +379,13 @@ module RequirementsPreservationTests =
               let written =
                   CliHarness.run
                       "dotnet"
-                      [ CliHarness.cli; "requirements"; "preservation"; "verify"
-                        "--baseline"; fixture "causa/baseline.json"
-                        "--disposition"; fixture "causa/J-generic-accessibility/disposition.json"
-                        "--derived"; fixture "causa/J-generic-accessibility/derived"
-                        "--source"; fixture "causa/source"
-                        "--output"; output ]
+                      ([ CliHarness.cli; "requirements"; "preservation"; "verify"
+                         "--baseline"; fixture "causa/baseline.json"
+                         "--disposition"; fixture "causa/J-generic-accessibility/disposition.json"
+                         "--derived"; fixture "causa/J-generic-accessibility/derived"
+                         "--source"; fixture "causa/source"
+                         "--output"; output ]
+                       @ trusted)
                       []
 
               Assert.equal 3 written.Exit
@@ -395,19 +450,19 @@ module RequirementsPreservationTests =
               let baseline, disposition, observations, criteria = decoded ()
 
               let unjustified =
-                  Preservation.evaluate baseline observations (replaceEntry "UI-004" (Disposition.NotApplicable("", None)) disposition) [] criteria
+                  evaluate baseline observations (replaceEntry "UI-004" (Disposition.NotApplicable("", None)) disposition) [] criteria
 
               Assert.equal Verdict.Fail unjustified.Verdict
               Assert.isTrue (codes unjustified |> List.contains (FindingCode.NotApplicableUnjustified, FindingStatus.Fail)) "justification required"
 
               let unapproved =
-                  Preservation.evaluate baseline observations (replaceEntry "UI-004" (Disposition.NotApplicable("no commands in this build", None)) disposition) [] criteria
+                  evaluate baseline observations (replaceEntry "UI-004" (Disposition.NotApplicable("no commands in this build", None)) disposition) [] criteria
 
               Assert.equal Verdict.Blocked unapproved.Verdict
               Assert.isTrue (codes unapproved |> List.contains (FindingCode.NotApplicableUnapproved, FindingStatus.NeedsReview)) "needs review"
 
               let approved =
-                  Preservation.evaluate
+                  evaluate
                       baseline
                       observations
                       (replaceEntry "UI-004" (Disposition.NotApplicable("no commands in this build", Some "APR-NA")) disposition)
@@ -422,13 +477,13 @@ module RequirementsPreservationTests =
               let replacement = { Requirement = "RQ-TEST-0001"; Criterion = "CMD-01" }
               let superseded = replaceEntry "UI-004" (Disposition.Superseded([ replacement ], "APR-SUP")) disposition
 
-              Assert.equal Verdict.Fail (Preservation.evaluate baseline observations superseded [] criteria).Verdict
-              Assert.equal Verdict.Pass (Preservation.evaluate baseline observations superseded [ approval "APR-SUP" [ "UI-004" ] ] criteria).Verdict
+              Assert.equal Verdict.Fail (evaluate baseline observations superseded [] criteria).Verdict
+              Assert.equal Verdict.Pass (evaluate baseline observations superseded [ approval "APR-SUP" [ "UI-004" ] ] criteria).Verdict
 
               let dangling =
                   replaceEntry "UI-004" (Disposition.Superseded([ { replacement with Criterion = "CMD-99" } ], "APR-SUP")) disposition
 
-              let report = Preservation.evaluate baseline observations dangling [ approval "APR-SUP" [ "UI-004" ] ] criteria
+              let report = evaluate baseline observations dangling [ approval "APR-SUP" [ "UI-004" ] ] criteria
               Assert.isTrue (codes report |> List.contains (FindingCode.CriterionNotFound, FindingStatus.Fail)) "replacement must exist")
 
           t "an approval record must name an authority, a scope and an ISO date" (fun () ->
@@ -439,7 +494,7 @@ module RequirementsPreservationTests =
                   [ { approval "APR-X" [ "UI-004" ] with Authority = "" }
                     { approval "APR-X" [ "UI-004" ] with Scope = " " }
                     { approval "APR-X" [ "UI-004" ] with Date = "24/10/2026" } ] do
-                  let report = Preservation.evaluate baseline observations excluded [ broken ] criteria
+                  let report = evaluate baseline observations excluded [ broken ] criteria
                   Assert.equal Verdict.Fail report.Verdict
                   Assert.isTrue (codes report |> List.contains (FindingCode.ApprovalInvalid, FindingStatus.Fail)) $"{broken}")
 
@@ -450,7 +505,7 @@ module RequirementsPreservationTests =
                   criteria
                   |> List.map (fun c -> if c.Id = "VIS-01" then { c with Kind = CriterionKind.Statement } else c)
 
-              let report = Preservation.evaluate baseline observations disposition [] statements
+              let report = evaluate baseline observations disposition [] statements
               Assert.equal Verdict.Fail report.Verdict
 
               Assert.isTrue
@@ -475,7 +530,7 @@ module RequirementsPreservationTests =
                                               elif o.Id = "UI-016-O9" then { o with Tokens = [ "monochrome" ] }
                                               else o) }) }
 
-              let report = Preservation.evaluate paraphrase observations disposition [] criteria
+              let report = evaluate paraphrase observations disposition [] criteria
               Assert.equal Verdict.Fail report.Verdict
 
               let invalid =
@@ -485,7 +540,7 @@ module RequirementsPreservationTests =
 
           t "a disposition reconciled against another baseline, or naming unknown ids, fails" (fun () ->
               let baseline, disposition, observations, criteria = decoded ()
-              let other = Preservation.evaluate baseline observations { disposition with BaselineCommit = "0000000" } [] criteria
+              let other = evaluate baseline observations { disposition with BaselineCommit = "0000000" } [] criteria
               Assert.isTrue (codes other |> List.contains (FindingCode.BaselineMismatch, FindingStatus.Fail)) "baseline identity"
 
               let extra =
@@ -495,7 +550,7 @@ module RequirementsPreservationTests =
                           @ [ { Requirement = "UI-099"
                                 Disposition = Disposition.Preserved [] } ] }
 
-              let report = Preservation.evaluate baseline observations extra [] criteria
+              let report = evaluate baseline observations extra [] criteria
               Assert.isTrue (codes report |> List.contains (FindingCode.DispositionUnknownRequirement, FindingStatus.Fail)) "unknown requirement") ]
 
     /// The published schemas name the contracts the decoders and renderer
@@ -599,17 +654,94 @@ module RequirementsPreservationTests =
                                           ) }
                               | _ -> e) }
 
-              let paraphrased = Preservation.evaluate baseline observations unreviewed [] criteria
+              let paraphrased = evaluate baseline observations unreviewed [] criteria
               Assert.equal Verdict.Blocked paraphrased.Verdict
 
               let verbatimCriteria =
                   criteria
                   |> List.map (fun c -> if c.Id = "COL-01" then { c with Text = "Carried:   " + o1.Text.Replace(" ", "\n  ") } else c)
 
-              let verbatim = Preservation.evaluate baseline observations unreviewed [] verbatimCriteria
+              let verbatim = evaluate baseline observations unreviewed [] verbatimCriteria
               Assert.equal Verdict.Pass verbatim.Verdict
 
               let outcome =
                   verbatim.Requirements |> List.find (fun r -> r.Requirement.Id = "UI-016") |> _.Obligations |> List.find (fun o -> o.Obligation.Id = "UI-016-O1")
 
-              Assert.equal Decision.Verbatim outcome.Decision) ]
+              Assert.equal Decision.Verbatim outcome.Decision)
+
+          // REQ-PRES-004 (REQ-PRES-001 R1): the baseline the package claims is the one supplied.
+          t "a disposition without the baseline digest is blocked, never passed" (fun () ->
+              inScratch (fun scratch ->
+                  let disposition = variant scratch "causa/A-complete/disposition.json" (fun t -> Text.RegularExpressions.Regex.Replace(t, ",\\s*\"sha256\": \"[0-9a-f]{64}\"", ""))
+                  let run = verifyArgs (causaArgs (fixture "causa/baseline.json") disposition (fixture "causa/A-complete/derived") @ trusted)
+                  expect 3 "blocked" run
+                  Assert.isTrue (hasFinding "baseline-digest-missing" None run) "the missing digest is named"))
+
+          t "an altered baseline fails on its digest even when it still parses" (fun () ->
+              inScratch (fun scratch ->
+                  let baseline = variant scratch "causa/baseline.json" (fun t -> t.Replace("\"priority\": \"P0\"", "\"priority\": \"P1\""))
+                  let run = verifyArgs (causaArgs baseline (fixture "causa/A-complete/disposition.json") (fixture "causa/A-complete/derived") @ trusted)
+                  expect 3 "fail" run
+                  Assert.isTrue (hasFinding "baseline-digest-mismatch" None run) "the digest mismatch is named"))
+
+          // REQ-PRES-004 (REQ-PRES-001 R2): only authenticated, trusted, non-agent approvals count.
+          t "approvals without their published digest are blocked, and with a different digest they fail" (fun () ->
+              let args approvalsArgs =
+                  causaArgs (fixture "causa/baseline.json") (fixture "causa/E-approved-exclusion/disposition.json") (fixture "causa/E-approved-exclusion/derived")
+                  @ [ "--approvals"; fixture "causa/E-approved-exclusion/approvals.json" ]
+                  @ approvalsArgs
+                  @ trusted
+
+              let unpinned = verifyArgs (args [])
+              expect 3 "blocked" unpinned
+              Assert.isTrue (hasFinding "approvals-unauthenticated" None unpinned) "unauthenticated approvals are named"
+
+              let wrong = verifyArgs (args [ "--approvals-sha256"; String('0', 64) ])
+              expect 3 "fail" wrong
+              Assert.isTrue (hasFinding "approvals-digest-mismatch" None wrong) "the approvals digest mismatch is named")
+
+          t "an agent-authored or untrusted approval does not authorize an exclusion" (fun () ->
+              inScratch (fun scratch ->
+                  let run approvals extraTrust =
+                      verifyArgs (
+                          causaArgs (fixture "causa/baseline.json") (fixture "causa/E-approved-exclusion/disposition.json") (fixture "causa/E-approved-exclusion/derived")
+                          @ [ "--approvals"; approvals; "--approvals-sha256"; sha256File approvals ]
+                          @ extraTrust
+                      )
+
+                  let byAgent =
+                      variant scratch "causa/E-approved-exclusion/approvals.json" (fun t ->
+                          t.Replace("{ \"id\": \"fixture-operator\", \"kind\": \"human\" }", "{ \"id\": \"agent:anthropic/claude-code\", \"kind\": \"agent\" }"))
+
+                  let agent = run byAgent ([ "--trusted-approver"; "agent:anthropic/claude-code" ] @ trusted)
+                  expect 3 "fail" agent
+                  Assert.isTrue (hasFinding "approval-agent-authored" None agent) "an agent approval is refused with its own code, even when its id is trusted"
+
+                  let untrusted = run (fixture "causa/E-approved-exclusion/approvals.json") [ "--trusted-approver"; fixtureReviewer ]
+                  expect 3 "fail" untrusted
+                  Assert.isTrue (hasFinding "approval-untrusted" None untrusted) "an approver the caller does not trust is refused"))
+
+          t "a review by an identity the caller does not trust leaves the obligation needing review" (fun () ->
+              let run =
+                  verifyArgs (
+                      causaArgs (fixture "causa/baseline.json") (fixture "causa/A-complete/disposition.json") (fixture "causa/A-complete/derived")
+                      @ [ "--trusted-approver"; fixtureOperator ]
+                  )
+
+              expect 3 "blocked" run
+              Assert.isTrue (hasFinding "review-untrusted" (Some "UI-016-O1") run) "the untrusted review is named")
+
+          // REQ-PRES-004: no silent priority downgrade.
+          t "a P0 requirement carried by a lower-priority derived requirement fails" (fun () ->
+              inScratch (fun scratch ->
+                  let derived = Path.Combine(scratch, "derived")
+                  Directory.CreateDirectory derived |> ignore
+
+                  for path in Directory.GetFiles(fixture "causa/A-complete/derived", "*.md") do
+                      let text = File.ReadAllText path
+                      let lowered = if text.Contains "id: RQ-TEST-0002" then text.Replace("version: 1.0.0", "version: 1.0.0\npriority: low") else text
+                      File.WriteAllText(Path.Combine(derived, Path.GetFileName path), lowered)
+
+                  let run = verifyArgs (causaArgs (fixture "causa/baseline.json") (fixture "causa/A-complete/disposition.json") derived @ trusted)
+                  expect 3 "fail" run
+                  Assert.isTrue (hasFinding "priority-downgraded" None run) "the downgrade is named")) ]

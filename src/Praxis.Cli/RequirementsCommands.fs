@@ -12,13 +12,20 @@ open Praxis.Infrastructure.Requirements
 [<RequireQualifiedAccess>]
 module RequirementsCommands =
     let usage =
-        "requirements preservation verify --baseline FILE --disposition FILE --derived DIR --source DIR [--approvals FILE] [--output FILE] [--json] | requirements preservation sections --source DIR --document PATH [--pattern REGEX] [--json]"
+        "requirements preservation verify --baseline FILE --disposition FILE --derived DIR --source DIR [--approvals FILE --approvals-sha256 HEX] [--trusted-approver ID]... [--output FILE] [--json] | requirements preservation sections --source DIR --document PATH [--pattern REGEX] [--json]"
 
     let rec private option (name: string) (arguments: string list) =
         match arguments with
         | flag :: value :: _ when flag = name -> Some value
         | _ :: rest -> option name rest
         | [] -> None
+
+    /// Every value of a repeatable option, in order.
+    let rec private options (name: string) (arguments: string list) =
+        match arguments with
+        | flag :: value :: rest when flag = name -> value :: options name rest
+        | _ :: rest -> options name rest
+        | [] -> []
 
     let private invalid (message: string) =
         eprintfn "ERROR %s" message
@@ -31,6 +38,8 @@ module RequirementsCommands =
                 { Baseline = baseline
                   Disposition = disposition
                   Approvals = option "--approvals" arguments
+                  ApprovalsSha256 = option "--approvals-sha256" arguments
+                  TrustedApprovers = options "--trusted-approver" arguments
                   Derived = derived
                   Source = source }
 

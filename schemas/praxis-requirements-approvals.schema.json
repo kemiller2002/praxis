@@ -11,14 +11,21 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["decisionId", "authority", "scope", "covers", "date"],
+        "required": ["decisionId", "authority", "scope", "covers", "date", "approvedBy"],
         "properties": {
           "decisionId": { "type": "string", "minLength": 1 },
           "authority": { "type": "string", "minLength": 1 },
           "scope": { "type": "string", "minLength": 1 },
           "covers": { "type": "array", "items": { "type": "string" }, "description": "Requirement, obligation or conflict ids the approval decides." },
           "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-          "ordoDecision": { "type": ["string", "null"], "description": "Reserved: the Ordo decision that backs this approval, once Ordo provides one. Recorded, not verified." }
+          "ordoDecision": { "type": ["string", "null"], "description": "Reserved: the Ordo decision that backs this approval, once Ordo provides one. Recorded, not verified." },
+          "approvedBy": {
+            "type": "object",
+            "required": ["id", "kind"],
+            "description": "Who signed the approval off (REQ-PRES-001-R2). The gate honours it only for an identity the caller trusts (--trusted-approver), only when the file matches the digest the approving authority published (--approvals-sha256), and never for an agent.",
+            "properties": { "id": { "type": "string", "minLength": 1 }, "kind": { "enum": ["human", "agent", "automation"] } },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }

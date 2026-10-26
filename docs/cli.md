@@ -736,7 +736,7 @@ never zero, and there is no single score. See
 ### `requirements preservation verify`, `requirements preservation sections`
 
 ```
-praxis requirements preservation verify --baseline FILE --disposition FILE --derived DIR --source DIR [--approvals FILE] [--output FILE] [--json]
+praxis requirements preservation verify --baseline FILE --disposition FILE --derived DIR --source DIR [--approvals FILE --approvals-sha256 HEX] [--trusted-approver ID]... [--output FILE] [--json]
 praxis requirements preservation sections --source DIR --document PATH [--pattern REGEX] [--json]
 ```
 
@@ -750,6 +750,10 @@ falsely equated mandatory obligation fails, and so do an unapproved exclusion
 and source drift. A declared conflict is `blocked`. An obligation only
 judgement can decide is `needs-review`, which also blocks.
 
+- **Trust.** The disposition must record the baseline file's SHA-256
+  (`baseline.sha256`). Approvals count only when the file matches
+  `--approvals-sha256` and each is signed off by a `--trusted-approver` that
+  is not an agent; reviews count only for trusted identities.
 - **Output.** `--json` prints `praxis.requirements-preservation/1`, and
   `--output` also writes it to a file.
 - **Exit codes.** `0` pass, `3` fail or blocked, `2` invalid arguments or an

@@ -67,6 +67,17 @@ type Baseline =
       Requirements: SourceRequirement list
       Conflicts: DeclaredConflict list }
 
+/// The kind of actor that signed off an approval (REQ-PRES-001-R2).
+[<RequireQualifiedAccess>]
+type ActorKind =
+    | Human
+    | Agent
+    | Automation
+
+/// Who approved. Self-reported in the approvals file: the gate honours it
+/// only for an identity the caller trusts, and never for an agent.
+type Approver = { Id: string; Kind: ActorKind }
+
 /// An approval decided by an approving authority outside the derivation
 /// (for example an operator, later an Ordo decision). Praxis reads these;
 /// it never writes them.
@@ -77,7 +88,8 @@ type ApprovalRecord =
       /// Requirement, obligation or conflict ids the approval covers.
       Covers: string list
       Date: string
-      OrdoDecision: string option }
+      OrdoDecision: string option
+      ApprovedBy: Approver option }
 
 /// A human attestation that a derived criterion carries an obligation that
 /// no token can decide. Never produced by Praxis.
@@ -136,6 +148,9 @@ type RequirementDisposition =
 type DispositionSet =
     { BaselineId: string
       BaselineCommit: string
+      /// The SHA-256 of the baseline file's bytes the derivation was
+      /// reconciled against (REQ-PRES-001-R1).
+      BaselineSha256: string option
       Package: string
       Entries: RequirementDisposition list
       Conflicts: DeclaredConflict list }
@@ -149,7 +164,20 @@ type DerivedCriterion =
     { Requirement: string
       Id: string
       Text: string
-      Kind: CriterionKind }
+      Kind: CriterionKind
+      /// The front-matter `priority` of the derived requirement document.
+      Priority: string option }
+
+/// What the gate cannot learn from the files it judges (REQ-PRES-001 R1,
+/// R2): the digests it observed of the baseline and approvals bytes, the
+/// approvals digest the approving authority published out of band, and the
+/// identities allowed to approve and review. The caller supplies the pin
+/// and the identities from a place the derivation does not control.
+type InputTrust =
+    { BaselineSha256: string
+      ApprovalsSha256: string option
+      PinnedApprovalsSha256: string option
+      TrustedApprovers: string list }
 
 /// The current text of one baseline source document, or `None` when the
 /// document is absent from the source root.
@@ -201,6 +229,14 @@ type FindingCode =
     | ConflictUnresolved
     | ConflictResolved
     | ConflictInvalid
+    | BaselineDigestMissing
+    | BaselineDigestMismatch
+    | ApprovalsUnauthenticated
+    | ApprovalsDigestMismatch
+    | ApprovalUntrusted
+    | ApprovalAgentAuthored
+    | ReviewUntrusted
+    | PriorityDowngraded
 
 [<RequireQualifiedAccess>]
 module FindingCode =
@@ -237,6 +273,14 @@ module FindingCode =
         | FindingCode.ConflictUnresolved -> "conflict-unresolved"
         | FindingCode.ConflictResolved -> "conflict-resolved"
         | FindingCode.ConflictInvalid -> "conflict-invalid"
+        | FindingCode.BaselineDigestMissing -> "baseline-digest-missing"
+        | FindingCode.BaselineDigestMismatch -> "baseline-digest-mismatch"
+        | FindingCode.ApprovalsUnauthenticated -> "approvals-unauthenticated"
+        | FindingCode.ApprovalsDigestMismatch -> "approvals-digest-mismatch"
+        | FindingCode.ApprovalUntrusted -> "approval-untrusted"
+        | FindingCode.ApprovalAgentAuthored -> "approval-agent-authored"
+        | FindingCode.ReviewUntrusted -> "review-untrusted"
+        | FindingCode.PriorityDowngraded -> "priority-downgraded"
 
 type Finding =
     { Code: FindingCode
@@ -409,16 +453,18 @@ module Preservation =
         let t = line.Trim()
         t.StartsWith "|" && t |> Seq.forall (fun c -> c = '|' || c = '-' || c = ':' || c = ' ')
 
-    let private frontMatterId (lines: string array) =
+    let private frontMatter (key: string) (lines: string array) =
         if lines.Length > 0 && lines[0].Trim() = "---" then
             lines
             |> Array.skip 1
             |> Array.takeWhile (fun line -> line.Trim() <> "---")
             |> Array.tryPick (fun line ->
                 let t = line.Trim()
-                if t.StartsWith("id:", ordinal) then Some(t.Substring(3).Trim().Trim('"', '\'')) else None)
+                if t.StartsWith(key + ":", ordinal) then Some(t.Substring(key.Length + 1).Trim().Trim('"', '\'')) else None)
         else
             None
+
+    let private frontMatterId lines = frontMatter "id" lines
 
     /// Criteria of one derived requirement document: every markdown table
     /// whose first header cell is `ID`. A table whose second header cell
@@ -434,6 +480,8 @@ module Preservation =
                 match stem.IndexOf("--", ordinal) with
                 | -1 -> stem
                 | index -> stem.Substring(0, index))
+
+        let priority = frontMatter "priority" lines
 
         let rec scan index (acc: DerivedCriterion list) =
             if index + 1 >= lines.Length then
@@ -462,7 +510,8 @@ module Preservation =
                                     { Requirement = requirement
                                       Id = id
                                       Text = String.Join(" | ", textCells)
-                                      Kind = kind }
+                                      Kind = kind
+                                      Priority = priority }
                             | _ -> None)
                         |> Array.toList
 
@@ -485,14 +534,43 @@ module Preservation =
 
     let private joined (items: string list) = String.Join(", ", items)
 
+    /// The approvals the gate may honour and who may approve or review
+    /// (REQ-PRES-001-R2). `Refusal` is set when the approvals file itself
+    /// cannot be trusted; then no approval in it counts.
+    type private Authority =
+        { Approvals: ApprovalRecord list
+          Refusal: (FindingCode * FindingStatus * string) option
+          Trusted: Set<string> }
+
+    /// Rank of a priority, 0 the highest, or `None` for a word the gate does
+    /// not compare: the baseline's `P0`, `P1`, ... and the derived
+    /// documents' `critical` and `high` (0), `medium` (1) and `low` (2).
+    let priorityRank (priority: string) =
+        match priority.Trim().ToLowerInvariant() with
+        | "critical"
+        | "high" -> Some 0
+        | "medium" -> Some 1
+        | "low" -> Some 2
+        | p when p.Length > 1 && p.Length < 4 && p[0] = 'p' && p.Substring(1) |> Seq.forall Char.IsAsciiDigit -> Some(int (p.Substring 1))
+        | _ -> None
+
     /// Resolves an approval reference for `target` (a requirement,
-    /// obligation or conflict id): it must exist, be complete, carry an ISO
-    /// date, and cover the target. Findings explain every refusal.
-    let private approve (approvals: ApprovalRecord list) (requirement: string option) (obligation: string option) (targets: string list) (reference: string) =
-        match approvals |> List.tryFind (fun a -> a.DecisionId = reference) with
-        | None ->
+    /// obligation or conflict id): the approvals file must be authenticated,
+    /// and the record must exist, name a trusted human or automation
+    /// approver (never an agent), be complete, carry an ISO date, and cover
+    /// the target. Findings explain every refusal.
+    let private approve (authority: Authority) (requirement: string option) (obligation: string option) (targets: string list) (reference: string) =
+        match authority.Refusal, authority.Approvals |> List.tryFind (fun a -> a.DecisionId = reference) with
+        | _, None ->
             Error [ finding FindingCode.ApprovalMissing FindingStatus.Fail requirement obligation $"approval record '{reference}' does not exist; approvals are supplied by the approving authority and never generated" ]
-        | Some approval ->
+        | Some(code, status, reason), Some _ -> Error [ finding code status requirement obligation $"approval record '{reference}' cannot be honoured: {reason}" ]
+        | None, Some { ApprovedBy = Some { Kind = ActorKind.Agent; Id = agent } } ->
+            Error [ finding FindingCode.ApprovalAgentAuthored FindingStatus.Fail requirement obligation $"approval record '{reference}' was approved by agent '{agent}'; an agent never approves an exclusion, supersession, judgement or conflict decision" ]
+        | None, Some { ApprovedBy = None } ->
+            Error [ finding FindingCode.ApprovalUntrusted FindingStatus.Fail requirement obligation $"approval record '{reference}' names no approver (approvedBy), so its authority cannot be established" ]
+        | None, Some { ApprovedBy = Some approver } when not (authority.Trusted.Contains approver.Id) ->
+            Error [ finding FindingCode.ApprovalUntrusted FindingStatus.Fail requirement obligation $"approval record '{reference}' is approved by '{approver.Id}', who is not a trusted approver (--trusted-approver)" ]
+        | None, Some approval ->
             let problems =
                 [ if blank approval.Authority then "it names no approving authority"
                   if blank approval.Scope then "it states no scope"
@@ -599,7 +677,7 @@ module Preservation =
 
     let private evaluateObligation
         (criteria: Map<CriterionRef, DerivedCriterion>)
-        (approvals: ApprovalRecord list)
+        (approvals: Authority)
         (requirement: SourceRequirement)
         (obligation: Obligation)
         (mapping: ObligationMapping option)
@@ -696,6 +774,9 @@ module Preservation =
             let decision, reviewFindings =
                 match obligation.Tokens, review with
                 | [], _ when verbatim -> Decision.Verbatim, []
+                | [], Some r when not (approvals.Trusted.Contains(r.Reviewer.Trim())) ->
+                    Decision.Undecided,
+                    [ at FindingCode.ReviewUntrusted FindingStatus.NeedsReview $"obligation '{obligation.Id}' has no deterministic tokens; the review by '{r.Reviewer}' does not count, because the reviewer is not a trusted approver (--trusted-approver)" ]
                 | [], Some r when not (blank r.Reviewer) && not (blank r.Basis) && isIsoDate r.Date ->
                     Decision.Review r,
                     [ at FindingCode.EquivalenceReviewed FindingStatus.Info $"obligation '{obligation.Id}' has no deterministic tokens; accepted by the equivalence review of {r.Reviewer} on {r.Date}: {r.Basis}" ]
@@ -822,7 +903,7 @@ module Preservation =
         findings,
         exclusions
 
-    let private evaluateConflicts (baseline: Baseline) (approvals: ApprovalRecord list) (conflicts: DeclaredConflict list) =
+    let private evaluateConflicts (baseline: Baseline) (approvals: Authority) (conflicts: DeclaredConflict list) =
         let known = baseline.Requirements |> List.map _.Id |> Set.ofList
 
         conflicts
@@ -851,6 +932,7 @@ module Preservation =
 
     /// The gate. Deterministic: the same inputs always give the same report.
     let evaluate
+        (trust: InputTrust)
         (baseline: Baseline)
         (observations: SourceObservation list)
         (dispositions: DispositionSet)
@@ -859,15 +941,59 @@ module Preservation =
         : PreservationReport =
         let documents, driftFindings = drift baseline observations
         let baselineFindings = validateBaseline baseline observations
+        let sameDigest (a: string) (b: string) = a.Trim().Equals(b.Trim(), caseless)
 
         let identityFindings =
             [ if dispositions.BaselineId <> baseline.Id || dispositions.BaselineCommit <> baseline.Commit then
-                  finding
-                      FindingCode.BaselineMismatch
-                      FindingStatus.Fail
-                      None
-                      None
-                      $"the disposition reconciles baseline '{dispositions.BaselineId}' at {dispositions.BaselineCommit}, not '{baseline.Id}' at {baseline.Commit}" ]
+                  yield
+                      finding
+                          FindingCode.BaselineMismatch
+                          FindingStatus.Fail
+                          None
+                          None
+                          $"the disposition reconciles baseline '{dispositions.BaselineId}' at {dispositions.BaselineCommit}, not '{baseline.Id}' at {baseline.Commit}"
+              match dispositions.BaselineSha256 with
+              | None ->
+                  yield
+                      finding
+                          FindingCode.BaselineDigestMissing
+                          FindingStatus.Blocked
+                          None
+                          None
+                          "the disposition records no baseline sha256 (baseline.sha256), so the gate cannot establish which baseline bytes the package was derived from"
+              | Some recorded when not (sameDigest recorded trust.BaselineSha256) ->
+                  yield
+                      finding
+                          FindingCode.BaselineDigestMismatch
+                          FindingStatus.Fail
+                          None
+                          None
+                          $"the disposition was reconciled against baseline bytes with sha256 {recorded}, but the baseline supplied has sha256 {trust.BaselineSha256}"
+              | Some _ -> () ]
+
+        let refusal =
+            let unauthenticated =
+                Some(
+                    FindingCode.ApprovalsUnauthenticated,
+                    FindingStatus.Blocked,
+                    "approvals were supplied without the digest their approving authority published (--approvals-sha256), so their integrity cannot be established"
+                )
+
+            match trust.ApprovalsSha256, trust.PinnedApprovalsSha256 with
+            | Some observed, Some pinned when not (sameDigest observed pinned) ->
+                Some(FindingCode.ApprovalsDigestMismatch, FindingStatus.Fail, $"the approvals file has sha256 {observed}, not the {pinned} its approving authority published (--approvals-sha256)")
+            | Some _, Some _ -> None
+            | Some _, None -> unauthenticated
+            | None, _ when not approvals.IsEmpty -> unauthenticated
+            | None, _ -> None
+
+        let authority =
+            { Approvals = approvals
+              Refusal = refusal
+              Trusted = trust.TrustedApprovers |> List.map _.Trim() |> List.filter (fun a -> a <> "") |> Set.ofList }
+
+        let approvalsFindings =
+            refusal |> Option.map (fun (code, status, reason) -> finding code status None None reason) |> Option.toList
 
         let derivedFindings =
             derived
@@ -892,17 +1018,45 @@ module Preservation =
 
         let requirementResults =
             baseline.Requirements
-            |> List.map (fun r -> evaluateRequirement criteria approvals (dispositions.Entries |> List.tryFind (fun e -> e.Requirement = r.Id)) r)
+            |> List.map (fun r -> evaluateRequirement criteria authority (dispositions.Entries |> List.tryFind (fun e -> e.Requirement = r.Id)) r)
 
-        let conflictResults = evaluateConflicts baseline approvals (baseline.Conflicts @ dispositions.Conflicts)
+        let conflictResults = evaluateConflicts baseline authority (baseline.Conflicts @ dispositions.Conflicts)
+
+        // A requirement's obligations may not move into a derived requirement
+        // of lower priority: that is a downgrade, which only an approved
+        // exclusion or supersession may make.
+        let priorityFindings =
+            [ for outcome, _, _ in requirementResults do
+                  match priorityRank outcome.Requirement.Priority with
+                  | None -> ()
+                  | Some rank ->
+                      let carriers =
+                          outcome.Obligations
+                          |> List.collect _.Criteria
+                          |> List.choose (fun r -> criteria |> Map.tryFind r)
+                          |> List.distinctBy _.Requirement
+
+                      for carrier in carriers do
+                          match carrier.Priority with
+                          | Some declared when (priorityRank declared |> Option.exists (fun r -> r > rank)) ->
+                              yield
+                                  finding
+                                      FindingCode.PriorityDowngraded
+                                      FindingStatus.Fail
+                                      (Some outcome.Requirement.Id)
+                                      None
+                                      $"{outcome.Requirement.Priority} requirement '{outcome.Requirement.Id}' is carried by derived requirement '{carrier.Requirement}' at priority '{declared}'; only an approved exclusion or supersession may lower it"
+                          | _ -> () ]
 
         let findings =
             baselineFindings
             @ identityFindings
+            @ approvalsFindings
             @ driftFindings
             @ derivedFindings
             @ entryFindings
             @ (requirementResults |> List.collect (fun (_, f, _) -> f))
+            @ priorityFindings
             @ (conflictResults |> List.collect snd)
 
         { Verdict = verdictOf findings

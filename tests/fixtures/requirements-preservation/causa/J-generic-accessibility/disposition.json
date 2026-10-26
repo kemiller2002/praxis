@@ -2,7 +2,8 @@
   "schema": "praxis.requirements-disposition/1",
   "baseline": {
     "id": "BL-CAUSA-UI-TEST-001",
-    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492"
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492",
+    "sha256": "b47661935860a67be97e544f28e6831935ca061f187b73deb75a1554e4410c40"
   },
   "package": "causa-test-generic-accessibility",
   "dispositions": [

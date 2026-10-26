@@ -1,6 +1,6 @@
 # Requirements preservation
 
-Implements `RQ-ROS-2026-A034` (intake `REQ-PRES-001`, defect DC-008); the contracts are recorded in `DF-ROS-2026-A075` (draft).
+Implements `RQ-ROS-2026-A034` (intake `REQ-PRES-001`, defect DC-008) and its tamper evidence, `RQ-ROS-2026-A035` (R1 and R2); the contracts are recorded in `DF-ROS-2026-A075` (draft).
 `praxis requirements preservation verify` is a deterministic gate that checks a
 derived requirements package against the authoritative requirements it was
 derived from. It refuses a derivation that silently drops, weakens or falsely
@@ -115,7 +115,11 @@ JSON and names its versioned schema in `schema`. Schemas live in `schemas/`.
 ```json
 {
   "schema": "praxis.requirements-disposition/1",
-  "baseline": { "id": "BL-CAUSA-UI-2026-10-24", "commit": "fc5df1c9fb268db61ee96e59523826d72f824492" },
+  "baseline": {
+    "id": "BL-CAUSA-UI-2026-10-24",
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492",
+    "sha256": "<sha256 of the baseline file's bytes>"
+  },
   "package": "causa-rehearsal-004",
   "dispositions": [
     {
@@ -160,6 +164,13 @@ Each source requirement gets exactly one disposition:
 - **Equivalence review.** Any other obligation without tokens can only be
   accepted by a `review: { reviewer, date, basis }` recorded by a person who
   judged the equivalence. A review never overrides missing tokens.
+- **Baseline identity (REQ-PRES-001-R1).** `baseline.sha256` records the
+  SHA-256 of the baseline file's bytes the package was reconciled against.
+  The gate refuses a baseline whose bytes differ (`baseline-digest-mismatch`,
+  fail), so an edited or substituted baseline, or a disposition prepared
+  against another baseline, cannot pass. Without the digest the gate cannot
+  tell which baseline the package came from, and the verdict is `blocked`
+  (`baseline-digest-missing`), never `pass`.
 
 ### Approval records
 
@@ -173,7 +184,8 @@ Each source requirement gets exactly one disposition:
       "scope": "Read-only rehearsal: exclude write workflows; UI, security and accessibility stay mandatory.",
       "covers": ["UI-004", "UI-006-O1", "UI-006-O2"],
       "date": "2026-10-24",
-      "ordoDecision": null
+      "ordoDecision": null,
+      "approvedBy": { "id": "kemiller2002", "kind": "human" }
     }
   ]
 }
@@ -190,8 +202,21 @@ Each source requirement gets exactly one disposition:
 - **Praxis never writes them.** Praxis never generates, writes or infers an
   approval or a review. A test checks that the gate writes nothing under its
   inputs.
-- **Not authentication.** Who wrote an approval file is outside what the gate
-  can prove; see Limits.
+- **Trust (REQ-PRES-001-R2).** An approval counts only when all of these hold:
+  - the approvals file's SHA-256 equals `--approvals-sha256`, the digest the
+    approving authority published outside the derivation. Without the pin
+    the gate is `blocked` (`approvals-unauthenticated`); with a different
+    digest it fails (`approvals-digest-mismatch`);
+  - `approvedBy.id` is one of the `--trusted-approver` identities
+    (`approval-untrusted` otherwise, also when `approvedBy` is absent);
+  - `approvedBy.kind` is not `agent`. An agent approval is refused with its
+    own code, `approval-agent-authored`, even when its id is trusted.
+
+  An equivalence review counts only when its `reviewer` is a trusted
+  identity; otherwise the obligation stays `needs-review`
+  (`review-untrusted`). The caller takes the pin and the identities from a
+  place the derivation does not control, such as an owner-committed kickoff
+  record. See Limits.
 
 ### Derived package
 
@@ -207,6 +232,13 @@ Each source requirement gets exactly one disposition:
   are statements.
 - **Format.** This is the Praxis RQ format that Causa Rehearsal 3 used
   (Praxis 3.16.0). The gate parses its eight original files as 56 criteria.
+- **Priority.** A derived document's front-matter `priority` is compared with
+  the priority of every source requirement whose obligations it carries.
+  The ranks are `P0`, `P1`, `P2` and so on for both, and `critical` or
+  `high` (rank 0), `medium` (1) and `low` (2) for the Praxis RQ vocabulary.
+  A carrier of lower rank fails (`priority-downgraded`): lowering a
+  requirement takes an approved exclusion or supersession. Priorities
+  outside these words, such as `unstated`, are not compared.
 
 ## Checks
 
@@ -233,6 +265,14 @@ The checks are deterministic. Each finding has one status:
 | `conflict-unresolved` | blocked | a declared conflict (in the baseline or disposition) has no deciding approval |
 | `equivalence-unverified`, `not-applicable-unapproved` | needs-review | only semantic judgement can decide; acceptance is blocked until a review or approval is recorded |
 | `baseline-invalid`, `baseline-mismatch`, `disposition-invalid`, `disposition-duplicate`, `disposition-unknown-requirement`, `obligation-unknown`, `obligation-duplicate`, `derived-criterion-duplicate`, `conflict-invalid` | fail | the documents are inconsistent: an obligation text that is not verbatim in its section, a token not in its text, a disposition for another baseline, unknown or repeated ids |
+| `baseline-digest-mismatch` | fail | the baseline's bytes do not hash to the `baseline.sha256` the disposition recorded (R1) |
+| `baseline-digest-missing` | blocked | the disposition records no baseline digest, so the baseline it came from cannot be established (R1) |
+| `approvals-digest-mismatch` | fail | the approvals file does not hash to `--approvals-sha256` (R2) |
+| `approvals-unauthenticated` | blocked | approvals were supplied without `--approvals-sha256` (R2) |
+| `approval-agent-authored` | fail | an approval's `approvedBy.kind` is `agent` (R2) |
+| `approval-untrusted` | fail | an approval names no `approvedBy`, or one outside `--trusted-approver` (R2) |
+| `review-untrusted` | needs-review | an equivalence review by an identity outside `--trusted-approver` (R2) |
+| `priority-downgraded` | fail | a requirement's obligations are carried by a derived requirement of lower priority |
 | `exclusion-approved`, `supersession-approved`, `not-applicable-approved`, `equivalence-reviewed`, `conflict-resolved` | info | accepted, and listed in the report and the human summary |
 
 The **verdict** follows from the findings:
@@ -307,6 +347,7 @@ praxis requirements preservation verify \
   --baseline requirements/baseline.json \
   --disposition requirements/disposition.json \
   --approvals requirements/approvals.json \
+  --approvals-sha256 "$APPROVALS_SHA256" --trusted-approver "$OPERATOR_ID" \
   --derived research/requirements \
   --source "$AUTHORITATIVE_CHECKOUT" \
   --output evidence/requirements-preservation.json --json
@@ -368,9 +409,24 @@ A future rehearsal begins implementation only after the gate passes.
 - **Commit SHA.** The commit is recorded provenance; the gate does not run
   Git. Drift is detected from the text under `--source`, so a checkout at
   the wrong commit with identical text is indistinguishable.
-- **Approvals and reviews.** These are self-reported files. The gate verifies
-  their completeness and scope, not the identity or authority of whoever
-  wrote them. Backing them with Ordo decisions is the intended remedy.
+- **Approvals and reviews.** Since REQ-PRES-004 the gate honours an approval
+  only from a file that matches the digest the caller pins, signed off by an
+  identity the caller trusts, and never by an agent. Reviews count only for
+  trusted identities. This binds approvals to values the caller supplies;
+  it is not a cryptographic signature:
+  - a caller who controls both the files and the pin can still approve for
+    itself, so the pin and the identities must come from a place the
+    derivation does not control;
+  - `approvedBy` and `reviewer` are self-reported names. A review lives in
+    the disposition, which the pin does not cover, so the trusted list
+    narrows who may be named, not who wrote it.
+
+  Owner signatures, or Ordo decisions behind `ordoDecision`, remain the
+  intended stronger remedy (REQ-PRES-001-R2).
+- **Not yet implemented from REQ-PRES-001.** R3, role-bound tokens: a role
+  swap of two values still passes. R4, repository-declared CI enforcement.
+  R5, negation and paraphrase are not reported as `needs-review`; see
+  Literal matching.
 - **Derived criteria.** Only criteria in markdown tables with an `ID` header
   are recognized; prose or list criteria are invisible to the gate.
 - **Conflicts.** Conflicts are only those declared; the gate does not

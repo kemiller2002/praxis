@@ -6,7 +6,8 @@
       "authority": "operator (test fixture)",
       "scope": "Exclude save and sync from the demonstration build.",
       "covers": ["UI-006"],
-      "date": "2026-10-24"
+      "date": "2026-10-24",
+      "approvedBy": { "id": "fixture-operator", "kind": "human" }
     }
   ]
 }

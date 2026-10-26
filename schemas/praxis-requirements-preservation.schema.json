@@ -4,7 +4,7 @@
   "title": "praxis.requirements-preservation/1",
   "description": "The evidence document of `praxis requirements preservation verify --json` (REQ-PRES-001): the verdict of the deterministic requirements-preservation gate, the SHA-256 of every input it consumed, per-requirement and per-obligation outcomes, every approved exclusion with its approval record, declared conflicts, and every finding. `verdict` is `fail` when any finding is `fail` or `drift`, else `blocked` when any is `blocked` or `needs-review`, else `pass`. `exitCode` is 0 for pass and 3 otherwise. Identical inputs produce byte-identical documents. See docs/requirements-preservation.md.",
   "type": "object",
-  "required": ["schema", "verdict", "exitCode", "baseline", "disposition", "approvals", "derived", "source", "requirements", "exclusions", "conflicts", "findings", "summary"],
+  "required": ["schema", "verdict", "exitCode", "baseline", "disposition", "approvals", "trust", "derived", "source", "requirements", "exclusions", "conflicts", "findings", "summary"],
   "properties": {
     "schema": { "const": "praxis.requirements-preservation/1" },
     "verdict": { "enum": ["pass", "fail", "blocked"] },
@@ -17,7 +17,8 @@
         "sha256": { "$ref": "#/$defs/sha256" },
         "id": { "type": "string" },
         "repository": { "type": "string" },
-        "commit": { "type": "string" }
+        "commit": { "type": "string" },
+        "recordedSha256": { "$ref": "#/$defs/sha256", "description": "The baseline digest the disposition recorded (REQ-PRES-001-R1); absent when it recorded none." }
       },
       "additionalProperties": false
     },
@@ -41,6 +42,16 @@
           "additionalProperties": false
         }
       ]
+    },
+    "trust": {
+      "type": "object",
+      "description": "What the caller supplied out of band (REQ-PRES-001 R1, R2): the approvals digest the approving authority published, and the identities whose approvals and reviews count.",
+      "required": ["trustedApprovers"],
+      "properties": {
+        "approvalsPinnedSha256": { "type": "string" },
+        "trustedApprovers": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
     },
     "derived": {
       "type": "object",
@@ -143,14 +154,25 @@
           "obligation": { "type": ["string", "null"] },
           "approval": {
             "type": "object",
-            "required": ["decisionId", "authority", "scope", "date", "covers", "ordoDecision"],
+            "required": ["decisionId", "authority", "scope", "date", "covers", "ordoDecision", "approvedBy"],
             "properties": {
               "decisionId": { "type": "string" },
               "authority": { "type": "string" },
               "scope": { "type": "string" },
               "date": { "type": "string" },
               "covers": { "type": "array", "items": { "type": "string" } },
-              "ordoDecision": { "type": ["string", "null"] }
+              "ordoDecision": { "type": ["string", "null"] },
+              "approvedBy": {
+                "oneOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "required": ["id", "kind"],
+                    "properties": { "id": { "type": "string" }, "kind": { "enum": ["human", "agent", "automation"] } },
+                    "additionalProperties": false
+                  }
+                ]
+              }
             },
             "additionalProperties": false
           }
@@ -190,7 +212,9 @@
               "equivalence-unverified", "equivalence-reviewed",
               "approval-missing", "approval-invalid", "exclusion-approved", "supersession-approved",
               "not-applicable-unjustified", "not-applicable-unapproved", "not-applicable-approved",
-              "conflict-unresolved", "conflict-resolved", "conflict-invalid"
+              "conflict-unresolved", "conflict-resolved", "conflict-invalid",
+              "baseline-digest-missing", "baseline-digest-mismatch", "approvals-unauthenticated", "approvals-digest-mismatch",
+              "approval-untrusted", "approval-agent-authored", "review-untrusted", "priority-downgraded"
             ]
           },
           "status": { "enum": ["fail", "drift", "blocked", "needs-review", "info"] },

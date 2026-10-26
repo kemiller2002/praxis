@@ -9,10 +9,11 @@
     "schema": { "const": "praxis.requirements-disposition/1" },
     "baseline": {
       "type": "object",
-      "required": ["id", "commit"],
+      "required": ["id", "commit", "sha256"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "commit": { "type": "string", "minLength": 1 }
+        "commit": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the baseline file's bytes the package was reconciled against (REQ-PRES-001-R1). The gate refuses a mismatch and blocks when it is absent." }
       },
       "additionalProperties": false
     },

@@ -276,6 +276,7 @@ module PreservationJson =
                 let! baseline = obj "baseline" root
                 let! id = nonEmpty "id" baseline
                 let! commit = nonEmpty "commit" baseline
+                let! baselineSha256 = optionalStr "sha256" baseline
                 let! package = nonEmpty "package" root
                 let! entries = array "dispositions" entry root
                 let! conflicts = optionalArray "conflicts" conflict root
@@ -283,10 +284,38 @@ module PreservationJson =
                 return
                     { BaselineId = id
                       BaselineCommit = commit
+                      BaselineSha256 = baselineSha256
                       Package = package
                       Entries = entries
                       Conflicts = conflicts }
             })
+
+    let private actorKind (text: string) =
+        match text with
+        | "human" -> Ok ActorKind.Human
+        | "agent" -> Ok ActorKind.Agent
+        | "automation" -> Ok ActorKind.Automation
+        | other -> Error $"approvedBy.kind '{other}' is not human, agent or automation"
+
+    let private actorKindCode kind =
+        match kind with
+        | ActorKind.Human -> "human"
+        | ActorKind.Agent -> "agent"
+        | ActorKind.Automation -> "automation"
+
+    /// `approvedBy`: who signed the approval off (REQ-PRES-001-R2).
+    let private approver (element: JsonElement) : Result<Approver option, string> =
+        match element.TryGetProperty "approvedBy" with
+        | false, _ -> Ok None
+        | true, value when value.ValueKind = JsonValueKind.Null -> Ok None
+        | true, value when value.ValueKind = JsonValueKind.Object ->
+            result {
+                let! id = nonEmpty "id" value
+                let! kindText = nonEmpty "kind" value
+                let! kind = actorKind kindText
+                return Some { Id = id; Kind = kind }
+            }
+        | _ -> Error "member 'approvedBy' must be an object"
 
     let private approval (element: JsonElement) : Result<ApprovalRecord, string> =
         result {
@@ -296,6 +325,7 @@ module PreservationJson =
             let! covers = array "covers" stringItem element
             let! date = str "date" element
             let! ordo = optionalStr "ordoDecision" element
+            let! approvedBy = approver element
 
             return
                 { DecisionId = decision
@@ -303,7 +333,8 @@ module PreservationJson =
                   Scope = scope
                   Covers = covers
                   Date = date
-                  OrdoDecision = ordo }
+                  OrdoDecision = ordo
+                  ApprovedBy = approvedBy }
         }
         |> Result.mapError (fun reason -> $"approval: {reason}")
 
@@ -324,6 +355,10 @@ module PreservationJson =
           Disposition: InputFile
           Package: string
           Approvals: InputFile option
+          /// What the caller supplied out of band (REQ-PRES-001 R1, R2).
+          Trust: InputTrust
+          /// The baseline digest the disposition recorded, if any.
+          RecordedBaselineSha256: string option
           DerivedRoot: string
           DerivedFiles: DerivedFile list
           SourceRoot: string }
@@ -369,6 +404,15 @@ module PreservationJson =
         approval.Covers |> List.iter writer.WriteStringValue
         writer.WriteEndArray()
         optional writer "ordoDecision" approval.OrdoDecision
+
+        match approval.ApprovedBy with
+        | Some approver ->
+            writer.WriteStartObject "approvedBy"
+            writer.WriteString("id", approver.Id)
+            writer.WriteString("kind", actorKindCode approver.Kind)
+            writer.WriteEndObject()
+        | None -> writer.WriteNull "approvedBy"
+
         writer.WriteEndObject()
 
     let exitCodeOf verdict =
@@ -392,6 +436,7 @@ module PreservationJson =
             writer.WriteString("id", inputs.BaselineValue.Id)
             writer.WriteString("repository", inputs.BaselineValue.Repository)
             writer.WriteString("commit", inputs.BaselineValue.Commit)
+            optional writer "recordedSha256" inputs.RecordedBaselineSha256
             writer.WriteEndObject()
 
             writer.WriteStartObject "disposition"
@@ -403,6 +448,13 @@ module PreservationJson =
             match inputs.Approvals with
             | Some file -> inputFile writer "approvals" file
             | None -> writer.WriteNull "approvals"
+
+            writer.WriteStartObject "trust"
+            optional writer "approvalsPinnedSha256" inputs.Trust.PinnedApprovalsSha256
+            writer.WriteStartArray "trustedApprovers"
+            inputs.Trust.TrustedApprovers |> List.iter writer.WriteStringValue
+            writer.WriteEndArray()
+            writer.WriteEndObject()
 
             writer.WriteStartObject "derived"
             writer.WriteString("root", inputs.DerivedRoot)

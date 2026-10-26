@@ -2,13 +2,13 @@
 id: DF-ROS-2026-A075
 title: Requirements preservation uses four versioned public contracts, with approvals kept outside the derivation
 status: draft
-version: 1.0.0
+version: 1.1.0
 owners: [repository-governance]
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-26
 research_area: repository-operating-system
 decision_type: architecture
-supports: [RQ-ROS-2026-A034]
+supports: [RQ-ROS-2026-A034, RQ-ROS-2026-A035]
 related_documents:
   - RQ-ROS-2026-A034
   - docs/requirements-preservation.md
@@ -28,6 +28,16 @@ provenance:
         model: claude-opus-5-5
         runtime: claude-code
       reason: "Record the requirements-preservation public contracts (REQ-PRES-002)"
+    EXE-20261026T163447652Z-ae64136e:
+      operations: [modified]
+      at: 2026-10-26T16:56:19.817Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "Amendment before first release: baseline digest, authenticated approvals and reviews, priority downgrade (REQ-PRES-004)"
 ---
 
 # Context
@@ -95,6 +105,24 @@ establishes a public contract or a persistent data shape.
    the Ordo decision that will back the approval. Praxis records it and
    does not verify it. No Ordo coupling is added.
 
+8. **Amendment before first release (REQ-PRES-004, `RQ-ROS-2026-A035`).**
+   No `/1` contract had been released, so `/1` is amended rather than
+   versioned:
+   - the disposition's `baseline` requires `sha256`, the SHA-256 of the
+     baseline file's bytes. A mismatch fails (`baseline-digest-mismatch`); a
+     missing digest blocks (`baseline-digest-missing`);
+   - an approval record requires `approvedBy: { id, kind }`, with `kind`
+     one of `human`, `agent` or `automation`;
+   - `verify` takes `--approvals-sha256` (the digest the approving
+     authority published) and repeatable `--trusted-approver`. An approval
+     counts only from a matching file, by a trusted identity, never by an
+     agent; a review counts only for a trusted identity;
+   - the report gains `trust`, `baseline.recordedSha256` and
+     `approvedBy`, plus eight finding codes, among them
+     `priority-downgraded`.
+
+   From the first release on, the compatibility rule above applies.
+
 # Alternatives considered
 
 - **Approvals inside the disposition file.** Rejected. The party deriving
@@ -119,8 +147,11 @@ establishes a public contract or a persistent data shape.
 - Rehearsal tooling and gates can depend on stable, versioned shapes.
 - The evidence document records the SHA-256 of every input it consumed, so
   a verdict is reproducible and auditable.
-- The trust in approvals and reviews is only as strong as the process that
-  writes the approvals file, until Ordo backs it. This is stated in
+- The trust in approvals and reviews rests on the digest and identities the
+  caller supplies: an approval counts only from a file matching the
+  published digest, by a trusted identity, and never by an agent. This is
+  not a cryptographic signature; owner signatures or Ordo-backed approvals
+  remain the stronger remedy. It is stated in
   `docs/requirements-preservation.md` ("Limits").
 
 # Reversibility
