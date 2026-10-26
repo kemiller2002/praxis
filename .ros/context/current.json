@@ -11488,10 +11488,23 @@
     {
       "id": "REQ-PRES-005",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-26T22:24:25.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A075--requirements-preservation-contracts.md"
+        },
+        {
+          "type": "implementation",
+          "path": "registries/decisions.json"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/Praxis.Tests.fsproj"
+        }
+      ],
+      "updatedAt": "2026-10-26T22:48:13.000Z",
       "telemetryExecutionIds": [
         "EXE-20261026T222427340Z-9d2cb456"
       ],
@@ -11514,12 +11527,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-26T22:48:13.000Z",
+      "conclusion": "DF-ROS-2026-A075 accepted by the owner (2026-10-26T22:22:06Z). Full suite on 65d2fba2: 2411/2411 passed (praxis-validation, https://github.com/kemiller2002/praxis/actions/runs/40412351079/job/121885956178)"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-26T22:24:25.000Z",
+  "updatedAt": "2026-10-26T22:48:13.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -6948,10 +6948,10 @@
         "governance"
       ],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-26T22:24:24.000Z",
-      "updatedAt": "2026-10-26T22:24:25.000Z",
+      "updatedAt": "2026-10-26T22:48:13.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
