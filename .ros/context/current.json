@@ -11452,11 +11452,22 @@
       },
       "completedAt": "2026-10-26T17:46:06Z",
       "conclusion": "REQ-PRES-001 R1 and R2 implemented, with priority-downgrade detection; R3-R5 recorded as not implemented (RQ-ROS-2026-A035)"
+    },
+    {
+      "id": "RELEASE-3-21-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-26T18:28:02.510Z",
+      "telemetryExecutionIds": [
+        "EXE-20261026T182803693Z-d6e53bed"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-26T17:46:06Z",
+  "updatedAt": "2026-10-26T18:28:02.510Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
