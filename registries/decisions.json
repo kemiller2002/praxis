@@ -2836,6 +2836,20 @@
             "modified"
           ],
           "reason": "Amendment before first release: baseline digest, authenticated approvals and reviews, priority downgrade (REQ-PRES-004)"
+        },
+        "EXE-20261026T222427340Z-9d2cb456": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-26T22:24:54.020Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "REQ-PRES-005: records the owner's acceptance (\"I approve accept DF-ROS-2026-A075\", 2026-10-26T22:22:06Z); status draft -> accepted, decision text unchanged"
         }
       }
     },
@@ -2845,7 +2859,7 @@
       "docs/cli.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "draft",
+    "status": "accepted",
     "supports": [
       "RQ-ROS-2026-A034",
       "RQ-ROS-2026-A035"
@@ -2861,6 +2875,6 @@
     ],
     "title": "Requirements preservation uses four versioned public contracts, with approvals kept outside the derivation",
     "updated": "2026-10-26",
-    "version": "1.1.0"
+    "version": "1.1.1"
   }
 ]

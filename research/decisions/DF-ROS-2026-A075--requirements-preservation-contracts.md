@@ -1,8 +1,8 @@
 ---
 id: DF-ROS-2026-A075
 title: Requirements preservation uses four versioned public contracts, with approvals kept outside the derivation
-status: draft
-version: 1.1.0
+status: accepted
+version: 1.1.1
 owners: [repository-governance]
 created: 2026-10-24
 updated: 2026-10-26
@@ -38,6 +38,16 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "Amendment before first release: baseline digest, authenticated approvals and reviews, priority downgrade (REQ-PRES-004)"
+    EXE-20261026T222427340Z-9d2cb456:
+      operations: [modified]
+      at: 2026-10-26T22:24:54.020Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "REQ-PRES-005: records the owner's acceptance ("I approve accept DF-ROS-2026-A075", 2026-10-26T22:22:06Z); status draft -> accepted, decision text unchanged"
 ---
 
 # Context
@@ -175,5 +185,7 @@ Scenarios A-L exercise the contracts end to end.
 
 # Status
 
-This record is a draft. It records the decision as implemented in PR #292
-and awaits owner acceptance; the agent does not treat it as accepted.
+Accepted by the owner (kemiller2002) on 2026-10-26 ("I approve accept
+DF-ROS-2026-A075", 22:22:06Z). It records the decision as implemented in
+PR #292 and released in Praxis 3.21.0. The decision text is unchanged by the
+acceptance.
