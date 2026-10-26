@@ -1,0 +1,13 @@
+{
+  "schema": "praxis.requirements-approvals/1",
+  "approvals": [
+    {
+      "decisionId": "APR-TEST-E-001",
+      "authority": "operator (test fixture)",
+      "scope": "Exclude the contextual command interface from the demonstration build.",
+      "covers": ["UI-004"],
+      "date": "2026-10-24",
+      "approvedBy": { "id": "fixture-operator", "kind": "human" }
+    }
+  ]
+}

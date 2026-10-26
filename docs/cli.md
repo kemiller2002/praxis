@@ -273,6 +273,7 @@ praxis step <plan|begin|resume|complete|block|abandon|record|availability|checkp
 praxis telemetry <show|summary|finalize|record|ingest|classify|start|adapters|validate>
 praxis reconcile --envelope FILE
 praxis inbox <list|show|claim|derive|complete|release|reject|recover>
+praxis requirements preservation <verify|sections>   # see requirements-preservation.md
 praxis adapter <call|publish>
 praxis provenance <identity|record|show|audit>
 praxis plan <analyze|simulate|compare|explain|replay|freshness|groups|explain-group>
@@ -731,6 +732,36 @@ collection time and source sha256. Re-ingesting the same document is a no-op.
 (`praxis.tutela-metrics/1`). Missing measurements are `unknown` with a reason,
 never zero, and there is no single score. See
 [`tutela-security-metrics.md`](tutela-security-metrics.md).
+
+### `requirements preservation verify`, `requirements preservation sections`
+
+```
+praxis requirements preservation verify --baseline FILE --disposition FILE --derived DIR --source DIR [--approvals FILE --approvals-sha256 HEX] [--trusted-approver ID]... [--output FILE] [--json]
+praxis requirements preservation sections --source DIR --document PATH [--pattern REGEX] [--json]
+```
+
+`verify` is the deterministic requirements-preservation gate
+(`RQ-ROS-2026-A034`). It checks a derived requirements package against a
+pinned baseline of the authoritative requirements
+(`praxis.requirements-baseline/1`), the package's disposition of each one
+(`praxis.requirements-disposition/1`), and the approval records an approving
+authority supplied (`praxis.requirements-approvals/1`). A dropped, weakened or
+falsely equated mandatory obligation fails, and so do an unapproved exclusion
+and source drift. A declared conflict is `blocked`. An obligation only
+judgement can decide is `needs-review`, which also blocks.
+
+- **Trust.** The disposition must record the baseline file's SHA-256
+  (`baseline.sha256`). Approvals count only when the file matches
+  `--approvals-sha256` and each is signed off by a `--trusted-approver` that
+  is not an agent; reviews count only for trusted identities.
+- **Output.** `--json` prints `praxis.requirements-preservation/1`, and
+  `--output` also writes it to a file.
+- **Exit codes.** `0` pass, `3` fail or blocked, `2` invalid arguments or an
+  unreadable or non-conforming input, `1` internal failure.
+
+`sections` lists a source document's heading sections with the SHA-256
+hashes a baseline pins. See
+[`requirements-preservation.md`](requirements-preservation.md).
 
 ### `remote execute`
 

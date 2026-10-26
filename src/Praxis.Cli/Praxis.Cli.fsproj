@@ -80,6 +80,7 @@
     <Compile Include="WorkFinishCommands.fs" />
     <Compile Include="WorkClaimCommands.fs" />
     <Compile Include="TelemetryReliabilityCommands.fs" />
+    <Compile Include="RequirementsCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

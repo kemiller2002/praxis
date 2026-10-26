@@ -1,0 +1,42 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-d9086d5909f4b5ac",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-tamper-evident-requirements-preservation.md",
+    "fileName": "2026-10-24-REQ-PRES-001-tamper-evident-requirements-preservation.md",
+    "sha256": "19b07a3143e73891061f3087394adb7892048b5c1ba44c537c8b4235a550fdbe",
+    "size": 3862
+  },
+  "claimedAt": "2026-10-26T16:34:49.846Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "unknown",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261026T163447652Z-ae64136e",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "artifact",
+      "target": "RQ-ROS-2026-A035",
+      "summary": "Tamper-evident requirements preservation: baseline digest (R1), authenticated approvals and reviews (R2); R3-R5 recorded, not implemented",
+      "locator": null,
+      "recordedAt": "2026-10-26T16:55:42.496Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261026T163447652Z-ae64136e"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-26T17:43:17.291Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}

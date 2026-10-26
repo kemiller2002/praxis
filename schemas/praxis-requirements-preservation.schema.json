@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://repository-operating-system.local/schemas/praxis-requirements-preservation.schema.json",
+  "title": "praxis.requirements-preservation/1",
+  "description": "The evidence document of `praxis requirements preservation verify --json` (REQ-PRES-001): the verdict of the deterministic requirements-preservation gate, the SHA-256 of every input it consumed, per-requirement and per-obligation outcomes, every approved exclusion with its approval record, declared conflicts, and every finding. `verdict` is `fail` when any finding is `fail` or `drift`, else `blocked` when any is `blocked` or `needs-review`, else `pass`. `exitCode` is 0 for pass and 3 otherwise. Identical inputs produce byte-identical documents. See docs/requirements-preservation.md.",
+  "type": "object",
+  "required": ["schema", "verdict", "exitCode", "baseline", "disposition", "approvals", "trust", "derived", "source", "requirements", "exclusions", "conflicts", "findings", "summary"],
+  "properties": {
+    "schema": { "const": "praxis.requirements-preservation/1" },
+    "verdict": { "enum": ["pass", "fail", "blocked"] },
+    "exitCode": { "enum": [0, 3] },
+    "baseline": {
+      "type": "object",
+      "required": ["path", "sha256", "id", "repository", "commit"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "id": { "type": "string" },
+        "repository": { "type": "string" },
+        "commit": { "type": "string" },
+        "recordedSha256": { "$ref": "#/$defs/sha256", "description": "The baseline digest the disposition recorded (REQ-PRES-001-R1); absent when it recorded none." }
+      },
+      "additionalProperties": false
+    },
+    "disposition": {
+      "type": "object",
+      "required": ["path", "sha256", "package"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "package": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "approvals": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["path", "sha256"],
+          "properties": { "path": { "type": "string" }, "sha256": { "$ref": "#/$defs/sha256" } },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "trust": {
+      "type": "object",
+      "description": "What the caller supplied out of band (REQ-PRES-001 R1, R2): the approvals digest the approving authority published, and the identities whose approvals and reviews count.",
+      "required": ["trustedApprovers"],
+      "properties": {
+        "approvalsPinnedSha256": { "type": "string" },
+        "trustedApprovers": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "derived": {
+      "type": "object",
+      "required": ["root", "files"],
+      "properties": {
+        "root": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256", "requirement", "criteria"],
+            "properties": {
+              "path": { "type": "string" },
+              "sha256": { "$ref": "#/$defs/sha256" },
+              "requirement": { "type": ["string", "null"] },
+              "criteria": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["root", "documents"],
+      "properties": {
+        "root": { "type": "string" },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "upstreamPath", "pinnedSha256", "observedSha256", "status"],
+            "properties": {
+              "path": { "type": "string" },
+              "upstreamPath": { "type": ["string", "null"] },
+              "pinnedSha256": { "$ref": "#/$defs/sha256" },
+              "observedSha256": { "oneOf": [ { "type": "null" }, { "$ref": "#/$defs/sha256" } ] },
+              "status": { "enum": ["unchanged", "changed", "missing"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "priority", "disposition", "outcome", "obligations"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "priority": { "type": "string" },
+          "disposition": { "enum": [null, "preserved", "strengthened", "excluded-with-approval", "superseded", "not-applicable"] },
+          "outcome": { "enum": ["pass", "fail", "blocked"] },
+          "obligations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "outcome", "criteria", "tokens", "decidedBy"],
+              "properties": {
+                "id": { "type": "string" },
+                "kind": { "enum": ["value", "acceptance", "constraint"] },
+                "outcome": { "enum": [null, "fail", "drift", "blocked", "needs-review", "info"] },
+                "criteria": { "type": "array", "items": { "type": "string" } },
+                "tokens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["token", "found"],
+                    "properties": { "token": { "type": "string" }, "found": { "type": "boolean" } },
+                    "additionalProperties": false
+                  }
+                },
+                "decidedBy": { "enum": ["tokens", "verbatim", "review", "exclusion", "undecided"] },
+                "review": {
+                  "type": "object",
+                  "required": ["reviewer", "date", "basis"],
+                  "properties": { "reviewer": { "type": "string" }, "date": { "type": "string" }, "basis": { "type": "string" } },
+                  "additionalProperties": false
+                },
+                "approval": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["requirement", "obligation", "approval"],
+        "properties": {
+          "requirement": { "type": "string" },
+          "obligation": { "type": ["string", "null"] },
+          "approval": {
+            "type": "object",
+            "required": ["decisionId", "authority", "scope", "date", "covers", "ordoDecision", "approvedBy"],
+            "properties": {
+              "decisionId": { "type": "string" },
+              "authority": { "type": "string" },
+              "scope": { "type": "string" },
+              "date": { "type": "string" },
+              "covers": { "type": "array", "items": { "type": "string" } },
+              "ordoDecision": { "type": ["string", "null"] },
+              "approvedBy": {
+                "oneOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "required": ["id", "kind"],
+                    "properties": { "id": { "type": "string" }, "kind": { "enum": ["human", "agent", "automation"] } },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "requirements", "description", "status", "decision"],
+        "properties": {
+          "id": { "type": "string" },
+          "requirements": { "type": "array", "items": { "type": "string" } },
+          "description": { "type": "string" },
+          "status": { "enum": ["resolved", "unresolved"] },
+          "decision": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "status", "requirement", "obligation", "message"],
+        "properties": {
+          "code": {
+            "enum": [
+              "baseline-invalid", "disposition-invalid", "baseline-mismatch",
+              "source-document-missing", "source-document-changed", "source-section-missing", "source-section-changed", "uninventoried-requirement",
+              "disposition-missing", "disposition-duplicate", "disposition-unknown-requirement",
+              "obligation-unmapped", "obligation-unknown", "obligation-duplicate",
+              "criterion-not-found", "derived-criterion-duplicate",
+              "value-token-missing", "token-missing", "acceptance-criterion-missing",
+              "equivalence-unverified", "equivalence-reviewed",
+              "approval-missing", "approval-invalid", "exclusion-approved", "supersession-approved",
+              "not-applicable-unjustified", "not-applicable-unapproved", "not-applicable-approved",
+              "conflict-unresolved", "conflict-resolved", "conflict-invalid",
+              "baseline-digest-missing", "baseline-digest-mismatch", "approvals-unauthenticated", "approvals-digest-mismatch",
+              "approval-untrusted", "approval-agent-authored", "review-untrusted", "priority-downgraded"
+            ]
+          },
+          "status": { "enum": ["fail", "drift", "blocked", "needs-review", "info"] },
+          "requirement": { "type": ["string", "null"] },
+          "obligation": { "type": ["string", "null"] },
+          "message": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["requirements", "obligations", "exclusions", "fail", "drift", "blocked", "needsReview", "info"],
+      "properties": {
+        "requirements": { "type": "integer" },
+        "obligations": { "type": "integer" },
+        "exclusions": { "type": "integer" },
+        "fail": { "type": "integer" },
+        "drift": { "type": "integer" },
+        "blocked": { "type": "integer" },
+        "needsReview": { "type": "integer" },
+        "info": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

@@ -6828,6 +6828,95 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "REQ-PRES-001",
+      "title": "Deterministic requirements-preservation gate (DC-008)",
+      "description": "Intake REQ-PRES-001: praxis requirements preservation verify — baseline manifest, disposition file, approval records, drift, conflicts, NeedsReview; tests A-L; contract doc.",
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-24T14:33:12.000Z",
+      "updatedAt": "2026-10-24T16:36:13.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "intake",
+      "sourceReference": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-requirements-preservation-gate.md"
+    },
+    {
+      "id": "REQ-PRES-002",
+      "title": "Decision record for the requirements-preservation schemas",
+      "description": "Record a DF- decision for the four praxis.requirements-* public contracts introduced by REQ-PRES-001 (PR #292), as requested by the coordinator.",
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-24T16:41:34.000Z",
+      "updatedAt": "2026-10-24T16:42:57.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "agent",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/292"
+    },
+    {
+      "id": "REQ-PRES-003",
+      "title": "Preservation gate: paragraph and list requirement anchors, escaped table pipes",
+      "description": "Indy-init PF-001..021 are bold paragraphs and EXT-DATA-001..012 are list items, not headings; RQ-CAUSA-2026-0010 criteria contain escaped pipes. Extend section anchoring (requirementPattern lines bound sections) and the criteria-table parser so the Indy-init baseline can be pinned and the R3 package read faithfully.",
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-24T16:47:11.000Z",
+      "updatedAt": "2026-10-24T17:40:15.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "runtime": "claude-code"
+      },
+      "source": "agent",
+      "sourceReference": "https://github.com/kemiller2002/praxis/pull/292"
+    },
+    {
+      "id": "REQ-PRES-004",
+      "title": "Tamper-evident requirements preservation (REQ-PRES-001 R1, R2) for the first gate release",
+      "description": null,
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-26T17:44:59Z",
+      "updatedAt": "2026-10-26T17:46:06Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

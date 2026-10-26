@@ -15,6 +15,7 @@ tests do.
 | Automation and release | Declare CI validation and native release orchestration. | `.github/workflows/`, `release.json` | `docs/features/automation/manifest.md` | Workflows host the F# CLI; external actions' own runtimes are not repository code. |
 | Local repository web interface | Present and invoke one repository's work capabilities. | `src/Praxis.Cli/WebInterface.fs` (`praxis web serve`), `web/styles.css` | `docs/features/work-lifecycle/manifest.md` | UI is an adapter over work semantics. |
 | Implementation-language policy | Keep repository-owned code F#/.NET only. | `src/**/Architecture/`, `ros.json` `implementationPolicy` | `research/requirements/RQ-ROS-2026-A024--fsharp-dotnet-only-repository.md` | Enforced by `./praxis architecture check` and `./praxis validate`. |
+| Requirements preservation | Deterministically check that a derived requirements package preserves every mandatory obligation of its authoritative source. | `src/**/Requirements/`, `src/Praxis.Cli/RequirementsCommands.fs`, `schemas/praxis-requirements-*.schema.json`, `tests/fixtures/requirements-preservation/` | `docs/requirements-preservation.md` | `RQ-ROS-2026-A034`; Ordo owns approvals, Dokimos the gates that invoke it. |
 | F# migration | Move stable Praxis semantic authority into typed vertical slices under comparative verification. | `docs/migrations/fsharp/`, `src/`, `tests/` | `docs/migrations/fsharp/README.md` | Migration status and traceability only; not a second domain authority. |
 
 ## Repository-wide composition

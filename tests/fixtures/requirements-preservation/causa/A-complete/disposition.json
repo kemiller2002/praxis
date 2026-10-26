@@ -1,0 +1,68 @@
+{
+  "schema": "praxis.requirements-disposition/1",
+  "baseline": {
+    "id": "BL-CAUSA-UI-TEST-001",
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492",
+    "sha256": "b47661935860a67be97e544f28e6831935ca061f187b73deb75a1554e4410c40"
+  },
+  "package": "causa-test-complete",
+  "dispositions": [
+    {
+      "requirement": "UI-004",
+      "disposition": "preserved",
+      "mappings": [
+        { "obligation": "UI-004-O1", "criteria": ["RQ-TEST-0001#CMD-01"] },
+        { "obligation": "UI-004-O2", "criteria": ["RQ-TEST-0001#CMD-02"] }
+      ]
+    },
+    {
+      "requirement": "UI-005",
+      "disposition": "preserved",
+      "mappings": [
+        { "obligation": "UI-005-O1", "criteria": ["RQ-TEST-0001#EVI-01"] },
+        { "obligation": "UI-005-O2", "criteria": ["RQ-TEST-0001#SEC-01"] }
+      ]
+    },
+    {
+      "requirement": "UI-006",
+      "disposition": "preserved",
+      "mappings": [
+        { "obligation": "UI-006-O1", "criteria": ["RQ-TEST-0001#SYN-01"] },
+        { "obligation": "UI-006-O2", "criteria": ["RQ-TEST-0001#SYN-02"] },
+        { "obligation": "UI-006-O3", "criteria": ["RQ-TEST-0001#SEC-02"] }
+      ]
+    },
+    {
+      "requirement": "UI-011",
+      "disposition": "preserved",
+      "mappings": [
+        { "obligation": "UI-011-O1", "criteria": ["RQ-TEST-0001#A11Y-01"] },
+        { "obligation": "UI-011-O2", "criteria": ["RQ-TEST-0001#A11Y-02"] },
+        { "obligation": "UI-011-O3", "criteria": ["RQ-TEST-0001#A11Y-03"] }
+      ]
+    },
+    {
+      "requirement": "UI-016",
+      "disposition": "preserved",
+      "mappings": [
+        {
+          "obligation": "UI-016-O1",
+          "criteria": ["RQ-TEST-0002#COL-01"],
+          "review": {
+            "reviewer": "fixture-reviewer (human, test fixture)",
+            "date": "2026-10-24",
+            "basis": "COL-01 restates the visibly colored, not monochrome identity obligation without weakening it."
+          }
+        },
+        { "obligation": "UI-016-O2", "criteria": ["RQ-TEST-0002#COL-02"] },
+        { "obligation": "UI-016-O3", "criteria": ["RQ-TEST-0002#COL-02"] },
+        { "obligation": "UI-016-O4", "criteria": ["RQ-TEST-0002#COL-03"] },
+        { "obligation": "UI-016-O5", "criteria": ["RQ-TEST-0002#COL-04"] },
+        { "obligation": "UI-016-O6", "criteria": ["RQ-TEST-0002#COL-05"] },
+        { "obligation": "UI-016-O7", "criteria": ["RQ-TEST-0002#VIS-01"] },
+        { "obligation": "UI-016-O8", "criteria": ["RQ-TEST-0002#VIS-02"] },
+        { "obligation": "UI-016-O9", "criteria": ["RQ-TEST-0002#VIS-03"] }
+      ]
+    }
+  ]
+}

@@ -185,6 +185,7 @@
     <Compile Include="InternalNamingTests.fs" />
     <Compile Include="TelemetryCostUnitTests.fs" />
     <Compile Include="TutelaMetricsTests.fs" />
+    <Compile Include="RequirementsPreservationTests.fs" />
     <Compile Include="FormaPresentationTests.fs" />
     <Compile Include="AegisBoundaryTests.fs" />
     <Compile Include="IdentityTests.fs" />

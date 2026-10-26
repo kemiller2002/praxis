@@ -121,5 +121,6 @@
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />
     <Compile Include="Foundations/RouteInventory.fs" />
+    <Compile Include="Requirements/Preservation.fs" />
   </ItemGroup>
 </Project>

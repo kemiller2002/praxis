@@ -1983,5 +1983,97 @@
     "title": "Agent governance for Design by Construction",
     "updated": "2026-10-18",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-24",
+    "derived_from": [
+      "INPUT-5a43bc5edee67caa"
+    ],
+    "id": "RQ-ROS-2026-A034",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A034--requirements-preservation-gate.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261024T143321807Z-6c3cd34a": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "claude-opus-5-5",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-24T15:04:12.468Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical ingestion of REQ-PRES-001 (DC-008): deterministic requirements-preservation gate"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A024",
+      "RQ-ROS-2026-A031"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "requirements",
+      "intake",
+      "derivation",
+      "provenance",
+      "verification"
+    ],
+    "title": "Deterministic requirements-preservation gate",
+    "updated": "2026-10-24",
+    "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-26",
+    "derived_from": [
+      "INPUT-d9086d5909f4b5ac"
+    ],
+    "id": "RQ-ROS-2026-A035",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A035--tamper-evident-requirements-preservation.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261026T163447652Z-ae64136e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-26T16:55:41.089Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical ingestion of REQ-PRES-001 (tamper-evident requirements preservation); R1 and R2 implemented under REQ-PRES-004"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A034",
+      "docs/requirements-preservation.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "requirements",
+      "derivation",
+      "verification",
+      "approvals",
+      "provenance"
+    ],
+    "title": "Tamper-evident requirements preservation and authenticated approvals",
+    "updated": "2026-10-26",
+    "version": "1.0.0"
   }
 ]

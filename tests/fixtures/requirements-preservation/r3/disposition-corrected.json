@@ -1,0 +1,76 @@
+{
+  "schema": "praxis.requirements-disposition/1",
+  "baseline": {
+    "id": "BL-CAUSA-R3-UI016",
+    "commit": "fc5df1c9fb268db61ee96e59523826d72f824492",
+    "sha256": "467c2baa1f589a5d7dc4373313160a0693524352decd0ee289084e81a525743e"
+  },
+  "package": "causa-rehearsal-003-corrected",
+  "dispositions": [
+    {
+      "requirement": "UI-016",
+      "disposition": "preserved",
+      "mappings": [
+        {
+          "obligation": "UI-016-O1",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-01"
+          ],
+          "review": {
+            "reviewer": "fixture-reviewer (human, test fixture)",
+            "date": "2026-10-24",
+            "basis": "COL-01 restates the visibly colored, not monochrome identity verbatim."
+          }
+        },
+        {
+          "obligation": "UI-016-O2",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-02"
+          ]
+        },
+        {
+          "obligation": "UI-016-O3",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-02"
+          ]
+        },
+        {
+          "obligation": "UI-016-O4",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-03"
+          ]
+        },
+        {
+          "obligation": "UI-016-O5",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-04"
+          ]
+        },
+        {
+          "obligation": "UI-016-O6",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-05"
+          ]
+        },
+        {
+          "obligation": "UI-016-O7",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-06"
+          ]
+        },
+        {
+          "obligation": "UI-016-O8",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-07"
+          ]
+        },
+        {
+          "obligation": "UI-016-O9",
+          "criteria": [
+            "RQ-CAUSA-2026-0010#COL-08"
+          ]
+        }
+      ]
+    }
+  ]
+}

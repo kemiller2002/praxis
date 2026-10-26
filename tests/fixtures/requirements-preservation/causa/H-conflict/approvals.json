@@ -1,0 +1,14 @@
+{
+  "schema": "praxis.requirements-approvals/1",
+  "approvals": [
+    {
+      "decisionId": "APR-TEST-H-001",
+      "authority": "operator (test fixture)",
+      "scope": "Amber is used only for non-text indicators and large text; derived foreground tokens carry text.",
+      "covers": ["CF-TEST-H-001"],
+      "date": "2026-10-24",
+      "ordoDecision": null,
+      "approvedBy": { "id": "fixture-operator", "kind": "human" }
+    }
+  ]
+}
