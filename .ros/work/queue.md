@@ -259,6 +259,7 @@
 | REQ-PRES-001 | Deterministic requirements-preservation gate (DC-008) | complete | requirements, preservation | high |
 | REQ-PRES-002 | Decision record for the requirements-preservation schemas | complete | requirements, preservation | medium |
 | REQ-PRES-003 | Preservation gate: paragraph and list requirement anchors, escaped table pipes | complete | requirements, preservation | high |
+| REQ-PRES-004 | Tamper-evident requirements preservation (REQ-PRES-001 R1, R2) for the first gate release | active | requirements, preservation | high |
 | ROADMAP-PHASE-2 | ROADMAP-PHASE-2 | complete |  |  |
 | ROADMAP-PHASE-3 | ROADMAP-PHASE-3 | complete |  |  |
 | ROADMAP-PHASE-4 | ROADMAP-PHASE-4 | complete |  |  |

@@ -6900,6 +6900,23 @@
       },
       "source": "agent",
       "sourceReference": "https://github.com/kemiller2002/praxis/pull/292"
+    },
+    {
+      "id": "REQ-PRES-004",
+      "title": "Tamper-evident requirements preservation (REQ-PRES-001 R1, R2) for the first gate release",
+      "description": null,
+      "tags": [
+        "requirements",
+        "preservation"
+      ],
+      "priority": "high",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-10-26T17:44:59Z",
+      "updatedAt": "2026-10-26T17:44:59Z",
+      "createdBy": "unknown",
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }

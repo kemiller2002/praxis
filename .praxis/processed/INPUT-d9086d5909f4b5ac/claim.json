@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-d9086d5909f4b5ac",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-24-REQ-PRES-001-tamper-evident-requirements-preservation.md",
     "fileName": "2026-10-24-REQ-PRES-001-tamper-evident-requirements-preservation.md",
@@ -36,7 +36,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-26T17:43:17.291Z",
   "releaseReason": null,
   "rejectionReason": null
 }

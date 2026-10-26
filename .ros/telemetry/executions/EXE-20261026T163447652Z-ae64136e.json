@@ -1647,6 +1647,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-26T17:43:17Z",
+      "stepId": "STEP-20261026T163535000Z-813a906a",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -1695,12 +1712,12 @@
       "name": "Harden the preservation gate: baseline digest, authenticated approvals and reviews, priority downgrade",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-26T16:35:35Z",
       "startedAt": "2026-10-26T16:35:35Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-26T16:35:35Z",
+      "completedAt": "2026-10-26T17:43:17Z",
+      "endedAt": "2026-10-26T17:43:17Z",
+      "updatedAt": "2026-10-26T17:43:17Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -2021,6 +2038,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-26T16:35:35Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-26T17:43:17Z",
           "reason": null,
           "actor": {
             "kind": "agent",
