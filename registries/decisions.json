@@ -2822,6 +2822,20 @@
             "created"
           ],
           "reason": "Record the requirements-preservation public contracts (REQ-PRES-002)"
+        },
+        "EXE-20261026T163447652Z-ae64136e": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-26T16:56:19.817Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "Amendment before first release: baseline digest, authenticated approvals and reviews, priority downgrade (REQ-PRES-004)"
         }
       }
     },
@@ -2833,7 +2847,8 @@
     "research_area": "repository-operating-system",
     "status": "draft",
     "supports": [
-      "RQ-ROS-2026-A034"
+      "RQ-ROS-2026-A034",
+      "RQ-ROS-2026-A035"
     ],
     "tags": [
       "requirements",
@@ -2845,7 +2860,7 @@
       "dokimos"
     ],
     "title": "Requirements preservation uses four versioned public contracts, with approvals kept outside the derivation",
-    "updated": "2026-10-24",
-    "version": "1.0.0"
+    "updated": "2026-10-26",
+    "version": "1.1.0"
   }
 ]
