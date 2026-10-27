@@ -77,6 +77,7 @@
     <Compile Include="Remote/Execution.fs" />
     <Compile Include="Work/Reconciliation.fs" />
     <Compile Include="Work/InputInbox.fs" />
+    <Compile Include="Work/VerificationPlanIntake.fs" />
     <Compile Include="Ordo/Model.fs" />
     <Compile Include="Ordo/ContractAdmission.fs" />
     <Compile Include="Lifecycle/Model.fs" />

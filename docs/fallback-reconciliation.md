@@ -101,3 +101,13 @@ a crash at any point leaves the input intact in at least one place;
 interrupted step. The claim ID is derived from the inbox path and content, so
 repeating a claim returns the existing one.
 
+A compiled verification plan (`indy-init.verification-plan/1`) is an input
+document like any other. After `inbox claim`, `./praxis inbox admit-plan
+INPUT-<id>` verifies its identity (claimed SHA-256, recomputed
+`planIdentity.digest`, id formats, scope counts), writes the unchanged plan
+and a `praxis.verification-plan-handoff/1` record under `verification-plans/`,
+and records both as derivations. Ordering the plan's work is Ordo's
+responsibility: the handoff carries the exact `sde verification schedule`
+command and the digest Ordo must find. Commit both files, then `inbox
+complete`.
+

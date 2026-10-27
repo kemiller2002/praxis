@@ -1,0 +1,201 @@
+{
+  "schema": "indy-init.verification-plan/1",
+  "planIdentity": {
+    "planId": "VP-61029ee4580e",
+    "algorithm": "sha256",
+    "digest": "61029ee4580ea59aae08485dc2c92fecbd631a0a70a1430d76758db11a84bedb",
+    "covers": "sha256 of the plan serialized by the compiler's canonical writer (ASCII JSON, two-space indent, trailing newline) with planIdentity removed"
+  },
+  "source": {
+    "repository": "kemiller2002/indy-init",
+    "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "baselineId": "BL-TEST",
+    "baselineSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "approvals": {
+      "repository": "indy-init",
+      "commit": "dddddddddddddddddddddddddddddddddddddddd",
+      "path": "approvals.json",
+      "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "trustedOperators": [
+        "op"
+      ]
+    }
+  },
+  "scope": {
+    "priority": "P0",
+    "origin": "baseline",
+    "requirements": 2,
+    "obligations": 3,
+    "boundObligations": 2,
+    "missingTestObligations": 1,
+    "excludedRequirements": 0
+  },
+  "statusVocabulary": {
+    "testIdentity": [
+      "bound",
+      "partial",
+      "missing"
+    ],
+    "verification": [
+      "PASS",
+      "FAIL"
+    ]
+  },
+  "freshnessPolicies": [],
+  "evidenceContract": {
+    "evidenceSchema": "causa.acceptance-evidence/1",
+    "manifestSchema": "causa.acceptance-evidence-manifest/1",
+    "mustMatch": [
+      "run_id"
+    ],
+    "digest": "d",
+    "reuse": "r"
+  },
+  "exclusionPolicy": {
+    "rule": "r",
+    "approvalSchema": "causa.requirements-approvals/1"
+  },
+  "requirements": [
+    {
+      "requirement": "AR-001",
+      "priority": "P0",
+      "title": "Caf\u00e9 \u2014 \"quoted\" r\u00e9sum\u00e9\ttab",
+      "document": "REQUIREMENTS.md",
+      "sectionSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "obligations": [
+        {
+          "id": "VPO-0000000000000001",
+          "sourceObligation": "AR-001#1",
+          "index": 1,
+          "kind": "acceptance",
+          "text": "The system must log every change.",
+          "textSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "testIdentity": {
+            "status": "bound",
+            "tests": [
+              {
+                "id": "tests/ar.spec::core",
+                "kind": "deterministic"
+              }
+            ]
+          }
+        },
+        {
+          "id": "VPO-0000000000000002",
+          "sourceObligation": "AR-001#2",
+          "index": 2,
+          "kind": "acceptance",
+          "text": "The system must log every change.",
+          "textSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "testIdentity": {
+            "status": "missing",
+            "tests": []
+          }
+        }
+      ],
+      "acceptance": {
+        "criteria": [],
+        "linkedSections": []
+      },
+      "verificationMethod": {
+        "gates": [
+          "G3"
+        ],
+        "rules": []
+      },
+      "testIdentity": {
+        "status": "partial",
+        "boundObligations": 1,
+        "missingObligations": 1
+      },
+      "evidenceContract": {
+        "subjectType": "requirement",
+        "subjectId": "AR-001",
+        "requiredEvidence": [
+          "acceptance ledger row"
+        ]
+      },
+      "dependencies": {
+        "requirements": [],
+        "contracts": []
+      },
+      "freshness": {
+        "policy": "FP-DETERMINISTIC-INPUT-DIGEST",
+        "boundTo": [
+          "exact source commit"
+        ],
+        "invalidatedBy": []
+      },
+      "exclusion": {
+        "status": "in-scope",
+        "approval": null
+      }
+    },
+    {
+      "requirement": "AR-002",
+      "priority": "P0",
+      "title": "API",
+      "document": "REQUIREMENTS.md",
+      "sectionSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "obligations": [
+        {
+          "id": "VPO-0000000000000003",
+          "sourceObligation": "AR-002#1",
+          "index": 1,
+          "kind": "acceptance",
+          "text": "The system must log every change.",
+          "textSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "testIdentity": {
+            "status": "bound",
+            "tests": [
+              {
+                "id": "tests/ar.spec::api",
+                "kind": "deterministic"
+              }
+            ]
+          }
+        }
+      ],
+      "acceptance": {
+        "criteria": [],
+        "linkedSections": []
+      },
+      "verificationMethod": {
+        "gates": [
+          "G3"
+        ],
+        "rules": []
+      },
+      "testIdentity": {
+        "status": "partial",
+        "boundObligations": 1,
+        "missingObligations": 1
+      },
+      "evidenceContract": {
+        "subjectType": "requirement",
+        "subjectId": "AR-002",
+        "requiredEvidence": [
+          "acceptance ledger row"
+        ]
+      },
+      "dependencies": {
+        "requirements": [
+          "AR-001",
+          "NOT-P0"
+        ],
+        "contracts": []
+      },
+      "freshness": {
+        "policy": "FP-DETERMINISTIC-INPUT-DIGEST",
+        "boundTo": [
+          "exact source commit"
+        ],
+        "invalidatedBy": []
+      },
+      "exclusion": {
+        "status": "in-scope",
+        "approval": null
+      }
+    }
+  ]
+}

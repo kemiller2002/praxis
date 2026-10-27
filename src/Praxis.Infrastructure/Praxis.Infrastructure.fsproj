@@ -100,6 +100,7 @@
     <Compile Include="Work/FileWorkGroupRepository.fs" />
     <Compile Include="Planning/FilePacingCapacity.fs" />
     <Compile Include="Work/FileInputInbox.fs" />
+    <Compile Include="Work/FileVerificationPlanIntake.fs" />
     <Compile Include="Work/ClaimProcess.fs" />
     <Compile Include="Work/TransientStore.fs" />
     <Compile Include="Work/WorkClaimJson.fs" />
