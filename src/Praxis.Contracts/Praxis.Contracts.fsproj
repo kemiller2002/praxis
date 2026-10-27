@@ -28,6 +28,7 @@
     <Compile Include="Lifecycle/LifecycleJson.fs" />
     <Compile Include="Work/ReconciliationJson.fs" />
     <Compile Include="Work/InputInboxJson.fs" />
+    <Compile Include="Work/VerificationPlanHandoffJson.fs" />
     <Compile Include="Work/CheckpointJson.fs" />
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />

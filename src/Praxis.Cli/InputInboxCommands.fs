@@ -4,6 +4,7 @@ open System.Text.Json.Nodes
 open Praxis.Application.Work
 open Praxis.Contracts.Work
 open Praxis.Domain.Work
+open Praxis.Domain.Verification
 open Praxis.Infrastructure.Artifacts
 open Praxis.Infrastructure.Provenance
 open Praxis.Infrastructure.Work
@@ -13,10 +14,10 @@ open Praxis.Infrastructure.Work
 [<RequireQualifiedAccess>]
 module InputInboxCommands =
     let usage =
-        "inbox list [--json] | inbox show CLAIM-ID [--json] | inbox claim PATH [--json] [IDENTITY] | inbox derive CLAIM-ID --kind {requirement|decision|constraint|evidence|risk|question|reference} (--id ARTIFACT-ID|--path PATH) --summary TEXT [--locator TEXT] [--json] [IDENTITY] | inbox complete CLAIM-ID [--no-derivations REASON] [--json] | inbox release CLAIM-ID --reason TEXT [--json] | inbox reject PATH|CLAIM-ID --reason TEXT [--json] [IDENTITY] | inbox recover [--json]"
+        "inbox list [--json] | inbox show CLAIM-ID [--json] | inbox claim PATH [--json] [IDENTITY] | inbox derive CLAIM-ID --kind {requirement|decision|constraint|evidence|risk|question|reference} (--id ARTIFACT-ID|--path PATH) --summary TEXT [--locator TEXT] [--json] [IDENTITY] | inbox admit-plan CLAIM-ID [--to DIR] [--json] [IDENTITY] | inbox complete CLAIM-ID [--no-derivations REASON] [--json] | inbox release CLAIM-ID --reason TEXT [--json] | inbox reject PATH|CLAIM-ID --reason TEXT [--json] [IDENTITY] | inbox recover [--json]"
 
     let private valued =
-        set [ "--kind"; "--id"; "--path"; "--summary"; "--locator"; "--no-derivations"; "--reason"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--agent"; "--actor"; "--subagent"; "--actor-kind" ]
+        set [ "--to"; "--kind"; "--id"; "--path"; "--summary"; "--locator"; "--no-derivations"; "--reason"; "--provider"; "--model"; "--model-version"; "--runtime"; "--runtime-version"; "--session"; "--conversation"; "--run"; "--agent"; "--actor"; "--subagent"; "--actor-kind" ]
 
     let private option name (arguments: string list) =
         arguments |> List.pairwise |> List.tryPick (fun (flag, value) -> if flag = name then Some value else None)
@@ -131,6 +132,25 @@ module InputInboxCommands =
                     printClaim (json arguments) claim (if created then $"claimed {claim.ClaimId}" else $"already claimed: {claim.ClaimId}")
                     0)
         | [ "derive"; claimId ] -> derive root claimId arguments
+        | [ "admit-plan"; claimId ] ->
+            withProducer root arguments (fun actor execution ->
+                let directory = option "--to" arguments |> Option.defaultValue VerificationPlanIntakeOperations.defaultDirectory
+
+                match VerificationPlanIntakeOperations.admit port (FileVerificationPlanIntake.create root) claimId directory actor execution with
+                | Error error -> refuse error
+                | Ok admission when json arguments ->
+                    printfn "%s" ((VerificationPlanHandoffJson.render admission.Handoff).TrimEnd())
+                    0
+                | Ok admission ->
+                    let handoff = admission.Handoff
+                    printfn "admitted %s from %s" handoff.Plan.PlanId claimId
+                    printfn "  plan: %s (sha256 %s, recomputed)" handoff.AdmittedPath handoff.Plan.Digest
+                    printfn "  source: %s@%s, baseline %s" handoff.Plan.SourceRepository handoff.Plan.SourceCommit handoff.Plan.BaselineId
+                    printfn "  scope: %d requirement(s), %d obligation(s), %d without a test" handoff.Plan.Requirements handoff.Plan.Obligations handoff.Plan.MissingTestObligations
+                    printfn "  handoff: %s" admission.HandoffPath
+                    printfn "  ordering (Ordo): %s" (VerificationPlanIntake.orderingCommand handoff)
+                    printfn "  next: commit both files, then praxis inbox complete %s" claimId
+                    0)
         | [ "complete"; claimId ] ->
             match InputInboxOperations.complete port claimId (option "--no-derivations" arguments) with
             | Error error -> refuse error

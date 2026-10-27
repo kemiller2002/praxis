@@ -81,6 +81,7 @@ let main argv =
     @ ImplementationLanguagePolicyTests.tests
     @ RequirementCitationTests.tests
     @ InputInboxTests.tests
+    @ VerificationPlanIntakeTests.tests
     @ WebInterfaceTests.tests
     @ HubTests.tests
     @ WorkDecisionCliTests.tests
