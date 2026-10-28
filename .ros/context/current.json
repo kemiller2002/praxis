@@ -11572,7 +11572,27 @@
       "updatedAt": "2026-10-28T00:59:15.000Z",
       "telemetryExecutionIds": [
         "EXE-20261028T005916741Z-aae5a0a4"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "945f4367c46b3a670458af01",
+        "recordedAt": "2026-10-28T02:48:18.000Z",
+        "executionId": "EXE-20261028T005916741Z-aae5a0a4",
+        "repository": "repository-operating-system",
+        "branch": "claude/eii-b-integration-contracts",
+        "commit": "5f3679f2c0a6bd8916d0b4bd7e6d0924bd17054a",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "claude/eii-b-integration-contracts",
+        "remoteCommit": "5f3679f2c0a6bd8916d0b4bd7e6d0924bd17054a",
+        "summary": "Integration contract (praxis.integration-contract/1), praxis streams check, 19 tests incl. negative controls, R5 replay EX-ROS-2026-A025, docs; full suite 2434/2434",
+        "nextAction": "Complete intake INPUT-28bdc22a92aeab92 and work item EII-B-001",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",

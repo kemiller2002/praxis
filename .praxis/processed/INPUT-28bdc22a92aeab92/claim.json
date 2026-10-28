@@ -1,7 +1,7 @@
 {
   "schema": "praxis.inbox-claim/1",
   "claimId": "INPUT-28bdc22a92aeab92",
-  "state": "claimed",
+  "state": "completed",
   "source": {
     "path": ".praxis/inbox/documents/2026-10-28-EII-B-integration-contracts.md",
     "fileName": "2026-10-28-EII-B-integration-contracts.md",
@@ -100,7 +100,7 @@
     }
   ],
   "noDerivationReason": null,
-  "closedAt": null,
+  "closedAt": "2026-10-28T02:48:24.590Z",
   "releaseReason": null,
   "rejectionReason": null
 }
