@@ -119,6 +119,7 @@
     <Compile Include="Work/ValidationResult.fs" />
     <Compile Include="Work/VerificationReceipt.fs" />
     <Compile Include="Work/CompletionGate.fs" />
+    <Compile Include="Work/ProcessEvidence.fs" />
     <Compile Include="Foundations/LimenPin.fs" />
     <Compile Include="Foundations/FormaPin.fs" />
     <Compile Include="Foundations/NpmPin.fs" />

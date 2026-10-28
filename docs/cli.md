@@ -502,6 +502,23 @@ telemetry" in [`development-telemetry.md`](development-telemetry.md).
 
 See "Durable checkpoints and continuity" in [`work-protocol.md`](work-protocol.md).
 
+### `work evidence`
+
+```text
+praxis work evidence --id ID --kind KIND --summary TEXT --occurred-at TIMESTAMP [--subject REF]* [--candidate SHA] [--reference REF]* [--decision ID] [--outcome VALUE] [--attestation TYPE:REF] [--execution EXE-ID] [--json] [IDENTITY]
+```
+
+Records one statement about how work was carried out (assignment, dependency
+decision, scope change, owner approval, independent review, release selection,
+test result, acceptance reference, final disposition) as a
+`work.evidence.recorded` event in `.ros/events/events.jsonl`. The event keeps
+the caller's `statement` apart from what Praxis `observed` (`HEAD`, the actor's
+active execution and its role, how the identity was established) and states a
+`provenance.class`; an agent's statement is always an `agent-assertion`, and
+Praxis never writes `verified-acceptance`. Argument errors exit 2; a refused
+execution (another actor's) exits 1 and records nothing. See
+[`process-evidence.md`](process-evidence.md).
+
 ### `work group`
 
 ```

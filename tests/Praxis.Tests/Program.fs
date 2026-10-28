@@ -116,6 +116,7 @@ let main argv =
     @ GitDurabilityTests.tests
     @ CheckpointPersistenceTests.tests
     @ CheckpointCliTests.tests
+    @ ProcessEvidenceTests.tests
     @ CheckpointGuardTests.tests
     @ ContinuationCliTests.tests
     @ TelemetrySegmentationTests.tests

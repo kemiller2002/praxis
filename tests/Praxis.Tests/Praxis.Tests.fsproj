@@ -119,6 +119,7 @@
     <Compile Include="GitDurabilityTests.fs" />
     <Compile Include="CheckpointPersistenceTests.fs" />
     <Compile Include="CheckpointCliTests.fs" />
+    <Compile Include="ProcessEvidenceTests.fs" />
     <Compile Include="CheckpointGuardTests.fs" />
     <Compile Include="ContinuationCliTests.fs" />
     <Compile Include="TelemetrySegmentationTests.fs" />
