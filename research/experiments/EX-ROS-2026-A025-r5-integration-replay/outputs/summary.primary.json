@@ -1,0 +1,1917 @@
+{
+  "variant": "primary",
+  "merges": 55,
+  "conflicted": 7,
+  "overlapFlag": {
+    "conflicting": 7,
+    "nonConflicting": 7
+  },
+  "coversConflictFiles": 7,
+  "narrowFlag": {
+    "conflicting": 5,
+    "nonConflicting": 4
+  },
+  "ownershipFlag": {
+    "conflicting": 7,
+    "nonConflicting": 34
+  },
+  "findings": {
+    "total": 164,
+    "byCode": {
+      "interface-unapproved": 9,
+      "outside-ownership": 155
+    },
+    "distinctStreamPath": 59,
+    "distinctStreamPathByCode": {
+      "interface-unapproved": 8,
+      "outside-ownership": 51
+    }
+  },
+  "readiness": {
+    "blocked": 42,
+    "ready": 1,
+    "unverified": 12
+  },
+  "perMerge": [
+    {
+      "merge": "5471d21",
+      "stream": "preflight",
+      "rule": "preflight",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "ready",
+      "exit": 3
+    },
+    {
+      "merge": "e50f4d4",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "4543e39",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "f55d550",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "b8bd23f",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "NuGet.config",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package-lock.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/serve.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tsconfig.build.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Contract.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Guest.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Routing.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/limen-fsharp.lock",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "af9c43b",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "b3d8e80",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "NuGet.config",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package-lock.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/serve.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tsconfig.build.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Contract.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Guest.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Routing.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/limen-fsharp.lock",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "4b61a3a",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "ca43dfa",
+      "stream": "core",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "dc02be0",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "91a35bd",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/deploy-pages.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/echelon-foundations.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/praxis-validation.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "4cb32ff",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "docs/architecture/INVARIANTS.md",
+        "docs/architecture/interface-manifest.json",
+        "tests/App.Engine.Tests/KernelTests.fs"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "3b5bc4d",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "ff42add",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "NuGet.config",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package-lock.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/serve.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tsconfig.build.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Contract.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Guest.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Routing.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/limen-fsharp.lock",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "7abed91",
+      "stream": "acc",
+      "rule": "stream-into-main",
+      "conflicted": true,
+      "conflictFiles": [
+        ".github/workflows/build-and-test.yml"
+      ],
+      "overlap": [
+        ".github/workflows/build-and-test.yml"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [
+        ".github/workflows/build-and-test.yml"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/deploy-pages.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/echelon-foundations.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/praxis-validation.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "cbeabd2",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "9cd49dd",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "App.slnx"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [
+        "App.slnx"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "NuGet.config",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package-lock.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/serve.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tsconfig.build.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Contract.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Guest.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Routing.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/limen-fsharp.lock",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "150a010",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "NuGet.config",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package-lock.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/serve.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tsconfig.build.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Contract.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Guest.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/EchelonFoundry.Limen.Routing.0.9.0.nupkg",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "vendor/nuget/limen-fsharp.lock",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "52988be",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "0f3a248",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "App.slnx"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [
+        "App.slnx"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "7f333d5",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "826b01a",
+      "stream": "persist",
+      "rule": "stream-into-main",
+      "conflicted": true,
+      "conflictFiles": [
+        "App.slnx"
+      ],
+      "overlap": [
+        "App.slnx"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [
+        "App.slnx"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "App.slnx",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "c51f69b",
+      "stream": "core",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "fa422d9",
+      "stream": "persist",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "cd78e24",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "c93371a",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "984892c",
+      "stream": "core",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "32a9ac7",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "ae23705",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "5f15a31",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "f82ae94",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/app/Causa.App.fsproj",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/support/fake-github.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/support/fixtures.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "b80a0e0",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "b0618e4",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "src/app/Shell.fs",
+        "tests/browser/shell.spec.js"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "scripts/scan-records.mjs",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "cf82464",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "cd8d13d",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "85c9d68",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": true,
+      "conflictFiles": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs"
+      ],
+      "overlap": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "6b1239e",
+      "stream": "shell",
+      "rule": "shell-by-report",
+      "conflicted": true,
+      "conflictFiles": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs"
+      ],
+      "overlap": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "scripts/scan-records.mjs",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "ab27a36",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "src/app/Graph.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/app/capabilities/workflow-layout-engine.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "tests/Causa.App.Tests/GraphTests.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/cycle.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/dense-evidence.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/disconnected.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/empty.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/four-roles.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/long-labels.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/single-node.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-layout.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/support/graph-harness.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "80a0476",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": true,
+      "conflictFiles": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs",
+        "src/app/View.fs"
+      ],
+      "overlap": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs",
+        "src/app/PersistencePort.fs",
+        "src/app/View.fs",
+        "src/kernel/index.html",
+        "tests/Persistence.Tests/BlockedTests.fs",
+        "tests/Persistence.Tests/Persistence.Tests.fsproj"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [
+        "src/app/Adapter.fs",
+        "src/app/EnginePort.fs",
+        "src/app/View.fs",
+        "src/kernel/index.html"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/fixture-mode.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "e94e828",
+      "stream": "core",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "tests/Causa.App.Tests/GraphTests.fs"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [
+        "tests/Causa.App.Tests/GraphTests.fs"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "src/app/Graph.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/app/capabilities/workflow-layout-engine.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "tests/Causa.App.Tests/GraphTests.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/cycle.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/dense-evidence.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/disconnected.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/empty.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/four-roles.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/long-labels.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/single-node.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-layout.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/support/graph-harness.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "f3a22d5",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "9912314",
+      "stream": "shell",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "tests/Causa.App.Tests/GraphTests.fs"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "scripts/scan-records.mjs",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "dda8c2c",
+      "stream": "persist",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/fixture-mode.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "5321c43",
+      "stream": "persist",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/fixture-mode.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "e76caaf",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "README.md",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "1526ca8",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "README.md",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "331f76c",
+      "stream": "core",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [
+        "playwright.config.js",
+        "scripts/scan-records.mjs",
+        "src/app/Adapter.fs",
+        "src/app/Dispatch.fs",
+        "src/app/EnginePort.fs",
+        "src/app/EngineView.fs",
+        "src/app/Routes.fs",
+        "src/app/Shell.fs",
+        "src/app/TestState.fs",
+        "src/app/View.fs",
+        "src/kernel/causa.css",
+        "src/kernel/index.html",
+        "src/kernel/main.ts",
+        "tests/Causa.App.Tests/EnginePortTests.fs",
+        "tests/Causa.App.Tests/GraphTests.fs",
+        "tests/Causa.App.Tests/ProjectionTests.fs",
+        "tests/Causa.App.Tests/RouteTests.fs",
+        "tests/browser/forms.spec.js",
+        "tests/browser/history.spec.js",
+        "tests/browser/identity.spec.js",
+        "tests/browser/percepta.spec.js",
+        "tests/browser/proposals.spec.js",
+        "tests/browser/records-scan.spec.js",
+        "tests/browser/shell.spec.js"
+      ],
+      "overlapFlag": true,
+      "coversConflict": false,
+      "narrowOverlap": [
+        "playwright.config.js",
+        "scripts/scan-records.mjs",
+        "src/app/Adapter.fs",
+        "src/app/Dispatch.fs",
+        "src/app/EnginePort.fs",
+        "src/app/EngineView.fs",
+        "src/app/Routes.fs",
+        "src/app/Shell.fs",
+        "src/app/TestState.fs",
+        "src/app/View.fs",
+        "src/kernel/causa.css",
+        "src/kernel/index.html",
+        "src/kernel/main.ts",
+        "tests/Causa.App.Tests/EnginePortTests.fs",
+        "tests/Causa.App.Tests/GraphTests.fs",
+        "tests/Causa.App.Tests/ProjectionTests.fs",
+        "tests/Causa.App.Tests/RouteTests.fs",
+        "tests/browser/forms.spec.js",
+        "tests/browser/history.spec.js",
+        "tests/browser/identity.spec.js",
+        "tests/browser/percepta.spec.js",
+        "tests/browser/proposals.spec.js",
+        "tests/browser/records-scan.spec.js",
+        "tests/browser/shell.spec.js"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "playwright.config.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/scan-records.mjs",
+          "ownedBy": []
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "src/app/Dispatch.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "src/app/EnginePort.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/app/Graph.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/app/Routes.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "src/app/Shell.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "src/app/View.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "src/kernel/causa.css",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "src/kernel/index.html",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/Causa.App.Tests/EnginePortTests.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "tests/Causa.App.Tests/ProjectionTests.fs",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/Causa.App.Tests/RouteTests.fs",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/forms.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/dense-evidence.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/disconnected.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/four-roles.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/long-labels.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-fixtures/single-node.json",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/graph-navigation.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/history.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/identity.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-graph.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/percepta.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/proposals.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/records-scan.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "interface-unapproved",
+          "path": "tests/browser/shell.spec.js",
+          "interface": "shell-files",
+          "interfaceOwner": "shell"
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "3858417",
+      "stream": "shell",
+      "rule": "shell-by-report",
+      "conflicted": true,
+      "conflictFiles": [
+        "src/app/View.fs"
+      ],
+      "overlap": [
+        "src/app/View.fs",
+        "src/kernel/main.ts"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "package.json",
+          "ownedBy": []
+        },
+        {
+          "code": "outside-ownership",
+          "path": "scripts/build-site.mjs",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "97abcbf",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "97a12c0",
+      "stream": "persist",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/fixture-mode.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "d23060f",
+      "stream": "persist",
+      "rule": "stream-into-main",
+      "conflicted": true,
+      "conflictFiles": [
+        "tests/browser/fixture-mode.spec.js"
+      ],
+      "overlap": [
+        "tests/browser/fixture-mode.spec.js"
+      ],
+      "overlapFlag": true,
+      "coversConflict": true,
+      "narrowOverlap": [
+        "tests/browser/fixture-mode.spec.js"
+      ],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/fixture-mode.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        },
+        {
+          "code": "outside-ownership",
+          "path": "tests/browser/live-persistence.spec.js",
+          "ownedBy": [
+            "shell"
+          ]
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "20db7f8",
+      "stream": "acc",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/persistence-provider.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    },
+    {
+      "merge": "91c4a1f",
+      "stream": "shell",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "2b2624a",
+      "stream": "shell",
+      "rule": "stream-into-head",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [],
+      "readiness": "unverified",
+      "exit": 3
+    },
+    {
+      "merge": "bc8f165",
+      "stream": "acc",
+      "rule": "into-stream",
+      "conflicted": false,
+      "conflictFiles": [],
+      "overlap": [],
+      "overlapFlag": false,
+      "coversConflict": false,
+      "narrowOverlap": [],
+      "findings": [
+        {
+          "code": "outside-ownership",
+          "path": ".github/workflows/build-and-test.yml",
+          "ownedBy": []
+        }
+      ],
+      "readiness": "blocked",
+      "exit": 3
+    }
+  ]
+}

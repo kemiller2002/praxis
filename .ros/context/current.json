@@ -11562,11 +11562,60 @@
         }
       },
       "completedAt": "2026-10-27T17:59:36.325Z"
+    },
+    {
+      "id": "EII-B-001",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/IntegrationContract.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/IntegrationStreamsTests.fs"
+        },
+        {
+          "type": "experiment",
+          "path": "research/experiments/EX-ROS-2026-A025--r5-integration-contract-replay.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/work-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-10-28T02:48:57.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261028T005916741Z-aae5a0a4"
+      ],
+      "latestCheckpoint": {
+        "id": "6427e25992de65b8d6e0e4d6",
+        "recordedAt": "2026-10-28T02:48:52.000Z",
+        "executionId": "EXE-20261028T005916741Z-aae5a0a4",
+        "repository": "repository-operating-system",
+        "branch": "claude/eii-b-integration-contracts",
+        "commit": "5ef5e5a1aa8a68f25778b0438ac956244b1415ed",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis.git"
+        },
+        "remoteBranch": "claude/eii-b-integration-contracts",
+        "remoteCommit": "5ef5e5a1aa8a68f25778b0438ac956244b1415ed",
+        "summary": "Intake completed; implementation, tests (2434/2434), replay and docs pushed",
+        "nextAction": "Complete EII-B-001, registry build, validate",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-10-28T02:48:57.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-27T17:59:36.325Z",
+  "updatedAt": "2026-10-28T02:48:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

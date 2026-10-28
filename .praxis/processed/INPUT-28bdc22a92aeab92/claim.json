@@ -1,0 +1,106 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-28bdc22a92aeab92",
+  "state": "completed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-28-EII-B-integration-contracts.md",
+    "fileName": "2026-10-28-EII-B-integration-contracts.md",
+    "sha256": "9f83f5415596d3ac728fbf11fdb9592214ebe9e75b767b92f0c84232b5208bbe",
+    "size": 3644
+  },
+  "claimedAt": "2026-10-28T00:59:20.244Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "unknown",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261028T005916741Z-aae5a0a4",
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "artifact",
+      "target": "RQ-ROS-2026-A036",
+      "summary": "Integration contracts for parallel agent workstreams (R1-R5)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:00.074Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "schemas/praxis-integration-contract.schema.json",
+      "summary": "praxis.integration-contract/1 schema (requirement 1)",
+      "locator": "## Requirements",
+      "recordedAt": "2026-10-28T01:29:01.175Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "src/Praxis.Domain/Work/IntegrationContract.fs",
+      "summary": "Pure streams check: ownership, interfaces, overlap, sequence, readiness (requirement 2)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:02.089Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "artifact",
+      "target": "EX-ROS-2026-A025",
+      "summary": "Retrospective non-causal replay of R5 merges (requirement 4)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:03.320Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "docs/work-protocol.md",
+      "summary": "Integration policy and agent consumption (requirement 5)",
+      "locator": "## Integrating parallel workstreams",
+      "recordedAt": "2026-10-28T01:29:04.332Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    }
+  ],
+  "noDerivationReason": null,
+  "closedAt": "2026-10-28T02:48:24.590Z",
+  "releaseReason": null,
+  "rejectionReason": null
+}

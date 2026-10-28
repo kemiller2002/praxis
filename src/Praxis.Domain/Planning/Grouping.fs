@@ -735,6 +735,21 @@ module Grouping =
         |> List.distinct
         |> List.sortWith (fun left right -> Text.ordinal (List.head left) (List.head right))
 
+    /// Topological order of `nodes` by `prerequisites` (Kahn, ordinal
+    /// tie-breaks), and the cycles that prevented placing the rest. Nodes in
+    /// a cycle, or waiting on one, are appended in ordinal order. Also the
+    /// integration sequence of `praxis streams check`.
+    let topologicalOrder (nodes: string list) (prerequisites: string -> string list) : string list * string list list =
+        let rec order (placed: string list) (remaining: string list) =
+            let ready = remaining |> List.filter (fun id -> prerequisites id |> List.forall (fun prerequisite -> placed |> List.contains prerequisite))
+
+            match ready with
+            | [] -> placed, remaining
+            | next :: _ -> order (placed @ [ next ]) (remaining |> List.filter ((<>) next))
+
+        let placed, cyclic = order [] (Text.sortOrdinal nodes)
+        placed @ cyclic, stronglyConnected (Text.sortOrdinal nodes) prerequisites
+
     /// Topological order of `members` by hard work-item dependencies among
     /// them; ordinal tie-breaks (PRX-GRP-090 case 4). Members in a cycle are
     /// appended in ordinal order and reported separately.
@@ -752,15 +767,7 @@ module Grouping =
             |> Option.defaultValue []
             |> Text.distinctOrdinal
 
-        let rec order (placed: string list) (remaining: string list) =
-            let ready = remaining |> List.filter (fun id -> prerequisites id |> List.forall (fun prerequisite -> placed |> List.contains prerequisite))
-
-            match ready with
-            | [] -> placed, remaining
-            | next :: _ -> order (placed @ [ next ]) (remaining |> List.filter ((<>) next))
-
-        let placed, cyclic = order [] (Text.sortOrdinal members)
-        placed @ cyclic, stronglyConnected (Text.sortOrdinal members) prerequisites
+        topologicalOrder members prerequisites
 
     // ---- clustering -------------------------------------------------------------
 

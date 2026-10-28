@@ -98,6 +98,7 @@
     <Compile Include="StatusValidateCliTests.fs" />
     <Compile Include="GitArtifactCliTests.fs" />
     <Compile Include="CliPortSupport.fs" />
+    <Compile Include="IntegrationStreamsTests.fs" />
     <Compile Include="TelemetryCliTests.fs" />
     <Compile Include="TelemetryAdapterCliTests.fs" />
     <Compile Include="AdapterCliTests.fs" />

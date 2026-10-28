@@ -64,3 +64,12 @@ module UpstreamSync =
         | Some successfulAt ->
             let elapsed = max TimeSpan.Zero (now - successfulAt)
             Some elapsed, Some(successfulAt + maxAge), elapsed >= maxAge
+
+    /// Paths both sides changed since their merge base: the local side's
+    /// paths (in their given order) that the incoming side also changed.
+    /// `praxis sync check` applies it to HEAD against upstream; `praxis
+    /// streams check` to a stream against its integration target and to
+    /// every two sibling streams.
+    let overlap (local: string list) (incoming: string list) =
+        let incomingSet = Set.ofList incoming
+        local |> List.filter incomingSet.Contains

@@ -13,6 +13,7 @@
 | DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
+| EII-B-001 | EII-B-001 | active |  |  |
 | EX-ROS-2026-A024 | EX-ROS-2026-A024 | complete |  |  |
 | EXEC-INSTALL-109 | Execution envelopes, step ledger, worktrees, legal actions, installation registration client | complete |  | high |
 | EXEC-INSTALL-109-NPM-BIN | Keep npm bin as ros only; praxis stays canonical via native release and ./praxis | complete |  | high |

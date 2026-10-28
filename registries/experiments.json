@@ -353,5 +353,56 @@
       "HY-ROS-2026-A028"
     ],
     "title": "Claude context continuity: continuous session versus code-only resets versus structured handoffs"
+  },
+  {
+    "created": "2026-10-28",
+    "derived_from": [
+      "INPUT-28bdc22a92aeab92"
+    ],
+    "id": "EX-ROS-2026-A025",
+    "inputs": [],
+    "outputs": [],
+    "path": "research/experiments/EX-ROS-2026-A025--r5-integration-contract-replay.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261028T005916741Z-aae5a0a4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-28T01:28:45.000Z",
+          "evidence": [
+            "research/experiments/EX-ROS-2026-A025-r5-integration-replay/outputs/summary.primary.json"
+          ],
+          "operations": [
+            "created"
+          ],
+          "reason": "Retrospective, non-causal replay of Rehearsal 5's 55 merges against a reconstructed integration contract (EII-B R4)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A036",
+      "docs/work-protocol.md",
+      "schemas/praxis-integration-contract.schema.json",
+      "research/experiments/EX-ROS-2026-A025-r5-integration-replay/README.txt"
+    ],
+    "related_theories": [],
+    "research_area": "repository-operating-system",
+    "status": "completed",
+    "tags": [
+      "integration",
+      "workstreams",
+      "ownership",
+      "merge-conflicts",
+      "replay",
+      "retrospective",
+      "non-causal"
+    ],
+    "tests_hypotheses": [],
+    "title": "Retrospective replay of Rehearsal 5's merges against a reconstructed integration contract"
   }
 ]

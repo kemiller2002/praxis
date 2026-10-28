@@ -1,0 +1,27 @@
+{
+  "schema": "praxis.integration-contract/1",
+  "managedPaths": [".ros/**", ".praxis/**"],
+  "commonPaths": [],
+  "streams": [
+    { "id": "core", "workItem": "WI-0003", "ref": "UNSET",
+      "owns": ["src/engine/**", "tests/App.Engine.Tests/**", "tests/Engine.WasmSmoke/**", "docs/architecture/**"],
+      "readiness": ["ownership", "interfaces", "overlap", "verified-completion"] },
+    { "id": "shell", "workItem": "WI-0004", "ref": "UNSET",
+      "owns": ["src/app/**", "src/kernel/**", "src/wasm/**", "tests/Causa.App.Tests/**", "tests/browser/**", ".percepta/**", "limen.config.json", "playwright.config.js", ".echelon/routes.json", "**/Routes.fs", "tests/**/RouteTests.fs"],
+      "dependsOn": ["core"],
+      "readiness": ["ownership", "interfaces", "overlap", "verified-completion"] },
+    { "id": "persist", "workItem": "WI-0005", "ref": "UNSET",
+      "owns": ["src/persistence/**", "tests/Persistence.Tests/**", "src/app/PersistencePort.fs"],
+      "dependsOn": ["core"],
+      "readiness": ["ownership", "interfaces", "overlap", "verified-completion"] },
+    { "id": "acc", "workItem": "WI-0006", "ref": "UNSET",
+      "owns": ["acceptance/**", "tools/acceptance/**", "evidence/acceptance/**"],
+      "readiness": ["ownership", "interfaces", "overlap", "verified-completion"] }
+  ],
+  "interfaces": [
+    { "id": "kernel-interface-manifest", "owner": "core",
+      "paths": ["docs/architecture/interface-manifest.json", "docs/architecture/BOUNDARIES.md"] },
+    { "id": "shell-files", "owner": "shell",
+      "paths": ["src/app/Shell.fs", "src/app/Adapter.fs", "src/app/EnginePort.fs", "src/app/Dispatch.fs", "src/app/Presentation.fs", "src/app/View.fs", "src/app/EngineView.fs", "src/app/TestState.fs", "src/kernel/index.html", "src/kernel/main.ts", "tests/browser/shell.spec.js", "tests/Causa.App.Tests/ProjectionTests.fs", "tests/Causa.App.Tests/GraphTests.fs"] }
+  ]
+}

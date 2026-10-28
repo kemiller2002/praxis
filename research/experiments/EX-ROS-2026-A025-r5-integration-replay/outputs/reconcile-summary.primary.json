@@ -1,0 +1,185 @@
+{
+  "variant": "primary",
+  "reconcileCommits": 19,
+  "reconciledCommitRows": 100,
+  "distinctCommits": 100,
+  "outcomes": {
+    "ambiguous": 6,
+    "mismatch": 8,
+    "no-stream": 3,
+    "none": 40,
+    "unique-match": 43
+  },
+  "autoAttributableReconcileCommits": 3,
+  "perReconcile": [
+    {
+      "commit": "005b431",
+      "rows": 3,
+      "unique": 0,
+      "outcomes": [
+        "no-stream"
+      ]
+    },
+    {
+      "commit": "03379d6",
+      "rows": 24,
+      "unique": 11,
+      "outcomes": [
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "0776a99",
+      "rows": 1,
+      "unique": 0,
+      "outcomes": [
+        "none"
+      ]
+    },
+    {
+      "commit": "1c702c1",
+      "rows": 6,
+      "unique": 2,
+      "outcomes": [
+        "mismatch",
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "25d564b",
+      "rows": 1,
+      "unique": 0,
+      "outcomes": [
+        "none"
+      ]
+    },
+    {
+      "commit": "2fa9995",
+      "rows": 3,
+      "unique": 1,
+      "outcomes": [
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "4b2d277",
+      "rows": 1,
+      "unique": 1,
+      "outcomes": [
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "4fcbb43",
+      "rows": 7,
+      "unique": 1,
+      "outcomes": [
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "543a94f",
+      "rows": 13,
+      "unique": 4,
+      "outcomes": [
+        "ambiguous",
+        "mismatch",
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "5d8888f",
+      "rows": 6,
+      "unique": 1,
+      "outcomes": [
+        "ambiguous",
+        "mismatch",
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "6463620",
+      "rows": 3,
+      "unique": 3,
+      "outcomes": [
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "9008c6f",
+      "rows": 20,
+      "unique": 14,
+      "outcomes": [
+        "ambiguous",
+        "mismatch",
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "ac84d46",
+      "rows": 4,
+      "unique": 2,
+      "outcomes": [
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "af698c9",
+      "rows": 1,
+      "unique": 1,
+      "outcomes": [
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "b95f7d4",
+      "rows": 2,
+      "unique": 1,
+      "outcomes": [
+        "none",
+        "unique-match"
+      ]
+    },
+    {
+      "commit": "c9f336b",
+      "rows": 1,
+      "unique": 0,
+      "outcomes": [
+        "none"
+      ]
+    },
+    {
+      "commit": "e086147",
+      "rows": 1,
+      "unique": 0,
+      "outcomes": [
+        "none"
+      ]
+    },
+    {
+      "commit": "fd5c451",
+      "rows": 1,
+      "unique": 0,
+      "outcomes": [
+        "none"
+      ]
+    },
+    {
+      "commit": "fe3d73a",
+      "rows": 2,
+      "unique": 1,
+      "outcomes": [
+        "ambiguous",
+        "unique-match"
+      ]
+    }
+  ]
+}

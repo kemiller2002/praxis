@@ -266,6 +266,7 @@ praxis validate [--json]
 praxis registry build [--dry-run] | registry check
 praxis git status [--json]
 praxis sync status [--json] | sync check [--start] [--json]
+praxis streams check [--stream ID]* [--against REF] [--contract FILE] [--json]
 praxis work <capture|list|ready|show|start|resume|block|complete|reconcile|checkpoint|continue|update|attach|context|...>
 praxis work <claim|verify|complete-verified|finish|completion-identity|claims|...>   # see work-claims.md
 praxis add "..."
@@ -311,6 +312,32 @@ deliberately at a safe boundary and rerun affected validation. “Current” mea
 the latest successfully fetched snapshot within the configured window, not a
 guarantee that the remote cannot move after the check. See [Upstream
 synchronization and bounded drift](work-protocol.md#upstream-synchronization-and-bounded-drift).
+
+### `streams check`
+
+```
+praxis streams check [--stream ID]* [--against REF] [--contract FILE] [--json]
+```
+
+`streams check` checks the integration contract of parallel workstreams
+(`praxis.integration-contract/1`, the `integration` member of `ros.json`, or
+`--contract FILE`) against Git facts. It is read-only and never fetches.
+
+For each stream it reports:
+
+- changed paths outside the stream's ownership;
+- unapproved shared-interface changes;
+- overlap with the target (`--against`, else the contract's `target`, else
+  the upstream-sync branch) and with sibling streams before merge;
+- merge readiness: `ready`, `blocked`, `unverified` or `unavailable`.
+
+It also reports the topological integration sequence; dependency cycles are
+errors. `--stream` limits the reported streams and sibling pairs.
+
+`--json` prints `praxis.streams-check/1`. Exit `0` when every reported
+stream is ready, `3` otherwise, and `2` for invalid arguments or an
+unreadable contract. See [Integrating parallel
+workstreams](work-protocol.md#integrating-parallel-workstreams).
 
 ### `repository identity`, `instance`
 
