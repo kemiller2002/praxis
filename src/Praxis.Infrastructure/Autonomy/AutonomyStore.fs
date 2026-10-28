@@ -13,9 +13,23 @@ open Praxis.Domain.Autonomy
 module AutonomyStore =
     let private full (path: string) = Path.TrimEndingDirectorySeparator(Path.GetFullPath path)
 
+    /// The path with every symbolic link along it resolved, so a link outside
+    /// a repository cannot stand for a file inside it.
+    let realPath (path: string) =
+        full path
+        |> fun p -> p.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
+        |> Array.fold
+            (fun (acc: string) part ->
+                let next = Path.Combine(acc, part)
+                let info: FileSystemInfo = if Directory.Exists next then DirectoryInfo next else FileInfo next
+                match (try info.ResolveLinkTarget true with _ -> null) with
+                | null -> next
+                | target -> full target.FullName)
+            (string Path.DirectorySeparatorChar)
+
     let private within (root: string) (path: string) =
-        let r = full root + string Path.DirectorySeparatorChar
-        (full path + string Path.DirectorySeparatorChar).StartsWith(r, StringComparison.Ordinal)
+        let r = realPath root + string Path.DirectorySeparatorChar
+        (realPath path + string Path.DirectorySeparatorChar).StartsWith(r, StringComparison.Ordinal)
 
     /// Load the trust store, refusing one inside a repository the run edits:
     /// a trust anchor the agent can rewrite anchors nothing.

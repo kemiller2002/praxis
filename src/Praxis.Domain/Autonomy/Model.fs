@@ -190,7 +190,10 @@ type CheckObservation =
       Status: string
       Conclusion: string option
       App: string
-      Id: int64 }
+      Id: int64
+      /// The check suite the run belongs to. Runs of one name from two suites
+      /// (two workflows, or a run posted through the API) are ambiguous.
+      Suite: int64 }
 
 [<RequireQualifiedAccess>]
 type ChangeKind =
@@ -245,6 +248,9 @@ type EvaluationInput =
       Policy: PolicyState
       Authorization: AuthorizationState
       RevokedRunIds: Set<string>
+      /// Revocation files that could not be read. A revocation that cannot be
+      /// read cannot name its run, so it denies every run (fail closed).
+      RevocationProblems: string list
       Checks: CheckObservation list
       Now: DateTimeOffset }
 

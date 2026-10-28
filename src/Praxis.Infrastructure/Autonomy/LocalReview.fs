@@ -61,6 +61,22 @@ module LocalReview =
             | null -> ""
             | pull -> [ "title"; "body" ] |> List.choose (fun n -> pull[n] |> Option.ofObj |> Option.map string) |> String.concat "\n"
 
+    /// The work-item ids a Praxis backlog (`.ros/work/queue.json`) names,
+    /// wherever they appear in it.
+    let knownWorkItems (queueJson: string) : Set<string> =
+        let rec ids (node: JsonNode) =
+            match node with
+            | :? JsonObject as o ->
+                (o |> Seq.collect (fun pair ->
+                    match pair.Key, pair.Value with
+                    | "id", (:? JsonValue as v) -> [ v.ToString() ]
+                    | _, null -> []
+                    | _, child -> ids child)
+                 |> Seq.toList)
+            | :? JsonArray as a -> a |> Seq.collect (fun child -> match child with null -> [] | c -> ids c) |> Seq.toList
+            | _ -> []
+        try ids (JsonNode.Parse queueJson) |> Set.ofList with _ -> Set.empty
+
     let inputs (root: string) (baseRev: string) (headRev: string) (extraText: string) (policyProtected: ProtectedPath list) (allowed: string list option) =
         let range = $"{baseRev}...{headRev}"
         git root [ "diff"; "--name-status"; "-M"; range ]
@@ -72,17 +88,19 @@ module LocalReview =
                     git root [ "ls-tree"; "-r"; "--name-only"; baseRev ]
                     |> Result.map (fun tree ->
                         let tracked = lines tree |> List.map (fun l -> l.TrimEnd('\r'))
+                        let atBase (p: string) = match git root [ "show"; $"{baseRev}:{p}" ] with Ok t -> Some t | Error _ -> None
                         let workflows =
                             tracked
                             |> List.filter (fun p -> p.StartsWith(".github/workflows/", StringComparison.Ordinal))
-                            |> List.choose (fun p -> match git root [ "show"; $"{baseRev}:{p}" ] with Ok t -> Some t | Error _ -> None)
+                            |> List.choose atBase
 
                         { Changes = parseNameStatus nameStatus
                           AddedLines = parseAddedLines diff
                           TraceText = messages + "\n" + extraText
                           ProtectedPaths = policyProtected
-                          CiReferencedPaths = Classification.ciReferencedPaths workflows tracked
-                          AllowedPaths = allowed }))))
+                          CiReferencedPaths = Classification.ciReferencedPaths atBase workflows tracked
+                          AllowedPaths = allowed
+                          KnownWorkItems = atBase ".ros/work/queue.json" |> Option.map knownWorkItems }))))
 
     let reportNode (baseSha: string) (headSha: string) (report: ReviewReport) (executor: (string * string) list) =
         let findings = JsonArray()

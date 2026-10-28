@@ -12,12 +12,20 @@ type LifecycleEnvironment =
       PollInterval: TimeSpan
       Log: string -> unit }
 
+/// The authority a decision rests on, as read at one moment.
+type Authority =
+    { Authorization: AuthorizationState
+      RevokedRunIds: Set<string>
+      RevocationProblems: string list }
+
 type MergeRequest =
     { Repository: string
       PullRequest: int
       Candidate: string
-      Authorization: AuthorizationState
-      RevokedRunIds: Set<string> }
+      /// Re-read at every evaluation (signature, trust store, revocations),
+      /// so a revocation made while the lifecycle waits takes effect at the
+      /// next decision, including the one immediately before the merge.
+      Authority: unit -> Authority }
 
 /// What the lifecycle read from GitHub for one evaluation.
 type MergeContext =
@@ -29,7 +37,9 @@ type MergeContext =
       Checks: CheckObservation list
       Rules: BranchRules
       /// Runs revoked by a revocation committed to the target repository.
-      Revoked: Set<string> }
+      Revoked: Set<string>
+      /// Committed revocation files that could not be read.
+      RevocationProblems: string list }
 
 /// The unattended pull-request lifecycle from "checks running" to "receipt
 /// recorded": reconcile, evaluate, check GitHub eligibility, submit a merge
@@ -94,13 +104,17 @@ module MergeLifecycle =
             (Ok [])
 
     /// A revocation removes authority, so one is honoured wherever it is
-    /// committed, on the protected base or in the candidate. An unreadable
-    /// file there cannot name its run, so it revokes nothing; the trust store
-    /// and `--revocations` remain the owner's direct channels.
-    let private revokedIn (texts: string list) =
-        texts
-        |> List.choose (fun text -> match AutonomyJson.readRevocation text with Ok r -> Some r.RunId | Error _ -> None)
-        |> Set.ofList
+    /// committed, on the protected base or in the candidate. A file there
+    /// that does not read as a revocation cannot say which run it names, so
+    /// it is reported and denies every run until the owner fixes it.
+    let private revokedIn (named: (string * string) list) =
+        named
+        |> List.fold
+            (fun (ids: Set<string>, problems) (path, text) ->
+                match AutonomyJson.readRevocation text with
+                | Ok r -> ids.Add r.RunId, problems
+                | Error reason -> ids, problems @ [ $"{path}: {reason}" ])
+            (Set.empty, [])
 
     /// Read everything one evaluation needs. The policy and the CI workflows
     /// are read from the target branch's current head (the protected base),
@@ -122,11 +136,22 @@ module MergeLifecycle =
                             r "get-candidate-tree" (fun () -> gh.GetTreePaths request.Repository request.Candidate)
                             |> Result.bind (fun candidateTree ->
                                 let texts reference paths = readTexts env request failure reference paths
+                                let named reference paths =
+                                    paths
+                                    |> List.fold
+                                        (fun acc p ->
+                                            acc |> Result.bind (fun found ->
+                                                readTexts env request failure reference [ p ] |> Result.map (fun t -> found @ (t |> List.map (fun text -> p, text)))))
+                                        (Ok [])
+                                let readBase p =
+                                    match gh.GetFile request.Repository baseHead p with
+                                    | Ok(Some bytes) -> Some(Encoding.UTF8.GetString bytes)
+                                    | _ -> None
                                 texts baseHead (tree |> List.filter isWorkflow)
                                 |> Result.bind (fun workflows ->
-                                    texts baseHead (tree |> List.filter isRevocation)
+                                    named baseHead (tree |> List.filter isRevocation)
                                     |> Result.bind (fun baseRevocations ->
-                                        texts request.Candidate (candidateTree |> List.filter isRevocation)
+                                        named request.Candidate (candidateTree |> List.filter isRevocation)
                                         |> Result.bind (fun candidateRevocations ->
                                             r "get-checks" (fun () -> gh.GetCheckRuns request.Repository request.Candidate)
                                             |> Result.bind (fun checks ->
@@ -142,12 +167,14 @@ module MergeLifecycle =
                                                             | Ok(policy, digest) -> PolicyState.Loaded(policy, digest, $"{request.Repository}@{baseHead}:{PolicyPath}")
                                                             | Error reason -> PolicyState.Unavailable reason
                                                       Changes = changes
-                                                      CiReferenced = Classification.ciReferencedPaths workflows tree
+                                                      CiReferenced = Classification.ciReferencedPaths readBase workflows tree
                                                       Checks = checks
                                                       Rules = rules
-                                                      Revoked = revokedIn (baseRevocations @ candidateRevocations) })))))))))))
+                                                      Revoked = fst (revokedIn (baseRevocations @ candidateRevocations))
+                                                      RevocationProblems = snd (revokedIn (baseRevocations @ candidateRevocations)) })))))))))))
 
     let evaluate (env: LifecycleEnvironment) (request: MergeRequest) (context: MergeContext) =
+        let authority = request.Authority()
         Evaluator.evaluate
             { Operation = Operation.MergeEligiblePullRequest
               Repository = request.Repository
@@ -157,8 +184,9 @@ module MergeLifecycle =
               ChangedPaths = context.Changes
               CiReferencedPaths = context.CiReferenced
               Policy = context.Policy
-              Authorization = request.Authorization
-              RevokedRunIds = Set.union request.RevokedRunIds context.Revoked
+              Authorization = authority.Authorization
+              RevokedRunIds = Set.union authority.RevokedRunIds context.Revoked
+              RevocationProblems = authority.RevocationProblems @ context.RevocationProblems
               Checks = context.Checks
               Now = env.Now() }
 
@@ -281,6 +309,15 @@ module MergeLifecycle =
                             | Eligibility.Pending reason -> LifecycleOutcome.Failed("mergeability-timeout", reason)
                             | Eligibility.NeedsNewCandidate(code, detail) -> LifecycleOutcome.Reverify(code, detail)
                             | Eligibility.Blocked(code, detail) -> LifecycleOutcome.Blocked(code, detail)
+                            | Eligibility.Eligible when
+                                (match env.GitHub.GetBranchHead request.Repository context.Pull.BaseRef with
+                                 | Ok head -> head <> context.BaseHead
+                                 | Error _ -> true) ->
+                                // The base moved (or could not be re-read) since the
+                                // decision: its policy or revocations may have changed,
+                                // so decide again rather than merge on a stale view.
+                                event env request "base-moved" [ "decidedAt", context.BaseHead ]
+                                loop failure attempt
                             | Eligibility.Eligible ->
                                 let strategy = (policyOf context |> Option.get).MergeStrategy
                                 AutonomyStore.writePhase env.Journal request.Repository request.PullRequest

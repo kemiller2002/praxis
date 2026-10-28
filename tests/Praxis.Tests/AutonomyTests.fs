@@ -78,7 +78,7 @@ module AutonomyTests =
     let private authorized (a: RunAuthorization) = AutonomyJson.verifySignature (trust ()) (sign ownerKey.Value a)
 
     let private check name conclusion app =
-        { Name = name; HeadSha = candidate; Status = "completed"; Conclusion = Some conclusion; App = app; Id = 10L }
+        { Name = name; HeadSha = candidate; Status = "completed"; Conclusion = Some conclusion; App = app; Id = 10L; Suite = 1L }
 
     let private passingChecks = [ check "build" "success" "github-actions"; check "independent-review" "success" "github-actions" ]
 
@@ -93,6 +93,7 @@ module AutonomyTests =
           Policy = PolicyState.Loaded(policy, policyDigest, "test")
           Authorization = authorized unsigned
           RevokedRunIds = Set.empty
+          RevocationProblems = []
           Checks = passingChecks
           Now = now }
 
@@ -180,13 +181,15 @@ module AutonomyTests =
           PollInterval = TimeSpan.Zero
           Log = ignore }
 
+    let private authorityOf auth revoked () = { Authorization = auth; RevokedRunIds = revoked; RevocationProblems = [] }
+
     let private request auth =
-        { Repository = repository; PullRequest = 7; Candidate = candidate; Authorization = auth; RevokedRunIds = Set.empty }
+        { Repository = repository; PullRequest = 7; Candidate = candidate; Authority = authorityOf auth Set.empty }
 
     let private findingCodes (review: ReviewReport) = review.Findings |> List.map _.Code
 
     let private reviewInput changes added trace =
-        { Changes = changes; AddedLines = added; TraceText = trace; ProtectedPaths = []; CiReferencedPaths = []; AllowedPaths = None }
+        { Changes = changes; AddedLines = added; TraceText = trace; ProtectedPaths = []; CiReferencedPaths = []; AllowedPaths = None; KnownWorkItems = None }
 
     let tests =
         [ { Name = "autonomy: an authorized, verified, reviewed candidate is ALLOWED"
@@ -250,7 +253,7 @@ module AutonomyTests =
             Run =
               fun () ->
                   let workflow = "steps:\n  - run: ./scripts/verify.sh --all\n  - run: dotnet build App.sln\n"
-                  Assert.equal [ "scripts/verify.sh" ] (Classification.ciReferencedPaths [ workflow ] [ "scripts/verify.sh"; "App.sln"; "src/App.fs" ]) }
+                  Assert.equal [ "scripts/verify.sh" ] (Classification.ciReferencedPaths (fun _ -> None) [ workflow ] [ "scripts/verify.sh"; "App.sln"; "src/App.fs" ]) }
 
           { Name = "autonomy: a gate failure dominates: an unauthorized protected change is DENY, not REQUIRES_OWNER"
             Run = fun () -> { baseInput with Authorization = AuthorizationState.Missing; ChangedPaths = [ change ".github/workflows/ci.yml" ] } |> expect DecisionResult.Deny (Some "authorization-missing") |> ignore }
@@ -407,7 +410,7 @@ module AutonomyTests =
                   | LifecycleOutcome.Blocked("github-requires-human-review", _) -> Assert.equal 0 review.MergeCalls
                   | other -> failwith $"{other}"
                   let revoked = fake ()
-                  match MergeLifecycle.run (environment revoked (temporaryJournal ())) { request (authorized unsigned) with RevokedRunIds = set [ "RUN-TEST-1" ] } with
+                  match MergeLifecycle.run (environment revoked (temporaryJournal ())) { request (authorized unsigned) with Authority = authorityOf (authorized unsigned) (set [ "RUN-TEST-1" ]) } with
                   | LifecycleOutcome.Denied d -> Assert.isTrue (codes d |> List.contains "authorization-revoked") "wrong denial"
                   | other -> failwith $"{other}"
                   Assert.equal 0 revoked.MergeCalls }
@@ -474,4 +477,125 @@ module AutonomyTests =
                   let failure = { TransientRetryLimit = 2; RetryBaseDelaySeconds = 3; ChecksTimeoutMinutes = 1 }
                   Assert.equal (Some(TimeSpan.FromSeconds 3.)) (Lifecycle.retryDelay failure 0)
                   Assert.equal (Some(TimeSpan.FromSeconds 6.)) (Lifecycle.retryDelay failure 1)
-                  Assert.equal None (Lifecycle.retryDelay failure 2) } ]
+                  Assert.equal None (Lifecycle.retryDelay failure 2) }
+
+          // ----------------------------------------------- security review (SECURITY-REVIEW.md)
+          { Name = "autonomy security F3: a same-name check from another suite cannot mask a failed run"
+            Run =
+              fun () ->
+                  let masked =
+                      [ { check "build" "failure" "github-actions" with Id = 10L; Suite = 1L }
+                        { check "build" "success" "github-actions" with Id = 12L; Suite = 2L }
+                        check "independent-review" "success" "github-actions" ]
+                  { baseInput with Checks = masked } |> expect DecisionResult.Deny (Some "required-check-ambiguous") |> ignore
+                  // A re-run stays in its suite: the newest run there is the check's state.
+                  let rerun =
+                      [ { check "build" "failure" "github-actions" with Id = 10L; Suite = 1L }
+                        { check "build" "success" "github-actions" with Id = 12L; Suite = 1L }
+                        check "independent-review" "success" "github-actions" ]
+                  { baseInput with Checks = rerun } |> expect DecisionResult.Allow None |> ignore }
+
+          { Name = "autonomy security F2: a trust store reached through a symlink into the repository is refused"
+            Run =
+              fun () ->
+                  let root = temporaryJournal ()
+                  let inside = Path.Combine(root, "trust.json")
+                  File.WriteAllText(inside, "{}")
+                  let outside = Path.Combine(temporaryJournal (), "trust-link.json")
+                  File.CreateSymbolicLink(outside, inside) |> ignore
+                  match AutonomyStore.loadTrustStore [ root ] outside with
+                  | Error reason -> Assert.isTrue (reason.Contains "outside") reason
+                  | Ok _ -> failwith "a symlinked trust store inside the repository was accepted" }
+
+          { Name = "autonomy security F4: CI-run files are found through working-directory, workspace prefixes, local actions and other scripts"
+            Run =
+              fun () ->
+                  let workflow =
+                      String.concat "\n"
+                          [ "steps:"; "  - uses: ./tools/ci-action"; "  - run: ./verify.sh"; "    working-directory: scripts"
+                            "  - run: $GITHUB_WORKSPACE/scripts/lint.sh"; "  - run: ${{ github.workspace }}/scripts/pack.sh" ]
+                  let tracked = [ "scripts/verify.sh"; "scripts/lint.sh"; "scripts/pack.sh"; "scripts/helper.sh"; "tools/ci-action/action.yml"; "tools/ci-action/index.js"; "src/App.fs" ]
+                  let read = function "scripts/verify.sh" -> Some "#!/bin/sh\n./helper.sh\n" | _ -> None
+                  Assert.equal
+                      [ "scripts/helper.sh"; "scripts/lint.sh"; "scripts/pack.sh"; "scripts/verify.sh"; "tools/ci-action/action.yml"; "tools/ci-action/index.js" ]
+                      (Classification.ciReferencedPaths read [ workflow ] tracked) }
+
+          { Name = "autonomy security F4: build, dependency and package configuration is owner-controlled, whatever its case"
+            Run =
+              fun () ->
+                  [ "Directory.Packages.props"; "Directory.Build.rsp"; "NuGet.Config"; "build/common.targets"; ".config/dotnet-tools.json"
+                    ".gitmodules"; "vendor/nuget/ordo-core.lock"; "packages.lock.json"; "package-lock.json"; ".github/dependabot.yml"
+                    "Makefile"; "package.json"; "App.slnx" ]
+                  |> List.iter (fun p ->
+                      Assert.isTrue (not (Classification.classify [] [] [ change p ]).IsEmpty) $"{p} was not classified") }
+
+          { Name = "autonomy security F5: Expecto focus, pending and skip variants are disabled tests"
+            Run =
+              fun () ->
+                  [ "  ftestCase \"only this runs\" <| fun () -> ()"; "  ptestCaseAsync \"p\" <| async { () }"
+                    "  testCase \"x\" <| fun () -> skiptest \"later\""; "  ptestProperty \"p\" <| fun (x: int) -> true" ]
+                  |> List.iter (fun line ->
+                      let report = Review.review (reviewInput [ change "tests/AppTests.fs" ] [ "tests/AppTests.fs", line ] "WI-1")
+                      Assert.isTrue (findingCodes report |> List.contains "disables-test") $"missed: {line}") }
+
+          { Name = "autonomy security F6: with a base backlog, a trace must name a real work item"
+            Run =
+              fun () ->
+                  let known = Some(set [ "WI-0104" ])
+                  let traced text = Review.review { reviewInput [ change "docs/a.md" ] [] text with KnownWorkItems = known }
+                  Assert.isTrue (findingCodes (traced "cleanup (see AR-x)") |> List.contains "requirements-trace-unknown") "an invented id passed"
+                  Assert.isTrue (traced "WI-0104: docs").Passed "a real work item failed"
+                  Assert.isTrue (traced "tidy\n\nWork-Item: WI-0104").Passed "a Work-Item trailer failed"
+                  Assert.equal (set [ "WI-0001"; "WI-0002" ]) (LocalReview.knownWorkItems """{"items":[{"id":"WI-0001"},{"id":"WI-0002","x":{"y":1}}]}""") }
+
+          { Name = "autonomy security F7: an unreadable committed revocation denies, it is never ignored"
+            Run =
+              fun () ->
+                  let state = fake ()
+                  let bad = MergeLifecycle.RevocationDirectory + "stop.json"
+                  let text = """{"schema":"praxis.run-revocation/1","runId":"RUN-TEST-1","revokedAt":"2026-10-28T11:00:00.000Z","reason":"stop"}"""
+                  let env = environment state (temporaryJournal ())
+                  let gh =
+                      { env.GitHub with
+                          GetTreePaths = fun _ _ -> Ok [ MergeLifecycle.PolicyPath; bad ]
+                          GetFile = fun r ref p -> if p = bad then Ok(Some(Text.Encoding.UTF8.GetBytes text)) else (port state).GetFile r ref p }
+                  match MergeLifecycle.run { env with GitHub = gh } (request (authorized unsigned)) with
+                  | LifecycleOutcome.Denied d -> Assert.isTrue (codes d |> List.contains "revocation-unreadable") $"{codes d}"
+                  | other -> failwith $"expected a denial, got {other}"
+                  Assert.equal 0 state.MergeCalls }
+
+          { Name = "autonomy security F8: a revocation made while the lifecycle waits stops the merge"
+            Run =
+              fun () ->
+                  let state = { fake () with Checks = [ { check "build" "success" "github-actions" with Status = "in_progress"; Conclusion = None }; check "independent-review" "success" "github-actions" ] }
+                  let mutable revoked = Set.empty
+                  let env =
+                      { environment state (temporaryJournal ()) with
+                          Sleep = fun _ -> revoked <- set [ "RUN-TEST-1" ]; state.Checks <- passingChecks }
+                  let req = { request (authorized unsigned) with Authority = fun () -> authorityOf (authorized unsigned) revoked () }
+                  match MergeLifecycle.run env req with
+                  | LifecycleOutcome.Denied d -> Assert.isTrue (codes d |> List.contains "authorization-revoked") $"{codes d}"
+                  | other -> failwith $"expected a denial after the revocation, got {other}"
+                  Assert.equal 0 state.MergeCalls }
+
+          { Name = "autonomy security F9: a truncated tree is refused, never read as complete"
+            Run =
+              fun () ->
+                  let node = System.Text.Json.Nodes.JsonNode.Parse """{"truncated":true,"tree":[{"path":"src/a.fs","type":"blob"}]}"""
+                  Assert.isTrue (Result.isError (GitHubApi.parseTree candidate node)) "a truncated tree was accepted" }
+
+          { Name = "autonomy security F10: a base that moves between the decision and the merge is decided again"
+            Run =
+              fun () ->
+                  let state = fake ()
+                  let env = environment state (temporaryJournal ())
+                  let mutable reads = 0
+                  let gh =
+                      { env.GitHub with
+                          GetBranchHead = fun _ _ ->
+                              reads <- reads + 1
+                              Ok(if reads = 2 then String('e', 40) else state.BaseHead) }
+                  match MergeLifecycle.run { env with GitHub = gh } (request (authorized unsigned)) with
+                  | LifecycleOutcome.Merged _ -> ()
+                  | other -> failwith $"{other}"
+                  Assert.isTrue ((File.ReadAllText env.Journal.EventsPath).Contains "base-moved") "the moved base was not re-decided" } ]

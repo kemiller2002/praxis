@@ -116,7 +116,9 @@ module GitHubApi =
 
     let private pages (path: string) (select: JsonNode -> JsonNode seq) =
         let rec loop page acc =
-            if page > 30 then Ok acc
+            // Never a silent prefix: a listing longer than the bound is an error,
+            // so a change or a revocation past it cannot go unseen.
+            if page > 30 then Error(CallFailure.Permanent(0, $"{path}: more than 3000 entries; refusing a truncated listing"))
             else
                 let separator = if path.Contains "?" then "&" else "?"
                 getJson $"{path}{separator}per_page=100&page={page}"
@@ -143,7 +145,8 @@ module GitHubApi =
           Status = str node "status"
           Conclusion = optStr node "conclusion"
           App = (match node["app"] with null -> "" | app -> str app "slug")
-          Id = node["id"].GetValue<int64>() }
+          Id = node["id"].GetValue<int64>()
+          Suite = (match node["check_suite"] with null -> 0L | suite -> (match suite["id"] with null -> 0L | id -> id.GetValue<int64>())) }
 
     let private getCheckRuns repository (sha: string) =
         pages $"/repos/{repository}/commits/{sha}/check-runs?filter=all" (fun node -> node["check_runs"].AsArray() :> JsonNode seq)
@@ -214,13 +217,20 @@ module GitHubApi =
             | 404 -> Ok None
             | _ -> Error(classify status body))
 
-    let private getTreePaths repository (sha: string) =
-        getJson $"/repos/{repository}/git/trees/{sha}?recursive=1"
-        |> Result.map (fun node ->
+    /// Blob paths of a recursive tree. A truncated tree is refused: deciding
+    /// on a partial view could miss a workflow or a revocation (F9).
+    let parseTree (sha: string) (node: JsonNode) =
+        if str node "truncated" = "true" then
+            Error(CallFailure.Permanent(0, $"the tree of {sha} is truncated; refusing to decide on a partial view"))
+        else
             node["tree"].AsArray()
             |> Seq.filter (fun entry -> str entry "type" = "blob")
             |> Seq.map (fun entry -> str entry "path")
-            |> Seq.toList)
+            |> Seq.toList
+            |> Ok
+
+    let private getTreePaths repository (sha: string) =
+        getJson $"/repos/{repository}/git/trees/{sha}?recursive=1" |> Result.bind (parseTree sha)
 
     let private contains repository (commit: string) (head: string) =
         getJson $"/repos/{repository}/compare/{commit}...{head}"

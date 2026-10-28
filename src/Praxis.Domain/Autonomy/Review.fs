@@ -43,7 +43,10 @@ type ReviewInput =
       CiReferencedPaths: string list
       /// The work item's declared scope, when one is given: every changed
       /// path must match one of these globs.
-      AllowedPaths: string list option }
+      AllowedPaths: string list option
+      /// Work-item and requirement ids that exist on the protected base. When
+      /// given, a trace must name one of them, not merely look like an id.
+      KnownWorkItems: Set<string> option }
 
 type ReviewReport =
     { Findings: ReviewFinding list
@@ -69,7 +72,8 @@ module Review =
           Regex(@"\[\s*(Ignore|Fact\s*\(\s*Skip|Theory\s*\(\s*Skip)", RegexOptions.Compiled)
           Regex(@"\b(it|test|describe)\.skip\s*\(", RegexOptions.Compiled)
           Regex(@"\b(xit|xdescribe|xtest)\s*\(", RegexOptions.Compiled)
-          Regex(@"\bptestCase\b|\bptestList\b", RegexOptions.Compiled) ]
+          // Expecto: focused tests (f…) run alone, pending (p…) and skiptest never run.
+          Regex(@"\b[fp]test[A-Z]\w*|\bskiptest\b", RegexOptions.Compiled) ]
 
     let private tracePattern =
         Regex(@"\b(WI|GH|RQ|REQ|DEC|AR|ESO|DF|OD|VP)-[A-Za-z0-9][A-Za-z0-9.-]*|\bWork-Item:\s*\S+", RegexOptions.Compiled)
@@ -112,8 +116,15 @@ module Review =
             |> List.map (fun c -> finding ReviewSeverity.Critical "removes-test" (Some c.Path) "a test file is deleted")
 
         let trace =
-            if tracePattern.IsMatch input.TraceText then []
-            else [ finding ReviewSeverity.Blocking "requirements-trace-missing" None "no work item, requirement or decision is referenced by the commits or the pull request" ]
+            let named =
+                tracePattern.Matches input.TraceText
+                |> Seq.map (fun m -> if m.Value.StartsWith("Work-Item:", StringComparison.Ordinal) then m.Value.Substring(10).Trim() else m.Value)
+                |> Seq.toList
+            match named, input.KnownWorkItems with
+            | [], _ -> [ finding ReviewSeverity.Blocking "requirements-trace-missing" None "no work item, requirement or decision is referenced by the commits or the pull request" ]
+            | _, Some known when not (named |> List.exists known.Contains) ->
+                [ finding ReviewSeverity.Blocking "requirements-trace-unknown" None $"""the referenced ids ({String.Join(", ", named |> List.distinct)}) name no work item on the protected base""" ]
+            | _ -> []
 
         let scope =
             match input.AllowedPaths with

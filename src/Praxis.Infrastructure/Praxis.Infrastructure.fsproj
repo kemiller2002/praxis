@@ -167,6 +167,7 @@
     <Compile Include="Autonomy/GitHubApi.fs" />
     <Compile Include="Autonomy/MergeLifecycle.fs" />
     <Compile Include="Autonomy/LocalReview.fs" />
+    <Compile Include="Autonomy/AutonomyOperations.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

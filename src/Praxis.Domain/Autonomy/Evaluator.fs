@@ -45,6 +45,8 @@ module Evaluator =
                   gate "authorization-duration" $"the authorization exceeds the policy's {policy.MaxAuthorizationHours} hours"
               if input.RevokedRunIds.Contains authorization.RunId then
                   gate "authorization-revoked" $"run {authorization.RunId} is revoked"
+              for problem in input.RevocationProblems do
+                  gate "revocation-unreadable" $"an unreadable revocation may name this run: {problem}"
               match ProtectedClass.all |> List.filter (fun c -> not (List.contains c authorization.ProtectedOperations)) with
               | [] -> ()
               | missing ->
@@ -87,7 +89,16 @@ module Evaluator =
         let atCandidate = input.Checks |> List.filter (fun c -> c.Name = name && c.HeadSha = input.CandidateSha)
         let trusted = atCandidate |> List.filter (fun c -> c.App = producer)
 
+        // A re-run stays in its suite, so the newest run of one suite is the
+        // check's current state. Runs of the same name in two suites (another
+        // workflow with a job of that name, or a run posted through the API)
+        // cannot be told apart, so neither counts: newest-wins would let a
+        // later run mask a failed one.
+        let suites = trusted |> List.map _.Suite |> List.distinct
+
         match trusted |> List.sortByDescending _.Id |> List.tryHead with
+        | Some _ when suites.Length > 1 ->
+            [ evidence $"{code}-ambiguous" $"""{name}: runs from {suites.Length} check suites at the candidate ({suites |> List.map string |> String.concat ", "})""" ]
         | None when atCandidate.IsEmpty -> [ evidence $"{code}-missing" $"{name}: no check run at {input.CandidateSha}" ]
         | None ->
             let apps = atCandidate |> List.map _.App |> List.distinct |> String.concat ", "
