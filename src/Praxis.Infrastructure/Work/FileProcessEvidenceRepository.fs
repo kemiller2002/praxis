@@ -37,6 +37,19 @@ module FileProcessEvidenceRepository =
     let private optional (node: JsonObject) (name: string) (value: string option) =
         value |> Option.iter (fun text -> node[name] <- JsonValue.Create text)
 
+    /// How this process's identity is established: the discovery mechanism, and
+    /// whether the actor kind came from a flag, the environment or discovery.
+    let identityBasis (overrides: Praxis.Domain.Telemetry.IdentityInputs) (kindFlagged: bool) : Result<IdentityBasis, string> =
+        match FileTelemetryExecutionRepository.resolveIdentity overrides with
+        | Error message -> Error message
+        | Ok(_, _, source) ->
+            let kindSource =
+                if kindFlagged then "flag"
+                elif not (System.String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable "ROS_ACTOR_KIND")) then "environment"
+                else "discovery-mechanism"
+
+            Ok { Mechanism = source.Mechanism; ActorKindSource = kindSource }
+
     /// The role recorded in an execution's envelope, if the envelope says one.
     let readExecutionRole (root: string) (executionId: string) =
         let path = Path.Combine(root, ".ros", "executions", executionId, "envelope.json")

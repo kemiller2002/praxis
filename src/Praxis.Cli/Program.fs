@@ -2871,8 +2871,7 @@ let private repositoryDispatch root packageRoot arguments =
     | WorkClaimCommands.Routed(verb, rest) -> WorkClaimCommands.run root ProvenanceCommands.withResolvedActor verb rest
     | "work" :: "checkpoint" :: "show" :: rest -> CheckpointCommands.show root rest
     | "work" :: "continue" :: rest -> ProvenanceCommands.withResolvedActor rest (ExecutionBindingCommands.guard root WorkGate.Continue rest (CheckpointCommands.runContinue root rest))
-    | "work" :: "checkpoint" :: rest -> ProvenanceCommands.withResolvedActor rest (CheckpointCommands.run root rest)
-    | "work" :: "evidence" :: rest -> ProvenanceCommands.withResolvedActor rest (ProcessEvidenceCommands.run root rest)
+    | "work" :: ("checkpoint" | "evidence" as verb) :: rest -> ProvenanceCommands.withResolvedActor rest ((if verb = "evidence" then ProcessEvidenceCommands.run else CheckpointCommands.run) root rest)
     | "work" :: "group" :: "cost" :: rest -> WorkGroupCostCommands.run root rest
     | "work" :: "group" :: verb :: rest when WorkGroupRoutes.verbs.Contains verb -> WorkGroupRoutes.run root verb rest
     | [ "telemetry"; "adapters" ] -> runTelemetryAdapters ()

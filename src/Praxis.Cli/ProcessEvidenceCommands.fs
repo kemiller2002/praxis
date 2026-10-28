@@ -47,15 +47,7 @@ module ProcessEvidenceCommands =
           Attestation = optionValue "--attestation" arguments }
 
     let private identityBasis (arguments: string list) =
-        match FileTelemetryExecutionRepository.resolveIdentity (ProvenanceCommands.identityOverridesFrom arguments) with
-        | Error message -> Error message
-        | Ok(_, _, source) ->
-            let kindSource =
-                if (optionValue "--actor-kind" arguments).IsSome then "flag"
-                elif not (String.IsNullOrEmpty(Environment.GetEnvironmentVariable "ROS_ACTOR_KIND")) then "environment"
-                else "discovery-mechanism"
-
-            Ok { Mechanism = source.Mechanism; ActorKindSource = kindSource }
+        FileProcessEvidenceRepository.identityBasis (ProvenanceCommands.identityOverridesFrom arguments) (optionValue "--actor-kind" arguments).IsSome
 
     /// The execution the statement belongs to. An execution that belongs to a
     /// different actor is refused, never borrowed; no execution is recorded as
