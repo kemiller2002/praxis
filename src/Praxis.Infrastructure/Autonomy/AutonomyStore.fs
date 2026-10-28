@@ -142,6 +142,18 @@ module AutonomyStore =
         File.AppendAllText(j.ChainPath, link.ToJsonString() + "\n", UTF8Encoding false)
         digest
 
+    /// Every receipt in chain order.
+    let readReceipts (j: Journal) : JsonNode list =
+        if not (File.Exists j.ChainPath) then []
+        else
+            File.ReadAllLines j.ChainPath
+            |> Array.filter (String.IsNullOrWhiteSpace >> not)
+            |> Array.toList
+            |> List.choose (fun line ->
+                let link = JsonNode.Parse line
+                let path = Path.Combine(j.Root, "receipts", link["digest"].GetValue<string>().Replace("sha256:", "") + ".json")
+                if File.Exists path then Some(JsonNode.Parse(File.ReadAllText path)) else None)
+
     /// Re-derive every receipt's address and check the chain links: a
     /// removed, reordered or edited receipt is reported.
     let verifyChain (j: Journal) : Result<int, string list> =

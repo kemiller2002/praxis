@@ -1,6 +1,7 @@
 namespace Praxis.Cli
 
 open System
+open System.Collections.Generic
 open System.IO
 open System.Text
 open System.Text.Json.Nodes
@@ -24,6 +25,7 @@ module AutonomyCommands =
         + "autonomy evaluate --repository OWNER/REPO --pr N --candidate SHA --authorization FILE --trust-store FILE [--revocations DIR]* [--json] | "
         + "autonomy merge --repository OWNER/REPO --pr N --candidate SHA --authorization FILE --trust-store FILE --journal DIR [--revocations DIR]* [--poll-seconds N] [--json] | "
         + "autonomy receipts verify --journal DIR | "
+        + "autonomy observations --journal DIR --repository OWNER/REPO --out FILE | "
         + "autonomy diagnose --repository OWNER/REPO [--branch NAME]"
 
     type private Options =
@@ -377,6 +379,59 @@ module AutonomyCommands =
                 problems |> List.iter (eprintfn "receipt chain: %s")
                 3
 
+    /// Dependency continuation: verified merge receipts become the planner's
+    /// own GitHub observations (`praxis plan … --observations FILE`,
+    /// docs/planning.md), so a dependent whose `dependsOn` pull request or
+    /// commit is now merged is reported `dependencies-satisfied` by the
+    /// existing planner. The chain is verified and every merge is confirmed
+    /// on GitHub again first; nothing is emitted from an unverified receipt.
+    let private observations (options: Options) =
+        match one options "--journal", one options "--repository", one options "--out" with
+        | Ok journalRoot, Ok repository, Ok out ->
+            let journal = AutonomyStore.journal journalRoot
+            match AutonomyStore.verifyChain journal with
+            | Error problems ->
+                problems |> List.iter (eprintfn "receipt chain: %s")
+                3
+            | Ok _ ->
+                let text (node: JsonNode) (name: string) = node[name].ToString()
+                let receipts = AutonomyStore.readReceipts journal |> List.filter (fun r -> text r "repository" = repository)
+
+                let confirmed =
+                    receipts
+                    |> List.map (fun r ->
+                        let number = int (text r "pullRequest")
+                        match GitHubApi.port.GetPull repository number with
+                        | Ok pull when pull.Merged && pull.MergeCommitSha = Some(text r "mergeCommitSha") -> Ok r
+                        | Ok _ -> Error $"#{number}: GitHub does not report the receipt's merge {text r "mergeCommitSha"}"
+                        | Error failure -> Error $"#{number}: {failure}")
+
+                match confirmed |> List.choose (function Error e -> Some e | Ok _ -> None) with
+                | (_ :: _) as problems ->
+                    problems |> List.iter (eprintfn "ERROR %s")
+                    3
+                | [] ->
+                    let items = JsonArray()
+                    let observation (fields: (string * JsonNode) list) =
+                        items.Add(JsonObject(fields |> List.map KeyValuePair.Create))
+                    for r in receipts do
+                        let digest = AutonomyJson.digest r
+                        let reference = $"""praxis.merge-receipt/1 {digest}: {repository}#{text r "pullRequest"} merged as {text r "mergeCommitSha"}"""
+                        observation [ "kind", JsonValue.Create "pull-request-merged"; "pullRequest", JsonValue.Create(int (text r "pullRequest"))
+                                      "source", JsonValue.Create "github"; "reference", JsonValue.Create reference ]
+                        observation [ "kind", JsonValue.Create "commit-merged"; "commit", JsonValue.Create(text r "candidateSha")
+                                      "into", JsonValue.Create(text r "targetBranch"); "source", JsonValue.Create "github"; "reference", JsonValue.Create reference ]
+                        observation [ "kind", JsonValue.Create "ci-passed"; "subject", JsonValue.Create(text r "candidateSha")
+                                      "source", JsonValue.Create "ci"; "reference", JsonValue.Create reference ]
+                    let node = JsonObject()
+                    node["observations"] <- items
+                    File.WriteAllText(out, AutonomyJson.pretty node, UTF8Encoding false)
+                    printfn "observations: %d merge(s) confirmed on GitHub -> %s" receipts.Length out
+                    0
+        | Error e, _, _
+        | _, Error e, _
+        | _, _, Error e -> invalid e
+
     let private diagnose (options: Options) =
         match one options "--repository" with
         | Error e -> invalid e
@@ -407,5 +462,6 @@ module AutonomyCommands =
         | "evaluate" :: rest -> dispatch rest (evaluateCommand root)
         | "merge" :: rest -> dispatch rest (merge root)
         | "receipts" :: "verify" :: rest -> dispatch rest receiptsVerify
+        | "observations" :: rest -> dispatch rest observations
         | "diagnose" :: rest -> dispatch rest diagnose
         | _ -> invalid "unknown autonomy command"
