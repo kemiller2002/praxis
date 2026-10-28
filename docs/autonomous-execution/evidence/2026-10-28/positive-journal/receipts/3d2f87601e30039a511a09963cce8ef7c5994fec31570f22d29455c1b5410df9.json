@@ -1,0 +1,38 @@
+{
+  "schema": "praxis.merge-receipt/1",
+  "runId": "RUN-E2E-20261028-01",
+  "authorizationDigest": "sha256:a4583bf765b9d73d4502e95963f023237f3363ece517425c1ec81c58a79341fb",
+  "policyVersion": 1,
+  "policyDigest": "sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "pullRequest": 11,
+  "targetBranch": "praxis-autonomy-e2e/base",
+  "candidateSha": "eef26ff919213013075e1a16afe6c0dc667b18e3",
+  "mergeMethod": "squash",
+  "decisionDigest": "sha256:aafd8941ef16f6d9de4b00ce68c087c5821561ea7a589322bae19d5c2958171a",
+  "checks": [
+    {
+      "name": "build-and-test",
+      "id": 123145032407,
+      "headSha": "eef26ff919213013075e1a16afe6c0dc667b18e3",
+      "app": "github-actions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "independent-review",
+      "id": 123145031927,
+      "headSha": "eef26ff919213013075e1a16afe6c0dc667b18e3",
+      "app": "github-actions",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "mergeCommitSha": "2539821443dee2704c94920d8da2899950e149e3",
+  "targetHeadSha": "2539821443dee2704c94920d8da2899950e149e3",
+  "targetContainsMerge": true,
+  "attempts": 1,
+  "reconciled": false,
+  "previousReceiptDigest": "sha256:0746c679a78f85ec2d4a02235c24852244d2bc50dc5c1c76c8aefe3024914503",
+  "recordedAt": "2026-10-28T22:44:00Z"
+}

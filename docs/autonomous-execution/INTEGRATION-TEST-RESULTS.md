@@ -83,6 +83,15 @@ Results: `evidence/2026-10-28/negative-results.json`.
 | Lost response recorded as reconciled | `reconciled: true` | true |
 | Duplicate merge request | idempotent | ALREADY_MERGED |
 
+## Second run, after the security fixes (Praxis `c768861`)
+
+All of the following were re-run against the same disposable base, with the independent-review job pinned to `c768861`. That commit fixes security findings F2 to F10 (see SECURITY-REVIEW.md). Evidence: `evidence/2026-10-28/rerun-c768861/`.
+
+| Run | Result |
+|---|---|
+| `conditor unattended-readiness` | **READY**, every applicable check passed. PR #11 (`eef26ff91921`) merged as `2539821443de`. The receipt chain is now 3 receipts, intact. A repeated request returned ALREADY_MERGED. |
+| Negative suite | **18 of 18 passed** with the same expectations as the first run. PRs #12 to #18. #12 merged by reconciliation as `46a0a9a113a8` (lost response); #13 to #18 were closed unmerged. |
+
 ## Not executed against real GitHub, and why
 
 | Scenario | Why | Where it is covered |

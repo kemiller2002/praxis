@@ -109,4 +109,5 @@ GitHub enforces **nothing** today. No check, no review and no restriction on dir
 | D-3 | Optionally, require pull requests for `main` (0 approvals) and restrict direct pushes. | Closes the direct-push path. | Compatible. |
 | D-4 | Optionally, enable auto-merge after D-2. | Lets GitHub do the merge once checks pass. Praxis still decides eligibility. | Optional. |
 | D-5 | Optionally, a semantic (LLM) reviewer job. It needs an API-key secret in Actions, which is credential creation. | Adds semantic review on top of the deterministic one. | Optional. |
+| D-7 | Run the merge gate as a GitHub Actions job: `praxis autonomy evaluate … --trust-store-env PRAXIS_AUTONOMY_TRUST`, with the owner's trust store in an Actions secret, and make that job's check required in D-2's ruleset. | Closes security finding F1 (SECURITY-REVIEW.md). The agent controls any executor it runs itself, so only a trust anchor it cannot read or write makes the owner's key binding. | Compatible. The gate runs unattended, as CI. |
 | D-6 | Delete the scratch branches `praxis-autonomy-e2e/*` in indy-init-rehearsal-007 when convenient. The session proxy blocks branch deletion. | Cleanup. | None. |

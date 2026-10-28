@@ -1,0 +1,20 @@
+{
+  "schema": "praxis.autonomy-decision/1",
+  "operation": "merge_eligible_pull_request",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "targetBranch": "praxis-autonomy-e2e/base",
+  "candidateSha": "c0d4fafec9934d540bc009ae6e18c43ec701896b",
+  "policyVersion": 1,
+  "policyDigest": "sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600",
+  "runId": "RUN-E2E-20261028-01",
+  "authorizationDigest": "sha256:2cb540b57baa6134e63f900458ba7f512945db63e8dfdf02b0ba6c639d32f2e4",
+  "result": "DENY",
+  "findings": [
+    {
+      "stage": "evidence",
+      "code": "required-check-failed",
+      "detail": "build-and-test: failure"
+    }
+  ],
+  "evaluatedAt": "2026-10-28T22:52:45Z"
+}

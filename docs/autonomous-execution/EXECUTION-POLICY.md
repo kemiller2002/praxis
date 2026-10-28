@@ -100,7 +100,11 @@ praxis autonomy authorize verify --authorization authorization.json --trust-stor
 
 The trust store, `praxis.autonomy-trust/1`, holds `{ keyId, owner, publicKeyPem }` signers and owner-revoked `revokedRunIds`.
 
-It must live **outside every repository the run edits**. Praxis refuses a trust store inside the repository root or the working directory, because whoever can write the trust store decides whose signature counts. Only public keys are accepted.
+It must live **outside every repository the run edits**. Praxis refuses a trust store inside the repository root or the working directory, after resolving symlinks, because whoever can write the trust store decides whose signature counts. Only public keys are accepted.
+
+`--trust-store-env NAME` reads the trust store from an environment variable instead. This is for the **CI-hosted gate**: a GitHub Actions job whose secret holds the owner's trust store, required by a ruleset (decision D-7).
+
+**Limit (security finding F1).** An executor the agent itself runs can be pointed at any trust store, including one the agent wrote. The owner's key binds only where the agent cannot choose or write the trust anchor, which is the CI-hosted gate. See [SECURITY-REVIEW.md](SECURITY-REVIEW.md).
 
 ### Evaluation rules (`Evaluator.evaluate`)
 
