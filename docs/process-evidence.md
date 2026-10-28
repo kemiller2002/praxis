@@ -28,7 +28,7 @@ the execution envelope under `.ros/executions/`) and `work checkpoint`
 | `assignment` | `--subject` (owned paths, requirements) | none |
 | `dependency-decision` | `--subject` (the dependency) | none |
 | `scope-change` | `--subject` (what changed); `--decision` names the approving decision | none |
-| `owner-approval` | `--outcome`; `--attestation TYPE:REF` when one exists | `approved`, `rejected` |
+| `owner-approval` | `--outcome`; `--decision` (the decision id) and `--subject` (what it covers); `--attestation TYPE:REF` when one exists | `approved`, `rejected` |
 | `independent-review` | `--candidate`, `--outcome`; `--attestation TYPE:REF` (the reviewer's pull-request review) | `approved`, `changes-requested`, `rejected` |
 | `release-selection` | `--candidate` | none |
 | `test-result` | `--candidate`, `--outcome` | `pass`, `fail`, `not-run` |
