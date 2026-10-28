@@ -6990,10 +6990,10 @@
       "description": null,
       "tags": [],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-28T06:35:09.745Z",
-      "updatedAt": "2026-10-28T06:35:16Z",
+      "updatedAt": "2026-10-28T11:34:52Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

@@ -11615,38 +11615,52 @@
     {
       "id": "WI-0103",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-28T06:35:16Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/ProcessEvidence.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ProcessEvidenceTests.fs"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/process-evidence.md"
+        }
+      ],
+      "updatedAt": "2026-10-28T11:34:52Z",
       "telemetryExecutionIds": [
         "EXE-20261028T063517744Z-f7fcd9a4"
       ],
       "latestCheckpoint": {
-        "id": "73a9613e01e8ecbe0071b4d1",
-        "recordedAt": "2026-10-28T07:06:02.495Z",
+        "id": "112781bbaa6feeceb7ff9115",
+        "recordedAt": "2026-10-28T11:34:27Z",
         "executionId": "EXE-20261028T063517744Z-f7fcd9a4",
         "repository": "repository-operating-system",
         "branch": "claude/echelon-speed-optimization-vtqjg4",
-        "commit": "c0116d3b1ec2f640741d70ce29d299ed564d4814",
+        "commit": "048a5dce51dcbb3b34f8e44e78aa45ac363c2ad1",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
-        "remoteBranch": "claude/echelon-speed-optimization-vtqjg4",
-        "remoteCommit": "c0116d3b1ec2f640741d70ce29d299ed564d4814",
-        "summary": "praxis work evidence implemented with domain, CLI and docs; 7 new tests pass",
-        "nextAction": "Complete WI-0103 after the PR is reviewed",
+        "remoteBranch": "main",
+        "remoteCommit": "048a5dce51dcbb3b34f8e44e78aa45ac363c2ad1",
+        "summary": "work evidence merged to main in PR #296 (048a5dc); CI green on 87c9a03",
+        "nextAction": "Complete WI-0103",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-28T11:34:52Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-28T06:35:16Z",
+  "updatedAt": "2026-10-28T11:34:52Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
