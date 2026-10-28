@@ -1783,6 +1783,23 @@
         "name": "step",
         "mechanism": "step-lifecycle"
       }
+    },
+    {
+      "type": "step.completed",
+      "occurredAt": "2026-10-28T02:48:08.000Z",
+      "stepId": "STEP-20261028T012924000Z-25908c0f",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": {
+        "type": "ros-cli",
+        "name": "step",
+        "mechanism": "step-lifecycle"
+      }
     }
   ],
   "repository": {
@@ -3281,12 +3298,12 @@
       "name": "Full test suite, validation and completion",
       "description": null,
       "classification": [],
-      "status": "active",
+      "status": "completed",
       "plannedAt": "2026-10-28T01:29:24.000Z",
       "startedAt": "2026-10-28T01:29:24.000Z",
-      "completedAt": null,
-      "endedAt": null,
-      "updatedAt": "2026-10-28T01:29:24.000Z",
+      "completedAt": "2026-10-28T02:48:08.000Z",
+      "endedAt": "2026-10-28T02:48:08.000Z",
+      "updatedAt": "2026-10-28T02:48:08.000Z",
       "actor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
@@ -3607,6 +3624,19 @@
           "from": null,
           "to": "active",
           "occurredAt": "2026-10-28T01:29:24.000Z",
+          "reason": null,
+          "actor": {
+            "kind": "agent",
+            "id": "anthropic/claude-code",
+            "provider": "anthropic",
+            "model": "unknown",
+            "runtime": "claude-code"
+          }
+        },
+        {
+          "from": "active",
+          "to": "completed",
+          "occurredAt": "2026-10-28T02:48:08.000Z",
           "reason": null,
           "actor": {
             "kind": "agent",
