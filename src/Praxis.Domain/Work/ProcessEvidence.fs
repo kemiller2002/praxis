@@ -94,7 +94,10 @@ module EvidenceProvenance =
 /// counts as observed by tooling.
 type IdentityBasis =
     { Mechanism: string
-      ActorKindSource: string }
+      ActorKindSource: string
+      /// The CI run the identity names (GITHUB_RUN_ID or ROS_TELEMETRY_RUN_ID), so a verifier can require that a
+      /// CI record was written by the run it trusts. Self-reported like the rest of the identity.
+      RunId: string option }
 
 /// An external attestation of an owner decision, such as a pull-request
 /// review. Praxis records the reference; it never treats it as checked.

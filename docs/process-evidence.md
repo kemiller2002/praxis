@@ -52,19 +52,27 @@ Each event keeps three parts apart:
 
 | Class | When Praxis assigns it |
 |---|---|
-| `tool-observed` | The actor is CI automation discovered from its own environment (`whitelisted-github-actions-environment`) and nothing declared the actor kind. |
+| `tool-observed` | The actor is CI automation discovered from its environment (`whitelisted-github-actions-environment`) and nothing declared the actor kind. The run it names is recorded as `observed.identity.runId`. |
 | `agent-assertion` | Everything an agent states, including an owner decision an agent transcribes (`authenticity: transcribed`), and anything whose identity was declared rather than discovered. |
 | `reviewer-finding` | An `independent-review`. Whether the reviewer is independent of the implementer is for a verifier to establish from the executions and the log. |
 | `owner-decision` | An `owner-approval` recorded by a human actor. `authenticity` is `unattested` unless an attestation is referenced, and Praxis never checks the attestation itself. |
 | `verified-acceptance` | Never written by Praxis. Only a verifier computes it. |
 
 Writing a record never upgrades it. An agent's statement is an agent assertion
-whatever it says, and Praxis identities are self-reported (`provenance identity`
-says so too): an agent that declares `--actor-kind human` is recorded with
-`actorKindSource: flag`, which a verifier must not accept as an owner. Owner
-decisions become verifiable only through an external attestation the verifier
-checks against its frozen rules (for example a pull-request review by the
-owner's login, fetched by CI).
+whatever it says. Every Praxis identity is **self-reported**
+(`observed.identity.assurance` is always `self-reported`, as `provenance
+identity` says): `--actor-kind human`, `ROS_ACTOR_KIND=human` and a locally set
+`GITHUB_ACTIONS=true` are all declarations a process makes about itself. The
+class says what the record claims to be; it is not proof. A verifier must
+therefore:
+
+- accept an owner decision only through an external attestation it checks
+  against its frozen rules (for example a pull-request review by the owner's
+  login, fetched by CI in the run it trusts) and that names the decision;
+- accept a CI record only when `observed.identity.runId` is the run it trusts,
+  ideally a record written by that run itself;
+- decide reviewer independence from its own frozen roster and the log, never
+  from the role a process chose for itself.
 
 An execution belonging to another actor is refused (`--execution` cannot borrow
 it), exactly as for checkpoints. With no active execution of its own the record

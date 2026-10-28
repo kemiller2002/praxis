@@ -43,8 +43,8 @@ module ProcessEvidenceTests =
           Model = None
           Runtime = None }
 
-    let private discovered = { Mechanism = "whitelisted-github-actions-environment"; ActorKindSource = "discovery-mechanism" }
-    let private declared = { Mechanism = "explicit-environment"; ActorKindSource = "environment" }
+    let private discovered = { Mechanism = "whitelisted-github-actions-environment"; ActorKindSource = "discovery-mechanism"; RunId = Some "1" }
+    let private declared = { Mechanism = "explicit-environment"; ActorKindSource = "environment"; RunId = None }
 
     let private classOf actorKind basis value =
         (ProcessEvidence.classify (actorOf actorKind) basis (statementOf value)).Class

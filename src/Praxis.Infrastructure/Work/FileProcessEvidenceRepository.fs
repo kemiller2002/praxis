@@ -42,13 +42,16 @@ module FileProcessEvidenceRepository =
     let identityBasis (overrides: Praxis.Domain.Telemetry.IdentityInputs) (kindFlagged: bool) : Result<IdentityBasis, string> =
         match FileTelemetryExecutionRepository.resolveIdentity overrides with
         | Error message -> Error message
-        | Ok(_, _, source) ->
+        | Ok(_, identity, source) ->
             let kindSource =
                 if kindFlagged then "flag"
                 elif not (System.String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable "ROS_ACTOR_KIND")) then "environment"
                 else "discovery-mechanism"
 
-            Ok { Mechanism = source.Mechanism; ActorKindSource = kindSource }
+            Ok
+                { Mechanism = source.Mechanism
+                  ActorKindSource = kindSource
+                  RunId = identity.RunId }
 
     /// The role recorded in an execution's envelope, if the envelope says one.
     let readExecutionRole (root: string) (executionId: string) =
@@ -113,7 +116,10 @@ module FileProcessEvidenceRepository =
         let identity = JsonObject()
         identity["mechanism"] <- JsonValue.Create observation.Identity.Mechanism
         identity["actorKindSource"] <- JsonValue.Create observation.Identity.ActorKindSource
-        identity["assurance"] <- JsonValue.Create(if ProcessEvidence.identityObserved observation.Identity then "observed" else "self-reported")
+        // Every Praxis identity is self-reported, CI discovery included (an environment variable can be set by anyone);
+        // a verifier binds CI records to the run it trusts through runId.
+        identity["assurance"] <- JsonValue.Create "self-reported"
+        optional identity "runId" observation.Identity.RunId
         observed["identity"] <- identity
         node["observed"] <- observed
 
