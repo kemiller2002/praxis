@@ -1,0 +1,56 @@
+merge	stream	rule	conflicted	conflictFiles	overlapPaths	coversConflict	narrowOverlapPaths	findings	readiness
+5471d21	preflight	preflight	no		0	-	0	0	ready
+e50f4d4	core	into-stream	no		0	-	0	0	unverified
+4543e39	persist	into-stream	no		0	-	0	1	blocked
+f55d550	acc	into-stream	no		0	-	0	1	blocked
+b8bd23f	shell	into-stream	no		0	-	0	11	blocked
+af9c43b	core	into-stream	no		0	-	0	0	unverified
+b3d8e80	shell	into-stream	no		0	-	0	11	blocked
+4b61a3a	persist	into-stream	no		0	-	0	2	blocked
+ca43dfa	core	stream-into-head	no		0	-	0	0	unverified
+dc02be0	core	into-stream	no		0	-	0	0	unverified
+91a35bd	acc	into-stream	no		0	-	0	5	blocked
+4cb32ff	core	into-stream	no		3	-	0	0	blocked
+3b5bc4d	persist	into-stream	no		0	-	0	2	blocked
+ff42add	shell	into-stream	no		0	-	0	11	blocked
+7abed91	acc	stream-into-main	yes	.github/workflows/build-and-test.yml	1	yes	1	5	blocked
+cbeabd2	core	into-stream	no		0	-	0	0	unverified
+9cd49dd	shell	into-stream	no		1	-	1	11	blocked
+150a010	shell	into-stream	no		0	-	0	11	blocked
+52988be	acc	into-stream	no		0	-	0	1	blocked
+0f3a248	persist	into-stream	no		1	-	1	2	blocked
+7f333d5	acc	stream-into-head	no		0	-	0	1	blocked
+826b01a	persist	stream-into-main	yes	App.slnx	1	yes	1	2	blocked
+c51f69b	core	stream-into-head	no		0	-	0	0	unverified
+fa422d9	persist	stream-into-head	no		0	-	0	0	unverified
+cd78e24	persist	into-stream	no		0	-	0	1	blocked
+c93371a	shell	into-stream	no		0	-	0	2	blocked
+984892c	core	stream-into-head	no		0	-	0	0	unverified
+32a9ac7	persist	into-stream	no		0	-	0	1	blocked
+ae23705	acc	into-stream	no		0	-	0	1	blocked
+5f15a31	shell	into-stream	no		0	-	0	0	unverified
+f82ae94	persist	into-stream	no		0	-	0	5	blocked
+b80a0e0	acc	stream-into-head	no		0	-	0	0	unverified
+b0618e4	shell	into-stream	no		2	-	0	1	blocked
+cf82464	persist	into-stream	no		0	-	0	1	blocked
+cd8d13d	acc	into-stream	no		0	-	0	1	blocked
+85c9d68	persist	into-stream	yes	src/app/Adapter.fs,src/app/EnginePort.fs	2	yes	2	1	blocked
+6b1239e	shell	shell-by-report	yes	src/app/Adapter.fs,src/app/EnginePort.fs	2	yes	0	1	blocked
+ab27a36	core	into-stream	no		0	-	0	12	blocked
+80a0476	persist	into-stream	yes	src/app/Adapter.fs,src/app/EnginePort.fs,src/app/View.fs	7	yes	4	2	blocked
+e94e828	core	into-stream	no		1	-	1	12	blocked
+f3a22d5	acc	stream-into-head	no		0	-	0	1	blocked
+9912314	shell	stream-into-head	no		1	-	0	1	blocked
+dda8c2c	persist	stream-into-head	no		0	-	0	2	blocked
+5321c43	persist	stream-into-head	no		0	-	0	2	blocked
+e76caaf	acc	into-stream	no		0	-	0	1	blocked
+1526ca8	acc	stream-into-head	no		0	-	0	1	blocked
+331f76c	core	stream-into-head	no		24	-	24	27	blocked
+3858417	shell	shell-by-report	yes	src/app/View.fs	2	yes	0	2	blocked
+97abcbf	acc	stream-into-head	no		0	-	0	1	blocked
+97a12c0	persist	into-stream	no		0	-	0	2	blocked
+d23060f	persist	stream-into-main	yes	tests/browser/fixture-mode.spec.js	1	yes	1	2	blocked
+20db7f8	acc	stream-into-head	no		0	-	0	1	blocked
+91c4a1f	shell	into-stream	no		0	-	0	0	unverified
+2b2624a	shell	stream-into-head	no		0	-	0	0	unverified
+bc8f165	acc	into-stream	no		0	-	0	1	blocked

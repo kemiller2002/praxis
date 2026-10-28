@@ -2075,5 +2075,53 @@
     "title": "Tamper-evident requirements preservation and authenticated approvals",
     "updated": "2026-10-26",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-10-28",
+    "derived_from": [
+      "INPUT-28bdc22a92aeab92"
+    ],
+    "id": "RQ-ROS-2026-A036",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A036--agent-integration-contracts.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261028T005916741Z-aae5a0a4": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-10-28T01:28:45.000Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Canonical ingestion of EII-B (agent integration contracts); R1-R5 implemented under EII-B-001"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/work-protocol.md",
+      "docs/cli.md",
+      "schemas/praxis-integration-contract.schema.json",
+      "EX-ROS-2026-A025"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "proposed",
+    "tags": [
+      "integration",
+      "workstreams",
+      "ownership",
+      "merge-readiness",
+      "planning"
+    ],
+    "title": "Integration contracts for parallel agent workstreams",
+    "updated": "2026-10-28",
+    "version": "1.0.0"
   }
 ]

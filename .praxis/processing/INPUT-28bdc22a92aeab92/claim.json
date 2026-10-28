@@ -17,7 +17,88 @@
     "runtime": "claude-code"
   },
   "executionId": "EXE-20261028T005916741Z-aae5a0a4",
-  "derivations": [],
+  "derivations": [
+    {
+      "kind": "requirement",
+      "targetKind": "artifact",
+      "target": "RQ-ROS-2026-A036",
+      "summary": "Integration contracts for parallel agent workstreams (R1-R5)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:00.074Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "schemas/praxis-integration-contract.schema.json",
+      "summary": "praxis.integration-contract/1 schema (requirement 1)",
+      "locator": "## Requirements",
+      "recordedAt": "2026-10-28T01:29:01.175Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "src/Praxis.Domain/Work/IntegrationContract.fs",
+      "summary": "Pure streams check: ownership, interfaces, overlap, sequence, readiness (requirement 2)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:02.089Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "evidence",
+      "targetKind": "artifact",
+      "target": "EX-ROS-2026-A025",
+      "summary": "Retrospective non-causal replay of R5 merges (requirement 4)",
+      "locator": null,
+      "recordedAt": "2026-10-28T01:29:03.320Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    },
+    {
+      "kind": "reference",
+      "targetKind": "path",
+      "target": "docs/work-protocol.md",
+      "summary": "Integration policy and agent consumption (requirement 5)",
+      "locator": "## Integrating parallel workstreams",
+      "recordedAt": "2026-10-28T01:29:04.332Z",
+      "actor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "executionId": "EXE-20261028T005916741Z-aae5a0a4"
+    }
+  ],
   "noDerivationReason": null,
   "closedAt": null,
   "releaseReason": null,
