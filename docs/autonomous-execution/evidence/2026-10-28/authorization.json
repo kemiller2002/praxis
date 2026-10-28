@@ -1,0 +1,37 @@
+{
+  "schema": "praxis.run-authorization/1",
+  "runId": "RUN-E2E-20261028-01",
+  "owner": "e2e-test-authority",
+  "keyId": "e2e-test-authority-20261028",
+  "issuedAt": "2026-10-28T22:06:26Z",
+  "expiresAt": "2026-10-29T18:06:26Z",
+  "policyVersion": 1,
+  "policyDigest": "sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600",
+  "repositories": [
+    "kemiller2002/indy-init-rehearsal-007"
+  ],
+  "targetBranches": [
+    "praxis-autonomy-e2e/base"
+  ],
+  "permittedOperations": [
+    "create_branch",
+    "commit",
+    "create_pull_request",
+    "run_verification",
+    "request_automated_review",
+    "merge_eligible_pull_request"
+  ],
+  "protectedOperations": [
+    "frozen_requirements",
+    "acceptance_criteria",
+    "verification_policy",
+    "security_policy",
+    "execution_policy",
+    "github_workflows",
+    "repository_rules",
+    "credentials",
+    "permission_expansion",
+    "infrastructure"
+  ],
+  "signature": "hEioj1RkzV5W6K02spEcRDWa6EVW7BUgqxEe7ji3N/5o/RtxTp4gSpeSex86tkiN2VYCHZheb1ANqF85LgigpQ=="
+}

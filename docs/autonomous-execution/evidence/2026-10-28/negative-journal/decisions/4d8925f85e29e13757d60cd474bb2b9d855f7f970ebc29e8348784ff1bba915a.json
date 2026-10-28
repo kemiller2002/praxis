@@ -1,0 +1,20 @@
+{
+  "schema": "praxis.autonomy-decision/1",
+  "operation": "merge_eligible_pull_request",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "targetBranch": "praxis-autonomy-e2e/base",
+  "candidateSha": "9cdcdeae274f163d52daa9f0b313e2e537730bc4",
+  "policyVersion": 1,
+  "policyDigest": "sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600",
+  "runId": "RUN-E2E-20261028-01",
+  "authorizationDigest": "sha256:8572fa5405c2dfd02c66c074ac892dbdff940193cc83ca2d6a3e5b495913a03b",
+  "result": "REQUIRES_OWNER",
+  "findings": [
+    {
+      "stage": "protected",
+      "code": "protected-change:execution_policy",
+      "detail": ".praxis/autonomy/policy.json: matches protected path .praxis/autonomy/**"
+    }
+  ],
+  "evaluatedAt": "2026-10-28T22:19:42Z"
+}

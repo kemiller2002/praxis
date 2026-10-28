@@ -1,0 +1,12 @@
+{
+  "schema": "praxis.autonomy-trust/1",
+  "description": "DISPOSABLE TEST AUTHORITY for the WI-0104 integration test. Not the owner. Trusted only by this scratch trust store.",
+  "signers": [
+    {
+      "keyId": "e2e-test-authority-20261028",
+      "owner": "e2e-test-authority",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEkKUAvD52/9JKrSxyLa3mKsEJIIGH\nGvMV20VJhh81HpJHmLS5YV6MeOYtpHRBSI8ZDLlsBwNcQ4AvmRf3Hjb8/g==\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "revokedRunIds": []
+}

@@ -1,0 +1,42 @@
+{
+  "observations": [
+    {
+      "kind": "pull-request-merged",
+      "pullRequest": 2,
+      "source": "github",
+      "reference": "praxis.merge-receipt/1 sha256:3fc1e9b9965bfe0ed778f3a39bc3359adcfa6aca26c32c928e7a6508c042398c: kemiller2002/indy-init-rehearsal-007#2 merged as 60fe833ca2ebd1bb52760c3ee56c5c0eab23a37a"
+    },
+    {
+      "kind": "commit-merged",
+      "commit": "8f2b2f4cd0f3267b6bd051a5771a1a76a572a4ab",
+      "into": "praxis-autonomy-e2e/base",
+      "source": "github",
+      "reference": "praxis.merge-receipt/1 sha256:3fc1e9b9965bfe0ed778f3a39bc3359adcfa6aca26c32c928e7a6508c042398c: kemiller2002/indy-init-rehearsal-007#2 merged as 60fe833ca2ebd1bb52760c3ee56c5c0eab23a37a"
+    },
+    {
+      "kind": "ci-passed",
+      "subject": "8f2b2f4cd0f3267b6bd051a5771a1a76a572a4ab",
+      "source": "ci",
+      "reference": "praxis.merge-receipt/1 sha256:3fc1e9b9965bfe0ed778f3a39bc3359adcfa6aca26c32c928e7a6508c042398c: kemiller2002/indy-init-rehearsal-007#2 merged as 60fe833ca2ebd1bb52760c3ee56c5c0eab23a37a"
+    },
+    {
+      "kind": "pull-request-merged",
+      "pullRequest": 3,
+      "source": "github",
+      "reference": "praxis.merge-receipt/1 sha256:0746c679a78f85ec2d4a02235c24852244d2bc50dc5c1c76c8aefe3024914503: kemiller2002/indy-init-rehearsal-007#3 merged as a51d851d0bd430c4b0026b946ef2f388b3cad658"
+    },
+    {
+      "kind": "commit-merged",
+      "commit": "0857a901d1b04082170ebe87d0455d11cf18055d",
+      "into": "praxis-autonomy-e2e/base",
+      "source": "github",
+      "reference": "praxis.merge-receipt/1 sha256:0746c679a78f85ec2d4a02235c24852244d2bc50dc5c1c76c8aefe3024914503: kemiller2002/indy-init-rehearsal-007#3 merged as a51d851d0bd430c4b0026b946ef2f388b3cad658"
+    },
+    {
+      "kind": "ci-passed",
+      "subject": "0857a901d1b04082170ebe87d0455d11cf18055d",
+      "source": "ci",
+      "reference": "praxis.merge-receipt/1 sha256:0746c679a78f85ec2d4a02235c24852244d2bc50dc5c1c76c8aefe3024914503: kemiller2002/indy-init-rehearsal-007#3 merged as a51d851d0bd430c4b0026b946ef2f388b3cad658"
+    }
+  ]
+}

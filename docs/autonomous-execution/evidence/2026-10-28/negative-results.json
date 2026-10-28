@@ -1,0 +1,116 @@
+{
+  "schema": "praxis.autonomy-integration-results/1",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "baseBranch": "praxis-autonomy-e2e/base",
+  "finishedAt": "2026-10-28T22:21:41Z",
+  "results": [
+    {
+      "scenario": "Missing required review (before checks)",
+      "expected": "DENY",
+      "actual": "DENY required-check-missing,independent-review-missing",
+      "passed": true
+    },
+    {
+      "scenario": "No run authorization",
+      "expected": "DENY authorization-missing",
+      "actual": "DENY authorization-missing",
+      "passed": true
+    },
+    {
+      "scenario": "Expired authorization",
+      "expected": "DENY authorization-expired",
+      "actual": "DENY authorization-expired",
+      "passed": true
+    },
+    {
+      "scenario": "Revoked authorization",
+      "expected": "DENY authorization-revoked",
+      "actual": "DENY authorization-revoked",
+      "passed": true
+    },
+    {
+      "scenario": "Wrong repository",
+      "expected": "DENY repository-out-of-scope",
+      "actual": "DENY repository-out-of-scope",
+      "passed": true
+    },
+    {
+      "scenario": "Wrong target branch",
+      "expected": "DENY target-branch-out-of-scope",
+      "actual": "DENY target-branch-out-of-scope",
+      "passed": true
+    },
+    {
+      "scenario": "Forged authorization (untrusted key)",
+      "expected": "DENY authorization-invalid",
+      "actual": "DENY authorization-invalid",
+      "passed": true
+    },
+    {
+      "scenario": "Tampered authorization",
+      "expected": "DENY authorization-invalid",
+      "actual": "DENY authorization-invalid",
+      "passed": true
+    },
+    {
+      "scenario": "Failed CI",
+      "expected": "DENY required-check-failed",
+      "actual": "DENY required-check-failed",
+      "passed": true
+    },
+    {
+      "scenario": "Critical defect open (independent review failed)",
+      "expected": "DENY independent-review-failed",
+      "actual": "DENY independent-review-failed",
+      "passed": true
+    },
+    {
+      "scenario": "Policy file changed",
+      "expected": "REQUIRES_OWNER",
+      "actual": "REQUIRES_OWNER protected-change:execution_policy",
+      "passed": true
+    },
+    {
+      "scenario": "Workflow security weakened",
+      "expected": "REQUIRES_OWNER",
+      "actual": "REQUIRES_OWNER protected-change:github_workflows",
+      "passed": true
+    },
+    {
+      "scenario": "Permission expansion",
+      "expected": "REQUIRES_OWNER",
+      "actual": "REQUIRES_OWNER protected-change:permission_expansion",
+      "passed": true
+    },
+    {
+      "scenario": "Verification script changed (effect, not location)",
+      "expected": "REQUIRES_OWNER",
+      "actual": "REQUIRES_OWNER protected-change:verification_policy",
+      "passed": true
+    },
+    {
+      "scenario": "Candidate SHA changed",
+      "expected": "REVERIFY candidate-changed",
+      "actual": "REVERIFY candidate-changed",
+      "passed": true
+    },
+    {
+      "scenario": "Merge completed remotely, response lost",
+      "expected": "MERGED",
+      "actual": "MERGED ",
+      "passed": true
+    },
+    {
+      "scenario": "Lost response recorded as reconciled",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "scenario": "Duplicate merge request",
+      "expected": "ALREADY_MERGED",
+      "actual": "ALREADY_MERGED ",
+      "passed": true
+    }
+  ]
+}

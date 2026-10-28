@@ -403,7 +403,7 @@ module AutonomyCommands =
                         let number = int (text r "pullRequest")
                         match GitHubApi.port.GetPull repository number with
                         | Ok pull when pull.Merged && pull.MergeCommitSha = Some(text r "mergeCommitSha") -> Ok r
-                        | Ok _ -> Error $"#{number}: GitHub does not report the receipt's merge {text r "mergeCommitSha"}"
+                        | Ok _ -> Error $"""#{number}: GitHub does not report the receipt's merge {text r "mergeCommitSha"}"""
                         | Error failure -> Error $"#{number}: {failure}")
 
                 match confirmed |> List.choose (function Error e -> Some e | Ok _ -> None) with
