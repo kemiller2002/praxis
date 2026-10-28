@@ -202,6 +202,7 @@
     <Compile Include="TelemetryAgentAttributionTests.fs" />
     <Compile Include="ReliabilityPipelineTests.fs" />
     <Compile Include="AttestedCompletionTests.fs" />
+    <Compile Include="AutonomyTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
