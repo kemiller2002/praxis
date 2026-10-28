@@ -104,7 +104,7 @@ All of the following were re-run against the same disposable base, with the inde
 | Suite | Result |
 |---|---|
 | Praxis `AutonomyTests` | 38 of 38 pass. A deliberate mutation that disabled the revocation check failed 2 tests, as it should. |
-| Praxis full suite | See IMPLEMENTATION-RESULTS.md (run at the final commit). |
+| Praxis full suite | 2489 of 2489 at `c768861` |
 | Conditor full suite, including 11 `UnattendedReadinessTests` | 1348 pass, 0 fail. The new tests caught one real verdict bug: an earlier failure was reported NOT_RUN instead of BLOCKED. It was fixed before commit. |
 | Dokimos `tests/actions/gate-revision.sh` | 3 of 3. It fails against the previous `gate.sh`, as it should. |
 | `praxis architecture check`, `praxis validate` | pass |

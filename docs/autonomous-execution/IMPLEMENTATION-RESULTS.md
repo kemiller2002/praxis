@@ -44,7 +44,7 @@ Full evidence: [GITHUB-APPROVAL-DIAGNOSIS.md](GITHUB-APPROVAL-DIAGNOSIS.md).
 | Suite | Result |
 |---|---|
 | Praxis `AutonomyTests` | 48 of 48 (38 functional, 10 security regressions) |
-| Praxis full suite | First run 2478 of 2479. The one failure was the CLI-boundary ratchet on the first CLI; it was fixed by moving the effects to Infrastructure, and the ratchet now passes 9 of 9. The second full run is recorded below. |
+| Praxis full suite | First run 2478 of 2479; the one failure was the CLI-boundary ratchet on the first CLI, fixed by moving the effects to Infrastructure. **Second run, on the fixed code `c768861`: 2489 of 2489.** |
 | `praxis architecture check`, `praxis validate` | pass |
 | Conditor full suite | 1348 of 1348 |
 | Dokimos `gate-revision.sh` | 3 of 3 |
