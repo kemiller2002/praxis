@@ -11566,10 +11566,27 @@
     {
       "id": "EII-B-001",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-10-28T00:59:15.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Work/IntegrationContract.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/IntegrationStreamsTests.fs"
+        },
+        {
+          "type": "experiment",
+          "path": "research/experiments/EX-ROS-2026-A025--r5-integration-contract-replay.md"
+        },
+        {
+          "type": "documentation",
+          "path": "docs/work-protocol.md"
+        }
+      ],
+      "updatedAt": "2026-10-28T02:48:57.000Z",
       "telemetryExecutionIds": [
         "EXE-20261028T005916741Z-aae5a0a4"
       ],
@@ -11592,12 +11609,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-10-28T02:48:57.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-28T00:59:15.000Z",
+  "updatedAt": "2026-10-28T02:48:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
