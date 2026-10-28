@@ -13,7 +13,7 @@
 | DOC-BACKLOG-USAGE-GUIDE | DOC-BACKLOG-USAGE-GUIDE | complete |  |  |
 | DOC-PROJECT-ADMIN-README | DOC-PROJECT-ADMIN-README | complete |  |  |
 | DOC-WEB-README | DOC-WEB-README | complete |  |  |
-| EII-B-001 | EII-B-001 | active |  |  |
+| EII-B-001 | EII-B-001 | complete |  |  |
 | EX-ROS-2026-A024 | EX-ROS-2026-A024 | complete |  |  |
 | EXEC-INSTALL-109 | Execution envelopes, step ledger, worktrees, legal actions, installation registration client | complete |  | high |
 | EXEC-INSTALL-109-NPM-BIN | Keep npm bin as ros only; praxis stays canonical via native release and ./praxis | complete |  | high |
@@ -373,6 +373,7 @@
 | WI-0100 | CONSTRUCT-008: mechanical-first construct prepare/apply with decision-bound grants, capability-scoped extensions, reuse cache and telemetry | active |  | medium |
 | WI-0101 | Pin Praxis 3.12.0 and validate with the pinned release binary in CI | complete |  | medium |
 | WI-0102 | Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12) | complete | telemetry | high |
+| WI-0103 | Process acceptance evidence capture: work evidence record (ESO Priority One) | ready |  | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
