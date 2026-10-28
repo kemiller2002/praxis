@@ -29,14 +29,16 @@ the execution envelope under `.ros/executions/`) and `work checkpoint`
 | `dependency-decision` | `--subject` (the dependency) | none |
 | `scope-change` | `--subject` (what changed); `--decision` names the approving decision | none |
 | `owner-approval` | `--outcome`; `--attestation TYPE:REF` when one exists | `approved`, `rejected` |
-| `independent-review` | `--candidate`, `--outcome` | `approved`, `changes-requested`, `rejected` |
+| `independent-review` | `--candidate`, `--outcome`; `--attestation TYPE:REF` (the reviewer's pull-request review) | `approved`, `changes-requested`, `rejected` |
 | `release-selection` | `--candidate` | none |
 | `test-result` | `--candidate`, `--outcome` | `pass`, `fail`, `not-run` |
 | `acceptance-reference` | `--candidate` | none |
-| `final-disposition` | `--candidate`, `--outcome` | `accepted`, `not-accepted`, `incomplete`, `abandoned` |
+| `final-disposition` | `--candidate`, `--outcome`; `--attestation TYPE:REF` | `accepted`, `not-accepted`, `incomplete`, `abandoned` |
 
-`--candidate` is always a full 40-character commit SHA. Attestation types are
-`github-review`, `signed-commit` and `signed-tag`.
+`--candidate` is always a full 40-character commit SHA. `--attestation` applies to
+`owner-approval`, `independent-review` and `final-disposition`, the statements a
+verifier anchors outside the log; types are `github-review`, `signed-commit` and
+`signed-tag`.
 
 ## What is asserted, what is observed
 
@@ -55,7 +57,7 @@ Each event keeps three parts apart:
 | `tool-observed` | The actor is CI automation discovered from its environment (`whitelisted-github-actions-environment`) and nothing declared the actor kind. The run it names is recorded as `observed.identity.runId`. |
 | `agent-assertion` | Everything an agent states, including an owner decision an agent transcribes (`authenticity: transcribed`), and anything whose identity was declared rather than discovered. |
 | `reviewer-finding` | An `independent-review`. Whether the reviewer is independent of the implementer is for a verifier to establish from the executions and the log. |
-| `owner-decision` | An `owner-approval` recorded by a human actor. `authenticity` is `unattested` unless an attestation is referenced, and Praxis never checks the attestation itself. |
+| `owner-decision` | An `owner-approval` or `final-disposition` recorded by a human actor. `authenticity` is `unattested` unless an attestation is referenced, and Praxis never checks the attestation itself. |
 | `verified-acceptance` | Never written by Praxis. Only a verifier computes it. |
 
 Writing a record never upgrades it. An agent's statement is an agent assertion

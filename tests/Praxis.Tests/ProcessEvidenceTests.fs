@@ -81,7 +81,7 @@ module ProcessEvidenceTests =
                   Assert.isTrue (errorsOf { request "independent-review" with Outcome = Some "approved"; Candidate = None } |> List.exists (fun e -> e.Contains "--candidate")) "review without candidate"
                   Assert.isTrue (errorsOf { request "release-selection" with Candidate = Some "abc123" } |> List.exists (fun e -> e.Contains "40-character")) "short sha"
                   Assert.isTrue (errorsOf { request "scope-change" with Subjects = [] } |> List.exists (fun e -> e.Contains "--subject")) "scope change without subject"
-                  Assert.isTrue (errorsOf { request "release-selection" with Attestation = Some "github-review:x" } |> List.exists (fun e -> e.Contains "owner-approval")) "attestation elsewhere"
+                  Assert.isTrue (errorsOf { request "release-selection" with Attestation = Some "github-review:x" } |> List.exists (fun e -> e.Contains "owner-approval, independent-review or final-disposition")) "attestation elsewhere"
                   Assert.isTrue (errorsOf { request "owner-approval" with Outcome = Some "approved"; Attestation = Some "email:x" } |> List.exists (fun e -> e.Contains "'email'")) "unknown attestation"
                   Assert.isTrue (errorsOf { request "release-selection" with Summary = Some "  " } |> List.exists (fun e -> e.Contains "--summary")) "blank summary"
                   Assert.empty (errorsOf (request "release-selection")) }
@@ -94,7 +94,10 @@ module ProcessEvidenceTests =
                   Assert.equal (Some "transcribed") transcribed.Authenticity
                   Assert.equal EvidenceProvenance.AgentAssertion (classOf ActorKind.Agent declared (request "release-selection"))
                   Assert.equal EvidenceProvenance.AgentAssertion (classOf ActorKind.Agent discovered { request "test-result" with Outcome = Some "pass" })
-                  Assert.equal EvidenceProvenance.ReviewerFinding (classOf ActorKind.Agent declared { request "independent-review" with Outcome = Some "approved" }) }
+                  Assert.equal EvidenceProvenance.ReviewerFinding (classOf ActorKind.Agent declared { request "independent-review" with Outcome = Some "approved" })
+                  Assert.equal EvidenceProvenance.AgentAssertion (classOf ActorKind.Agent declared { request "final-disposition" with Outcome = Some "accepted" })
+                  Assert.equal EvidenceProvenance.OwnerDecision (classOf ActorKind.Human declared { request "final-disposition" with Outcome = Some "accepted" })
+                  Assert.empty (errorsOf { request "independent-review" with Outcome = Some "approved"; Attestation = Some "github-review:o/r#1@2" }) }
           { Name = "process evidence: an owner decision needs a human actor and is unattested without an attestation"
             Run =
               fun () ->

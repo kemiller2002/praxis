@@ -59,6 +59,16 @@ module ProcessEvidenceKind =
         | ProcessEvidenceKind.FinalDisposition -> true
         | _ -> false
 
+    /// Kinds whose statement a verifier anchors outside the log, in an external
+    /// attestation such as a pull-request review: owner decisions, independent
+    /// reviews and the final disposition.
+    let attestable kind =
+        match kind with
+        | ProcessEvidenceKind.OwnerApproval
+        | ProcessEvidenceKind.IndependentReview
+        | ProcessEvidenceKind.FinalDisposition -> true
+        | _ -> false
+
     /// The closed outcome vocabulary of a kind, or `None` when it has none.
     let outcomes kind =
         match kind with
@@ -212,8 +222,8 @@ module ProcessEvidence =
                       yield $"--kind {label} requires at least one --subject naming what it concerns"
                   | _ -> ()
 
-                  if request.Attestation.IsSome && k <> ProcessEvidenceKind.OwnerApproval then
-                      yield "--attestation applies only to --kind owner-approval"
+                  if request.Attestation.IsSome && not (ProcessEvidenceKind.attestable k) then
+                      yield "--attestation applies only to --kind owner-approval, independent-review or final-disposition"
               | None -> () ]
 
         match errors, kind with
@@ -243,18 +253,20 @@ module ProcessEvidence =
         let human = actor.Kind = ActorKind.Human
 
         match statement.Kind with
-        | ProcessEvidenceKind.OwnerApproval when human ->
+        | ProcessEvidenceKind.OwnerApproval
+        | ProcessEvidenceKind.FinalDisposition when human ->
             { Class = EvidenceProvenance.OwnerDecision
               Basis = $"recorded by a human actor (identity {basis.Mechanism}, kind from {basis.ActorKindSource}); self-reported"
               Authenticity = Some(if statement.Attestation.IsSome then "attestation-referenced" else "unattested") }
-        | ProcessEvidenceKind.OwnerApproval ->
+        | ProcessEvidenceKind.OwnerApproval
+        | ProcessEvidenceKind.FinalDisposition ->
             { Class = EvidenceProvenance.AgentAssertion
               Basis = $"an owner decision transcribed by a {ActorKind.code actor.Kind} actor is that actor's assertion, not the owner's decision"
               Authenticity = Some "transcribed" }
         | ProcessEvidenceKind.IndependentReview when human || actor.Kind = ActorKind.Agent ->
             { Class = EvidenceProvenance.ReviewerFinding
               Basis = "a review finding; its independence from the implementer is for a verifier to establish"
-              Authenticity = None }
+              Authenticity = Some(if statement.Attestation.IsSome then "attestation-referenced" else "unattested") }
         | _ when actor.Kind = ActorKind.Automation && identityObserved basis ->
             { Class = EvidenceProvenance.ToolObserved
               Basis = "recorded by CI automation discovered from its own environment"
