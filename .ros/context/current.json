@@ -11656,11 +11656,22 @@
         }
       },
       "completedAt": "2026-10-28T11:34:52Z"
+    },
+    {
+      "id": "RELEASE-3-23-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-10-28T12:30:32.714Z",
+      "telemetryExecutionIds": [
+        "EXE-20261028T123033704Z-424b880b"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-28T11:34:52Z",
+  "updatedAt": "2026-10-28T12:30:32.714Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

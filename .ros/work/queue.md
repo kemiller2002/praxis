@@ -248,6 +248,7 @@
 | RELEASE-3-20-0 | Release Praxis 3.20.0 | complete |  | medium |
 | RELEASE-3-21-0 | Release Praxis 3.21.0 | complete |  | medium |
 | RELEASE-3-22-0 | Release Praxis 3.22.0 | complete |  | medium |
+| RELEASE-3-23-0 | Release Praxis 3.23.0 | ready |  | medium |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |
 | RELEASE-3-7-0 | Release Praxis 3.7.0 | complete | release | high |
