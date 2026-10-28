@@ -103,6 +103,7 @@
     <Compile Include="Planning/Pricing.fs" />
     <Compile Include="Planning/Grouping.fs" />
     <Compile Include="Work/WorkGroups.fs" />
+    <Compile Include="Work/IntegrationContract.fs" />
     <Compile Include="Work/GroupGates.fs" />
     <Compile Include="Work/EcirGates.fs" />
     <Compile Include="Work/GroupExecutions.fs" />

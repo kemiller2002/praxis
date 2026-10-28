@@ -30,6 +30,7 @@
     <Compile Include="Work/InputInboxJson.fs" />
     <Compile Include="Work/VerificationPlanHandoffJson.fs" />
     <Compile Include="Work/CheckpointJson.fs" />
+    <Compile Include="Work/IntegrationContractJson.fs" />
     <Compile Include="Provenance/ProvenanceFrontMatter.fs" />
     <Compile Include="Provenance/ProvenanceReportJson.fs" />
     <Compile Include="Remote/RemoteJson.fs" />

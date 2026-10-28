@@ -160,6 +160,7 @@
     <Compile Include="Foundations/RouteInventoryReader.fs" />
     <Compile Include="Foundations/RoutingFoundation.fs" />
     <Compile Include="Requirements/FilePreservationInputs.fs" />
+    <Compile Include="Work/FileIntegrationStreams.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

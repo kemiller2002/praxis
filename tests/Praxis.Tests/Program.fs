@@ -18,6 +18,7 @@ let main argv =
     @ PersistenceTests.tests
     @ GitTests.tests
     @ UpstreamSyncTests.tests
+    @ IntegrationStreamsTests.tests
     @ WorkTests.tests
     @ EnvelopeReconciliationTests.tests
     @ WorkPlanTests.tests

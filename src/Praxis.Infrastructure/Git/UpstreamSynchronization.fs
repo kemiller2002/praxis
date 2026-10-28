@@ -109,7 +109,7 @@ module FileUpstreamSynchronization =
         | true, seconds when seconds > 0.0 -> TimeSpan.FromSeconds seconds
         | _ -> TimeSpan.FromSeconds 30.0
 
-    let private readConfig (root: string) : UpstreamSyncConfig =
+    let readConfig (root: string) : UpstreamSyncConfig =
         let fallback = UpstreamSync.defaultConfig
         let path = Path.Combine(root, "ros.json")
 
@@ -367,8 +367,7 @@ module FileUpstreamSynchronization =
 
                                                         let local = sortPaths (committedLocal @ dirty)
                                                         let incomingPaths = sortPaths incoming
-                                                        let incomingSet = Set.ofList incomingPaths
-                                                        let overlap = local |> List.filter incomingSet.Contains
+                                                        let overlap = UpstreamSync.overlap local incomingPaths
                                                         let successfulAttempt =
                                                             match state |> Option.map _.LastAttempt with
                                                             | Some UpstreamSyncAttempt.Succeeded -> true

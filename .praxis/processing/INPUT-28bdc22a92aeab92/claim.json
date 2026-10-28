@@ -1,0 +1,25 @@
+{
+  "schema": "praxis.inbox-claim/1",
+  "claimId": "INPUT-28bdc22a92aeab92",
+  "state": "claimed",
+  "source": {
+    "path": ".praxis/inbox/documents/2026-10-28-EII-B-integration-contracts.md",
+    "fileName": "2026-10-28-EII-B-integration-contracts.md",
+    "sha256": "9f83f5415596d3ac728fbf11fdb9592214ebe9e75b767b92f0c84232b5208bbe",
+    "size": 3644
+  },
+  "claimedAt": "2026-10-28T00:59:20.244Z",
+  "claimant": {
+    "kind": "agent",
+    "id": "anthropic/claude-code",
+    "provider": "anthropic",
+    "model": "unknown",
+    "runtime": "claude-code"
+  },
+  "executionId": "EXE-20261028T005916741Z-aae5a0a4",
+  "derivations": [],
+  "noDerivationReason": null,
+  "closedAt": null,
+  "releaseReason": null,
+  "rejectionReason": null
+}
