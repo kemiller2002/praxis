@@ -377,6 +377,7 @@
 | WI-0103 | Process acceptance evidence capture: work evidence record (ESO Priority One) | complete |  | high |
 | WI-0104 | Autonomous execution policy: versioned unattended-execution policy, owner-signed run authorization, fail-closed merge evaluation, SHA-bound GitHub merge lifecycle with reconciliation, and merge receipts | complete |  | medium |
 | WI-0105 | Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY | complete |  | high |
+| WI-0106 | R7-REM-004: starter praxis-validation.yml runs once per ref, cancels superseded runs, has a timeout | ready | ci, starter, r7-remediation | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

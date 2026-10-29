@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 105,
+  "nextSeq": 107,
   "items": [
     {
       "id": "WI-0001",
@@ -7058,6 +7058,31 @@
       "createdAt": "2026-10-29T01:06:04.000Z",
       "updatedAt": "2026-10-29T01:07:25.000Z",
       "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0106",
+      "title": "R7-REM-004: starter praxis-validation.yml runs once per ref, cancels superseded runs, has a timeout",
+      "description": "Indy-init R7-REM-004 (Rehearsal 6 CI starvation). The installed workflow failed conditor ci-policy CIP-002, CIP-005, CIP-006: push on every branch plus pull_request, no concurrency group, no timeout. Rehearsal 6 started 144 of these runs in seven hours. Companion: conditor#122.",
+      "tags": [
+        "ci",
+        "starter",
+        "r7-remediation"
+      ],
+      "priority": "high",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-10-29T11:10:00Z",
+      "updatedAt": "2026-10-29T11:11:00Z",
+      "createdBy": "anthropic/claude-code",
       "createdByActor": {
         "kind": "agent",
         "id": "anthropic/claude-code",
