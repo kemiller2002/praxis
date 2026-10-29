@@ -1,0 +1,15 @@
+unattended readiness: READY (kemiller2002/indy-init-rehearsal-007 -> main, run RUN-R7-READINESS-20261029-01)
+  UR-01 passed         Praxis available: praxis 3.23.0
+  UR-02 passed         GitHub authentication and repository permissions: authenticated; push permission
+  UR-03 passed         Branch protection compatibility: no required human review, no code-owner review (rules readable)
+  UR-04 passed         Praxis policy available on the target branch: valid; sha256:e0ad0877189dcf1543fdfcc2fd0ccdae2134336ca55b2a2a323329027483ea9e
+  UR-05 passed         Required CI checks declared and present: required: build-and-test; proven by UR-09
+  UR-06 passed         Valid run authorization: run RUN-R7-READINESS-20261029-01, expires 2026-10-30T01:01:20Z
+  UR-07 passed         Revocation is effective: a revoked run's authorization is refused
+  UR-08 passed         Probe pull request opened (branch, commit, push): pull request #20 at ac2f95432d9383e65bc867848034a2fbbc560bd7
+  UR-09 passed         CI, independent review, Praxis authorization and merge: merged as 9c3aaf64a5ff76dc240f178c60f935cc8d7ea648
+  UR-10 passed         Merge verified on GitHub: pull request merged as 9c3aaf64a5ff76dc240f178c60f935cc8d7ea648; main contains it
+  UR-11 passed         Independent review and CI evidence bound to the candidate: 2 check(s) from github-actions at the candidate, including independent-review
+  UR-12 passed         Receipt persisted and chain intact: receipt chain: 1 receipt(s), intact
+  UR-13 passed         Recovery: a repeated merge request is reconciled, not repeated: ALREADY_MERGED with the same merge commit
+  UR-14 not-applicable Deployment permissions: the authorized operations include no deployment

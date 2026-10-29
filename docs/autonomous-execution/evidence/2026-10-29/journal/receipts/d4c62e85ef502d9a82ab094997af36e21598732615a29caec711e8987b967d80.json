@@ -1,0 +1,38 @@
+{
+  "schema": "praxis.merge-receipt/1",
+  "runId": "RUN-R7-READINESS-20261029-01",
+  "authorizationDigest": "sha256:d8f69fdbe24638dfe86c22b3607187ea1c0084fc78c5acd0c2c18a3b5d7f80d7",
+  "policyVersion": 1,
+  "policyDigest": "sha256:e0ad0877189dcf1543fdfcc2fd0ccdae2134336ca55b2a2a323329027483ea9e",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "pullRequest": 20,
+  "targetBranch": "main",
+  "candidateSha": "ac2f95432d9383e65bc867848034a2fbbc560bd7",
+  "mergeMethod": "squash",
+  "decisionDigest": "sha256:b04cf628810791d94986ee570383a0f15f547c1eb1322056a867a1c54351679c",
+  "checks": [
+    {
+      "name": "build-and-test",
+      "id": 123199163013,
+      "headSha": "ac2f95432d9383e65bc867848034a2fbbc560bd7",
+      "app": "github-actions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "independent-review",
+      "id": 123199162683,
+      "headSha": "ac2f95432d9383e65bc867848034a2fbbc560bd7",
+      "app": "github-actions",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "mergeCommitSha": "9c3aaf64a5ff76dc240f178c60f935cc8d7ea648",
+  "targetHeadSha": "9c3aaf64a5ff76dc240f178c60f935cc8d7ea648",
+  "targetContainsMerge": true,
+  "attempts": 1,
+  "reconciled": false,
+  "previousReceiptDigest": null,
+  "recordedAt": "2026-10-29T01:05:35Z"
+}

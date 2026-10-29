@@ -1,0 +1,105 @@
+{
+  "schema": "conditor.unattended-readiness/1",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "baseBranch": "main",
+  "runId": "RUN-R7-READINESS-20261029-01",
+  "probeBranch": "praxis-autonomy/readiness-20261029-01",
+  "verdict": "READY",
+  "checks": [
+    {
+      "id": "UR-01",
+      "name": "Praxis available",
+      "status": "passed",
+      "detail": "praxis 3.23.0"
+    },
+    {
+      "id": "UR-02",
+      "name": "GitHub authentication and repository permissions",
+      "status": "passed",
+      "detail": "authenticated; push permission"
+    },
+    {
+      "id": "UR-03",
+      "name": "Branch protection compatibility",
+      "status": "passed",
+      "detail": "no required human review, no code-owner review (rules readable)"
+    },
+    {
+      "id": "UR-04",
+      "name": "Praxis policy available on the target branch",
+      "status": "passed",
+      "detail": "valid; sha256:e0ad0877189dcf1543fdfcc2fd0ccdae2134336ca55b2a2a323329027483ea9e"
+    },
+    {
+      "id": "UR-05",
+      "name": "Required CI checks declared and present",
+      "status": "passed",
+      "detail": "required: build-and-test; proven by UR-09"
+    },
+    {
+      "id": "UR-06",
+      "name": "Valid run authorization",
+      "status": "passed",
+      "detail": "run RUN-R7-READINESS-20261029-01, expires 2026-10-30T01:01:20Z"
+    },
+    {
+      "id": "UR-07",
+      "name": "Revocation is effective",
+      "status": "passed",
+      "detail": "a revoked run\u0027s authorization is refused"
+    },
+    {
+      "id": "UR-08",
+      "name": "Probe pull request opened (branch, commit, push)",
+      "status": "passed",
+      "detail": "pull request #20 at ac2f95432d9383e65bc867848034a2fbbc560bd7"
+    },
+    {
+      "id": "UR-09",
+      "name": "CI, independent review, Praxis authorization and merge",
+      "status": "passed",
+      "detail": "merged as 9c3aaf64a5ff76dc240f178c60f935cc8d7ea648"
+    },
+    {
+      "id": "UR-10",
+      "name": "Merge verified on GitHub",
+      "status": "passed",
+      "detail": "pull request merged as 9c3aaf64a5ff76dc240f178c60f935cc8d7ea648; main contains it"
+    },
+    {
+      "id": "UR-11",
+      "name": "Independent review and CI evidence bound to the candidate",
+      "status": "passed",
+      "detail": "2 check(s) from github-actions at the candidate, including independent-review"
+    },
+    {
+      "id": "UR-12",
+      "name": "Receipt persisted and chain intact",
+      "status": "passed",
+      "detail": "receipt chain: 1 receipt(s), intact"
+    },
+    {
+      "id": "UR-13",
+      "name": "Recovery: a repeated merge request is reconciled, not repeated",
+      "status": "passed",
+      "detail": "ALREADY_MERGED with the same merge commit"
+    },
+    {
+      "id": "UR-14",
+      "name": "Deployment permissions",
+      "status": "not-applicable",
+      "detail": "the authorized operations include no deployment"
+    }
+  ],
+  "evidence": {
+    "pullRequest": 20,
+    "candidateSha": "ac2f95432d9383e65bc867848034a2fbbc560bd7",
+    "mergeCommitSha": "9c3aaf64a5ff76dc240f178c60f935cc8d7ea648",
+    "praxisReceiptDigest": "sha256:d4c62e85ef502d9a82ab094997af36e21598732615a29caec711e8987b967d80",
+    "policyDigest": "sha256:e0ad0877189dcf1543fdfcc2fd0ccdae2134336ca55b2a2a323329027483ea9e",
+    "authorizationDigest": "sha256:d8f69fdbe24638dfe86c22b3607187ea1c0084fc78c5acd0c2c18a3b5d7f80d7"
+  },
+  "startedAt": "2026-10-29T01:03:17Z",
+  "finishedAt": "2026-10-29T01:05:36Z",
+  "receiptDigest": "sha256:23f500c5f97f5098d6059cb2a065cc3fa77580a488112dc844275f32f11c0bb5"
+}

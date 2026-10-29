@@ -7046,6 +7046,27 @@
       },
       "source": "manual",
       "sourceReference": null
+    },
+    {
+      "id": "WI-0105",
+      "title": "Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY",
+      "description": null,
+      "tags": [],
+      "priority": "high",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-10-29T01:06:04.000Z",
+      "updatedAt": "2026-10-29T01:07:25.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
     }
   ]
 }
