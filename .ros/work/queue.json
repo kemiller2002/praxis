@@ -7053,10 +7053,10 @@
       "description": null,
       "tags": [],
       "priority": "high",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-10-29T01:06:04.000Z",
-      "updatedAt": "2026-10-29T01:06:05.000Z",
+      "updatedAt": "2026-10-29T01:07:25.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
