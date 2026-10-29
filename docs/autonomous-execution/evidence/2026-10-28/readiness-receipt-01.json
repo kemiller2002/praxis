@@ -1,0 +1,105 @@
+{
+  "schema": "conditor.unattended-readiness/1",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "baseBranch": "praxis-autonomy-e2e/base",
+  "runId": "RUN-E2E-20261028-01",
+  "probeBranch": "praxis-autonomy-e2e/readiness-01",
+  "verdict": "BLOCKED",
+  "checks": [
+    {
+      "id": "UR-01",
+      "name": "Praxis available",
+      "status": "passed",
+      "detail": "praxis 3.23.0"
+    },
+    {
+      "id": "UR-02",
+      "name": "GitHub authentication and repository permissions",
+      "status": "passed",
+      "detail": "authenticated; push permission"
+    },
+    {
+      "id": "UR-03",
+      "name": "Branch protection compatibility",
+      "status": "passed",
+      "detail": "no required human review, no code-owner review (rules readable)"
+    },
+    {
+      "id": "UR-04",
+      "name": "Praxis policy available on the target branch",
+      "status": "passed",
+      "detail": "valid; sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600"
+    },
+    {
+      "id": "UR-05",
+      "name": "Required CI checks declared and present",
+      "status": "passed",
+      "detail": "required: build-and-test; proven by UR-09"
+    },
+    {
+      "id": "UR-06",
+      "name": "Valid run authorization",
+      "status": "passed",
+      "detail": "run RUN-E2E-20261028-01, expires 2026-10-29T18:06:26Z"
+    },
+    {
+      "id": "UR-07",
+      "name": "Revocation is effective",
+      "status": "passed",
+      "detail": "a revoked run\u0027s authorization is refused"
+    },
+    {
+      "id": "UR-08",
+      "name": "Probe pull request opened (branch, commit, push)",
+      "status": "failed",
+      "detail": "fatal: \u0027origin/praxis-autonomy-e2e/base\u0027 is not a commit and a branch \u0027praxis-autonomy-e2e/readiness-01\u0027 cannot be created from it"
+    },
+    {
+      "id": "UR-09",
+      "name": "CI, independent review, Praxis authorization and merge",
+      "status": "not-run",
+      "detail": "not run: an earlier check failed"
+    },
+    {
+      "id": "UR-10",
+      "name": "Merge verified on GitHub",
+      "status": "not-run",
+      "detail": "not run: an earlier check failed"
+    },
+    {
+      "id": "UR-11",
+      "name": "Independent review and CI evidence bound to the candidate",
+      "status": "not-run",
+      "detail": "not run: an earlier check failed"
+    },
+    {
+      "id": "UR-12",
+      "name": "Receipt persisted and chain intact",
+      "status": "not-run",
+      "detail": "not run: an earlier check failed"
+    },
+    {
+      "id": "UR-13",
+      "name": "Recovery: a repeated merge request is reconciled, not repeated",
+      "status": "not-run",
+      "detail": "not run: an earlier check failed"
+    },
+    {
+      "id": "UR-14",
+      "name": "Deployment permissions",
+      "status": "not-applicable",
+      "detail": "the authorized operations include no deployment"
+    }
+  ],
+  "evidence": {
+    "pullRequest": null,
+    "candidateSha": null,
+    "mergeCommitSha": null,
+    "praxisReceiptDigest": null,
+    "policyDigest": "sha256:5ee1faae63dcf4b74b563d92fc164c5f1bd05f1215b6c29718f8300bf9c25600",
+    "authorizationDigest": "sha256:a4583bf765b9d73d4502e95963f023237f3363ece517425c1ec81c58a79341fb"
+  },
+  "startedAt": "2026-10-28T22:11:50Z",
+  "finishedAt": "2026-10-28T22:11:56Z",
+  "receiptDigest": "sha256:ccc81d7fb6ca6b45ff4687e9925754f26d30388ba941b9c0b378c073382715ef"
+}

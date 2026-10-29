@@ -162,6 +162,12 @@
     <Compile Include="Foundations/RoutingFoundation.fs" />
     <Compile Include="Requirements/FilePreservationInputs.fs" />
     <Compile Include="Work/FileIntegrationStreams.fs" />
+    <Compile Include="Autonomy/AutonomyJson.fs" />
+    <Compile Include="Autonomy/AutonomyStore.fs" />
+    <Compile Include="Autonomy/GitHubApi.fs" />
+    <Compile Include="Autonomy/MergeLifecycle.fs" />
+    <Compile Include="Autonomy/LocalReview.fs" />
+    <Compile Include="Autonomy/AutonomyOperations.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

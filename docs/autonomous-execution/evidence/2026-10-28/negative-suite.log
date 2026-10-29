@@ -1,0 +1,31 @@
+
+
+/home/user/praxis/tests/integration/autonomy/github-negative.fsx(234,40): info FS3886: This list expression contains a single tuple element. Did you mean to use ';' instead of ',' to separate list elements?
+
+opened #4 harmless at 82315e95fb2c392146f528270e4331d842079e1a
+PASS Missing required review (before checks)          expected DENY                               actual DENY required-check-missing,independent-review-missing
+opened #5 failed-ci at c849501614f2c5603261e676e233e93b3e9e9174
+opened #6 critical-defect at 54ff4f749edf6fca6785fa08e96f1c34aa914708
+opened #7 policy-change at 9cdcdeae274f163d52daa9f0b313e2e537730bc4
+opened #8 workflow-weakened at b76e00439a454b49a26090b3d8e89ee0ffcb4169
+opened #9 permission-expansion at a95683db7803df483157449b3948ee1408b1219f
+opened #10 verification-script at b969b3c8047055fdf2caa95980e42b79c1f17fe4
+PASS No run authorization                             expected DENY authorization-missing         actual DENY authorization-missing
+PASS Expired authorization                            expected DENY authorization-expired         actual DENY authorization-expired
+PASS Revoked authorization                            expected DENY authorization-revoked         actual DENY authorization-revoked
+PASS Wrong repository                                 expected DENY repository-out-of-scope       actual DENY repository-out-of-scope
+PASS Wrong target branch                              expected DENY target-branch-out-of-scope    actual DENY target-branch-out-of-scope
+PASS Forged authorization (untrusted key)             expected DENY authorization-invalid         actual DENY authorization-invalid
+PASS Tampered authorization                           expected DENY authorization-invalid         actual DENY authorization-invalid
+PASS Failed CI                                        expected DENY required-check-failed         actual DENY required-check-failed
+PASS Critical defect open (independent review failed) expected DENY independent-review-failed     actual DENY independent-review-failed
+PASS Policy file changed                              expected REQUIRES_OWNER                     actual REQUIRES_OWNER protected-change:execution_policy
+PASS Workflow security weakened                       expected REQUIRES_OWNER                     actual REQUIRES_OWNER protected-change:github_workflows
+PASS Permission expansion                             expected REQUIRES_OWNER                     actual REQUIRES_OWNER protected-change:permission_expansion
+PASS Verification script changed (effect, not location) expected REQUIRES_OWNER                     actual REQUIRES_OWNER protected-change:verification_policy
+PASS Candidate SHA changed                            expected REVERIFY candidate-changed         actual REVERIFY candidate-changed
+PASS Merge completed remotely, response lost          expected MERGED                             actual MERGED 
+PASS Lost response recorded as reconciled             expected true                               actual true
+PASS Duplicate merge request                          expected ALREADY_MERGED                     actual ALREADY_MERGED 
+18 scenario(s); 18 passed; 0 failed
+exit 0

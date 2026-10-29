@@ -125,5 +125,11 @@
     <Compile Include="Foundations/NpmPin.fs" />
     <Compile Include="Foundations/RouteInventory.fs" />
     <Compile Include="Requirements/Preservation.fs" />
+    <Compile Include="Autonomy/Model.fs" />
+    <Compile Include="Autonomy/Classification.fs" />
+    <Compile Include="Autonomy/Authorization.fs" />
+    <Compile Include="Autonomy/Evaluator.fs" />
+    <Compile Include="Autonomy/Lifecycle.fs" />
+    <Compile Include="Autonomy/Review.fs" />
   </ItemGroup>
 </Project>
