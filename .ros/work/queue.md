@@ -376,6 +376,7 @@
 | WI-0102 | Cumulative telemetry and cost attribution from Claude Code transcripts (CONSTRUCT-010 Phase 6, OPT-12) | complete | telemetry | high |
 | WI-0103 | Process acceptance evidence capture: work evidence record (ESO Priority One) | complete |  | high |
 | WI-0104 | Autonomous execution policy: versioned unattended-execution policy, owner-signed run authorization, fail-closed merge evaluation, SHA-bound GitHub merge lifecycle with reconciliation, and merge receipts | complete |  | medium |
+| WI-0105 | Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY | active |  | high |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
