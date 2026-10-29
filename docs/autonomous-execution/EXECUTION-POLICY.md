@@ -106,6 +106,20 @@ It must live **outside every repository the run edits**. Praxis refuses a trust 
 
 **Limit (security finding F1).** An executor the agent itself runs can be pointed at any trust store, including one the agent wrote. The owner's key binds only where the agent cannot choose or write the trust anchor, which is the CI-hosted gate. See [SECURITY-REVIEW.md](SECURITY-REVIEW.md).
 
+### Owner-delegated agent authority (Rehearsal 7)
+
+On 2026-10-29 the owner decided that **the agent holds the signing key** for Rehearsal 7, instead of the owner signing each run (decision D-1, as resolved). The mechanics are unchanged: a P-256 key, a trust store outside every repository, and a signed `praxis.run-authorization/1`. The signer is `agent-authority` (key `agent-authority-20261029`).
+
+Holding the key is the owner's standing delegation; it is not the owner's own signature on each run. What still binds:
+
+- the scope, expiry and policy digest in each authorization;
+- the policy read from the base branch;
+- REQUIRES_OWNER on protected changes;
+- the CI and independent-review evidence from `github-actions`;
+- revocation through a committed `praxis.run-revocation/1`.
+
+What no longer holds: the signature no longer proves the owner's intent for a specific run. F1 is accepted rather than closed. The private key lives only in the agent's session; it is never committed, and it is lost when the session ends, so each session generates a fresh key and trust store. Evidence: [`evidence/2026-10-29/`](evidence/2026-10-29/).
+
 ### Evaluation rules (`Evaluator.evaluate`)
 
 | Gate (DENY) | Code |

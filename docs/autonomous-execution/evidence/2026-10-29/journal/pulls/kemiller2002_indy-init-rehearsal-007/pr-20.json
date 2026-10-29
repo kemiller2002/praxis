@@ -1,0 +1,9 @@
+{
+  "schema": "praxis.merge-journal/1",
+  "repository": "kemiller2002/indy-init-rehearsal-007",
+  "pullRequest": 20,
+  "phase": "completed",
+  "mergeCommitSha": "9c3aaf64a5ff76dc240f178c60f935cc8d7ea648",
+  "receiptDigest": "sha256:d4c62e85ef502d9a82ab094997af36e21598732615a29caec711e8987b967d80",
+  "updatedAt": "2026-10-29T01:05:35Z"
+}

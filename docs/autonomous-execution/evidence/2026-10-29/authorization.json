@@ -1,0 +1,37 @@
+{
+  "schema": "praxis.run-authorization/1",
+  "runId": "RUN-R7-READINESS-20261029-01",
+  "owner": "agent-authority",
+  "keyId": "agent-authority-20261029",
+  "issuedAt": "2026-10-29T01:01:20Z",
+  "expiresAt": "2026-10-30T01:01:20Z",
+  "policyVersion": 1,
+  "policyDigest": "sha256:e0ad0877189dcf1543fdfcc2fd0ccdae2134336ca55b2a2a323329027483ea9e",
+  "repositories": [
+    "kemiller2002/indy-init-rehearsal-007"
+  ],
+  "targetBranches": [
+    "main"
+  ],
+  "permittedOperations": [
+    "create_branch",
+    "commit",
+    "create_pull_request",
+    "run_verification",
+    "request_automated_review",
+    "merge_eligible_pull_request"
+  ],
+  "protectedOperations": [
+    "frozen_requirements",
+    "acceptance_criteria",
+    "verification_policy",
+    "security_policy",
+    "execution_policy",
+    "github_workflows",
+    "repository_rules",
+    "credentials",
+    "permission_expansion",
+    "infrastructure"
+  ],
+  "signature": "UmUGnbcTwPOyVNuILontYBP1y08T2eQSVRpkjH7tw\u002BLN1xO4F4IBJSVVfFIuum8gih2cc6c\u002BmXHuj47t7Tzbhw=="
+}

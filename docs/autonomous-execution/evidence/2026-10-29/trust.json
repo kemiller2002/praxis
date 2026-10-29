@@ -1,0 +1,12 @@
+{
+  "schema": "praxis.autonomy-trust/1",
+  "description": "Owner-delegated AGENT AUTHORITY for Rehearsal 7 (owner decision 2026-10-29: the agent holds the signing key). Session-scoped; the private key never enters any repository.",
+  "signers": [
+    {
+      "keyId": "agent-authority-20261029",
+      "owner": "agent-authority",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzzaSFD4uJvpmyF1JjubRZ4x9pKXV\nIfvjMqC1joZR0zeWAvVBtqDlL3mHZeWm8J8TYj/H5bSy1WUFCxbY/BC/DQ==\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "revokedRunIds": []
+}

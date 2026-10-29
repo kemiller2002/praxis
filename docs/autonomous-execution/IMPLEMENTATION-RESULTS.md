@@ -81,11 +81,29 @@ Each merge had:
 2. The policy and workflow are placed on the rehearsal repository's `main`, and readiness is re-proven there (UAE-R7-06). This writes to the rehearsal repository's `main`, and starting Rehearsal 7 is owner-controlled, so it was not done.
 3. To make the gate **enforced** rather than advisory: D-2 plus D-7 (UAE-R7-12).
 
+## Update 2026-10-29: implementation merged, Rehearsal 7 preflight READY on `main` (WI-0105)
+
+The owner approved the implementation PRs and they were merged: praxis #298, conditor #121, dokimos #61 and Indy-init #38, which approves UAE-001.
+
+The owner then resolved D-1 as an **agent-held key** (EXECUTION-POLICY.md, "Owner-delegated agent authority"). With that:
+
+1. **Bootstrap.** rehearsal-007 PR #19 put the policy (`sha256:e0ad0877…3ea9e`), the `praxis-autonomy` workflow (Praxis pinned to `023b208`) and `tests/verify.sh` on `main`. It was merged as `df336cd` with owner approval, not through Praxis. Its `independent-review` failed closed as designed, because `main` had no policy yet.
+2. **Authorization.** `RUN-R7-READINESS-20261029-01` was signed by `agent-authority-20261029` (digest `sha256:d8f69fdb…f80d7`, 24 hours) and verified.
+3. **Preflight (UAE-R7-06).** `conditor unattended-readiness` against `kemiller2002/indy-init-rehearsal-007` `main` reported **READY**: every applicable check passed. Probe PR #20 merged as `9c3aaf6` with no owner action. A repeated request returned ALREADY_MERGED. The receipt chain holds 1 receipt, intact.
+
+Evidence: [`evidence/2026-10-29/`](evidence/2026-10-29/). It contains public material only; the private key was not committed.
+
+**Still open:**
+
+- **D-2 and D-7.** The gate stays advisory. The agent's admin token can still merge outside Praxis, and the agent now also holds the signing key. The rehearsal report must say so (UAE-R7-12).
+- **D-6.**
+- **Starting Rehearsal 7.** That is the owner's kickoff decision.
+
 ## Remaining owner decisions
 
 | ID | Decision |
 |---|---|
-| D-1 | Generate the owner's P-256 key; register its public key in a trust store outside every repository; sign each run's authorization. |
+| D-1 | **Resolved 2026-10-29: agent-held key** (owner-delegated agent authority). F1 is accepted. |
 | D-2 | A ruleset on the target `main`: require the CI, `independent-review` and gate checks from GitHub Actions; no human review; block force pushes and deletion. |
 | D-7 | The CI-hosted gate job, with the trust store in an Actions secret (closes F1). |
 | D-3, D-4, D-5 | Optional: require PRs (0 approvals), auto-merge, and a semantic (LLM) reviewer (closes R-3; needs an API-key secret). |
