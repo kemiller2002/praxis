@@ -11869,11 +11869,22 @@
       },
       "completedAt": "2026-11-03T14:14:12.000Z",
       "conclusion": "Catalog schema, compiler and stale check implemented; 24 targeted tests pass locally; full suite left to CI"
+    },
+    {
+      "id": "RELEASE-3-25-0",
+      "type": "mechanical",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-11-03T19:21:43.088Z",
+      "telemetryExecutionIds": [
+        "EXE-20261103T192143868Z-c2f254ab"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-03T14:14:12.000Z",
+  "updatedAt": "2026-11-03T19:21:43.088Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
