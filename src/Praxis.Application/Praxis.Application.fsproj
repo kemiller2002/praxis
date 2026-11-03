@@ -54,6 +54,7 @@
     <Compile Include="Web/UrlState.fs" />
     <Compile Include="Web/UrlEnhancement.fs" />
     <Compile Include="Requirements/PreservationGate.fs" />
+    <Compile Include="Requirements/RequirementManifest.fs" />
   </ItemGroup>
   <ItemGroup>
     <!-- The one approved browser script (DF-ROS-2026-A058), served by UrlEnhancement. -->

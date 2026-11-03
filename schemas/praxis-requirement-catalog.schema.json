@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kemiller2002.github.io/praxis/schemas/praxis-requirement-catalog.schema.json",
+  "title": "Praxis requirement catalog",
+  "description": "praxis.requirement-catalog/1 (REQ-RVM-001): stable, authored IDs for every individually verifiable field, control, action, navigation, validation rule, data contract, state transition, workflow outcome and accessibility obligation, each with its verification obligations. Compiled by `praxis requirements manifest compile` into praxis.verification-manifest/1. Semantic rules (duplicate IDs, references, conflicts, retirements) are enforced by the compiler, not by this schema.",
+  "type": "object",
+  "required": ["schema", "catalogId", "idPattern", "status", "screens", "requirements"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "praxis.requirement-catalog/1" },
+    "catalogId": { "type": "string", "minLength": 1 },
+    "idPattern": { "type": "string", "minLength": 1, "description": "Regular expression every requirement ID must match." },
+    "status": { "type": "string", "description": "Governance status of the catalog, e.g. proposed or ratified. The compiler records it; it never ratifies." },
+    "description": { "type": "string" },
+    "screens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "properties": { "id": { "type": "string", "minLength": 1 }, "route": { "type": ["string", "null"] } }
+      }
+    },
+    "facts": { "type": "array", "items": { "type": "string" }, "description": "Applicability facts a requirement may name in appliesWhen." },
+    "requirements": { "type": "array", "items": { "$ref": "#/$defs/requirement" } },
+    "retired": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "reason", "authority"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "reason": { "type": "string", "minLength": 1 },
+          "replacedBy": { "type": ["string", "null"] },
+          "authority": { "type": "string", "minLength": 1, "description": "The governance record that authorised the retirement." }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "requirement": {
+      "type": "object",
+      "required": ["id", "type", "screen", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "enum": ["ui-field", "ui-control", "action", "navigation", "validation-rule", "data-contract", "state-transition", "workflow-outcome", "accessibility"] },
+        "screen": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "component": { "type": ["string", "null"] },
+        "required": { "type": "boolean", "default": false },
+        "visible": { "type": "boolean", "default": true },
+        "editable": { "type": "boolean", "default": false },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minLength": { "type": "integer", "minimum": 0 },
+            "maxLength": { "type": "integer", "minimum": 0 },
+            "pattern": { "type": "string" },
+            "options": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["mapped", "exists", "visible", "accessible", "editable", "enter", "select", "activate", "validation", "rejects", "outcome", "save", "reload", "update", "isolation"] }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["document", "requirement"],
+            "additionalProperties": false,
+            "properties": { "document": { "type": "string" }, "requirement": { "type": "string" } }
+          }
+        },
+        "dependsOn": { "type": "array", "items": { "type": "string" } },
+        "appliesWhen": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["fact"],
+            "additionalProperties": false,
+            "properties": { "fact": { "type": "string" }, "equals": { "type": "boolean", "default": true } }
+          }
+        },
+        "instances": { "type": ["string", "null"], "description": "Present for repeated controls: the meaning of data-requirement-instance." },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

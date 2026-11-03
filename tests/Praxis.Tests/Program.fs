@@ -53,6 +53,7 @@ let main argv =
     @ RequirementsPreservationTests.schemaTests
     @ RequirementsPreservationTests.anchorTests
     @ RequirementsPreservationTests.verbatimTests
+    @ RequirementManifestTests.tests
     @ TelemetryFinalizeTargetTests.tests
     @ TelemetryRecordMetricTests.tests
     @ TelemetryIngestTests.tests

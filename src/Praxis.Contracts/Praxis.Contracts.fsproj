@@ -45,5 +45,6 @@
     <Compile Include="Work/LocalIntegrationJournalJson.fs" />
     <Compile Include="Work/LocalContainmentJson.fs" />
     <Compile Include="Requirements/PreservationJson.fs" />
+    <Compile Include="Requirements/RequirementManifestJson.fs" />
   </ItemGroup>
 </Project>

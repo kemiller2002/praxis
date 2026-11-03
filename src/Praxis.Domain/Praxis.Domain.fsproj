@@ -125,6 +125,7 @@
     <Compile Include="Foundations/NpmPin.fs" />
     <Compile Include="Foundations/RouteInventory.fs" />
     <Compile Include="Requirements/Preservation.fs" />
+    <Compile Include="Requirements/RequirementCatalog.fs" />
     <Compile Include="Autonomy/Model.fs" />
     <Compile Include="Autonomy/Classification.fs" />
     <Compile Include="Autonomy/Authorization.fs" />
