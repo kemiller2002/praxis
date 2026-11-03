@@ -379,7 +379,7 @@
 | WI-0104 | Autonomous execution policy: versioned unattended-execution policy, owner-signed run authorization, fail-closed merge evaluation, SHA-bound GitHub merge lifecycle with reconciliation, and merge receipts | complete |  | medium |
 | WI-0105 | Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY | complete |  | high |
 | WI-0106 | R7-REM-004: starter praxis-validation.yml runs once per ref, cancels superseded runs, has a timeout | active | ci, starter, r7-remediation | high |
-| WI-0107 | Stable requirement IDs and a deterministic verification manifest (RQ-ROS-2026-A037) | ready |  | medium |
+| WI-0107 | Stable requirement IDs and a deterministic verification manifest (RQ-ROS-2026-A037) | active |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
