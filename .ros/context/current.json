@@ -11823,11 +11823,57 @@
         }
       },
       "completedAt": "2026-10-29T13:56:41.215Z"
+    },
+    {
+      "id": "WI-0107",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Requirements/RequirementCatalog.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementManifestTests.fs"
+        },
+        {
+          "type": "document",
+          "path": "docs/requirement-verification-manifest.md"
+        }
+      ],
+      "updatedAt": "2026-11-03T14:14:12.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261103T141251588Z-d34e0674"
+      ],
+      "latestCheckpoint": {
+        "id": "6c4faa76501d0388902f3b2b",
+        "recordedAt": "2026-11-03T14:14:07.000Z",
+        "executionId": "EXE-20261103T141251588Z-d34e0674",
+        "repository": "repository-operating-system",
+        "branch": "claude/requirement-verification-manifest",
+        "commit": "5d4451393dc4323a7ee56534c3144775adec3175",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/requirement-verification-manifest",
+        "remoteCommit": "5d4451393dc4323a7ee56534c3144775adec3175",
+        "summary": "Implementation and tests pushed",
+        "nextAction": "Complete the work item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-03T14:14:12.000Z",
+      "conclusion": "Catalog schema, compiler and stale check implemented; 24 targeted tests pass locally; full suite left to CI"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-10-29T13:56:41.215Z",
+  "updatedAt": "2026-11-03T14:14:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

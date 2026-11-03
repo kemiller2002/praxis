@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kemiller2002.github.io/praxis/schemas/praxis-verification-manifest.schema.json",
+  "title": "Praxis verification manifest",
+  "description": "praxis.verification-manifest/1 (REQ-RVM-001): the canonical, deterministic compilation of a praxis.requirement-catalog/1. contentHash is the SHA-256 of the compact JSON of this document with contentHash removed. No timestamps: identical inputs give byte-identical output.",
+  "type": "object",
+  "required": ["schema", "compiler", "catalogId", "catalogStatus", "source", "screens", "facts", "counts", "requirements", "retired", "contentHash"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "praxis.verification-manifest/1" },
+    "compiler": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" } }
+    },
+    "catalogId": { "type": "string" },
+    "catalogStatus": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["commit", "catalogSha256"],
+      "additionalProperties": false,
+      "properties": {
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "catalogSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "screens": { "type": "array" },
+    "facts": { "type": "array", "items": { "type": "string" } },
+    "counts": { "type": "object" },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "screen", "name", "required", "visible", "editable", "validation", "sources", "dependsOn", "applicability", "instancing", "levels", "obligations", "mappings"],
+        "properties": {
+          "id": { "type": "string" },
+          "levels": { "type": "array", "items": { "enum": ["V1", "V2", "V3", "V4", "V5"] } },
+          "applicability": {
+            "type": "object",
+            "required": ["rule"],
+            "properties": { "rule": { "enum": ["always", "when"] }, "facts": { "type": "array" } }
+          },
+          "instancing": {
+            "type": "object",
+            "required": ["scope"],
+            "properties": { "scope": { "enum": ["single", "repeated"] }, "key": { "type": "string" } }
+          },
+          "obligations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "level", "check", "mandatory"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string", "pattern": "^.+/V[1-5]/[a-z]+$" },
+                "level": { "enum": ["V1", "V2", "V3", "V4", "V5"] },
+                "check": { "type": "string" },
+                "mandatory": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "retired": { "type": "array" },
+    "contentHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

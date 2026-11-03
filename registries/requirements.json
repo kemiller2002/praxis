@@ -2123,5 +2123,47 @@
     "title": "Integration contracts for parallel agent workstreams",
     "updated": "2026-10-28",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-11-03",
+    "id": "RQ-ROS-2026-A037",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A037--requirement-verification-manifest.md",
+    "priority": "critical",
+    "provenance": {
+      "contributions": {
+        "EXE-20261103T141251588Z-d34e0674": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-03T14:13:03.730Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "Operator assignment: requirement-level implementation and verification (stable requirement IDs, deterministic verification manifest)"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-A034",
+      "RQ-ROS-2026-A035"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "requirements",
+      "verification",
+      "traceability",
+      "determinism"
+    ],
+    "title": "Stable requirement IDs and a deterministic verification manifest",
+    "updated": "2026-11-03",
+    "version": "1.0.0"
   }
 ]
