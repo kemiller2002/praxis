@@ -11827,10 +11827,23 @@
     {
       "id": "WI-0107",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-03T14:12:50.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Requirements/RequirementCatalog.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/RequirementManifestTests.fs"
+        },
+        {
+          "type": "document",
+          "path": "docs/requirement-verification-manifest.md"
+        }
+      ],
+      "updatedAt": "2026-11-03T14:14:12.000Z",
       "telemetryExecutionIds": [
         "EXE-20261103T141251588Z-d34e0674"
       ],
@@ -11853,12 +11866,14 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-11-03T14:14:12.000Z",
+      "conclusion": "Catalog schema, compiler and stale check implemented; 24 targeted tests pass locally; full suite left to CI"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-03T14:12:50.000Z",
+  "updatedAt": "2026-11-03T14:14:12.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
