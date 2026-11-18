@@ -191,7 +191,9 @@ module WorkDecisionCliTests =
                                "rejection": { "reason": "missing-evidence", "missingEvidence": ["tests"] } }""")
                       (json result) }
 
-          { Name = "work decisions: evidence verification accepts files, directories and absolute paths but not missing ones"
+          // PRX-VER-ADV-001 changed this frozen case: an absolute path outside the repository was
+          // accepted as evidence; it is now refused as unavailable (see FileEvidenceRepository).
+          { Name = "work decisions: evidence verification accepts files and directories inside the repository but not missing or outside ones"
             Run =
               fun () ->
                   let outside = Path.Combine(Path.GetTempPath(), $"ros-work-evidence-{System.Guid.NewGuid():N}.txt")
@@ -222,8 +224,10 @@ module WorkDecisionCliTests =
                                   else
                                       Assert.equal "evidence-rejected" (payload.["outcome"].GetValue<string>())
 
+                                      let expectedIssue = if key = "outside" then "unavailable" else "missing"
+
                                       Assert.equal
-                                          [ "missing"; "missing" ]
+                                          [ expectedIssue; expectedIssue ]
                                           (CliGolden.items payload.["rejection"].["evidenceIssues"]
                                            |> List.map (fun issue -> issue.["outcome"].GetValue<string>())))
                   finally

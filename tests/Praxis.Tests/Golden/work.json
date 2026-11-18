@@ -278,7 +278,7 @@
   "test6": {
     "ros.json": true,
     ".": true,
-    "outside": true,
+    "outside": false,
     "missing-evidence.txt": false
   },
   "test7ObservationOutcome": "changed",
