@@ -381,6 +381,8 @@
 | WI-0105 | Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY | complete |  | high |
 | WI-0106 | R7-REM-004: starter praxis-validation.yml runs once per ref, cancels superseded runs, has a timeout | active | ci, starter, r7-remediation | high |
 | WI-0107 | Stable requirement IDs and a deterministic verification manifest (RQ-ROS-2026-A037) | complete |  | medium |
+| WI-0108 | PRX-LEARN-001: governed improvement proposals (counterfactual, held-out, regression; human approval for protected governance) | complete |  | medium |
+| WI-0109 | PRX-LEARN-002: harden improvement proposals against gaming found by adversarial review | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

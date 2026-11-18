@@ -204,6 +204,7 @@
     <Compile Include="ReliabilityPipelineTests.fs" />
     <Compile Include="AttestedCompletionTests.fs" />
     <Compile Include="AutonomyTests.fs" />
+    <Compile Include="ImprovementProposalTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
