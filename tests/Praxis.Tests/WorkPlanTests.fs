@@ -185,6 +185,66 @@ module WorkPlanTests =
                       | other -> failwith $"Expected unavailable evidence path, received {other}"
                   finally
                       Directory.Delete(root, true) }
+          { Name = "filesystem evidence adapter refuses evidence that resolves outside the repository"
+            Run =
+              fun () ->
+                  // PRX-VER-ADV-001: a completion once cited an agent's ephemeral scratchpad
+                  // (/tmp/.../dokimos-0.8.0-tests.txt) as test evidence. Evidence outside the
+                  // repository is not reviewable, not durable and not the candidate's.
+                  let parent = Path.Combine(Path.GetTempPath(), $"ros-evidence-{Guid.NewGuid():N}")
+                  let root = Path.Combine(parent, "repo")
+                  Directory.CreateDirectory root |> ignore
+
+                  try
+                      let outside = Path.Combine(parent, "outside.txt")
+                      File.WriteAllText(outside, "forged evidence")
+                      File.WriteAllText(Path.Combine(root, "inside.txt"), "evidence")
+                      let repository = FileEvidenceRepository.create root
+
+                      let refused path =
+                          match repository.Observe { Type = "tests"; Path = path } with
+                          | EvidencePathObservation.Unavailable message ->
+                              Assert.isTrue (message.Contains "outside the repository") $"{path}: {message}"
+                          | other -> failwith $"Expected '{path}' to be refused, received {other}"
+
+                      refused outside
+                      refused "../outside.txt"
+                      refused "sub/../../outside.txt"
+
+                      if not (OperatingSystem.IsWindows()) then
+                          File.CreateSymbolicLink(Path.Combine(root, "link.txt"), outside) |> ignore
+                          refused "link.txt"
+
+                          // A linked parent directory must not carry a citation out either
+                          // (found by independent adversarial review).
+                          let outsideDir = Path.Combine(parent, "outside-dir")
+                          Directory.CreateDirectory outsideDir |> ignore
+                          File.WriteAllText(Path.Combine(outsideDir, "forged-tests.txt"), "forged")
+                          Directory.CreateDirectory(Path.Combine(root, "a")) |> ignore
+                          Directory.CreateSymbolicLink(Path.Combine(root, "a", "b"), outsideDir) |> ignore
+                          refused "a/b/forged-tests.txt"
+
+                          // Links that stay inside the repository remain valid evidence.
+                          File.CreateSymbolicLink(Path.Combine(root, "alias.txt"), Path.Combine(root, "inside.txt")) |> ignore
+                          Assert.equal EvidencePathObservation.Present (repository.Observe { Type = "tests"; Path = "alias.txt" })
+
+                          // A repository reached through a linked root is still the repository.
+                          let linkedRoot = Path.Combine(parent, "repo-link")
+                          Directory.CreateSymbolicLink(linkedRoot, root) |> ignore
+
+                          Assert.equal
+                              EvidencePathObservation.Present
+                              ((FileEvidenceRepository.create linkedRoot).Observe { Type = "tests"; Path = "inside.txt" })
+
+                      Assert.equal
+                          EvidencePathObservation.Present
+                          (repository.Observe { Type = "tests"; Path = "./inside.txt" })
+
+                      Assert.equal
+                          EvidencePathObservation.Present
+                          (repository.Observe { Type = "tests"; Path = "." })
+                  finally
+                      Directory.Delete(parent, true) }
           { Name = "context plan retains context order and request event order"
             Run =
               fun () ->

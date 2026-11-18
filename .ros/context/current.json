@@ -11901,11 +11901,53 @@
         }
       },
       "completedAt": "2026-11-03T19:22:14.635Z"
+    },
+    {
+      "id": "WI-0110",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Work/FileEvidenceRepository.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/WorkPlanTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-18T16:12:20.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261118T161200902Z-e89b0094"
+      ],
+      "latestCheckpoint": {
+        "id": "c88e289ab930c2ce26081d1d",
+        "recordedAt": "2026-11-18T16:12:17.000Z",
+        "executionId": "EXE-20261118T161200902Z-e89b0094",
+        "repository": "repository-operating-system",
+        "branch": "claude/evidence-path-confinement",
+        "commit": "ebec51748275be153dca7272be3f3176a5a3a838",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/evidence-path-confinement",
+        "remoteCommit": "ebec51748275be153dca7272be3f3176a5a3a838",
+        "summary": "Confinement with full-component symlink resolution pushed",
+        "nextAction": "Open draft PR; confirm final full-suite run",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-18T16:12:20.000Z",
+      "conclusion": "Evidence outside the repository, including via symlinked parents, is refused"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-03T19:22:14.635Z",
+  "updatedAt": "2026-11-18T16:12:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
