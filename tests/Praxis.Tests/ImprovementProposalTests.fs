@@ -100,7 +100,7 @@ module ImprovementProposalTests =
               Assert.equal [ ImprovementProposal.IncompleteCode ] (codes (ImprovementProposal.evaluate hollow ProposalState.Proposed sound)))
 
           t "an agent can never approve a change to protected governance, even another agent's" (fun () ->
-              let evaluated = ProposalState.Evaluated sound
+              let evaluated = ProposalState.Evaluated(governance, sound)
               Assert.equal [ ImprovementProposal.HumanApprovalRequiredCode ] (codes (ImprovementProposal.approve governance evaluated otherAgent at))
 
               Assert.equal
@@ -108,26 +108,26 @@ module ImprovementProposalTests =
                   (codes (ImprovementProposal.approve governance evaluated agent at))
 
               match ImprovementProposal.approve governance evaluated reviewer at with
-              | Ok(ProposalState.Approved(_, approver, _)) -> Assert.equal reviewer approver
+              | Ok(ProposalState.Approved(_, _, approver, _)) -> Assert.equal reviewer approver
               | other -> failwith $"{other}")
 
           t "a human proposer cannot approve their own governance change either" (fun () ->
               let byOwner = { governance with ProposedBy = reviewer }
-              Assert.equal [ ImprovementProposal.SelfApprovalCode ] (codes (ImprovementProposal.approve byOwner (ProposalState.Evaluated sound) reviewer at)))
+              Assert.equal [ ImprovementProposal.SelfApprovalCode ] (codes (ImprovementProposal.approve byOwner (ProposalState.Evaluated(byOwner, sound)) reviewer at)))
 
-          t "an unprotected prompt change may be approved by a different agent but never by its proposer" (fun () ->
-              let evaluated = ProposalState.Evaluated sound
-              Assert.equal [ ImprovementProposal.SelfApprovalCode ] (codes (ImprovementProposal.approve prompt evaluated agent at))
+          t "initially every change, a prompt included, needs a human approver who is not the proposer" (fun () ->
+              let evaluated = ProposalState.Evaluated(prompt, sound)
+              Assert.equal [ ImprovementProposal.HumanApprovalRequiredCode ] (codes (ImprovementProposal.approve prompt evaluated otherAgent at))
 
-              match ImprovementProposal.approve prompt evaluated otherAgent at with
+              match ImprovementProposal.approve prompt evaluated reviewer at with
               | Ok(ProposalState.Approved _) -> ()
               | other -> failwith $"{other}")
 
           t "only an evaluated proposal can be approved, only an approved one applied, only an applied one rolled back" (fun () ->
               Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.approve prompt ProposalState.Proposed reviewer at))
-              Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.apply (ProposalState.Evaluated sound) "v2" at))
+              Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.apply (ProposalState.Evaluated(prompt, sound)) "v2" at))
               Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.rollBack ProposalState.Proposed "bad" at))
-              Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.evaluate prompt (ProposalState.Evaluated sound) sound)))
+              Assert.equal [ ImprovementProposal.IllegalTransitionCode ] (codes (ImprovementProposal.evaluate prompt (ProposalState.Evaluated(prompt, sound)) sound)))
 
           t "the full lifecycle records the approver, the applied version and the rollback" (fun () ->
               let lifecycle =
@@ -136,7 +136,7 @@ module ImprovementProposalTests =
                   |> Result.bind (fun state -> ImprovementProposal.apply state "verification-policy@2" at)
 
               match lifecycle with
-              | Ok(ProposalState.Applied(_, approver, version, _) as applied) ->
+              | Ok(ProposalState.Applied(_, _, approver, version, _) as applied) ->
                   Assert.equal reviewer approver
                   Assert.equal "verification-policy@2" version
 
@@ -146,7 +146,45 @@ module ImprovementProposalTests =
               | other -> failwith $"{other}")
 
           t "applying needs a version and rolling back needs a reason" (fun () ->
-              let approved = ProposalState.Approved(sound, reviewer, at)
+              let approved = ProposalState.Approved(prompt, sound, reviewer, at)
               Assert.equal [ ImprovementProposal.IncompleteCode ] (codes (ImprovementProposal.apply approved " " at))
-              let applied = ProposalState.Applied(sound, reviewer, "v2", at)
-              Assert.equal [ ImprovementProposal.IncompleteCode ] (codes (ImprovementProposal.rollBack applied "" at))) ]
+              let applied = ProposalState.Applied(prompt, sound, reviewer, "v2", at)
+              Assert.equal [ ImprovementProposal.IncompleteCode ] (codes (ImprovementProposal.rollBack applied "" at)))
+          // Cases found by independent adversarial review: each was accepted before hardening.
+          t "a held-out case that re-spells the original id is still the original case" (fun () ->
+              let respelt = { sound with HeldOut = [ case "d-t4 " RootCause.ContradictoryInstruction true ] }
+
+              Assert.equal
+                  [ ImprovementProposal.MemorizedCode; ImprovementProposal.GeneralizationUnprovenCode ]
+                  (codes (ImprovementProposal.evaluate prompt ProposalState.Proposed respelt)))
+
+          t "evaluation cases and failures must carry evidence references" (fun () ->
+              let noEvidence = { sound with Regression = [ { case "D-T1" RootCause.MissingKnowledge true with EvidenceRef = " " } ] }
+              Assert.equal [ ImprovementProposal.IncompleteCode ] (codes (ImprovementProposal.evaluate prompt ProposalState.Proposed noEvidence))
+              let blankRef = { prompt with Failures = [ { prompt.Failures.Head with EvidenceRefs = [ "x"; "" ] } ] }
+              Assert.equal 1 (ImprovementProposal.validate blankRef).Length)
+
+          t "self-approval cannot hide behind a re-cased or padded identity" (fun () ->
+              let byOwner = { governance with ProposedBy = reviewer }
+              let recased = { reviewer with Id = " OWNER" }
+              Assert.equal [ ImprovementProposal.SelfApprovalCode ] (codes (ImprovementProposal.approve byOwner (ProposalState.Evaluated(byOwner, sound)) recased at)))
+
+          t "unknown or extension actor kinds cannot approve" (fun () ->
+              let evaluated = ProposalState.Evaluated(prompt, sound)
+              let unknown = actor ActorKind.Unknown "someone"
+              let extension = actor (ActorKind.Extension "x-bot") "bot"
+              Assert.equal [ ImprovementProposal.HumanApprovalRequiredCode ] (codes (ImprovementProposal.approve prompt evaluated unknown at))
+              Assert.equal [ ImprovementProposal.HumanApprovalRequiredCode ] (codes (ImprovementProposal.approve prompt evaluated extension at)))
+
+          t "agent instruction and workflow files are governance even when filed as knowledge" (fun () ->
+              let governancePaths = [ "AGENTS.md"; "./CLAUDE.md"; "sub/agents.md"; ".github/workflows/ci.yml"; "ros.json"; "docs/00-governance/README.md"; "/.claude/settings.json" ]
+              for path in governancePaths do
+                  Assert.isTrue (ImprovementProposal.isGovernance (ImprovementTarget.Knowledge path)) path
+
+              Assert.isTrue (not (ImprovementProposal.isGovernance (ImprovementTarget.Knowledge "docs/guide.md"))) "docs/guide.md"
+              Assert.isTrue (ImprovementProposal.isGovernance (ImprovementTarget.Governance ProtectedClass.SecurityPolicy)) "protected class")
+
+          t "a proposal swapped after evaluation cannot be approved under the old evaluation" (fun () ->
+              let evaluated = ProposalState.Evaluated(prompt, sound)
+              let swapped = { governance with ProposedBy = otherAgent }
+              Assert.equal [ ImprovementProposal.ProposalChangedCode ] (codes (ImprovementProposal.approve swapped evaluated reviewer at))) ]

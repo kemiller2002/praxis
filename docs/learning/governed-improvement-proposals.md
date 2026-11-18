@@ -27,6 +27,16 @@ carrying every reason. Transitions are pure functions returning `Result`.
 | The approver proposed the change | `PRX.LEARN.SELF_APPROVAL` |
 | Protected governance approved by a non-human | `PRX.LEARN.HUMAN_APPROVAL_REQUIRED` |
 | Transition from the wrong state | `PRX.LEARN.ILLEGAL_TRANSITION` |
+| Approving a proposal other than the one evaluated (target, proposer or action changed) | `PRX.LEARN.PROPOSAL_CHANGED` |
+
+Hardening (PRX-LEARN-002, from an independent adversarial review):
+- Case ids and identities compare trimmed and case-insensitively, so `"d-t4 "` is the original case `"D-T4"`, and `" OWNER"` is `"owner"`.
+- Every evaluation case and every listed failure evidence reference must be non-blank.
+- **Initially every change needs a human approver**, prompts and skills included. `Unknown` and extension actor kinds can never approve.
+- A "knowledge" change to agent-governing files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `ros.json`, `conditor.json`, `.github/`, `.claude/`, `.ros/`, `docs/00-governance/`) is classified as governance.
+- States carry the evaluated proposal, so a proposal cannot be swapped after evaluation.
+
+**Known limit.** Actor kinds are self-reported provenance, not authentication (see `docs/agent-provenance.md`). An agent that declares itself `human` under a different id passes `approve`. Binding approval to the owner-signed `RunAuthorization` (`Autonomy/Authorization.fs`) is the next step.
 
 Protected governance reuses `Praxis.Domain.Autonomy.ProtectedClass` (verification
 policy, security policy, execution policy, workflows, repository rules, credentials,

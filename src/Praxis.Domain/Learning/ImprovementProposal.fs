@@ -91,10 +91,12 @@ type ImprovementProposal =
 [<RequireQualifiedAccess>]
 type ProposalState =
     | Proposed
-    | Evaluated of Evaluation
+    /// The proposal is snapshotted at evaluation: approval of any other
+    /// proposal (changed target, proposer or action) is refused.
+    | Evaluated of proposal: ImprovementProposal * evaluation: Evaluation
     | Rejected of reasons: string list
-    | Approved of evaluation: Evaluation * approver: Actor * at: DateTimeOffset
-    | Applied of evaluation: Evaluation * approver: Actor * appliedVersion: string * at: DateTimeOffset
+    | Approved of proposal: ImprovementProposal * evaluation: Evaluation * approver: Actor * at: DateTimeOffset
+    | Applied of proposal: ImprovementProposal * evaluation: Evaluation * approver: Actor * appliedVersion: string * at: DateTimeOffset
     | RolledBack of reason: string * at: DateTimeOffset
 
 type ProposalFinding = { Code: string; Detail: string }
@@ -109,17 +111,42 @@ module ImprovementProposal =
     let MemorizedCode = "PRX.LEARN.MEMORIZED"
     let SelfApprovalCode = "PRX.LEARN.SELF_APPROVAL"
     let HumanApprovalRequiredCode = "PRX.LEARN.HUMAN_APPROVAL_REQUIRED"
+    let ProposalChangedCode = "PRX.LEARN.PROPOSAL_CHANGED"
 
     let private finding code detail = { Code = code; Detail = detail }
     let private blank (value: string) = String.IsNullOrWhiteSpace value
 
-    /// Whether a change to `target` needs a human approver (initially: all protected governance).
-    let requiresHumanApproval (target: ImprovementTarget) =
+    /// Identities and case ids compare trimmed and case-insensitively, so a
+    /// re-spelling ("d-t4 " for "D-T4", "Agent" for "agent") is the same thing.
+    let private canonical (value: string) = if isNull value then "" else value.Trim().ToLowerInvariant()
+
+    /// Repository files that govern agents. A "knowledge" change to one of
+    /// these is a governance change.
+    let isGovernancePath (path: string) =
+        let rec relative (value: string) =
+            if value.StartsWith("./", StringComparison.Ordinal) then relative (value.Substring 2)
+            elif value.StartsWith("/", StringComparison.Ordinal) then relative (value.Substring 1)
+            else value
+
+        let normal = relative ((canonical path).Replace('\\', '/'))
+        let name = normal.Split('/') |> Array.last
+        List.contains name [ "agents.md"; "claude.md"; "gemini.md"; "ros.json"; "conditor.json" ]
+        || [ ".github/"; ".claude/"; ".ros/"; "docs/00-governance/" ]
+           |> List.exists (fun prefix -> normal.StartsWith(prefix, StringComparison.Ordinal))
+
+    /// Whether `target` changes the rules that govern agents.
+    let isGovernance (target: ImprovementTarget) =
         match target with
         | ImprovementTarget.Governance _ -> true
-        | ImprovementTarget.Knowledge _
+        | ImprovementTarget.Knowledge path -> isGovernancePath path
         | ImprovementTarget.Skill _
         | ImprovementTarget.Prompt _ -> false
+
+    /// Initially every change needs a human approver: prompts and skills
+    /// steer agents as much as policy does. Relaxing this for non-governance
+    /// targets is itself a governance decision, made by changing this rule
+    /// through review.
+    let requiresHumanApproval (_: ImprovementTarget) = true
 
     /// The nine required parts of a proposal (failure evidence, root cause,
     /// action, expected improvement, cost, rollback, provenance); evaluation
@@ -129,8 +156,8 @@ module ImprovementProposal =
           if proposal.Version < 1 then yield finding IncompleteCode "the version must be 1 or greater"
           if proposal.Failures.IsEmpty then yield finding IncompleteCode "no originating failure is recorded"
           for failure in proposal.Failures do
-              if failure.EvidenceRefs |> List.forall blank then
-                  yield finding IncompleteCode $"failure '{failure.Summary}' cites no evidence"
+              if failure.EvidenceRefs.IsEmpty || failure.EvidenceRefs |> List.exists blank then
+                  yield finding IncompleteCode $"failure '{failure.Summary}' cites no evidence or a blank evidence reference"
           if blank proposal.CorrectiveAction then yield finding IncompleteCode "no corrective action is stated"
           if blank proposal.ExpectedImprovement then yield finding IncompleteCode "no expected improvement is stated"
           if proposal.EstimatedCost < 0m then yield finding IncompleteCode "the estimated cost cannot be negative"
@@ -141,9 +168,12 @@ module ImprovementProposal =
     /// counterfactual alone is memorisation; generalisation needs held-out
     /// cases of the same root cause that are not the original cases.
     let judge (proposal: ImprovementProposal) (evaluation: Evaluation) : ProposalFinding list =
-        let counterfactualIds = evaluation.Counterfactual |> List.map _.CaseId |> Set.ofList
+        let counterfactualIds = evaluation.Counterfactual |> List.map (fun case -> canonical case.CaseId) |> Set.ofList
+        let allCases = evaluation.Counterfactual @ evaluation.HeldOut @ evaluation.Regression
 
-        [ if evaluation.Counterfactual.IsEmpty then
+        [ for case in allCases |> List.filter (fun case -> blank case.CaseId || blank case.EvidenceRef) do
+              yield finding IncompleteCode $"evaluation case '{case.CaseId}' has no id or no evidence reference"
+          if evaluation.Counterfactual.IsEmpty then
               yield finding CounterfactualFailedCode "no counterfactual case re-runs the original failure"
           for case in evaluation.Counterfactual |> List.filter (fun case -> not case.Passed) do
               yield finding CounterfactualFailedCode $"the original failure '{case.CaseId}' still fails with the proposal applied"
@@ -151,11 +181,11 @@ module ImprovementProposal =
               yield finding RegressionCode "no previously successful case was re-run"
           for case in evaluation.Regression |> List.filter (fun case -> not case.Passed) do
               yield finding RegressionCode $"previously successful case '{case.CaseId}' now fails"
-          for case in evaluation.HeldOut |> List.filter (fun case -> counterfactualIds.Contains case.CaseId) do
+          for case in evaluation.HeldOut |> List.filter (fun case -> counterfactualIds.Contains(canonical case.CaseId)) do
               yield finding MemorizedCode $"held-out case '{case.CaseId}' is one of the cases the proposal was written from"
           let independent =
               evaluation.HeldOut
-              |> List.filter (fun case -> not (counterfactualIds.Contains case.CaseId) && case.RootCause = proposal.RootCause)
+              |> List.filter (fun case -> not (counterfactualIds.Contains(canonical case.CaseId)) && case.RootCause = proposal.RootCause)
           if independent.IsEmpty then
               yield
                   finding
@@ -172,34 +202,39 @@ module ImprovementProposal =
         match state with
         | ProposalState.Proposed ->
             match validate proposal @ judge proposal evaluation with
-            | [] -> Ok(ProposalState.Evaluated evaluation)
+            | [] -> Ok(ProposalState.Evaluated(proposal, evaluation))
             | findings -> Ok(ProposalState.Rejected(findings |> List.map (fun item -> $"{item.Code}: {item.Detail}")))
         | other -> illegal other "evaluate"
 
-    /// Evaluated -> Approved. Nobody approves their own proposal; protected
-    /// governance needs a human approver.
+    /// Evaluated -> Approved. The proposal must be the one that was
+    /// evaluated; nobody approves their own proposal; the approver must be an
+    /// identified human (initially, for every target). Actor kinds are
+    /// self-reported provenance, not authentication: binding approval to an
+    /// owner-signed authorization is the next step (see the design note).
     let approve (proposal: ImprovementProposal) (state: ProposalState) (approver: Actor) (at: DateTimeOffset) =
         match state with
-        | ProposalState.Evaluated evaluation ->
-            [ if not (blank approver.Id) && approver.Id = proposal.ProposedBy.Id then
-                  yield finding SelfApprovalCode $"'{approver.Id}' proposed this change and cannot approve it"
+        | ProposalState.Evaluated(evaluated, evaluation) ->
+            [ if evaluated <> proposal then
+                  yield finding ProposalChangedCode "the proposal differs from the one that was evaluated; evaluate it again"
               if blank approver.Id then
                   yield finding SelfApprovalCode "the approver is not identified"
-              if requiresHumanApproval proposal.Target && approver.Kind <> ActorKind.Human then
+              elif canonical approver.Id = canonical evaluated.ProposedBy.Id then
+                  yield finding SelfApprovalCode $"'{approver.Id}' proposed this change and cannot approve it"
+              if requiresHumanApproval evaluated.Target && approver.Kind <> ActorKind.Human then
                   yield
                       finding
                           HumanApprovalRequiredCode
-                          $"{proposal.Target} changes protected governance and needs a human approver, not {ActorKind.code approver.Kind}" ]
+                          $"{evaluated.Target} needs a human approver, not {ActorKind.code approver.Kind}" ]
             |> function
-                | [] -> Ok(ProposalState.Approved(evaluation, approver, at))
+                | [] -> Ok(ProposalState.Approved(evaluated, evaluation, approver, at))
                 | findings -> Error findings
         | other -> illegal other "approve"
 
     /// Approved -> Applied, recording the version of the target it produced.
     let apply (state: ProposalState) (appliedVersion: string) (at: DateTimeOffset) =
         match state with
-        | ProposalState.Approved(evaluation, approver, _) when not (blank appliedVersion) ->
-            Ok(ProposalState.Applied(evaluation, approver, appliedVersion, at))
+        | ProposalState.Approved(proposal, evaluation, approver, _) when not (blank appliedVersion) ->
+            Ok(ProposalState.Applied(proposal, evaluation, approver, appliedVersion, at))
         | ProposalState.Approved _ -> Error [ finding IncompleteCode "an applied proposal must name the version it produced" ]
         | other -> illegal other "apply"
 
