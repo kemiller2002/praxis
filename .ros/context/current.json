@@ -11905,18 +11905,49 @@
     {
       "id": "WI-0108",
       "type": "feature",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-18T15:38:07.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Learning/ImprovementProposal.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/ImprovementProposalTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-18T15:38:20.000Z",
       "telemetryExecutionIds": [
         "EXE-20261118T153808268Z-2cbed789"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "97eb448ca514c4ca131543a8",
+        "recordedAt": "2026-11-18T15:38:17.000Z",
+        "executionId": "EXE-20261118T153808268Z-2cbed789",
+        "repository": "repository-operating-system",
+        "branch": "claude/governed-improvement-proposals",
+        "commit": "521d93d6a9a40efb966777e956d4812472f787a1",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/governed-improvement-proposals",
+        "remoteCommit": "521d93d6a9a40efb966777e956d4812472f787a1",
+        "summary": "Domain contract and 12 tests pushed",
+        "nextAction": "Open draft PR; add persistence and CLI in a later item",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-18T15:38:20.000Z",
+      "conclusion": "Governed improvement proposal contract with memorisation, regression and self-approval guards"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-18T15:38:07.000Z",
+  "updatedAt": "2026-11-18T15:38:20.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
