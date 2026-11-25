@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 108,
+  "nextSeq": 109,
   "items": [
     {
       "id": "WI-0001",
@@ -7152,6 +7152,27 @@
         "provider": "github",
         "model": "unknown",
         "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0108",
+      "title": "Upgrade Aegis 1.0.0 -> 2.0.0 (echelon-current 1.40.0)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-25T12:34:41.141Z",
+      "updatedAt": "2026-11-25T12:34:45.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

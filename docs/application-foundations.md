@@ -145,7 +145,7 @@ Praxis is itself an Echelon application and is bound by
 ### Aegis (SAF-AEGIS-1..6)
 
 - One boundary module, `src/Praxis.Infrastructure/Boundary/AegisBoundary.fs`,
-  configures Aegis (released `EchelonFoundry.Aegis.Core` 1.0.0, blocking
+  configures Aegis (released `EchelonFoundry.Aegis.Core` 2.0.1, blocking
   delivery, standard-error sink) and classifies every escaped failure.
 - The command line runs each command inside one capture. A failure is
   attributed to the boundary that raised it: thrown inside
