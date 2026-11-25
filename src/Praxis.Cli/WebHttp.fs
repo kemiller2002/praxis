@@ -105,12 +105,12 @@ module Html =
     let page (title: string) (body: string) =
         String.concat "\n"
             [ "<!doctype html>"
-              "<html lang=\"en\">"
+              FormaMarkup.HtmlOpen
               "<head>"
               "<meta charset=\"utf-8\" />"
               "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
               $"<title>{escape title}</title>"
-              yield! FormaMarkup.head (FormaRelease.stylesheetPath ())
+              yield! FormaMarkup.head (PresentationRelease.stylesheetPaths ())
               "</head>"
               FormaMarkup.BodyOpen
               body
@@ -391,7 +391,7 @@ module HttpHost =
     /// One request's answer; an unexpected failure is recorded at the web
     /// boundary (SAF-AEGIS-1) and answered with a safe message and reference.
     let respond (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (data: HttpRequestData) =
-        match AegisBoundary.capture aegis OperationalBoundary.WebRequest $"web.{data.Method.ToLowerInvariant()}" None "could not answer the request" (fun () -> FormaRelease.tryServe data.Method data.Segments |> Option.map (HttpMessages.response 200 "text/css; charset=utf-8") |> Option.defaultWith (fun () -> handler data)) with
+        match AegisBoundary.capture aegis OperationalBoundary.WebRequest $"web.{data.Method.ToLowerInvariant()}" None "could not answer the request" (fun () -> PresentationRelease.tryServe data.Method data.Segments |> Option.map (fun (contentType, bytes) -> HttpMessages.response 200 contentType bytes) |> Option.defaultWith (fun () -> handler data)) with
         | Ok response -> response
         | Error fault -> HttpMessages.html 500 (Html.page "Error" (Html.fault fault.UserMessage (Aegis.Presentation.reference fault)))
     let private handle (aegis: Aegis.AegisConfig) (handler: HttpRequestData -> HttpResponseData) (context: HttpListenerContext) =
@@ -489,11 +489,11 @@ module UrlGate =
 
     let refused (problem: Limen.Routing.RouteError) =
         let status, title, message = UrlState.refusal problem
-        let back = "<p><a class=\"ef-button\" href=\"/\">&larr; Back to the start</a></p>"
+        let back = "<p><a class=\"forma-button\" href=\"/\">&larr; Back to the start</a></p>"
         HttpMessages.html status (Html.page $"{title} · Praxis" $"<main id=\"main\" tabindex=\"-1\"><h1>{Html.escape title}</h1>{FormaMarkup.alert message}{back}</main>")
 
     let private linkSection (share: string) (location: string) =
-        $"<section class=\"ef-section\" aria-label=\"Link to this view\"><h2>Link to this view</h2><p><a href=\"{Html.escape location}\" rel=\"bookmark\">{Html.escape share}</a></p><p>Copy it with your browser's Copy Link, or select it here:</p><input id=\"share-url\" type=\"text\" readonly value=\"{Html.escape share}\" aria-label=\"Address of this view\" /><p><button type=\"button\" hidden data-copy=\"share-url\" data-status=\"share-status\">Copy link</button> <span id=\"share-status\" role=\"status\"></span></p></section>\n</main>"
+        $"<section class=\"forma-section\" aria-label=\"Link to this view\"><h2>Link to this view</h2><p><a href=\"{Html.escape location}\" rel=\"bookmark\">{Html.escape share}</a></p><p>Copy it with your browser's Copy Link, or select it here:</p><input id=\"share-url\" type=\"text\" readonly value=\"{Html.escape share}\" aria-label=\"Address of this view\" /><p><button type=\"button\" hidden data-copy=\"share-url\" data-status=\"share-status\">Copy link</button> <span id=\"share-status\" role=\"status\"></span></p></section>\n</main>"
 
     let private decorate (share: string) (location: string) (shown: bool) (response: HttpResponseData) =
         let page = response.Status = 200 && response.ContentType.StartsWith("text/html", StringComparison.Ordinal)

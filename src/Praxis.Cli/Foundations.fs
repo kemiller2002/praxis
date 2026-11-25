@@ -292,21 +292,7 @@ module Foundations =
         let lockPinned = lock |> Option.exists (Result.exists (fun l -> rule.Version |> Option.forall ((=) l.Version)))
         let installed = spec.IsSome || lock.IsSome
         let pinned = (spec.IsSome && NpmPin.isPinned rule.Version rule.SourceCommit spec) || lockPinned
-        let used =
-            anySourceContains
-                root
-                [ "@echelon-foundry/design-system"
-                  "design-system/all.css"
-                  "class=\\\"ef-"
-                  "<ef-button"
-                  "<ef-input"
-                  "<ef-field"
-                  "<ef-card"
-                  "<ef-dialog"
-                  "<ef-alert"
-                  "<ef-select"
-                  "<ef-checkbox"
-                  "<ef-toggle" ]
+        let used = anySourceContains root FormaPin.usageMarkers
 
         let dependencyDetail = spec |> Option.orElse (lock |> Option.map (function Ok l -> $"{FormaRelease.LockPath} {l.Version}" | Error e -> e)) |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]

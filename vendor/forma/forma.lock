@@ -3,6 +3,6 @@
 # release artifact, verified against this digest at build-time tests and at
 # runtime before any stylesheet is served. Upgrade by replacing both, never by
 # editing Forma CSS (docs/web-interface.md, "Forma").
-forma 0.4.1
-url https://github.com/kemiller2002/forma/releases/download/v0.4.1/echelon-foundry-design-system-0.4.1.tgz
-sha256 32685421a759bdacf48943c8906ba2b2f57ae0218ea0a3c4f4de5d780a72ed76
+forma 1.0.1
+url https://github.com/kemiller2002/forma/releases/download/v1.0.1/echelon-foundry-design-system-1.0.1.tgz
+sha256 db4a8bf7bcf6ba7826f1605c4265ea86c456464f2e2a3eef18d026f24c242056

@@ -180,7 +180,7 @@ Praxis is itself an Echelon application and is bound by
 | SAF-AEGIS-4 | Met | Idempotent remote and reconcile paths (RemoteProtocolTests, WorkReconciliationTests) |
 | SAF-AEGIS-5 | Met | Redaction rules and scrubber; "credentials, repository data and work content never reach a sink" |
 | SAF-AEGIS-6 | Met | Released 1.0.0 pin; collector-sink tests |
-| SAF-FORMA-1 | Met | `vendor/forma/forma.lock` pins the Forma 0.4.1 release tarball by URL and sha256; "forma: the vendored tarball is the pinned immutable release artifact" |
+| SAF-FORMA-1 | Met | `vendor/forma/forma.lock` pins the Forma 1.0.1 release tarball by URL and sha256 ("forma: the vendored tarball is the pinned immutable release artifact"); `vendor/echelon-theme/echelon-theme.lock` pins the Echelon theme 1.1.0 the same way ("echelon theme: the vendored tarball is the pinned immutable release artifact") |
 | SAF-FORMA-2 | Met | Web and hub markup use Forma patterns; shipped `styles.css` files carry no rules (guarded by test) |
 | SAF-FORMA-3 | Met | No Forma CSS is copied; the stylesheet is extracted at runtime from the verified release tarball |
 | SAF-FORMA-4 | Met | Native forms, tables, landmarks; Forma only presents |
@@ -199,7 +199,7 @@ Praxis is itself an Echelon application and is bound by
 | SAF-URL-8 | Met | `.echelon/routes.json` and `.echelon/routes.hub.json` are `Inventory.render` of the two tables, held byte-equal by "url state: .echelon/routes.json and routes.hub.json are Inventory.render ..."; `foundations verify` checks both |
 | SAF-URL-9 | Met | `RouteTable.define` tables and typed `RouteCodec`s; `UrlState.format` is the route formatter; "url state: format then resolve is the view, for generated views" is the round-trip property test |
 | SAF-URL-10 | Met | Every page ends with "Link to this view": its canonical URL as a link, a selectable absolute address, and a `Copy link` button that `url-state.js` reveals and that copies the address in one action (`DF-ROS-2026-A058`); without script the button stays hidden and the address is selected by hand. "browser: with the enhancement, Copy link puts the view's absolute URL on the clipboard ..." |
-| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 2.0.2 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
+| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 2.0.2 (NuGet), Forma 1.0.1 (release tarball lock) and Ordo.Core 1.8.2 (release nupkg lock); every pin is a released version or immutable artifact |
 | SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
 ### Forma (SAF-FORMA-1..6)
@@ -208,6 +208,12 @@ Praxis is itself an Echelon application and is bound by
 in `vendor/forma/` (see [`web-interface.md`](web-interface.md)). Praxis has no
 npm, so the verifier accepts that lock as Forma's pin when the tarball's
 sha256 matches it.
+
+The Echelon brand is not a foundations capability: it is the optional
+`@echelon-foundry/echelon-theme` release layered over Forma 1.0, pinned by
+`vendor/echelon-theme/echelon-theme.lock` and its tarball, verified by digest
+at build-time tests and at runtime, and loaded after Forma's `all.css` with
+`data-forma-brand="echelon"` on every page's root element.
 
 ### Declaration
 

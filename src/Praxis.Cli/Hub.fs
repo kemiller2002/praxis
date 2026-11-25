@@ -610,7 +610,7 @@ module HubWeb =
     let private fileRows =
         [ 1..3 ]
         |> List.map (fun _ ->
-            "<div class=\"ef-cluster\"><input type=\"file\" name=\"file\" aria-label=\"File\" /><input type=\"text\" name=\"name\" aria-label=\"File name (optional)\" placeholder=\"name (optional)\" /></div>")
+            "<div class=\"forma-cluster\"><input type=\"file\" name=\"file\" aria-label=\"File\" /><input type=\"text\" name=\"name\" aria-label=\"File name (optional)\" placeholder=\"name (optional)\" /></div>")
         |> String.concat "\n"
 
     let renderHome (repos: Result<HubRepo list, string>) (work: Result<JsonObject list, string>) (query: (string * string) list) : string =
@@ -622,13 +622,13 @@ module HubWeb =
         let reposTable =
             match repos with
             | Error message -> FormaMarkup.alert message
-            | Ok [] -> "<section class=\"ef-empty-state\"><h3>No repositories registered yet.</h3></section>"
+            | Ok [] -> "<section class=\"forma-empty-state\"><h3>No repositories registered yet.</h3></section>"
             | Ok entries ->
                 entries
                 |> List.map (fun repo ->
                     $"<tr><td>{e repo.Id}</td><td>{e repo.Name}</td><td><code>{e repo.Path}</code></td><td><form method=\"post\" action=\"/repos/{Html.segment repo.Id}/unregister\"><button type=\"submit\">Unregister</button></form></td></tr>")
                 |> String.concat "\n"
-                |> sprintf "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Registered repositories\"><table id=\"repos-table\"><thead><tr><th>ID</th><th>Name</th><th>Path</th><th><span class=\"ef-visually-hidden\">Actions</span></th></tr></thead><tbody>\n%s\n</tbody></table></div>"
+                |> sprintf "<div class=\"forma-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Registered repositories\"><table id=\"repos-table\"><thead><tr><th>ID</th><th>Name</th><th>Path</th><th><span class=\"forma-visually-hidden\">Actions</span></th></tr></thead><tbody>\n%s\n</tbody></table></div>"
 
         let repoOptions (selected: string) =
             registered
@@ -640,56 +640,56 @@ module HubWeb =
         let workTable =
             match work with
             | Error message -> FormaMarkup.alert message
-            | Ok [] -> "<section class=\"ef-empty-state\"><h3>No work items match.</h3></section>"
+            | Ok [] -> "<section class=\"forma-empty-state\"><h3>No work items match.</h3></section>"
             | Ok rows ->
                 rows
                 |> List.map workRow
                 |> String.concat "\n"
-                |> sprintf "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Aggregated work\"><table id=\"work-table\"><thead><tr><th>Repo</th><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th></tr></thead><tbody>\n%s\n</tbody></table></div>"
+                |> sprintf "<div class=\"forma-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Aggregated work\"><table id=\"work-table\"><thead><tr><th>Repo</th><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th></tr></thead><tbody>\n%s\n</tbody></table></div>"
 
         Html.page
             "Praxis Project Administration Hub"
             (String.concat
                 "\n"
-                [ "<header class=\"ef-section\">"
+                [ "<header class=\"forma-section\">"
                   "<h1>Project Administration Hub</h1>"
-                  "<p class=\"ef-lead\">Creates work in other Praxis repositories by running their own <code>./praxis</code> -- it never edits a repository's files directly.</p>"
+                  "<p class=\"forma-lead\">Creates work in other Praxis repositories by running their own <code>./praxis</code> -- it never edits a repository's files directly.</p>"
                   "</header>"
                   "<main id=\"main\" tabindex=\"-1\">"
                   Html.flash query
-                  "<section id=\"repos\" class=\"ef-section\" aria-label=\"Registered repositories\">"
+                  "<section id=\"repos\" class=\"forma-section\" aria-label=\"Registered repositories\">"
                   "<h2>Registered repositories</h2>"
                   "<form id=\"register-form\" method=\"post\" action=\"/repos\">"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-path\">Repository path</label><input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"register-name\">Display name</label><input id=\"register-name\" name=\"name\" type=\"text\" placeholder=\"display name (optional)\" /></div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Register</button></div>"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"register-path\">Repository path</label><input id=\"register-path\" name=\"path\" type=\"text\" placeholder=\"/absolute/path/to/repo\" required /></div>"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"register-name\">Display name</label><input id=\"register-name\" name=\"name\" type=\"text\" placeholder=\"display name (optional)\" /></div>"
+                  "<div class=\"forma-actions\"><button type=\"submit\" data-forma-variant=\"primary\">Register</button></div>"
                   "</form>"
                   reposTable
                   "</section>"
-                  "<section id=\"create\" class=\"ef-section\" aria-label=\"Create work item in a repository\">"
+                  "<section id=\"create\" class=\"forma-section\" aria-label=\"Create work item in a repository\">"
                   "<h2>Create work item</h2>"
                   "<form id=\"create-form\" method=\"post\" action=\"/work\" enctype=\"multipart/form-data\">"
-                  $"<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-repo\">Repository</label><select id=\"create-repo\" name=\"repo\" required>{repoOptions repoFilter}</select></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-title\">Title</label><input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-tags\">Tags</label><input id=\"create-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
-                  $"""<div class="ef-field"><label class="ef-field__label" for="create-priority">Priority</label><select id="create-priority" name="priority">{Html.options "medium" WebInterface.priorities}</select></div>"""
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"create-description\">Description</label><textarea id=\"create-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
-                  "<div class=\"ef-stack\">"
+                  $"<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"create-repo\">Repository</label><select id=\"create-repo\" name=\"repo\" required>{repoOptions repoFilter}</select></div>"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"create-title\">Title</label><input id=\"create-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"create-tags\">Tags</label><input id=\"create-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
+                  $"""<div class="forma-field"><label class="forma-field__label" for="create-priority">Priority</label><select id="create-priority" name="priority">{Html.options "medium" WebInterface.priorities}</select></div>"""
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"create-description\">Description</label><textarea id=\"create-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
+                  "<div class=\"forma-stack\">"
                   fileRows
                   "</div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Create</button></div>"
+                  "<div class=\"forma-actions\"><button type=\"submit\" data-forma-variant=\"primary\">Create</button></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter aggregated work\">"
+                  "<section id=\"filters\" class=\"forma-section\" aria-label=\"Filter aggregated work\">"
                   "<h2>Filter</h2>"
                   "<form method=\"get\" action=\"/\" data-refine>"
                   $"<label>Repo <select name=\"repo\"><option value=\"\">all</option>{repoOptions repoFilter}</select></label>"
                   $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
                   $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter WebInterface.statuses}</select></label>"""
-                  "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"
+                  "<div class=\"forma-actions\"><button type=\"submit\">Filter</button> <a class=\"forma-button\" href=\"/\">Clear</a></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"queue\" class=\"ef-section\" aria-label=\"Aggregated work across repositories\">"
+                  "<section id=\"queue\" class=\"forma-section\" aria-label=\"Aggregated work across repositories\">"
                   "<h2>Aggregated queue</h2>"
                   workTable
                   "</section>"
