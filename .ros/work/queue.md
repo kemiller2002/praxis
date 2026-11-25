@@ -381,7 +381,7 @@
 | WI-0105 | Rehearsal 7 activation: owner-delegated agent authority, policy on rehearsal-007 main, readiness READY | complete |  | high |
 | WI-0106 | R7-REM-004: starter praxis-validation.yml runs once per ref, cancels superseded runs, has a timeout | active | ci, starter, r7-remediation | high |
 | WI-0107 | Stable requirement IDs and a deterministic verification manifest (RQ-ROS-2026-A037) | complete |  | medium |
-| WI-0108 | Upgrade Aegis 1.0.0 -> 2.0.0 (echelon-current 1.40.0) | ready |  | medium |
+| WI-0108 | Upgrade Aegis 1.0.0 -> 2.0.0 (echelon-current 1.40.0) | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
