@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 111,
+  "nextSeq": 113,
   "items": [
     {
       "id": "WI-0001",
@@ -7208,6 +7208,48 @@
       "attachments": [],
       "createdAt": "2026-11-25T17:55:56.020Z",
       "updatedAt": "2026-11-25T17:55:58.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0111",
+      "title": "Move Praxis web/hub presentation from vendored Forma 0.4.1 to Forma 1.0.1 (echelon-current 1.42.0): ef- to forma- namespace in WebInterface/Hub/WebHttp/Foundations and tests, vendor/forma lock, optional echelon-theme 1.1.0",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-11-25T18:32:01.614Z",
+      "updatedAt": "2026-11-25T18:32:01.614Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0112",
+      "title": "Decide whether Praxis's vendored Ordo.Core/Ordo.Construction 1.8.2 library pins (vendor/nuget) should follow Ordo 1.20.0; the echelon-current set selects only the Ordo CLI",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "captured",
+      "attachments": [],
+      "createdAt": "2026-11-25T18:32:02.799Z",
+      "updatedAt": "2026-11-25T18:32:02.799Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
