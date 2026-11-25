@@ -11987,18 +11987,39 @@
     {
       "id": "WI-0110",
       "type": "requirements",
-      "state": "active",
-      "semanticState": "active",
+      "state": "blocked",
+      "semanticState": "blocked",
       "evidence": [],
-      "updatedAt": "2026-11-25T18:04:51Z",
+      "updatedAt": "2026-11-25T18:05:24Z",
       "telemetryExecutionIds": [
         "EXE-20261125T180452465Z-66a34a67"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "73a36a47fc3e984f751ae091",
+        "recordedAt": "2026-11-25T18:05:02Z",
+        "executionId": "EXE-20261125T180452465Z-66a34a67",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-transparency-governance-rvt82z",
+        "commit": "907780e241ae28df95e283c7bde31ab2ea6dfdfd",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-transparency-governance-rvt82z",
+        "remoteCommit": "907780e241ae28df95e283c7bde31ab2ea6dfdfd",
+        "summary": "Proposed RM requirements committed",
+        "nextAction": "Owner review and approval",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "blockReason": "Proposed requirements await owner approval (OD-GOV-001/OD-GOV-003); implementation not authorized"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-25T18:04:51Z",
+  "updatedAt": "2026-11-25T18:05:24Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
