@@ -2165,5 +2165,51 @@
     "title": "Stable requirement IDs and a deterministic verification manifest",
     "updated": "2026-11-03",
     "version": "1.0.0"
+  },
+  {
+    "created": "2026-11-25",
+    "id": "RQ-ROS-2026-A038",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A038--application-reliability-applicability-declaration.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261125T201255923Z-3477d5c5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-25T20:14:03.054Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0113: INIT-012 reliability applicability declaration (proposed)"
+        }
+      }
+    },
+    "related_documents": [
+      "DF-ROS-2026-A076",
+      "requirements/SHARED-APPLICATION-FOUNDATIONS.md",
+      "requirements/APPLICATION-RELIABILITY-DECLARATION.md",
+      "requirements/echelon-reliability-v1.schema.json"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "draft",
+    "tags": [
+      "reliability",
+      "availability",
+      "cache-readiness",
+      "applicability",
+      "compliance",
+      "foundations"
+    ],
+    "title": "Every Echelon repository declares its applicability to the reliability and cache-readiness tenets, with honest compliance states",
+    "updated": "2026-11-25",
+    "version": "0.1.0"
   }
 ]

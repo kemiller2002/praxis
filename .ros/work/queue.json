@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 113,
+  "nextSeq": 114,
   "items": [
     {
       "id": "WI-0001",
@@ -7250,6 +7250,27 @@
       "attachments": [],
       "createdAt": "2026-11-25T18:32:02.799Z",
       "updatedAt": "2026-11-25T20:38:40.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0113",
+      "title": "INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-25T20:12:44.906Z",
+      "updatedAt": "2026-11-25T20:12:54Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

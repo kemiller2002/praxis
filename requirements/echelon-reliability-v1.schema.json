@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kemiller2002/praxis/requirements/echelon-reliability-v1.schema.json",
+  "title": "Echelon reliability applicability declaration (proposed, RQ-ROS-2026-A038)",
+  "type": "object",
+  "required": ["schema", "systemClass", "tenets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "echelon.reliability/v1" },
+    "systemClass": {
+      "enum": ["transactional-application", "interactive-application", "stateless-service", "background-processing-service",
+               "developer-tooling", "shared-library", "static-website", "research-repository", "governance-repository", "other"]
+    },
+    "tenets": {
+      "type": "object",
+      "required": ["continuousAvailability", "cacheReadiness", "reliabilityByConstruction"],
+      "additionalProperties": false,
+      "properties": {
+        "continuousAvailability": { "$ref": "#/$defs/tenet" },
+        "cacheReadiness": { "$ref": "#/$defs/tenet" },
+        "reliabilityByConstruction": { "$ref": "#/$defs/tenet" }
+      }
+    },
+    "families": { "type": "array", "items": { "$ref": "#/$defs/family" } },
+    "exceptions": { "type": "array", "items": { "$ref": "#/$defs/exception" } },
+    "designEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decision": { "type": "string", "minLength": 1 },
+        "serviceLevels": { "type": "string", "minLength": 1 },
+        "failureModes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "migrationPlan": { "type": "string", "minLength": 1 },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["capability", "pin"], "additionalProperties": false,
+        "properties": { "capability": { "type": "string" }, "pin": { "type": "string", "minLength": 1 } }
+      }
+    }
+  },
+  "$defs": {
+    "tenet": {
+      "type": "object",
+      "required": ["applicability"],
+      "additionalProperties": false,
+      "properties": {
+        "applicability": { "enum": ["applicable", "partially-applicable", "not-applicable"] },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "if": { "properties": { "applicability": { "const": "applicable" } } },
+      "else": { "required": ["reason"] }
+    },
+    "family": {
+      "type": "object",
+      "required": ["family", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "family": { "enum": ["EAR-API", "EAR-CMD", "EAR-AVL", "EAR-QRY", "EAR-QCS", "EAR-MSG", "EAR-PRS", "EAR-SEC", "EAR-OBS"] },
+        "state": { "enum": ["compliant", "partially-compliant", "noncompliant", "not-applicable", "unverified"] },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["class", "ref"], "additionalProperties": false,
+            "properties": {
+              "class": { "enum": ["automated", "integration-test", "operational", "architectural-review"] },
+              "ref": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "exception": {
+      "type": "object",
+      "required": ["requirement", "rationale", "compensatingControls", "approver", "decision", "expires"],
+      "additionalProperties": false,
+      "properties": {
+        "requirement": { "type": "string", "pattern": "^EAR-[A-Z]{3}-\\d{3}$" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "compensatingControls": { "type": "string", "minLength": 1 },
+        "approver": { "type": "string", "minLength": 1 },
+        "decision": { "type": "string", "minLength": 1 },
+        "expires": { "type": "string", "format": "date" }
+      }
+    }
+  }
+}
