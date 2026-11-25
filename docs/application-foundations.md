@@ -145,7 +145,7 @@ Praxis is itself an Echelon application and is bound by
 ### Aegis (SAF-AEGIS-1..6)
 
 - One boundary module, `src/Praxis.Infrastructure/Boundary/AegisBoundary.fs`,
-  configures Aegis (released `EchelonFoundry.Aegis.Core` 2.0.1, blocking
+  configures Aegis (released `EchelonFoundry.Aegis.Core` 2.0.2, blocking
   delivery, standard-error sink) and classifies every escaped failure.
 - The command line runs each command inside one capture. A failure is
   attributed to the boundary that raised it: thrown inside
@@ -199,7 +199,7 @@ Praxis is itself an Echelon application and is bound by
 | SAF-URL-8 | Met | `.echelon/routes.json` and `.echelon/routes.hub.json` are `Inventory.render` of the two tables, held byte-equal by "url state: .echelon/routes.json and routes.hub.json are Inventory.render ..."; `foundations verify` checks both |
 | SAF-URL-9 | Met | `RouteTable.define` tables and typed `RouteCodec`s; `UrlState.format` is the route formatter; "url state: format then resolve is the view, for generated views" is the round-trip property test |
 | SAF-URL-10 | Met | Every page ends with "Link to this view": its canonical URL as a link, a selectable absolute address, and a `Copy link` button that `url-state.js` reveals and that copies the address in one action (`DF-ROS-2026-A058`); without script the button stays hidden and the address is selected by hand. "browser: with the enhancement, Copy link puts the view's absolute URL on the clipboard ..." |
-| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 1.0.0 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
+| SAF-DEP-1 | Met | `.echelon/foundations.json` declares Aegis 2.0.2 (NuGet), Forma 0.4.1 (release tarball lock) and Ordo.Core 1.5.0 (release nupkg lock); every pin is a released version or immutable artifact |
 | SAF-DEP-2 | Met | "foundation verifier: Praxis's own repository passes its declared foundations" runs `foundations verify` on this repository in the suite; Aegis boundary tests and Forma presentation tests are the behaviour evidence |
 
 ### Forma (SAF-FORMA-1..6)

@@ -63,8 +63,8 @@ module AegisBoundaryTests =
                       File.ReadAllText(Path.Combine(repositoryRoot (DirectoryInfo(AppContext.BaseDirectory)), "src", "Praxis.Infrastructure", "Praxis.Infrastructure.fsproj"))
 
                   Assert.isTrue
-                      (project.Contains("<PackageReference Include=\"EchelonFoundry.Aegis.Core\" Version=\"2.0.1\" />"))
-                      "Aegis is pinned to the released 2.0.1" }
+                      (project.Contains("<PackageReference Include=\"EchelonFoundry.Aegis.Core\" Version=\"2.0.2\" />"))
+                      "Aegis is pinned to the released 2.0.2" }
           { Name = "aegis boundary: each operational boundary is recorded under its own code"
             Run =
               fun () ->

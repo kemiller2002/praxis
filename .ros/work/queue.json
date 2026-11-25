@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 109,
+  "nextSeq": 110,
   "items": [
     {
       "id": "WI-0001",
@@ -7166,6 +7166,27 @@
       "attachments": [],
       "createdAt": "2026-11-25T12:34:41.141Z",
       "updatedAt": "2026-11-25T14:12:37.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0109",
+      "title": "Upgrade Aegis 2.0.1 -> 2.0.2 (detached capture no longer blocks)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-25T15:40:28.966Z",
+      "updatedAt": "2026-11-25T15:40:32Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
