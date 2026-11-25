@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 110,
+  "nextSeq": 111,
   "items": [
     {
       "id": "WI-0001",
@@ -7187,6 +7187,27 @@
       "attachments": [],
       "createdAt": "2026-11-25T15:40:28.966Z",
       "updatedAt": "2026-11-25T16:48:57Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0110",
+      "title": "Upgrade to echelon-current 1.42.0 (praxis pin 3.12.0 -> 3.25.0, ordo 1.5.0 -> 1.20.0)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-25T17:55:56.020Z",
+      "updatedAt": "2026-11-25T17:55:58.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
