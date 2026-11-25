@@ -11946,18 +11946,48 @@
     {
       "id": "WI-0109",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-25T15:40:32Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Praxis.Infrastructure.fsproj"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/AegisBoundaryTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-25T16:48:57Z",
       "telemetryExecutionIds": [
         "EXE-20261125T154034256Z-3e4815e9"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "88cfdd1068b22a36df3c2618",
+        "recordedAt": "2026-11-25T16:48:54Z",
+        "executionId": "EXE-20261125T154034256Z-3e4815e9",
+        "repository": "repository-operating-system",
+        "branch": "claude/vigila-implementation-jdeps1",
+        "commit": "3a34a6e60dabd51f865527ec5fb358d1f5271676",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/vigila-implementation-jdeps1",
+        "remoteCommit": "3a34a6e60dabd51f865527ec5fb358d1f5271676",
+        "summary": "Aegis pinned to 2.0.2 in both projects, foundations.json, AegisBoundaryTests and docs; 2513 F# tests and 4 browser tests pass",
+        "nextAction": "Complete WI-0109, rebuild registry, validate, push Praxis state",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-25T16:48:57Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-25T15:40:32Z",
+  "updatedAt": "2026-11-25T16:48:57Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
