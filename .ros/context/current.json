@@ -12034,7 +12034,27 @@
       "updatedAt": "2026-11-25T20:38:40.000Z",
       "telemetryExecutionIds": [
         "EXE-20261125T203842230Z-a742431a"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "07ca212f8ea3d12ceef083f8",
+        "recordedAt": "2026-11-25T21:28:53.000Z",
+        "executionId": "EXE-20261125T203842230Z-a742431a",
+        "repository": "repository-operating-system",
+        "branch": "claude/vigila-implementation-jdeps1",
+        "commit": "af76c365712fc6f187a972d1fd14448796983a1d",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/vigila-implementation-jdeps1",
+        "remoteCommit": "af76c365712fc6f187a972d1fd14448796983a1d",
+        "summary": "Web and hub moved to Forma 1.0.1 (forma- namespace via NamespaceMigrator) and the pinned Echelon theme 1.1.0 (load order + data-forma-brand=echelon); tests and docs updated",
+        "nextAction": "Full F# suite, browser suite, validate; then complete",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
