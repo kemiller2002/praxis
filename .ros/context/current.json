@@ -12034,7 +12034,27 @@
       "updatedAt": "2026-11-25T20:12:54Z",
       "telemetryExecutionIds": [
         "EXE-20261125T201255923Z-3477d5c5"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "cb3d82f71b6bc2ed6aba8fc3",
+        "recordedAt": "2026-11-25T20:40:19Z",
+        "executionId": "EXE-20261125T201255923Z-3477d5c5",
+        "repository": "repository-operating-system",
+        "branch": "claude/echelon-availability-architecture-ezhitq",
+        "commit": "cddb4e1e8cc7db4cfb4bdc9e0f861e71de8a6c00",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/echelon-availability-architecture-ezhitq",
+        "remoteCommit": "cddb4e1e8cc7db4cfb4bdc9e0f861e71de8a6c00",
+        "summary": "Draft RQ-ROS-2026-A038, DF-ROS-2026-A076, declaration spec and schema pushed; PR #307 open",
+        "nextAction": "Record full test-suite rerun result on PR #307; await owner review",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      }
     }
   ],
   "protocolVersion": "1.0.0",
