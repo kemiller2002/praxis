@@ -398,10 +398,10 @@ module WebInterface =
 
     let private e = Html.escape
     /// Forma status lozenge: the state word is always visible text, so state never relies on color (SAF-FORMA-5).
-    let statusPill (status: string) = $"<span class=\"ef-status-lozenge\" data-state=\"{FormaMarkup.lozengeState status}\">{e status}</span>"
+    let statusPill (status: string) = $"<span class=\"forma-status-lozenge\" data-state=\"{FormaMarkup.lozengeState status}\">{e status}</span>"
 
     let tagList (tags: string list) =
-        tags |> List.map (fun tag -> $"<span class=\"ef-badge\">{e tag}</span>") |> String.concat ""
+        tags |> List.map (fun tag -> $"<span class=\"forma-badge\">{e tag}</span>") |> String.concat ""
 
     let private header (status: StatusSummary option) =
         let label =
@@ -411,16 +411,16 @@ module WebInterface =
 
         String.concat
             "\n"
-            [ "<header class=\"ef-section\">"
+            [ "<header class=\"forma-section\">"
               "<h1>Work Backlog</h1>"
-              $"<p id=\"repository-label\" class=\"ef-eyebrow\">{label}</p>"
-              "<nav class=\"ef-cluster\" aria-label=\"Primary\"><a href=\"/\">Queue</a> <a href=\"/validate\">Validate</a></nav>"
+              $"<p id=\"repository-label\" class=\"forma-eyebrow\">{label}</p>"
+              "<nav class=\"forma-cluster\" aria-label=\"Primary\"><a href=\"/\">Queue</a> <a href=\"/validate\">Validate</a></nav>"
               "</header>" ]
 
     let private fileRows (count: int) =
         [ 1..count ]
         |> List.map (fun _ ->
-            "<div class=\"ef-cluster\"><input type=\"file\" name=\"file\" aria-label=\"File\" /><input type=\"text\" name=\"name\" aria-label=\"File name (optional)\" placeholder=\"name (optional)\" /></div>")
+            "<div class=\"forma-cluster\"><input type=\"file\" name=\"file\" aria-label=\"File\" /><input type=\"text\" name=\"name\" aria-label=\"File name (optional)\" placeholder=\"name (optional)\" /></div>")
         |> String.concat "\n"
 
     let private buttonForm (id: string) (action: string) (label: string) =
@@ -448,7 +448,7 @@ module WebInterface =
               $"<td>{statusPill row.Status}</td>"
               $"<td>{tagList row.Tags}</td>"
               $"""<td>{e (row.Priority |> Option.defaultValue "")}</td>"""
-              $"<td data-label=\"Actions\"><div class=\"ef-cluster\">{rowActionCell row}</div></td>"
+              $"<td data-label=\"Actions\"><div class=\"forma-cluster\">{rowActionCell row}</div></td>"
               "</tr>" ]
 
     /// The queue page: capture form, filter, and the (filtered) queue.
@@ -463,11 +463,11 @@ module WebInterface =
         let table =
             match rows with
             | Error message -> FormaMarkup.alert message
-            | Ok [] -> "<section class=\"ef-empty-state\"><h3>No work items match.</h3></section>"
+            | Ok [] -> "<section class=\"forma-empty-state\"><h3>No work items match.</h3></section>"
             | Ok items ->
                 String.concat
                     "\n"
-                    [ "<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Work queue\"><table id=\"work-table\">"
+                    [ "<div class=\"forma-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Work queue\"><table id=\"work-table\">"
                       "<thead><tr><th>ID</th><th>Work</th><th>Status</th><th>Tags</th><th>Priority</th><th>Actions</th></tr></thead>"
                       "<tbody>"
                       items |> List.map queueRow |> String.concat "\n"
@@ -481,28 +481,28 @@ module WebInterface =
                 [ header status
                   "<main id=\"main\" tabindex=\"-1\">"
                   Html.flash query
-                  "<section id=\"capture\" class=\"ef-section\" aria-label=\"Capture new work\">"
+                  "<section id=\"capture\" class=\"forma-section\" aria-label=\"Capture new work\">"
                   "<h2>Capture</h2>"
                   "<form id=\"add-form\" method=\"post\" action=\"/work\" enctype=\"multipart/form-data\">"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-title\">Title</label><input id=\"add-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-tags\">Tags</label><input id=\"add-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
-                  $"""<div class="ef-field"><label class="ef-field__label" for="add-priority">Priority</label><select id="add-priority" name="priority">{Html.options "medium" priorities}</select></div>"""
-                  "<div class=\"ef-field\"><label class=\"ef-field__label\" for=\"add-description\">Description</label><textarea id=\"add-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
-                  "<div class=\"ef-stack\">"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"add-title\">Title</label><input id=\"add-title\" name=\"title\" type=\"text\" placeholder=\"Describe the work\" required /></div>"
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"add-tags\">Tags</label><input id=\"add-tags\" name=\"tags\" type=\"text\" placeholder=\"tags, comma, separated\" /></div>"
+                  $"""<div class="forma-field"><label class="forma-field__label" for="add-priority">Priority</label><select id="add-priority" name="priority">{Html.options "medium" priorities}</select></div>"""
+                  "<div class=\"forma-field\"><label class=\"forma-field__label\" for=\"add-description\">Description</label><textarea id=\"add-description\" name=\"description\" placeholder=\"Optional longer description\"></textarea></div>"
+                  "<div class=\"forma-stack\">"
                   fileRows 3
                   "</div>"
-                  "<div class=\"ef-actions\"><button type=\"submit\" data-ef-variant=\"primary\">Add</button></div>"
+                  "<div class=\"forma-actions\"><button type=\"submit\" data-forma-variant=\"primary\">Add</button></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"filters\" class=\"ef-section\" aria-label=\"Filter work\">"
+                  "<section id=\"filters\" class=\"forma-section\" aria-label=\"Filter work\">"
                   "<h2>Filter</h2>"
                   "<form method=\"get\" action=\"/\" data-refine>"
                   $"<label>Tag <input name=\"tag\" type=\"text\" placeholder=\"e.g. wasm\" value=\"{e tagFilter}\" /></label>"
                   $"""<label>Status <select name="status"><option value="">any</option>{Html.options statusFilter statuses}</select></label>"""
-                  "<div class=\"ef-actions\"><button type=\"submit\">Filter</button> <a class=\"ef-button\" href=\"/\">Clear</a></div>"
+                  "<div class=\"forma-actions\"><button type=\"submit\">Filter</button> <a class=\"forma-button\" href=\"/\">Clear</a></div>"
                   "</form>"
                   "</section>"
-                  "<section id=\"queue\" class=\"ef-section\" aria-label=\"Work queue\">"
+                  "<section id=\"queue\" class=\"forma-section\" aria-label=\"Work queue\">"
                   "<h2>Queue</h2>"
                   table
                   "</section>"
@@ -526,7 +526,7 @@ module WebInterface =
         | RowAction.Ready -> $"""<section id="ready"><h3>Mark ready</h3>{buttonForm row.Id "ready" "Mark ready"}</section>"""
         | RowAction.Resume -> $"""<section id="resume"><h3>Resume</h3>{buttonForm row.Id "resume" "Resume"}</section>"""
         | RowAction.Block ->
-            $"""<section id="block"><h3>Block</h3><form method="post" action="{target "block"}"><textarea name="reason" aria-label="Reason for blocking" placeholder="Reason for blocking"></textarea><div class="ef-actions"><button type="submit">Block</button></div></form></section>"""
+            $"""<section id="block"><h3>Block</h3><form method="post" action="{target "block"}"><textarea name="reason" aria-label="Reason for blocking" placeholder="Reason for blocking"></textarea><div class="forma-actions"><button type="submit">Block</button></div></form></section>"""
         | RowAction.Abandon ->
             $"""<section id="abandon"><h3>Abandon</h3><form method="post" action="{target "abandon"}"><textarea name="reason" aria-label="Reason for abandoning" placeholder="Reason for abandoning"></textarea><button type="submit">Abandon</button></form></section>"""
         | RowAction.Start ->
@@ -536,7 +536,7 @@ module WebInterface =
                 [ "implementation"; "tests"; ""; "" ]
                 |> List.map (fun placeholder ->
                     let hint = if placeholder = "" then "type" else placeholder
-                    $"<div class=\"ef-cluster\"><input name=\"evidence-type\" aria-label=\"Evidence type\" placeholder=\"{hint}\" /><input name=\"evidence-path\" aria-label=\"Evidence path\" placeholder=\"path\" /></div>")
+                    $"<div class=\"forma-cluster\"><input name=\"evidence-type\" aria-label=\"Evidence type\" placeholder=\"{hint}\" /><input name=\"evidence-path\" aria-label=\"Evidence path\" placeholder=\"path\" /></div>")
                 |> String.concat ""
 
             $"""<section id="complete"><h3>Complete</h3><form method="post" action="{target "complete"}">{evidenceRows}<label>Conclusion (research only) <input name="conclusion" type="text" placeholder="e.g. inconclusive" /></label><button type="submit">Complete</button></form></section>"""
@@ -574,18 +574,18 @@ module WebInterface =
                   "<main id=\"main\" tabindex=\"-1\">"
                   Html.flash query
                   "<p><a href=\"/\">&larr; Queue</a></p>"
-                  "<section id=\"detail\" class=\"ef-section\" aria-label=\"Selected item detail\">"
+                  "<section id=\"detail\" class=\"forma-section\" aria-label=\"Selected item detail\">"
                   $"<h2>{e row.Id}: {e row.Title}</h2>"
-                  $"""<p class="ef-cluster">{statusPill row.Status} {tagList row.Tags} <span>{e (row.Priority |> Option.defaultValue "")}</span></p>"""
+                  $"""<p class="forma-cluster">{statusPill row.Status} {tagList row.Tags} <span>{e (row.Priority |> Option.defaultValue "")}</span></p>"""
                   live
                   blocked
                   $"""<p>{e (row.Description |> Option.defaultValue "No description.")}</p>"""
                   attachmentList row
                   "</section>"
-                  "<section id=\"actions\" class=\"ef-section\" aria-label=\"Allowed actions\">"
+                  "<section id=\"actions\" class=\"forma-section\" aria-label=\"Allowed actions\">"
                   availableActions row |> List.map (actionForm row) |> String.concat "\n"
                   "</section>"
-                  "<section id=\"edit\" class=\"ef-section\" aria-label=\"Edit work item\">"
+                  "<section id=\"edit\" class=\"forma-section\" aria-label=\"Edit work item\">"
                   "<h3>Edit</h3>"
                   $"""<form method="post" action="{target "update"}">"""
                   $"<label>Title <input name=\"title\" type=\"text\" value=\"{e row.Title}\" /></label>"
@@ -595,10 +595,10 @@ module WebInterface =
                   "<button type=\"submit\">Save</button>"
                   "</form>"
                   "</section>"
-                  "<section id=\"attach\" class=\"ef-section\" aria-label=\"Attach files\">"
+                  "<section id=\"attach\" class=\"forma-section\" aria-label=\"Attach files\">"
                   "<h3>Attach files</h3>"
                   $"""<form method="post" action="{target "attachments"}" enctype="multipart/form-data">"""
-                  "<div class=\"ef-stack\">"
+                  "<div class=\"forma-stack\">"
                   fileRows 3
                   "</div>"
                   "<button type=\"submit\">Attach</button>"
@@ -640,18 +640,18 @@ module WebInterface =
                         |> String.concat "\n"
 
                     let summary =
-                        if valid then "<p><span class=\"ef-status-lozenge\" data-state=\"ok\">Validation passed.</span></p>"
-                        else "<p role=\"alert\"><span class=\"ef-status-lozenge\" data-state=\"blocked\">Validation failed.</span></p>"
+                        if valid then "<p><span class=\"forma-status-lozenge\" data-state=\"ok\">Validation passed.</span></p>"
+                        else "<p role=\"alert\"><span class=\"forma-status-lozenge\" data-state=\"blocked\">Validation failed.</span></p>"
 
                     if findings.IsEmpty then
                         summary
                     else
-                        $"{summary}\n<div class=\"ef-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Validation findings\"><table><thead><tr><th>Severity</th><th>Path</th><th>Field</th><th>Message</th><th>Repair</th></tr></thead><tbody>\n{rows}\n</tbody></table></div>"
+                        $"{summary}\n<div class=\"forma-data-grid\" role=\"region\" tabindex=\"0\" aria-label=\"Validation findings\"><table><thead><tr><th>Severity</th><th>Path</th><th>Field</th><th>Message</th><th>Repair</th></tr></thead><tbody>\n{rows}\n</tbody></table></div>"
                 | _ -> $"<pre>{e json}</pre>"
 
         Html.page
             "Validation · Praxis Work Backlog"
-            (String.concat "\n" [ header status; "<main id=\"main\" tabindex=\"-1\">"; "<section id=\"validation\" class=\"ef-section\"><h2>Validation</h2>"; body; "</section>"; "</main>" ])
+            (String.concat "\n" [ header status; "<main id=\"main\" tabindex=\"-1\">"; "<section id=\"validation\" class=\"forma-section\"><h2>Validation</h2>"; body; "</section>"; "</main>" ])
 
     // ------------------------------------------------------------------
     // Effects: run the CLI, serve HTTP

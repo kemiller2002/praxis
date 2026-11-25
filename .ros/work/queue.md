@@ -251,6 +251,7 @@
 | RELEASE-3-23-0 | Release Praxis 3.23.0 | complete |  | medium |
 | RELEASE-3-24-0 | Release Praxis 3.24.0 | complete |  | medium |
 | RELEASE-3-25-0 | Release Praxis 3.25.0 | complete |  | medium |
+| RELEASE-3-26-0 | Release Praxis 3.26.0 | complete |  | medium |
 | RELEASE-3-5-0 | Release Praxis 3.5.0 with remote execution (GH-90) | complete |  | high |
 | RELEASE-3-6-0 | Release Praxis 3.6.0 | complete |  | medium |
 | RELEASE-3-7-0 | Release Praxis 3.7.0 | complete | release | high |
@@ -384,9 +385,9 @@
 | WI-0108 | Upgrade Aegis 1.0.0 -> 2.0.0 (echelon-current 1.40.0) | complete |  | medium |
 | WI-0109 | Upgrade Aegis 2.0.1 -> 2.0.2 (detached capture no longer blocks) | complete |  | medium |
 | WI-0110 | Upgrade to echelon-current 1.42.0 (praxis pin 3.12.0 -> 3.25.0, ordo 1.5.0 -> 1.20.0) | complete |  | medium |
-| WI-0111 | Move Praxis web/hub presentation from vendored Forma 0.4.1 to Forma 1.0.1 (echelon-current 1.42.0): ef- to forma- namespace in WebInterface/Hub/WebHttp/Foundations and tests, vendor/forma lock, optional echelon-theme 1.1.0 | captured |  | medium |
-| WI-0112 | Decide whether Praxis's vendored Ordo.Core/Ordo.Construction 1.8.2 library pins (vendor/nuget) should follow Ordo 1.20.0; the echelon-current set selects only the Ordo CLI | captured |  | medium |
-| WI-0113 | INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets | ready |  | medium |
+| WI-0111 | Move Praxis web/hub presentation from vendored Forma 0.4.1 to Forma 1.0.1 (echelon-current 1.42.0): ef- to forma- namespace in WebInterface/Hub/WebHttp/Foundations and tests, vendor/forma lock, optional echelon-theme 1.1.0 | complete |  | medium |
+| WI-0112 | Decide whether Praxis's vendored Ordo.Core/Ordo.Construction 1.8.2 library pins (vendor/nuget) should follow Ordo 1.20.0; the echelon-current set selects only the Ordo CLI | blocked |  | medium |
+| WI-0113 | INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets | active |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |

@@ -7225,10 +7225,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "captured",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-25T18:32:01.614Z",
-      "updatedAt": "2026-11-25T18:32:01.614Z",
+      "updatedAt": "2026-11-25T21:58:53.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -7246,10 +7246,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "captured",
+      "status": "ready",
       "attachments": [],
       "createdAt": "2026-11-25T18:32:02.799Z",
-      "updatedAt": "2026-11-25T18:32:02.799Z",
+      "updatedAt": "2026-11-25T20:38:40.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -7278,6 +7278,27 @@
         "provider": "anthropic",
         "model": "unknown",
         "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "RELEASE-3-26-0",
+      "title": "Release Praxis 3.26.0",
+      "description": "Bump release.json from 3.25.0 to 3.26.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-11-25T22:37:06.473Z",
+      "updatedAt": "2026-11-25T22:37:13.555Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "automation",
+        "id": "github/github-actions",
+        "provider": "github",
+        "model": "unknown",
+        "runtime": "github-actions"
       },
       "source": "manual",
       "sourceReference": null
