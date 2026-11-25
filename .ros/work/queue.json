@@ -7267,10 +7267,10 @@
       "description": "Bump release.json from 3.25.0 to 3.26.0 so native-release.yml releases it; the self-hosting pin advances after the release is published and verified.",
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-25T22:37:06.473Z",
-      "updatedAt": "2026-11-25T22:37:06.839Z",
+      "updatedAt": "2026-11-25T22:37:13.555Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "automation",

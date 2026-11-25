@@ -12081,18 +12081,39 @@
     {
       "id": "RELEASE-3-26-0",
       "type": "mechanical",
-      "state": "active",
-      "semanticState": "active",
+      "state": "complete",
+      "semanticState": "complete",
       "evidence": [],
-      "updatedAt": "2026-11-25T22:37:07.073Z",
+      "updatedAt": "2026-11-25T22:37:13.555Z",
       "telemetryExecutionIds": [
         "EXE-20261125T223707750Z-fc65aef5"
-      ]
+      ],
+      "latestCheckpoint": {
+        "id": "e9357393c273430dc5817f6a",
+        "recordedAt": "2026-11-25T22:37:11.331Z",
+        "executionId": "EXE-20261125T223707750Z-fc65aef5",
+        "repository": "repository-operating-system",
+        "branch": "main",
+        "commit": "6cb4266143c45760f866b81b83a09589cb267fb9",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "main",
+        "remoteCommit": "6cb4266143c45760f866b81b83a09589cb267fb9",
+        "summary": "Bumped the package version from 3.25.0 to 3.26.0",
+        "nextAction": "Run final completion transition",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-25T22:37:13.555Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-25T22:37:07.073Z",
+  "updatedAt": "2026-11-25T22:37:13.555Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
