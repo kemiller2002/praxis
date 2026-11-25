@@ -12028,10 +12028,19 @@
     {
       "id": "WI-0111",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-25T20:38:40.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Foundations/FormaRelease.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FormaPresentationTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-25T21:58:53.000Z",
       "telemetryExecutionIds": [
         "EXE-20261125T203842230Z-a742431a"
       ],
@@ -12054,7 +12063,8 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-11-25T21:58:53.000Z"
     },
     {
       "id": "WI-0112",
@@ -12071,7 +12081,7 @@
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-25T21:29:13.000Z",
+  "updatedAt": "2026-11-25T21:58:53.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
