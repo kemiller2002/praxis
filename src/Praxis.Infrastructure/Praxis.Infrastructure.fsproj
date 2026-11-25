@@ -215,6 +215,9 @@
     <!-- The pinned Forma release (SAF-FORMA-1): the unmodified release tarball and its lock. -->
     <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/forma/forma.lock" LogicalName="praxis.forma/forma.lock" />
     <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/forma/echelon-foundry-design-system-*.tgz" LogicalName="praxis.forma/forma.tgz" />
+    <!-- The pinned Echelon theme release (WI-0111): the unmodified release tarball and its lock. -->
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/echelon-theme/echelon-theme.lock" LogicalName="praxis.echelon-theme/echelon-theme.lock" />
+    <EmbeddedResource Include="$(PraxisRepositoryRoot)vendor/echelon-theme/echelon-foundry-echelon-theme-*.tgz" LogicalName="praxis.echelon-theme/echelon-theme.tgz" />
 
     <EmbeddedResource Include="$(PraxisRepositoryRoot)starter/**/*.*" LogicalName="praxis.payload/starter/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

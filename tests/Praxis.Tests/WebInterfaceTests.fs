@@ -721,6 +721,6 @@ module WebInterfaceTests =
                       let shown = server.Get(Http.location blocked)
                       Http.contains "reason" (Http.body shown)
                       Http.contains "praxis-flash=;" (String.Join("|", (match shown.Headers.TryGetValues "Set-Cookie" with | true, values -> values | _ -> Seq.empty)))
-                      Assert.isTrue (not ((Http.body (server.Get "/work/WI-FLASH")).Contains "ef-fault--inline")) "the flash shows once") } ]
+                      Assert.isTrue (not ((Http.body (server.Get "/work/WI-FLASH")).Contains "forma-fault--inline")) "the flash shows once") } ]
 
     let tests = unitTests @ apiTests @ formTests @ urlStateTests

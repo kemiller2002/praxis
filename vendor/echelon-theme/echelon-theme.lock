@@ -1,0 +1,10 @@
+# Echelon theme pin for praxis web serve and praxis hub serve (WI-0111).
+# The Echelon brand for Forma 1.0 (EDS-ADR-002), loaded after Forma's
+# all.css in the order echelon.css, echelon-fonts.css, echelon-app.css, with
+# data-forma-brand="echelon" on the root element. The tarball beside this file
+# is the unmodified release artifact, verified against this digest at
+# build-time tests and at runtime before any stylesheet or font is served.
+# Upgrade by replacing both, never by editing theme CSS.
+echelon-theme 1.1.0
+url https://github.com/kemiller2002/echelon-design-system/releases/download/v1.1.0/echelon-foundry-echelon-theme-1.1.0.tgz
+sha256 e9360d743ad9e9a62abb3cf22d29bc8a26a4f9fd2b4980dd1d050c27937ec6bd
