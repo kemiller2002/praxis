@@ -12303,38 +12303,52 @@
     {
       "id": "WI-0116",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-26T12:34:52.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Governance/MergeAuthorization.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Governance/GovernanceOperations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/GovernanceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T14:08:42.000Z",
       "telemetryExecutionIds": [
         "EXE-20261126T123453931Z-9f20ee63"
       ],
       "latestCheckpoint": {
-        "id": "c559fd66f1e22e2cd0fd04a7",
-        "recordedAt": "2026-11-26T13:00:00.000Z",
+        "id": "86947c836bbb1ec87344dd9d",
+        "recordedAt": "2026-11-26T14:08:40.000Z",
         "executionId": "EXE-20261126T123453931Z-9f20ee63",
         "repository": "repository-operating-system",
         "branch": "claude/praxis-verified-completion-eu4ydu",
-        "commit": "bf16ffc81fee7ca85cb58dc41cab128ad99ac3cb",
+        "commit": "6286453d5d12ac777f65619e2bf26f5c8b3cd38c",
         "remote": {
           "name": "origin",
           "url": "https://github.com/kemiller2002/praxis"
         },
         "remoteBranch": "claude/praxis-verified-completion-eu4ydu",
-        "remoteCommit": "bf16ffc81fee7ca85cb58dc41cab128ad99ac3cb",
-        "summary": "Governance domain, infrastructure and CLI implemented; live inspect and audit verified against Praxis and echelon-assurance",
-        "nextAction": "Adversarial tests, docs, review",
+        "remoteCommit": "6286453d5d12ac777f65619e2bf26f5c8b3cd38c",
+        "summary": "Enforceable governance implemented, reviewed in two rounds, full suite 2598/2598, draft PR #312",
+        "nextAction": "Owner review and merge of PR #312; then per-repository bootstrap (docs/governance/rollout.md)",
         "verification": {
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-11-26T14:08:42.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-26T12:34:52.000Z",
+  "updatedAt": "2026-11-26T14:08:42.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
