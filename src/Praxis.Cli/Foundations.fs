@@ -181,20 +181,11 @@ module Foundations =
         |> Seq.filter (fun path -> sourceExtensions.Contains(Path.GetExtension(path).ToLowerInvariant()))
         |> Seq.toList
 
-    let private fileSatisfies (predicate: string -> bool) (path: string) =
-        try
-            File.ReadAllText path |> predicate
-        with _ ->
-            false
-
     let private anySourceSatisfies (root: string) (predicate: string -> bool) =
-        sourceFiles root |> List.exists (fileSatisfies predicate)
-
-    let private containsAny (needles: string list) (text: string) =
-        needles |> List.exists (fun needle -> text.Contains(needle, StringComparison.OrdinalIgnoreCase))
+        sourceFiles root |> List.exists (fun path -> try File.ReadAllText path |> predicate with _ -> false)
 
     let private anySourceContains (root: string) (needles: string list) =
-        anySourceSatisfies root (containsAny needles)
+        anySourceSatisfies root (fun text -> needles |> List.exists (fun needle -> text.Contains(needle, StringComparison.OrdinalIgnoreCase)))
 
     let private allProjectText root =
         projectFiles root
