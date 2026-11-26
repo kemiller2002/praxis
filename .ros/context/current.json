@@ -12110,14 +12110,45 @@
     {
       "id": "WI-0112",
       "type": "task",
-      "state": "blocked",
-      "semanticState": "blocked",
-      "evidence": [],
-      "updatedAt": "2026-11-25T21:29:13.000Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A077--keep-ordo-library-pins-at-1-8-2.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T04:00:40Z",
       "telemetryExecutionIds": [
         "EXE-20261125T212905301Z-3ab94da5"
       ],
-      "blockReason": "Owner decision required before following Ordo 1.20.0. Verified 2026-11-25 in a scratch worktree (pins swapped to the v1.20.0 ordo-core.nupkg sha256 d3bf0301... and ordo-construction.nupkg sha256 bb17b2da..., both matching the release native-checksums.txt): (1) Build breaks: Ordo.Construction 1.20 ObligationKind adds vocabulary-3 cases ResolveUndecidedTransition and DecideExtension; ConstructionRouting.classify and ConstructionService.obligationNode fail FS0025 (incomplete match, warnings as errors). Routing both as semantic decisions compiles, but praxis.construction-routing/1 semantic entries then carry empty subject/question, so the wire shape for resolve-transition/decide-extension (state, command, point) and their handoff question kinds and docs/construction.md routing table need a design decision. (2) With that patch the suite runs 2507/2513: five local runtime cli tests fail because Ordo.Core 1.20 cohort readiness refuses AuthorizationOutsideCohort (DEC-B, DEC-C): an authorization set may no longer name decisions outside the selected cohort dependency closure, while Praxis passes one global approved-decision set to every cohort. Following 1.20 therefore changes Praxis governance semantics (scope authorizations per cohort, regenerate fixtures). (3) foundations.json ordo version must move with the locks. Decide: (a) adopt Ordo 1.20 libraries with per-cohort authorization scoping and vocabulary-3 obligation routing/wire shapes (a Praxis minor feature, new WI), or (b) keep the 1.8.2 library pins (the echelon-current set selects only the Ordo CLI) and record that as a decision."
+      "blockReason": "Owner decision required before following Ordo 1.20.0. Verified 2026-11-25 in a scratch worktree (pins swapped to the v1.20.0 ordo-core.nupkg sha256 d3bf0301... and ordo-construction.nupkg sha256 bb17b2da..., both matching the release native-checksums.txt): (1) Build breaks: Ordo.Construction 1.20 ObligationKind adds vocabulary-3 cases ResolveUndecidedTransition and DecideExtension; ConstructionRouting.classify and ConstructionService.obligationNode fail FS0025 (incomplete match, warnings as errors). Routing both as semantic decisions compiles, but praxis.construction-routing/1 semantic entries then carry empty subject/question, so the wire shape for resolve-transition/decide-extension (state, command, point) and their handoff question kinds and docs/construction.md routing table need a design decision. (2) With that patch the suite runs 2507/2513: five local runtime cli tests fail because Ordo.Core 1.20 cohort readiness refuses AuthorizationOutsideCohort (DEC-B, DEC-C): an authorization set may no longer name decisions outside the selected cohort dependency closure, while Praxis passes one global approved-decision set to every cohort. Following 1.20 therefore changes Praxis governance semantics (scope authorizations per cohort, regenerate fixtures). (3) foundations.json ordo version must move with the locks. Decide: (a) adopt Ordo 1.20 libraries with per-cohort authorization scoping and vocabulary-3 obligation routing/wire shapes (a Praxis minor feature, new WI), or (b) keep the 1.8.2 library pins (the echelon-current set selects only the Ordo CLI) and record that as a decision.",
+      "latestCheckpoint": {
+        "id": "42492e7de7e47aa09117b58e",
+        "recordedAt": "2026-11-26T03:59:36Z",
+        "executionId": "EXE-20261125T212905301Z-3ab94da5",
+        "repository": "repository-operating-system",
+        "branch": "claude/vigila-implementation-jdeps1",
+        "commit": "1a76737d485ce7d82a1e1ff8a484f407680d08b3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/vigila-implementation-jdeps1",
+        "remoteCommit": "1a76737d485ce7d82a1e1ff8a484f407680d08b3",
+        "summary": "DF-ROS-2026-A077 recorded: keep Ordo library pins at 1.8.2",
+        "nextAction": "complete WI-0112 with the decision as evidence",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-26T04:00:40Z",
+      "conclusion": "Option (b) decided under owner delegation (DF-ROS-2026-A077): keep Ordo.Core/Ordo.Construction 1.8.2 library pins, unchanged and verified by the foundations self-check (ordo 1.8.2 installed, pinned, used); adopting 1.20 is a separate feature needing per-cohort authorization scoping and ResolveUndecidedTransition/DecideExtension routing"
     },
     {
       "id": "RELEASE-3-26-0",
@@ -12191,11 +12222,56 @@
         }
       },
       "completedAt": "2026-11-26T00:35:01Z"
+    },
+    {
+      "id": "WI-0115",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Foundations/FormaPin.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/Foundations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T04:00:55Z",
+      "telemetryExecutionIds": [
+        "EXE-20261126T031316515Z-432ed1a5"
+      ],
+      "latestCheckpoint": {
+        "id": "32594db6be88ed62dd5019ba",
+        "recordedAt": "2026-11-26T03:59:36Z",
+        "executionId": "EXE-20261126T031316515Z-432ed1a5",
+        "repository": "repository-operating-system",
+        "branch": "claude/vigila-implementation-jdeps1",
+        "commit": "1a76737d485ce7d82a1e1ff8a484f407680d08b3",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/vigila-implementation-jdeps1",
+        "remoteCommit": "1a76737d485ce7d82a1e1ff8a484f407680d08b3",
+        "summary": "usesForma detects plain/escaped Forma class attributes; tests added; ratchet locked",
+        "nextAction": "complete WI-0115, open draft PR",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-26T04:00:55Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-26T01:23:19.0000000\u002B00:00",
+  "updatedAt": "2026-11-26T04:00:55Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

@@ -26,7 +26,7 @@
     "review.accept"
   ],
   "baselineRevision": "f5006d311827c0744ef37a1be1be3c42b6ab5ad3",
-  "candidateRevision": null,
+  "candidateRevision": "c65746ff0e7802a03b0e9bc77fb8230ea3810287",
   "workspace": "checkout:EXE-20261125T212905301Z-3ab94da5",
   "workspaceBinding": {
     "id": "checkout:EXE-20261125T212905301Z-3ab94da5",
@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-11-25T21:29:06.097Z",
-  "state": "blocked",
-  "stateReason": "Owner decision required before following Ordo 1.20.0. Verified 2026-11-25 in a scratch worktree (pins swapped to the v1.20.0 ordo-core.nupkg sha256 d3bf0301... and ordo-construction.nupkg sha256 bb17b2da..., both matching the release native-checksums.txt): (1) Build breaks: Ordo.Construction 1.20 ObligationKind adds vocabulary-3 cases ResolveUndecidedTransition and DecideExtension; ConstructionRouting.classify and ConstructionService.obligationNode fail FS0025 (incomplete match, warnings as errors). Routing both as semantic decisions compiles, but praxis.construction-routing/1 semantic entries then carry empty subject/question, so the wire shape for resolve-transition/decide-extension (state, command, point) and their handoff question kinds and docs/construction.md routing table need a design decision. (2) With that patch the suite runs 2507/2513: five local runtime cli tests fail because Ordo.Core 1.20 cohort readiness refuses AuthorizationOutsideCohort (DEC-B, DEC-C): an authorization set may no longer name decisions outside the selected cohort dependency closure, while Praxis passes one global approved-decision set to every cohort. Following 1.20 therefore changes Praxis governance semantics (scope authorizations per cohort, regenerate fixtures). (3) foundations.json ordo version must move with the locks. Decide: (a) adopt Ordo 1.20 libraries with per-cohort authorization scoping and vocabulary-3 obligation routing/wire shapes (a Praxis minor feature, new WI), or (b) keep the 1.8.2 library pins (the echelon-current set selects only the Ordo CLI) and record that as a decision.",
+  "state": "completed",
+  "stateReason": null,
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"

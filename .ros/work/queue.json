@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 115,
+  "nextSeq": 116,
   "items": [
     {
       "id": "WI-0001",
@@ -7246,10 +7246,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-25T18:32:02.799Z",
-      "updatedAt": "2026-11-25T20:38:40.000Z",
+      "updatedAt": "2026-11-26T04:00:40Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
@@ -7313,6 +7313,27 @@
       "attachments": [],
       "createdAt": "2026-11-26T00:32:51.471Z",
       "updatedAt": "2026-11-26T00:35:01Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0115",
+      "title": "Fix praxis foundations verify Forma usage detection: plain HTML class=\"forma-*\"/class='ef-*' attributes (including non-first classes) are not recognised because usageMarkers carries a literal backslash",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-11-26T03:13:07.925Z",
+      "updatedAt": "2026-11-26T04:00:55Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

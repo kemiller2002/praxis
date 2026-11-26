@@ -114,6 +114,43 @@ module FoundationsTests =
                       Assert.isTrue forma.Pinned "Forma should be pinned"
                       Assert.isTrue forma.Used "Forma canonical usage should be detected") }
 
+          { Name = "forma usage detection: a Forma class anywhere in a class list, in plain or escaped attributes (WI-0115)"
+            Run =
+              fun () ->
+                  [ "<div class=\"forma-card\">"
+                    "<div class='forma-card'>"
+                    "<div class=\"x forma-card\">"
+                    "<div class='layout  ef-button primary'>"
+                    "<div CLASS = \"forma-alert\">"
+                    "<div class=\"x\tforma-card\">"
+                    "let view = \"<div class=\\\"x forma-card\\\">\""
+                    "<forma-dialog open></forma-dialog>"
+                    "<link rel=\"stylesheet\" href=\"/vendor/design-system/all.css\">" ]
+                  |> List.iter (fun text -> Assert.isTrue (FormaPin.usesForma text) $"Forma use detected in: {text}")
+
+                  [ "<div class=\"chef-hat\">"
+                    "<div class=\"xforma-card\">"
+                    "<div class=\"card\" data-note=\"forma-card\">"
+                    "<div data-class=\"forma-card\">"
+                    "<div className=\"card\">forma-card</div>"
+                    "plain prose about forma-card" ]
+                  |> List.iter (fun text -> Assert.isTrue (not (FormaPin.usesForma text)) $"no Forma use in: {text}") }
+
+          { Name = "foundation verifier recognises Forma used only through plain HTML class attributes (WI-0115)"
+            Run =
+              fun () ->
+                  withTemp (fun root ->
+                      write root ".echelon/foundations.json" (config "Example" "\"forma\": { \"required\": true, \"version\": \"1.0.1\" }")
+                      write root "package.json" (dependency "@echelon-foundry/design-system" "1.0.1")
+                      write root "web/index.html" "<!doctype html>\n<main class=\"forma-card\"><p>Hello</p></main>"
+                      let forma = (report root).Capabilities |> List.find (fun item -> item.Name = "forma")
+                      Assert.isTrue forma.Used $"plain class=\"forma-card\" is Forma use: {forma}"
+                      Assert.isTrue forma.Passed $"pinned and used Forma passes: {forma}"
+
+                      write root "web/index.html" "<!doctype html>\n<main class='page forma-card'><p>Hello</p></main>"
+                      let listed = (report root).Capabilities |> List.find (fun item -> item.Name = "forma")
+                      Assert.isTrue listed.Used $"a non-first Forma class in single quotes is Forma use: {listed}") }
+
           { Name = "foundation verifier rejects dependency that is installed but unused"
             Run =
               fun () ->

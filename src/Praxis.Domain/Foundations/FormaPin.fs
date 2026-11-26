@@ -89,15 +89,36 @@ module FormaPin =
     /// The stylesheet path a page links: versioned, so a pin change is a new URL.
     let stylesheetPath (lock: ReleaseLock) = $"/forma/{lock.Version}/all.css"
 
-    /// Source text that shows a repository uses Forma, for `foundations
-    /// verify`. Forma 1.0 renamed the `ef-` namespace to `forma-`
-    /// (FORMA-NS-001); the pre-1.0 markers still identify 0.x consumers.
+    /// The class and element prefixes that identify Forma. Forma 1.0 renamed
+    /// the `ef-` namespace to `forma-` (FORMA-NS-001); `ef-` still identifies
+    /// 0.x consumers.
+    let private prefixes = [ "ef"; "forma" ]
+
+    /// Literal source text that shows a repository uses Forma: the package,
+    /// its stylesheet, its custom elements, and a class attribute inside an
+    /// escaped string literal (`class=\"forma-…`, as F# or C# source carries
+    /// it). Plain HTML class attributes are recognised by `usesForma`.
     let usageMarkers =
         let elements = [ "button"; "input"; "field"; "card"; "dialog"; "alert"; "select"; "checkbox"; "toggle" ]
 
         [ "@echelon-foundry/design-system"; "design-system/all.css" ]
-        @ ([ "ef"; "forma" ]
+        @ (prefixes
            |> List.collect (fun prefix -> $"class=\\\"{prefix}-" :: (elements |> List.map (fun element -> $"<{prefix}-{element}"))))
+
+    /// A `class` attribute naming a Forma class anywhere in its list: double or
+    /// single quotes, optionally escaped (`class=\"…`), any position in the list.
+    let private classAttribute =
+        let namespaces = prefixes |> List.map Regex.Escape |> String.concat "|"
+
+        Regex(
+            $"""(?<![\w-])class\s*=\s*\\?["'](?:[^"'<>\r\n]*?\s)?(?:{namespaces})-[a-z0-9]""",
+            RegexOptions.Compiled ||| RegexOptions.IgnoreCase ||| RegexOptions.CultureInvariant
+        )
+
+    /// Pure: whether source text shows Forma use (WI-0115).
+    let usesForma (text: string) =
+        usageMarkers |> List.exists (fun marker -> text.Contains(marker, StringComparison.OrdinalIgnoreCase))
+        || classAttribute.IsMatch text
 
 /// The Echelon theme pin (`vendor/echelon-theme/echelon-theme.lock`): the
 /// Echelon brand for Forma 1.0, an optional layer over Forma (EDS-ADR-002).

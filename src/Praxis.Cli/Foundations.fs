@@ -165,15 +165,11 @@ module Foundations =
         |> Seq.filter (fun path -> sourceExtensions.Contains(Path.GetExtension(path).ToLowerInvariant()))
         |> Seq.toList
 
-    let private fileContainsAny (needles: string list) (path: string) =
-        try
-            let text = File.ReadAllText path
-            needles |> List.exists (fun needle -> text.Contains(needle, StringComparison.OrdinalIgnoreCase))
-        with _ ->
-            false
+    let private anySourceSatisfies (root: string) (predicate: string -> bool) =
+        sourceFiles root |> List.exists (fun path -> try File.ReadAllText path |> predicate with _ -> false)
 
     let private anySourceContains (root: string) (needles: string list) =
-        sourceFiles root |> List.exists (fileContainsAny needles)
+        anySourceSatisfies root (fun text -> needles |> List.exists (fun needle -> text.Contains(needle, StringComparison.OrdinalIgnoreCase)))
 
     let private allProjectText root =
         projectFiles root
@@ -276,7 +272,7 @@ module Foundations =
         let lockPinned = lock |> Option.exists (Result.exists (fun l -> rule.Version |> Option.forall ((=) l.Version)))
         let installed = spec.IsSome || lock.IsSome
         let pinned = (spec.IsSome && NpmPin.isPinned rule.Version rule.SourceCommit spec) || lockPinned
-        let used = anySourceContains root FormaPin.usageMarkers
+        let used = anySourceSatisfies root FormaPin.usesForma
 
         let dependencyDetail = spec |> Option.orElse (lock |> Option.map (function Ok l -> $"{FormaRelease.LockPath} {l.Version}" | Error e -> e)) |> Option.defaultValue "missing"
         installed, pinned, used, used, [ $"dependency: {dependencyDetail}" ]
