@@ -38,13 +38,6 @@ module Foundations =
           Message: string
           Remediation: string }
 
-    /// The report-only reliability declaration check (RQ-ROS-2026-A038,
-    /// DF-ROS-2026-A076). Its findings never affect `Passed`.
-    type ReliabilityReport =
-        { Configuration: string
-          Assessment: ReliabilityAssessment
-          Findings: Finding list }
-
     type Report =
         { SchemaVersion: int
           Application: string
@@ -52,7 +45,8 @@ module Foundations =
           Passed: bool
           Capabilities: CapabilityResult list
           Findings: Finding list
-          Reliability: ReliabilityReport }
+          /// Report-only (RQ-ROS-2026-A038); never changes `Passed`.
+          Reliability: ReliabilitySection }
 
     let private ignoredDirectories =
         set
@@ -89,30 +83,12 @@ module Foundations =
 
     let private projectExtensions = set [ ".fsproj"; ".csproj"; ".props"; ".targets" ]
 
-    let private tryProperty (name: string) (element: JsonElement) =
-        let mutable value = Unchecked.defaultof<JsonElement>
-        if element.ValueKind = JsonValueKind.Object && element.TryGetProperty(name, &value) then Some value else None
-
-    let private stringProperty name element =
-        tryProperty name element
-        |> Option.bind (fun value ->
-            if value.ValueKind = JsonValueKind.String then
-                value.GetString() |> Option.ofObj
-            else
-                None)
-
-    let private boolProperty defaultValue name element =
-        match tryProperty name element with
-        | Some value when value.ValueKind = JsonValueKind.True -> true
-        | Some value when value.ValueKind = JsonValueKind.False -> false
-        | _ -> defaultValue
-
     let private parseRule name (element: JsonElement) =
         { Name = name
-          Required = boolProperty false "required" element
-          Version = stringProperty "version" element
-          SourceCommit = stringProperty "sourceCommit" element
-          BoundaryManifest = stringProperty "boundaryManifest" element
+          Required = FoundationsJson.boolProperty false "required" element
+          Version = FoundationsJson.stringProperty "version" element
+          SourceCommit = FoundationsJson.stringProperty "sourceCommit" element
+          BoundaryManifest = FoundationsJson.stringProperty "boundaryManifest" element
           Routing = RoutingFoundation.declaration element }
 
     let private readConfig root =
@@ -125,7 +101,7 @@ module Foundations =
                 use document = JsonDocument.Parse(File.ReadAllText path)
                 let rootElement = document.RootElement
                 let schemaVersion =
-                    tryProperty "schemaVersion" rootElement
+                    FoundationsJson.tryProperty "schemaVersion" rootElement
                     |> Option.filter (fun value -> value.ValueKind = JsonValueKind.Number)
                     |> Option.map _.GetInt32()
                     |> Option.defaultValue 0
@@ -133,17 +109,17 @@ module Foundations =
                 if schemaVersion <> 1 then
                     Error $"{ConfigRelativePath} schemaVersion must be 1"
                 else
-                    match tryProperty "capabilities" rootElement with
+                    match FoundationsJson.tryProperty "capabilities" rootElement with
                     | None -> Error $"{ConfigRelativePath} must contain a capabilities object"
                     | Some capabilities when capabilities.ValueKind <> JsonValueKind.Object ->
                         Error $"{ConfigRelativePath} capabilities must be an object"
                     | Some capabilities ->
                         let application =
-                            stringProperty "application" rootElement
+                            FoundationsJson.stringProperty "application" rootElement
                             |> Option.defaultValue (DirectoryInfo(root).Name)
 
                         let rule name =
-                            tryProperty name capabilities
+                            FoundationsJson.tryProperty name capabilities
                             |> Option.map (parseRule name)
                             |> Option.defaultValue
                                 { Name = name
@@ -217,9 +193,9 @@ module Foundations =
 
                 sections
                 |> List.tryPick (fun section ->
-                    tryProperty section document.RootElement
+                    FoundationsJson.tryProperty section document.RootElement
                     |> Option.bind (fun dependencies ->
-                        tryProperty packageName dependencies
+                        FoundationsJson.tryProperty packageName dependencies
                         |> Option.bind (fun value ->
                             if value.ValueKind = JsonValueKind.String then
                                 value.GetString() |> Option.ofObj
@@ -439,28 +415,6 @@ module Foundations =
 
             result, findings
 
-    /// Pure: the reliability assessment as a report section. Every finding
-    /// is `info`: the check is report-only and never fails verification.
-    let reliabilityReport (assessment: ReliabilityAssessment) =
-        { Configuration = ReliabilityDeclaration.RelativePath
-          Assessment = assessment
-          Findings =
-            assessment.Findings
-            |> List.map (fun item ->
-                { Code = findingCode "reliability" item.Suffix
-                  Capability = "reliability"
-                  Severity = "info"
-                  Message = $"{item.Requirement}: {item.Message}"
-                  Remediation = item.Remediation }) }
-
-    /// The I/O edge of the reliability check: read the declaration, and
-    /// answer path existence, under `root`.
-    let private assessReliability (today: DateOnly) (root: string) =
-        ReliabilityDeclarationReader.read root
-        |> ReliabilityDeclarationReader.parse
-        |> ReliabilityDeclaration.assess (ReliabilityDeclarationReader.fileExists root) today
-        |> reliabilityReport
-
     let verifyOn (today: DateOnly) (root: string) : Result<Report, string> =
         let absoluteRoot = Path.GetFullPath root
 
@@ -478,46 +432,14 @@ module Foundations =
                   Passed = findings |> List.forall (isError >> not)
                   Capabilities = capabilities
                   Findings = findings
-                  Reliability = assessReliability today absoluteRoot }
+                  Reliability = ReliabilityFoundation.verify today absoluteRoot }
 
-    let verify (root: string) : Result<Report, string> =
-        verifyOn (DateOnly.FromDateTime DateTime.UtcNow) root
+    let verify root = verifyOn (ReliabilityFoundation.today ()) root
 
     let private optionNode (value: string option) =
         match value with
         | Some text -> JsonValue.Create(text) :> JsonNode
         | None -> null
-
-    let reliabilityStatusText =
-        function
-        | ReliabilityStatus.Absent -> "absent"
-        | ReliabilityStatus.Present -> "present"
-        | ReliabilityStatus.Invalid -> "invalid"
-
-    /// The report-only reliability section of the text report. A family is
-    /// shown with its effective state; a downgraded claim reads `unverified`.
-    let private reliabilityLines (section: ReliabilityReport) =
-        let assessment = section.Assessment
-
-        [ yield ""
-          yield $"Reliability declaration (report-only, RQ-ROS-2026-A038): {reliabilityStatusText assessment.Status} ({section.Configuration})"
-          match assessment.SystemClass with
-          | Some value -> yield $"  system class: {value}"
-          | None -> ()
-          for key, value in assessment.Tenets do
-              let shown = value |> Option.defaultValue "(undeclared)"
-              yield $"  tenet {key}: {shown}"
-          for family in assessment.Families do
-              if family.Reasons.IsEmpty then
-                  yield $"  family {family.Family}: {family.Effective}"
-              else
-                  let reasons = String.Join("; ", family.Reasons)
-                  yield $"  family {family.Family}: {family.Effective} (declared {family.Declared}; {reasons})"
-          for finding in section.Findings do
-              yield $"  NOTE {finding.Code} {finding.Message}"
-              yield $"    REPAIR {finding.Remediation}"
-          if not section.Findings.IsEmpty then
-              yield $"  {section.Findings.Length} reliability note(s); report-only, never a verification failure" ]
 
     let renderJson (report: Report) =
         let capabilities = JsonArray()
@@ -538,43 +460,16 @@ module Foundations =
             node["details"] <- details
             capabilities.Add(node)
 
-        let findingNode (finding: Finding) =
+        let findings = JsonArray()
+
+        for finding in report.Findings do
             let node = JsonObject()
             node["code"] <- JsonValue.Create finding.Code
             node["capability"] <- JsonValue.Create finding.Capability
             node["severity"] <- JsonValue.Create finding.Severity
             node["message"] <- JsonValue.Create finding.Message
             node["remediation"] <- JsonValue.Create finding.Remediation
-            node
-
-        let findings = JsonArray()
-        report.Findings |> List.iter (findingNode >> findings.Add)
-
-        let reliability = JsonObject()
-        let assessment = report.Reliability.Assessment
-        reliability["configuration"] <- JsonValue.Create report.Reliability.Configuration
-        reliability["mode"] <- JsonValue.Create "report-only"
-        reliability["status"] <- JsonValue.Create(reliabilityStatusText assessment.Status)
-        reliability["systemClass"] <- optionNode assessment.SystemClass
-        let tenets = JsonObject()
-        assessment.Tenets |> List.iter (fun (key, value) -> tenets[key] <- optionNode value)
-        reliability["tenets"] <- tenets
-        let families = JsonArray()
-
-        for family in assessment.Families do
-            let node = JsonObject()
-            node["family"] <- JsonValue.Create family.Family
-            node["declared"] <- JsonValue.Create family.Declared
-            node["effective"] <- JsonValue.Create family.Effective
-            let reasons = JsonArray()
-            family.Reasons |> List.iter (fun reason -> reasons.Add(JsonValue.Create reason))
-            node["reasons"] <- reasons
-            families.Add(node)
-
-        reliability["families"] <- families
-        let reliabilityFindings = JsonArray()
-        report.Reliability.Findings |> List.iter (findingNode >> reliabilityFindings.Add)
-        reliability["findings"] <- reliabilityFindings
+            findings.Add(node)
 
         let summary = JsonObject()
         summary["required"] <- JsonValue.Create(report.Capabilities |> List.filter _.Required |> List.length)
@@ -591,7 +486,7 @@ module Foundations =
         root["passed"] <- JsonValue.Create report.Passed
         root["capabilities"] <- capabilities
         root["findings"] <- findings
-        root["reliability"] <- reliability
+        root["reliability"] <- ReliabilityFoundation.json report.Reliability
         root["summary"] <- summary
         root.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2))
 
@@ -619,7 +514,7 @@ module Foundations =
                 lines.Add((if isError finding then "  " else "  NOTE ") + $"{finding.Code} {finding.Message}")
                 lines.Add($"    REPAIR {finding.Remediation}")
 
-        reliabilityLines report.Reliability |> List.iter lines.Add
+        ReliabilityFoundation.textLines report.Reliability |> List.iter lines.Add
         lines.Add("")
         let errors, notes = report.Findings |> List.partition isError
         let noted = if notes.IsEmpty then "" else $" ({notes.Length} note(s))"

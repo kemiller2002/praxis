@@ -47,7 +47,7 @@ This section is a portfolio-wide standard. It applies to **every Echelon web app
 
 ## Application reliability and cache readiness (report-only)
 
-[`APPLICATION-RELIABILITY-DECLARATION.md`](APPLICATION-RELIABILITY-DECLARATION.md) (RQ-ROS-2026-A038, DF-ROS-2026-A076, accepted) adds a per-repository applicability declaration for the owner-approved Continuous Availability and Cache-Readiness tenets. `praxis foundations verify` reports on it report-only: its findings never fail verification until owner decision U-14 makes it enforcing.
+[`APPLICATION-RELIABILITY-DECLARATION.md`](APPLICATION-RELIABILITY-DECLARATION.md) (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, draft) adds a per-repository applicability declaration for the owner-approved Continuous Availability and Cache-Readiness tenets. `praxis foundations verify` reports on it report-only: its findings never fail verification. Nothing in it is required; whether it ever becomes enforcing is open owner decision U-14.
 
 ## Dependency discipline and completion
 

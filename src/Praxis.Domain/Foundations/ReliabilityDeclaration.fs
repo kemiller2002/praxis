@@ -72,8 +72,8 @@ type ReliabilityStatus =
 
 /// One report-only finding: the PRX-REL requirement it reports against, its
 /// code suffix (ECHELON-FND-RELIABILITY-<suffix>), message and remediation.
-/// Every finding is informational: verification stays report-only
-/// (DF-ROS-2026-A076, owner decision U-14).
+/// Every finding is informational: verification is report-only, as draft
+/// decision DF-ROS-2026-A076 proposes.
 type ReliabilityFinding =
     { Requirement: string
       Suffix: string

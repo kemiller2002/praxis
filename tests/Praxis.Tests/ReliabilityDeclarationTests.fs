@@ -153,7 +153,7 @@ module ReliabilityDeclarationTests =
           { Name = "reliability declaration: a downgraded family is never rendered as compliant"
             Run =
               fun () ->
-                  let report = Foundations.reliabilityReport (assess (transactional """{ "family": "EAR-CMD", "state": "compliant" }""" design))
+                  let report = ReliabilityFoundation.section (assess (transactional """{ "family": "EAR-CMD", "state": "compliant" }""" design))
                   let family = Assert.single report.Assessment.Families
                   Assert.isTrue (family.Effective <> "compliant") "a claim without evidence must not read compliant"
                   Assert.isTrue (report.Findings |> List.forall (fun item -> item.Severity = "info")) "every reliability finding is report-only" }

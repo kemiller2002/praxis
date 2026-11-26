@@ -128,8 +128,8 @@ reference. Neither needs a new Praxis release.
 `praxis foundations verify` also reads `.echelon/reliability.json`
 (`echelon.reliability/v1`,
 [`requirements/APPLICATION-RELIABILITY-DECLARATION.md`](../requirements/APPLICATION-RELIABILITY-DECLARATION.md),
-RQ-ROS-2026-A038). The check is **report-only** (DF-ROS-2026-A076, owner
-decision U-14): it adds a separate `reliability` section to the text and
+RQ-ROS-2026-A038). The check is **report-only**, as draft decision
+DF-ROS-2026-A076 proposes: it adds a separate `reliability` section to the text and
 `--json` reports, every finding is `info`, and it never changes `passed` or
 the exit code. The section states whether the declaration is `present`,
 `absent` or `invalid`, the system class, each tenet's applicability and

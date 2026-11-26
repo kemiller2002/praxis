@@ -19,7 +19,7 @@ provenance:
     EXE-20261125T201255923Z-3477d5c5:
       operations: [created, modified]
       at: 2026-11-25T20:14:03.054Z
-      last: 2026-11-26T00:30:00.170Z
+      last: 2026-11-26T00:55:40.317Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -33,8 +33,8 @@ provenance:
 
 **Status: implemented, report-only, in part** (see "Implementation status" below for exactly which items).
 Proposed under INIT-012 (echelon-organization-administration issues #12 and #14; mission
-"Echelon Continuous Availability, Durable Execution, and Cache-Ready Architecture"); DF-ROS-2026-A076 was
-accepted by owner instruction to implement on 2026-11-26. The tenets themselves are owner-approved; this record
+"Echelon Continuous Availability, Durable Execution, and Cache-Ready Architecture"); DF-ROS-2026-A076 remains
+draft. The tenets themselves are owner-approved; this record
 states how Praxis verifies that each repository has *declared* its position. It does not make any repository
 adopt runtime machinery, and it does not claim that a declaration proves runtime reliability.
 
@@ -87,20 +87,21 @@ Status of each item: see "Implementation status".
 
 ## Acceptance for this record
 
-DF-ROS-2026-A076 was accepted by owner instruction to implement (2026-11-26); implementation is WI-0113.
+This record's acceptance still depends on DF-ROS-2026-A076, which remains draft; recording that decision's
+acceptance is the owner's. The report-only implementation below (WI-0113) does not accept it.
 
 ## Implementation status (2026-11-26, WI-0113)
 
-`praxis foundations verify` reads `.echelon/reliability.json` and reports a separate, report-only `reliability`
+Implemented in `praxis foundations verify`, report-only: it reads `.echelon/reliability.json` and reports a separate `reliability`
 section (finding codes `ECHELON-FND-RELIABILITY-001..013`, all `info`; they never change `passed` or the exit code).
 The evaluation is pure (`src/Praxis.Domain/Foundations/ReliabilityDeclaration.fs`, over the parse in
-`src/Praxis.Infrastructure/Foundations/ReliabilityDeclarationReader.fs`); only `src/Praxis.Cli/Foundations.fs`
-reads files. Tests: `tests/Praxis.Tests/ReliabilityDeclarationTests.fs`. Praxis declares itself in
+`src/Praxis.Infrastructure/Foundations/ReliabilityDeclarationReader.fs`); the file reads and rendering are in
+`src/Praxis.Infrastructure/Foundations/ReliabilityFoundation.fs`, called from `src/Praxis.Cli/Foundations.fs`. Tests: `tests/Praxis.Tests/ReliabilityDeclarationTests.fs`. Praxis declares itself in
 `.echelon/reliability.json` (`developer-tooling`). Documentation: `docs/application-foundations.md`.
 
 | Item | Status |
 |---|---|
-| PRX-REL-001 | Implemented, report-only: present / absent / invalid. Absent is a note, never a failure. Enforcing mode is not implemented (U-14). |
+| PRX-REL-001 | Implemented, report-only: present / absent / invalid. Absent is a note, never a failure. Enforcing mode is not implemented (open owner decision U-14). |
 | PRX-REL-002 | Implemented (system class enumeration). |
 | PRX-REL-003 | Implemented (three tenets, applicability enumeration, non-empty reason unless `applicable`). EAR-TEN-004 has no field to check. |
 | PRX-REL-004 | Implemented: a `compliant`/`partially-compliant` family with no evidence, or with any evidence ref that does not resolve, is reported with effective state `unverified`. |

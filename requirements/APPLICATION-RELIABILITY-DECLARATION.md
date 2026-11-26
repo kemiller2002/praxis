@@ -1,6 +1,6 @@
 # Application reliability applicability declaration
 
-Status: **Report-only** (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, accepted 2026-11-26). `praxis foundations verify`
+Status: **Report-only** (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, draft). `praxis foundations verify`
 reports on the declaration (see [docs/application-foundations.md](../docs/application-foundations.md#reliability-declaration-report-only));
 no finding fails verification, and `praxis validate` does not check it.
 

@@ -2898,10 +2898,8 @@
             "runtime": "claude-code"
           },
           "at": "2026-11-25T20:14:03.943Z",
-          "last": "2026-11-26T00:30:01.118Z",
           "operations": [
-            "created",
-            "modified"
+            "created"
           ],
           "reason": "WI-0113: INIT-012 reliability applicability declaration (proposed)"
         }
@@ -2914,7 +2912,7 @@
       "RQ-ROS-2026-A038"
     ],
     "research_area": "repository-operating-system",
-    "status": "accepted",
+    "status": "draft",
     "supports": [
       "RQ-ROS-2026-A038"
     ],
@@ -2926,7 +2924,7 @@
       "decision"
     ],
     "title": "Praxis carries the reliability and cache-readiness tenets into repository governance through a declared-applicability file, report-only first",
-    "updated": "2026-11-26",
-    "version": "1.0.0"
+    "updated": "2026-11-25",
+    "version": "0.1.0"
   }
 ]
