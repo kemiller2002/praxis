@@ -7416,10 +7416,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-26T20:40:28.433Z",
-      "updatedAt": "2026-11-26T20:40:31Z",
+      "updatedAt": "2026-11-26T20:42:43Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
