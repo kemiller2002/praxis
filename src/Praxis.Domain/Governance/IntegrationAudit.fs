@@ -31,6 +31,12 @@ type IntegratedCommit =
       /// completion (read from the parent's `ros.json`).
       VerifiedCompletionRequired: bool
       Gate: GateObservation
+      /// For a merge commit: whether its tree equals Git's re-merge of its
+      /// parents (`None` when not a merge or the re-merge conflicts).
+      MergeTreeMatches: bool option
+      /// Whether the platform records this commit as the merge of the pull
+      /// request (`None` when not checked, offline).
+      PlatformConfirmed: bool option
       /// Commits pushed to the candidate's branch after it was integrated and
       /// never integrated themselves (platform observation; 0 when unknown).
       StrandedAfterMerge: int }
@@ -53,9 +59,6 @@ type IntegrationAuditReport =
 
 [<RequireQualifiedAccess>]
 module IntegrationAudit =
-    /// The committer GitHub records for merges and squashes made through its
-    /// own merge button or API.
-    let isPlatformMerge (commit: IntegratedCommit) = commit.Committer = "GitHub"
 
     let private finding (commit: IntegratedCommit) code severity detail remedy =
         { Commit = commit.Commit; Code = code; Severity = severity; Detail = detail; Remedy = remedy }
@@ -66,7 +69,8 @@ module IntegrationAudit =
 
         match commit.Gate with
         | GateObservation.Check("success", "github-actions") -> []
-        | GateObservation.Decision "verified" -> []
+        | GateObservation.Decision "verified" ->
+            [ finding commit "AUD.GATE_DECISION_UNAUTHENTICATED" "notice" $"{label} has a recorded 'verified' decision file; it is not platform evidence and is not counted as a verified integration" "audit with --repository to read the gate's check run" ]
         | GateObservation.Decision "authorized-by-exception" ->
             [ finding commit "AUD.INTEGRATED_BY_EXCEPTION" "notice" $"{label} was integrated under a governance exception; it is not verified completion" "complete the exception's follow-up obligations" ]
         | GateObservation.Check(conclusion, producer) when producer <> "github-actions" ->
@@ -83,22 +87,33 @@ module IntegrationAudit =
                   "re-verify the integrated state and record the result, or record the governing decision that accepted plain completion" ]
 
     let examine (gateCheck: string) (commit: IntegratedCommit) =
+        // The committer name is never trusted: anyone can set it, and GitHub's
+        // web editor commits straight to a branch as "GitHub" too.
         let direct =
-            if commit.PullRequest.IsNone && not (isPlatformMerge commit) then
+            match commit.PullRequest, commit.PlatformConfirmed with
+            | _ when commit.Parents.IsEmpty -> []
+            | None, _ ->
                 [ finding
                       commit
                       "AUD.DIRECT_PUSH"
                       "error"
                       $"'{commit.Subject}' reached the protected branch without a pull request (committer {commit.Committer})"
                       "require pull requests on the protected branch; review the pushed change" ]
-            else []
+            | Some n, Some false ->
+                [ finding commit "AUD.UNCONFIRMED_MERGE" "error" $"the commit claims pull request #{n} but the platform does not record it as that pull request's merge" "review the commit as a direct push" ]
+            | _ -> []
+
+        let evil =
+            match commit.MergeTreeMatches with
+            | Some false ->
+                [ finding commit "AUD.MERGE_TREE_MISMATCH" "error" "the merge commit's tree differs from Git's merge of its parents: it carries changes neither parent has" "review the extra changes; they were never verified" ]
+            | _ -> []
 
         let gate = if commit.PullRequest.IsSome || commit.Candidate.IsSome then gateFindings gateCheck commit else []
 
         let gateVerified =
             match commit.Gate with
-            | GateObservation.Check("success", "github-actions")
-            | GateObservation.Decision "verified" -> true
+            | GateObservation.Check("success", "github-actions") -> true
             | _ -> false
 
         let active =
@@ -124,7 +139,7 @@ module IntegrationAudit =
                       "integrate or discard them through a new pull request" ]
             else []
 
-        direct @ gate @ active @ stranded
+        direct @ evil @ gate @ active @ stranded
 
     let audit (branch: string) (head: string) (gateCheck: string) (previousHeadStillAncestor: bool option) (commits: IntegratedCommit list) =
         let findings = commits |> List.collect (examine gateCheck)
@@ -142,9 +157,8 @@ module IntegrationAudit =
         let verified =
             commits
             |> List.filter (fun c ->
-                match c.Gate with
-                | GateObservation.Check("success", "github-actions")
-                | GateObservation.Decision "verified" -> true
+                match c.Gate, c.MergeTreeMatches with
+                | GateObservation.Check("success", "github-actions"), (Some true | None) -> true
                 | _ -> false)
             |> List.length
 

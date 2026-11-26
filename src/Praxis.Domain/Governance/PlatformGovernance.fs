@@ -58,7 +58,12 @@ type PlatformSnapshot =
       /// Check runs on the protected branch head: (name, app slug, conclusion).
       HeadChecks: Observed<(string * string * string) list>
       /// Tag rulesets protecting release tags.
-      ReleaseTagsProtected: Observed<bool> }
+      ReleaseTagsProtected: Observed<bool>
+      /// The repository's default `GITHUB_TOKEN` permission (`read`/`write`).
+      DefaultTokenPermission: Observed<string>
+      /// Other protected-branch workflows that run for pull requests and can
+      /// write check runs or statuses (so could post the gate's check name).
+      CheckWriters: Observed<string list> }
 
 /// The governance a repository requires of its platform. Read only from the
 /// protected branch (`ros.json` `governance`), with Praxis defaults.
@@ -85,7 +90,10 @@ type PraxisConfiguration =
       TrustRoot: VerifierTrustRoot option
       TrustRootError: string option
       ValidationPolicyPresent: bool
-      GovernanceProfileDeclared: bool }
+      GovernanceProfileDeclared: bool
+      /// The protected `ros.json` governance block is malformed (defaults
+      /// are then not silently assumed to be the owner's intent).
+      ProfileError: string option }
 
 [<RequireQualifiedAccess>]
 type ControlStatus =
@@ -189,6 +197,15 @@ module PlatformGovernance =
 
     let private ruleControls (profile: GovernanceProfile) (snapshot: PlatformSnapshot) =
         match snapshot.Rules with
+        | Observed.Unknown reason when reason.Contains("Upgrade to GitHub Pro", StringComparison.OrdinalIgnoreCase) ->
+            [ control
+                  "GOV-RULES"
+                  "Branch rules are available"
+                  ControlStatus.PlatformUnavailable
+                  $"the platform does not enforce branch rules on this repository under its current plan ({reason})"
+                  "make the repository public, or decide on a plan that enforces rules on private repositories (no purchase is implied)"
+                  Principal.OrganizationOwner
+              control "GOV-PR" "Pull request required" ControlStatus.NotEnforced "branch rules are unavailable, so nothing is enforced" "" Principal.OrganizationOwner ]
         | Observed.Unknown reason ->
             [ control
                   "GOV-RULES"
@@ -275,7 +292,7 @@ module PlatformGovernance =
                     $"'{profile.MergeGateWorkflow}' is not on the protected branch"
                     "merge the workflow `praxis governance bootstrap` writes, through a reviewed change"
                     Principal.RepositoryAdministrator
-            | Some(_, triggers) when triggers |> List.exists (fun t -> t <> "pull_request_target" && t <> "merge_group" && t <> "workflow_dispatch") ->
+            | Some(_, triggers) when triggers |> List.exists (fun t -> t <> "pull_request_target" && t <> "merge_group") ->
                 let names = String.concat ", " triggers
                 control
                     "GOV-GATE-WORKFLOW"
@@ -289,11 +306,32 @@ module PlatformGovernance =
             | Some _ ->
                 control "GOV-GATE-WORKFLOW" "Merge gate runs from the protected branch" ControlStatus.Enforced "the gate's definition is read from the protected branch" "" Principal.RepositoryAdministrator
 
+    let private tokenControls (profile: GovernanceProfile) (snapshot: PlatformSnapshot) =
+        let gate = profile.RequiredChecks |> List.map _.Context |> String.concat ", "
+
+        [ (match snapshot.DefaultTokenPermission with
+           | Observed.Known "read" -> control "GOV-DEFAULT-TOKEN" "Workflow tokens are read-only by default" ControlStatus.Enforced "the default GITHUB_TOKEN permission is read" "" Principal.RepositoryAdministrator
+           | Observed.Known other ->
+               control
+                   "GOV-DEFAULT-TOKEN"
+                   "Workflow tokens are read-only by default"
+                   ControlStatus.NotEnforced
+                   $"the default GITHUB_TOKEN permission is '{other}': candidate code in any pull-request workflow without a permissions block can post a check named {gate}"
+                   "Settings > Actions > General > Workflow permissions: read repository contents"
+                   Principal.RepositoryAdministrator
+           | Observed.Unknown reason -> control "GOV-DEFAULT-TOKEN" "Workflow tokens are read-only by default" ControlStatus.Unknown reason "" Principal.RepositoryAdministrator)
+          (match snapshot.CheckWriters with
+           | Observed.Known [] -> control "GOV-CHECK-WRITERS" "No other pull-request workflow can write checks" ControlStatus.Enforced "no other pull-request workflow requests checks, statuses or write-all permission" "" Principal.RepositoryAdministrator
+           | Observed.Known writers ->
+               let names = String.concat ", " writers
+               control "GOV-CHECK-WRITERS" "No other pull-request workflow can write checks" ControlStatus.NotEnforced $"{names} run for pull requests with permission to write checks or statuses: they could post {gate}" "remove checks/statuses write permission from pull-request workflows" Principal.RepositoryAdministrator
+           | Observed.Unknown reason -> control "GOV-CHECK-WRITERS" "No other pull-request workflow can write checks" ControlStatus.Unknown reason "" Principal.RepositoryAdministrator) ]
+
     let private praxisControls (praxis: PraxisConfiguration) =
         let trust =
             match praxis.TrustRoot, praxis.TrustRootError with
             | _, Some error ->
-                control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.NotEnforced $"the protected trust root is unusable: {error}" "fix .praxis/trust/verifiers.json through an elevated change" Principal.RepositoryAdministrator
+                control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.NotEnforced $"the protected trust root is unusable: {error}" "fix .praxis/trust/verifiers.json through an elevated change (docs/governance/bootstrap.md)" Principal.RepositoryAdministrator
             | None, None ->
                 control
                     "GOV-TRUST-ROOT"
@@ -303,19 +341,22 @@ module PlatformGovernance =
                     "run the bootstrap in docs/governance/bootstrap.md (the owner merges one generated change; no key is created or held by anyone)"
                     Principal.OrganizationOwner
             | Some root, None when root.Verifiers |> List.forall (fun v -> v.RevokedAt.IsSome) ->
-                control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.NotEnforced "every pinned verifier is revoked" "provision a new verifier (docs/governance/completion-authority.md, rotation)" Principal.OrganizationOwner
+                control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.NotEnforced "every pinned verifier is revoked" "provision a new verifier (docs/governance/bootstrap.md, rotation)" Principal.OrganizationOwner
             | Some root, None ->
                 control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.Enforced $"configVersion {root.ConfigVersion}, {root.Verifiers.Length} verifier(s), approved by {root.ApprovedBy}" "" Principal.OrganizationOwner
 
-        [ (if praxis.RequireVerifiedCompletion then
+        [ match praxis.ProfileError with
+          | Some e -> control "GOV-PROFILE" "Governance profile is readable" ControlStatus.NotEnforced $"the protected governance profile is malformed: {e}" "fix ros.json governance through an elevated change" Principal.RepositoryAdministrator
+          | None -> ()
+          (if praxis.RequireVerifiedCompletion then
                control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.Enforced "verified completion (workProtocol.requireVerifiedCompletion or governance.requireVerifiedMerge) is required on the protected branch" "" Principal.RepositoryAdministrator
            else
-               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.NotEnforced "the protected ros.json requires neither verified merges nor verified completion" "set governance.requireVerifiedMerge (bootstrap does) or workProtocol.requireVerifiedCompletion through an elevated change" Principal.OrganizationOwner)
+               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.NotEnforced "the protected ros.json requires neither verified merges nor verified completion" "run `praxis governance bootstrap`, which sets governance.requireVerifiedMerge (the CI path); workProtocol.requireVerifiedCompletion is the host-verifier path" Principal.OrganizationOwner)
           trust
           (if praxis.ValidationPolicyPresent then
                control "GOV-VALIDATION-POLICY" "Protected validation policy" ControlStatus.Enforced "the validation policy is read from the protected branch" "" Principal.RepositoryAdministrator
            else
-               control "GOV-VALIDATION-POLICY" "Protected validation policy" ControlStatus.NotEnforced "no validation policy on the protected branch" "add .praxis/validation-policy.json (echelon.validation-policy/1) through an elevated change" Principal.OrganizationOwner) ]
+               control "GOV-VALIDATION-POLICY" "Protected validation policy" ControlStatus.NotEnforced "no validation policy on the protected branch" "run `praxis governance bootstrap` (it writes the policy), or add .praxis/validation-policy.json through an elevated change" Principal.OrganizationOwner) ]
 
     let private releaseControl (profile: GovernanceProfile) (snapshot: PlatformSnapshot) =
         match profile.RequireReleaseTagProtection, snapshot.ReleaseTagsProtected with
@@ -347,7 +388,7 @@ module PlatformGovernance =
     let private rung level reached blockers = { Level = level; Reached = reached; Blockers = blockers }
 
     let evaluate (profile: GovernanceProfile) (praxis: PraxisConfiguration) (demonstrated: bool * string list) (snapshot: PlatformSnapshot) =
-        let platform = ruleControls profile snapshot @ [ workflowControl profile snapshot; releaseControl profile snapshot; auditControl snapshot ]
+        let platform = ruleControls profile snapshot @ [ workflowControl profile snapshot ] @ tokenControls profile snapshot @ [ releaseControl profile snapshot; auditControl snapshot ]
         let own = praxisControls praxis
         let controls = platform @ own
 
@@ -360,13 +401,14 @@ module PlatformGovernance =
             match snapshot.HeadChecks with
             | Observed.Unknown reason -> false, [ $"the protected branch head's checks are unknown: {reason}" ]
             | Observed.Known checks ->
-                let missing =
-                    profile.RequiredChecks
-                    |> List.filter (fun required -> not (checks |> List.exists (fun (name, _, conclusion) -> name = required.Context && conclusion = "success")))
-                    |> List.map (fun required -> $"no successful '{required.Context}' run on the protected branch head")
+                // The gate runs on pull-request heads, never on the protected
+                // head itself: here "validated" means the protected state's own
+                // CI (GitHub Actions) passed and nothing failed.
+                let actions = checks |> List.filter (fun (_, app, _) -> app = "github-actions")
+                let failed = actions |> List.filter (fun (_, _, c) -> c <> "success" && c <> "skipped" && c <> "neutral") |> List.map (fun (name, _, c) -> $"'{name}' concluded {c} on the protected branch head")
 
-                if checks.IsEmpty then false, [ "no check ran on the protected branch head" ]
-                else missing.IsEmpty, missing
+                if actions.IsEmpty then false, [ "no GitHub Actions check ran on the protected branch head" ]
+                else failed.IsEmpty, failed
 
         let installed = praxis.Installed, (if praxis.Installed then [] else [ "Praxis is not installed on the protected branch" ])
 
@@ -414,7 +456,9 @@ module PlatformGovernance =
         current.Controls
         |> List.choose (fun now ->
             match before |> Map.tryFind now.Id with
-            | Some was when ControlStatus.isSatisfied was.Status && not (ControlStatus.isSatisfied now.Status) ->
+            | Some was when
+                (ControlStatus.isSatisfied was.Status && not (ControlStatus.isSatisfied now.Status))
+                || (was.Status = ControlStatus.Enforced && now.Status = ControlStatus.NotRequired) ->
                 Some(GovernanceFinding.create "GOV.DRIFT" $"{now.Id} was {ControlStatus.toWire was.Status} and is now {ControlStatus.toWire now.Status}: {now.Detail}" now.Remedy now.ResolvedBy)
             | _ -> None)
         |> fun weakened ->

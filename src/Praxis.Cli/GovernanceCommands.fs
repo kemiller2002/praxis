@@ -11,13 +11,14 @@ open Praxis.Infrastructure.Governance
 module GovernanceCommands =
     let usage =
         String.concat " | "
-            [ "governance inspect (--repository OWNER/NAME | --snapshot FILE) [--base REF] [--branch NAME] [--save-snapshot FILE] [--out FILE] [--require LEVEL] [--json]"
+            [ "governance inspect (--repository OWNER/NAME | --snapshot FILE) [--base REF] [--branch NAME] [--audit] [--save-snapshot FILE] [--out FILE] [--require LEVEL] [--json]"
               "governance drift --baseline REPORT (--repository OWNER/NAME | --snapshot FILE) [--base REF] [--json]"
               "governance audit [--repository OWNER/NAME] [--branch REF] [--limit N] [--since SHA] [--previous-head SHA] [--decisions DIR] [--json]"
               "governance authority [--base REF] [--json]"
               "governance bootstrap --repository OWNER/NAME --approved-by LOGIN --validation NAME=COMMAND... [--branch NAME] [--agent ID]* [--base REF]"
-              "governance observe --candidate SHA --pull-request N [--work-item ID] [--repository OWNER/NAME] --policy FILE --out DIR"
-              "governance attest --observations DIR --candidate SHA --policy FILE --out DIR"
+              "governance validations --policy FILE"
+              "governance observe --candidate SHA --validation NAME --policy FILE"
+              "governance attest --repository OWNER/NAME --run-id ID --pull-request N --candidate SHA --policy FILE --out DIR"
               "merge authorize --repository OWNER/NAME --candidate SHA [--base REF] [--pull-request N] [--work-item ID]* [--receipts DIR]* [--jwks FILE] [--governance-report FILE] [--live] [--evidence-out FILE] [--json]" ]
 
     let private value = ClaimArguments.optionValue
@@ -42,13 +43,13 @@ module GovernanceCommands =
         | None, None -> Error "--repository or --snapshot is required"
 
     let private demonstratedFor root arguments live =
-        match live, value "--repository" arguments with
+        match live && List.contains "--audit" arguments, value "--repository" arguments with
         | true, Some repository ->
             GovernanceOperations.audit
                 { Root = root; Repository = Some repository; BranchRef = baseRef arguments; Limit = 20; Since = None; PreviousHead = None; DecisionDirectory = None; GateCheck = "praxis-merge-gate" }
             |> Result.map IntegrationAudit.demonstrated
             |> Result.defaultWith (fun e -> false, [ $"the integration audit failed: {e}" ])
-        | _ -> false, [ "operational demonstration is assessed only live (governance audit)" ]
+        | _ -> false, [ "operational demonstration is not assessed (add --audit, or run governance audit)" ]
 
     let private inspect root arguments =
         match snapshotFor root arguments with
@@ -121,12 +122,7 @@ module GovernanceCommands =
             emit arguments (GovernanceJson.diagnosis d) (GovernanceText.diagnosis d) (if d.Ready then 0 else 3)
 
     let private bootstrap root arguments =
-        let validations =
-            values "--validation" arguments
-            |> ClaimArguments.collect (fun text ->
-                match text.Split('=', 2) with
-                | [| name; command |] when name <> "" && command.Trim() <> "" -> Ok(name, command.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Array.toList)
-                | _ -> Error $"--validation '{text}' must be NAME=COMMAND")
+        let validations = values "--validation" arguments |> ClaimArguments.collect GovernanceFiles.validationArgument
 
         match required "--repository" arguments, required "--approved-by" arguments, validations with
         | Error m, _, _
@@ -152,34 +148,42 @@ module GovernanceCommands =
                 printfn "next: commit these files on a branch and open a pull request; the owner reviews and merges it, then imports %s as the default-branch ruleset." GovernanceBootstrap.RulesetPath
                 0
 
-    let private observe root arguments =
-        match required "--candidate" arguments, ClaimArguments.number "--pull-request" Int32.TryParse arguments, required "--policy" arguments, required "--out" arguments with
-        | Error m, _, _, _
-        | _, Error m, _, _
-        | _, _, Error m, _
-        | _, _, _, Error m -> invalid m
-        | _, Ok None, _, _ -> invalid "--pull-request is required"
-        | Ok candidate, Ok(Some pr), Ok policy, Ok out ->
-            let item = match value "--work-item" arguments with Some i -> Ok i | None -> GovernanceFiles.declaredWorkItem (value "--repository" arguments) pr
-
-            match item |> Result.bind (fun item -> GovernanceBootstrap.observe { Root = root; Candidate = candidate; WorkItem = item; PullRequest = pr; PolicyFile = policy; OutDirectory = out }) with
+    let private validations arguments =
+        match required "--policy" arguments with
+        | Error m -> invalid m
+        | Ok policy ->
+            match GovernanceBootstrap.validations policy with
+            | Ok text -> ClaimArguments.print (text, 0)
             | Error e -> fail e
-            | Ok(files, passed) ->
-                files |> List.iter (printfn "observed %s")
+
+    let private observe root arguments =
+        match required "--candidate" arguments, required "--validation" arguments, required "--policy" arguments with
+        | Error m, _, _
+        | _, Error m, _
+        | _, _, Error m -> invalid m
+        | Ok candidate, Ok validation, Ok policy ->
+            match GovernanceBootstrap.observe { Root = root; Candidate = candidate; Validation = validation; PolicyFile = policy } with
+            | Error e -> fail e
+            | Ok(passed, output) ->
+                printfn "%s" output
+                printfn "validation %s: %s" validation (if passed then "passed" else "NOT PASSED")
                 if passed then 0 else 3
 
-    let private attest arguments =
-        match required "--observations" arguments, required "--candidate" arguments, required "--policy" arguments, required "--out" arguments with
-        | Ok observations, Ok candidate, Ok policy, Ok out ->
-            match GovernanceBootstrap.attest { Observations = observations; Candidate = candidate; PolicyFile = policy; OutDirectory = out } with
+    let private attest root arguments =
+        let fields = [ "--repository"; "--run-id"; "--candidate"; "--policy"; "--out" ] |> List.map (fun name -> required name arguments)
+
+        match fields |> List.tryPick (function Error m -> Some m | Ok _ -> None), ClaimArguments.number "--pull-request" Int32.TryParse arguments with
+        | Some m, _
+        | None, Error m -> invalid m
+        | None, Ok None -> invalid "--pull-request is required"
+        | None, Ok(Some pr) ->
+            let get name = required name arguments |> Result.defaultValue ""
+
+            match GovernanceBootstrap.attest { Root = root; Repository = get "--repository"; RunId = get "--run-id"; PullRequest = pr; Candidate = get "--candidate"; PolicyFile = get "--policy"; OutDirectory = get "--out" } with
             | Error e -> fail e
             | Ok files ->
                 files |> List.iter (printfn "attested %s")
                 0
-        | Error m, _, _, _
-        | _, Error m, _, _
-        | _, _, Error m, _
-        | _, _, _, Error m -> invalid m
 
     let authorize root arguments =
         match required "--repository" arguments, required "--candidate" arguments, ClaimArguments.number "--pull-request" Int32.TryParse arguments with
@@ -216,6 +220,7 @@ module GovernanceCommands =
         | "audit" :: rest -> audit root rest
         | "authority" :: rest -> authority root rest
         | "bootstrap" :: rest -> bootstrap root rest
+        | "validations" :: rest -> validations rest
         | "observe" :: rest -> observe root rest
-        | "attest" :: rest -> attest rest
+        | "attest" :: rest -> attest root rest
         | _ -> invalid "unknown governance command"

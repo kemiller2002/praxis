@@ -31,12 +31,15 @@ module GovernanceGit =
 
     let tree root (commit: string) = text root [ "rev-parse"; "--verify"; commit + "^{tree}" ]
 
-    /// A file at a revision; `None` when the revision has no such path.
+    /// A file at a revision, byte-exact (never trimmed: digests are computed
+    /// over it); `None` when the revision has no such path.
     let show root (revision: string) (path: string) =
         run root [ "cat-file"; "-e"; $"{revision}:{path}" ]
         |> Result.bind (fun probe ->
             if probe.ExitCode <> 0 then Ok None
-            else text root [ "cat-file"; "blob"; $"{revision}:{path}" ] |> Result.map Some)
+            else
+                run root [ "cat-file"; "blob"; $"{revision}:{path}" ]
+                |> Result.bind (fun blob -> if blob.ExitCode = 0 then Ok(Some blob.Stdout) else Error $"git cat-file failed: {blob.Stderr.Trim()}"))
 
     /// Whether `ancestor` is in `descendant`'s history.
     let isAncestor root (ancestor: string) (descendant: string) =
@@ -57,7 +60,18 @@ module GovernanceGit =
 
     /// Tracked paths under `prefix` at a revision.
     let listFiles root (revision: string) (prefix: string) =
-        text root [ "ls-tree"; "-r"; "--name-only"; revision; "--"; prefix ] |> Result.map lines
+        let pathspec = if prefix = "" then [] else [ "--"; prefix ]
+        text root ([ "ls-tree"; "-r"; "--name-only"; revision ] @ pathspec) |> Result.map lines
+
+    /// Whether a merge commit's tree equals Git's own merge of its parents.
+    /// `None` when the re-merge conflicts (a hand-resolved merge cannot be
+    /// re-derived) or Git cannot compute it.
+    let mergeTreeMatches root (commit: string) (first: string) (second: string) =
+        match run root [ "merge-tree"; "--write-tree"; first; second ], tree root commit with
+        | Ok result, Ok actual when result.ExitCode = 0 ->
+            let derived = (lines result.Stdout |> List.tryHead |> Option.defaultValue "").Trim()
+            Some(derived = actual)
+        | _ -> None
 
     type LogEntry =
         { Commit: string

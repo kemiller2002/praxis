@@ -47,7 +47,20 @@ type ElevatedApproval =
       /// The platform reports the action was made through an app on the
       /// approver's behalf (an agent acting as the owner). Never accepted.
       ViaApplication: string option
+      /// The platform shows the comment was edited after it was posted.
+      /// Any writer can edit another's comment, so an edited approval is
+      /// never accepted.
+      Edited: bool
       Reason: string }
+
+/// A work authorizer's `/praxis authorize-work ID` on the pull request, or an
+/// entry of the protected `.praxis/governance/work-authorizations.json`.
+type WorkAuthorization =
+    { Authorizer: string
+      WorkItem: string
+      AuthorizedAt: DateTimeOffset
+      ViaApplication: string option
+      Edited: bool }
 
 /// `praxis.governance-exception/1`.
 type GovernanceException =
@@ -88,13 +101,30 @@ module Authority =
     let private listed (logins: string list) (login: string) =
         logins |> List.exists (fun candidate -> String.Equals(candidate, login, StringComparison.OrdinalIgnoreCase))
 
+    /// An approval names the candidate by its full ID or a prefix of at least
+    /// 12 hexadecimal characters (unique in practice, easy to type on a phone).
+    let namesHead (named: string) (candidateHead: string) =
+        named.Length >= 12
+        && named.Length <= candidateHead.Length
+        && named |> Seq.forall Uri.IsHexDigit
+        && candidateHead.StartsWith(named.ToLowerInvariant(), StringComparison.Ordinal)
+
     /// Whether `approval` authorizes protected changes in `candidateHead`.
     let elevated (authorities: GovernanceAuthorities) (candidateHead: string) (approval: ElevatedApproval) =
-        if approval.CandidateHead <> candidateHead then Error $"the approval by {approval.Approver} names {approval.CandidateHead}, not the candidate"
+        if not (namesHead approval.CandidateHead candidateHead) then Error $"the approval by {approval.Approver} names {approval.CandidateHead}, not the candidate"
+        elif approval.Edited then Error $"the approval by {approval.Approver} was edited after it was posted"
         elif approval.ViaApplication.IsSome then Error $"the approval by {approval.Approver} was made through the application '{approval.ViaApplication.Value}', not by the person"
         elif isAgent authorities approval.Approver then Error $"{approval.Approver} is an agent identity"
         elif not (listed authorities.ElevatedApprovers approval.Approver) then Error $"{approval.Approver} is not an elevated approver"
         else Ok approval
+
+    /// Whether a work authorization is acceptable: a listed work authorizer,
+    /// not an agent identity, posted in person and not edited.
+    let workAuthorized (authorities: GovernanceAuthorities) (authorization: WorkAuthorization) =
+        not authorization.Edited
+        && authorization.ViaApplication.IsNone
+        && not (isAgent authorities authorization.Authorizer)
+        && listed authorities.WorkAuthorizers authorization.Authorizer
 
     /// Which standing authorization, if any, covers a change.
     let standing (policies: StandingAuthorization list) (repository: string) (at: DateTimeOffset) (changedPaths: string list) =

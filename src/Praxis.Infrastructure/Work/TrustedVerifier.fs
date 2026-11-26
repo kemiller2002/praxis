@@ -293,7 +293,13 @@ module TrustedVerifierEngine =
         match validation.Command with
         | [] -> CheckStatus.Unavailable, None, "no command\n"
         | executable :: arguments ->
-            match ClaimProcess.run executable clone [] None validation.Timeout arguments with
+            // Credentials the verifier's own environment may hold (CI tokens)
+            // are blanked for candidate code; nothing a validation needs.
+            let scrubbed =
+                [ "GITHUB_TOKEN"; "GH_TOKEN"; "ACTIONS_RUNTIME_TOKEN"; "ACTIONS_ID_TOKEN_REQUEST_TOKEN"; "ACTIONS_ID_TOKEN_REQUEST_URL"; "ACTIONS_CACHE_URL"; "ACTIONS_RESULTS_URL"; "PRAXIS_COMPLETION_AUTHORITY" ]
+                |> List.map (fun name -> name, "")
+
+            match ClaimProcess.run executable clone scrubbed None validation.Timeout arguments with
             | Ok result when result.ExitCode = 0 ->
                 let output = result.Stdout + result.Stderr
 
@@ -555,7 +561,7 @@ module FileTrustedVerifier =
     /// One-shot: the same engine, writing the response document to `out`.
     /// `keyFile = None` signs with an ephemeral in-memory key: the receipts
     /// are then only an observation for a separate attestation step
-    /// (`verifier attest-workload`), never trusted by key.
+    /// (`governance attest`), never trusted by key.
     let runOnce (request: VerifyRequest) (policyPath: string) (contractDigest: string) (keyFile: string option) (out: string) =
         validDigest contractDigest
         |> Result.bind (fun digest ->

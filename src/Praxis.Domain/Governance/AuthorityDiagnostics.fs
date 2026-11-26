@@ -10,7 +10,6 @@ type CompletionAuthorityState =
       TrustRootError: string option
       ValidationPolicyPresent: bool
       MergeGateWorkflowPresent: bool
-      VerifyWorkflowPresent: bool
       /// The `--authority` / `PRAXIS_COMPLETION_AUTHORITY` file, if named.
       HostAuthorityNamed: bool
       HostVerifierSocketNamed: bool }
@@ -48,7 +47,7 @@ module AuthorityDiagnostics =
             |> Option.map (fun root -> root.Verifiers |> List.filter (fun v -> v.RevokedAt.IsNone && (match v.Identity with VerifierIdentity.Workload _ -> true | _ -> false)))
             |> Option.defaultValue []
 
-        let ciPathReady = state.TrustRoot.IsSome && state.TrustRootError.IsNone && not workloadVerifiers.IsEmpty && state.ValidationPolicyPresent && state.VerifyWorkflowPresent && state.MergeGateWorkflowPresent
+        let ciPathReady = state.TrustRoot.IsSome && state.TrustRootError.IsNone && not workloadVerifiers.IsEmpty && state.ValidationPolicyPresent && state.MergeGateWorkflowPresent
         let hostPathReady = not state.PinnedKeyIds.IsEmpty && state.HostAuthorityNamed && state.HostVerifierSocketNamed
 
         if ciPathReady || hostPathReady then
@@ -58,7 +57,11 @@ module AuthorityDiagnostics =
               Why = "a trusted verifier outside the implementer's control is provisioned"
               Reusable = []
               ResolvedBy = Principal.VerificationService
-              Procedure = (if ciPathReady then [ "push the work branch and open a pull request declaring 'Praxis-Work-Item: ID'; the protected workflow verifies and the merge gate decides" ] else [ "praxis work finish --id ID --token TOKEN" ])
+              Procedure =
+                (if ciPathReady then
+                     [ "push the work branch and open a pull request declaring 'Praxis-Work-Item: ID'; the protected workflow verifies and the merge gate decides"
+                       "this reports the files only: confirm the platform requires the gate with `praxis governance inspect`" ]
+                 else [ "praxis work finish --id ID --token TOKEN" ])
               MayContinue = []
               Blocked = [] }
         else
@@ -69,7 +72,7 @@ module AuthorityDiagnostics =
                   | Some _, None when workloadVerifiers.IsEmpty && state.PinnedKeyIds.IsEmpty -> "an unrevoked verifier in the trust root"
                   | _ -> ()
                   if not state.ValidationPolicyPresent then "the protected validation policy (.praxis/validation-policy.json)"
-                  if not (state.VerifyWorkflowPresent && state.MergeGateWorkflowPresent) then
+                  if not state.MergeGateWorkflowPresent then
                       "the protected verification and merge-gate workflow (.github/workflows/praxis-merge-gate.yml)" ]
 
             let reusable =
@@ -86,9 +89,11 @@ module AuthorityDiagnostics =
               Reusable = reusable
               ResolvedBy = Principal.OrganizationOwner
               Procedure =
-                [ "an agent runs `praxis governance bootstrap --repository OWNER/NAME --approved-by LOGIN --validation NAME=COMMAND` on a branch and opens a pull request (it writes the trust root, validation policy, authorities and the merge-gate workflow; it creates no key)"
+                [ "the owner (or the agent, from the repository's existing CI) chooses the mandatory validation commands"
+                  "an agent runs `praxis governance bootstrap --repository OWNER/NAME --approved-by LOGIN --validation NAME=COMMAND` on a branch and opens a pull request (it writes the trust root, validation policy, authorities and the merge-gate workflow; it creates no key)"
                   "the owner reviews and merges that pull request (the one human action that establishes the trust root; mobile is sufficient)"
-                  "the owner imports the default-branch ruleset the bootstrap wrote (.praxis/governance/ruleset-main.json) so the gate is required and administrators cannot bypass it"
+                  "an agent opens a trivial pull request and confirms the praxis-merge-gate check runs and passes; only then"
+                  "the owner creates the default-branch ruleset (docs/governance/bootstrap.md, step 3) so the gate is required and administrators cannot bypass it"
                   "`praxis governance inspect` then reports the readiness level reached" ]
               MayContinue = continueSafely
               Blocked = blocked }

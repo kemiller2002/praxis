@@ -70,7 +70,9 @@ module VerifierTrust =
     let identityKey (verifier: TrustedVerifier) =
         match verifier.Identity with
         | VerifierIdentity.PinnedKey key -> key.KeyId
-        | VerifierIdentity.Workload workload -> "workload:" + workload.WorkflowRef
+        | VerifierIdentity.Workload workload ->
+            let events = workload.Events |> List.sort |> String.concat ","
+            $"workload:{workload.Issuer}|{workload.Repository.ToLowerInvariant()}|{workload.WorkflowRef}|{events}"
 
     let private finding code detail remedy who = GovernanceFinding.create code detail remedy who
 

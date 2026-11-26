@@ -16,6 +16,7 @@ type ProtectedState =
       Head: string
       Ros: Result<GovernanceJson.RosFacts, string> option
       Profile: GovernanceProfile * bool
+      ProfileError: string option
       Trust: Result<VerifierTrustRoot, string> option
       Authorities: GovernanceAuthorities
       AuthoritiesError: string option
@@ -23,8 +24,13 @@ type ProtectedState =
       Policy: Result<ProtectedPolicy, string> option
       Exceptions: (string * Result<GovernanceException, string>) list
       Workflows: (string * string list) list
+      /// Pull-request workflows (other than the gate) that may write checks.
+      WorkflowWriters: (string * string list * bool) list
       WorkflowTexts: string list
-      OpenWorkItems: string list }
+      /// Work items a work authorizer authorized on the protected branch
+      /// (`.praxis/governance/work-authorizations.json`). `.ros/` state is
+      /// not authorization: any change can add to it.
+      AuthorizedWorkItems: string list }
 
 type AuthorizeRequest =
     { Root: string
@@ -56,6 +62,21 @@ module GovernanceOperations =
     let StandingPath = ".praxis/standing-authorization.json"
     let PolicyPath = ".praxis/validation-policy.json"
     let ReceiptsPrefix = ".praxis/receipts"
+    let WorkAuthorizationsPath = ".praxis/governance/work-authorizations.json"
+    let MergeGatePath = ".github/workflows/praxis-merge-gate.yml"
+
+    /// The branch name a ref names: `origin/release/1.x` -> `release/1.x`.
+    let branchOf (reference: string) =
+        [ "refs/remotes/origin/"; "refs/heads/"; "origin/" ]
+        |> List.tryFind (fun prefix -> reference.StartsWith(prefix, StringComparison.Ordinal))
+        |> Option.map (fun prefix -> reference.Substring prefix.Length)
+        |> Option.defaultValue reference
+
+    /// Whether a workflow could write check runs or statuses: an explicit
+    /// write permission, `write-all`, or no permissions block at all (then
+    /// the repository default applies; GOV-DEFAULT-TOKEN reports it).
+    let writesChecks (text: string) =
+        text.Contains "checks: write" || text.Contains "statuses: write" || text.Contains "write-all" || not (text.Contains "permissions:")
 
     let private now () = DateTimeOffset.UtcNow
 
@@ -132,7 +153,8 @@ module GovernanceOperations =
         |> Result.map (fun head ->
             let read = show root head
             let ros = read "ros.json" |> Option.orElse (read ".echelon/ros.json")
-            let profile = ros |> Option.map GovernanceJson.parseProfile |> Option.map (Result.defaultValue (PlatformGovernance.defaultProfile, false)) |> Option.defaultValue (PlatformGovernance.defaultProfile, false)
+            let profileResult = ros |> Option.map GovernanceJson.parseProfile |> Option.defaultValue (Ok(PlatformGovernance.defaultProfile, false))
+            let profile = profileResult |> Result.defaultValue (PlatformGovernance.defaultProfile, false)
 
             let authorities, authoritiesError =
                 match read AuthoritiesPath with
@@ -152,10 +174,32 @@ module GovernanceOperations =
 
             let workflowTexts = workflowPaths |> List.map (fun p -> p, read p |> Option.defaultValue "")
 
+            let authorizedWork =
+                match read WorkAuthorizationsPath with
+                | None -> []
+                | Some text ->
+                    try
+                        match JsonNode.Parse(text)["authorizations"] with
+                        | :? JsonArray as items ->
+                            items
+                            |> Seq.choose (fun item ->
+                                let authorization: WorkAuthorization =
+                                    { Authorizer = (match item["authorizer"] with null -> "" | v -> v.ToString())
+                                      WorkItem = (match item["workItem"] with null -> "" | v -> v.ToString())
+                                      AuthorizedAt = DateTimeOffset.MinValue
+                                      ViaApplication = None
+                                      Edited = false }
+
+                                if authorization.WorkItem <> "" && Authority.workAuthorized authorities authorization then Some authorization.WorkItem else None)
+                            |> Seq.toList
+                        | _ -> []
+                    with _ -> []
+
             { Ref = baseRef
               Head = head
               Ros = ros |> Option.map GovernanceJson.parseRos
               Profile = profile
+              ProfileError = (match profileResult with Error e -> Some e | Ok _ -> None)
               Trust = read TrustRootPath |> Option.map GovernanceJson.parseTrustRoot
               Authorities = authorities
               AuthoritiesError = authoritiesError
@@ -166,8 +210,9 @@ module GovernanceOperations =
                 |> Option.map (fun text -> GovernanceJson.parsePolicy (Encoding.UTF8.GetBytes text))
               Exceptions = exceptions
               Workflows = workflowTexts |> List.map (fun (p, t) -> p, workflowTriggers t)
+              WorkflowWriters = workflowTexts |> List.map (fun (p, t) -> p, workflowTriggers t, writesChecks t)
               WorkflowTexts = workflowTexts |> List.map snd
-              OpenWorkItems = openWorkItems (read ".ros/context/current.json") (read ".ros/work/queue.json") })
+              AuthorizedWorkItems = authorizedWork })
 
     let praxisConfiguration (state: ProtectedState) =
         { Installed = state.Ros.IsSome
@@ -179,12 +224,13 @@ module GovernanceOperations =
           TrustRoot = (match state.Trust with Some(Ok t) -> Some t | _ -> None)
           TrustRootError = (match state.Trust with Some(Error e) -> Some e | _ -> None)
           ValidationPolicyPresent = (match state.Policy with Some(Ok _) -> true | _ -> false)
-          GovernanceProfileDeclared = snd state.Profile }
+          GovernanceProfileDeclared = snd state.Profile
+          ProfileError = state.ProfileError }
 
     // ---- inspect and drift --------------------------------------------------
 
     let snapshot (root: string) (repository: string) (baseRef: string) (branch: string option) =
-        let workflows = loadProtected root baseRef |> Result.map _.Workflows
+        let workflows = loadProtected root baseRef |> Result.map _.WorkflowWriters
         GitHubGovernance.capture repository branch workflows (now ())
 
     let inspect (root: string) (baseRef: string) (raw: JsonNode) (demonstrated: bool * string list) =
@@ -248,107 +294,124 @@ module GovernanceOperations =
                 GovernanceGit.isAncestor root state.Head candidate
                 |> Result.bind (fun containsTarget ->
                     GovernanceGit.candidateChanges root state.Head candidate
-                    |> Result.map (fun changes ->
-                        let pull =
-                            match request.Live, request.PullRequest with
-                            | true, Some number -> GitHubGovernance.getPull request.Repository number |> Result.toOption
-                            | _ -> None
+                    |> Result.bind (fun changes ->
+                        GovernanceGit.listFiles root state.Head ""
+                        |> Result.map (fun tracked ->
+                            let platform (what: string) (result: Result<'a, string>) =
+                                match result with
+                                | Ok value -> Some value, []
+                                | Error e ->
+                                    None,
+                                    [ GovernanceFinding.create "MRG.PLATFORM_UNAVAILABLE" $"{what} could not be read: {e}" "re-run the gate when the platform answers" Principal.HostingProvider ]
 
-                        let declared = (request.WorkItems @ (pull |> Option.map (fun p -> declaredIn p.Body) |> Option.defaultValue [])) |> List.distinct
+                            let live f = match request.Live, request.PullRequest with | true, Some number -> Some(f number) | _ -> None
+                            let pull, pullErrors = match live (GitHubGovernance.getPull request.Repository) with Some r -> platform "the pull request" r | None -> None, []
+                            let approvals, approvalErrors = match live (GitHubGovernance.elevatedApprovals request.Repository) with Some r -> platform "elevated approvals" r | None -> Some [], []
+                            let commented, authorizationErrors = match live (GitHubGovernance.workAuthorizations request.Repository) with Some r -> platform "work authorizations" r | None -> Some [], []
 
-                        let approvals =
-                            match request.Live, request.PullRequest with
-                            | true, Some number -> GitHubGovernance.elevatedApprovals request.Repository number |> Result.defaultValue []
-                            | _ -> []
+                            let declared = (request.WorkItems @ (pull |> Option.map (fun p -> declaredIn p.Body) |> Option.defaultValue [])) |> List.distinct
 
-                        let trust = match state.Trust with Some(Ok t) -> Some t | _ -> None
+                            let authorizedByComment =
+                                commented |> Option.defaultValue [] |> List.filter (Authority.workAuthorized state.Authorities) |> List.map _.WorkItem
 
-                        let jwks =
-                            lazy
-                                (match request.JwksFile with
-                                 | Some path -> (try GovernanceJson.parseJwks (File.ReadAllText path) with e -> Error e.Message)
-                                 | None when request.Live -> GitHubGovernance.fetchJwks ()
-                                 | None -> Error "no --jwks file and live access is off")
+                            let trust = match state.Trust with Some(Ok t) -> Some t | _ -> None
 
-                        let receipts = receiptTexts root candidate request.ReceiptDirectories |> verifyReceipts trust jwks
+                            let jwks =
+                                lazy
+                                    (match request.JwksFile with
+                                     | Some path -> (try GovernanceJson.parseJwks (File.ReadAllText path) with e -> Error e.Message)
+                                     | None when request.Live -> GitHubGovernance.fetchJwks ()
+                                     | None -> Error "no --jwks file and live access is off")
 
-                        let verifiedCommits =
-                            receipts
-                            |> List.choose (fun r -> match r.Check with Ok v -> Some v.Payload.Commit | Error _ -> None)
-                            |> List.distinct
-                            |> List.map (fun commit ->
-                                commit,
-                                { IsAncestorOfCandidate = GovernanceGit.isAncestor root commit candidate |> Result.defaultValue false
-                                  ChangedSince = GovernanceGit.changedBetween root commit candidate |> Result.defaultValue [ "<unavailable>" ]
-                                  TreeId = GovernanceGit.tree root commit |> Result.toOption })
-                            |> Map.ofList
+                            let receipts = receiptTexts root candidate request.ReceiptDirectories |> verifyReceipts trust jwks
 
-                        let candidateExceptions =
-                            GovernanceGit.listFiles root candidate ExceptionsPrefix
-                            |> Result.defaultValue []
-                            |> List.filter (fun p -> not (state.Exceptions |> List.exists (fun (q, _) -> q = p)))
-                            |> List.map (fun p -> p, (show root candidate p |> Option.map GovernanceJson.parseException |> Option.defaultValue (Error "unreadable")))
+                            let verifiedCommits =
+                                receipts
+                                |> List.choose (fun r -> match r.Check with Ok v -> Some v.Payload.Commit | Error _ -> None)
+                                |> List.distinct
+                                |> List.map (fun commit ->
+                                    commit,
+                                    { IsAncestorOfCandidate = GovernanceGit.isAncestor root commit candidate |> Result.defaultValue false
+                                      ChangedSince = GovernanceGit.changedBetween root commit candidate |> Result.defaultValue [ "<unavailable>" ]
+                                      TreeId = GovernanceGit.tree root commit |> Result.toOption })
+                                |> Map.ofList
 
-                        let exceptions, exceptionErrors =
-                            state.Exceptions @ candidateExceptions
-                            |> List.partition (fun (_, r) -> Result.isOk r)
-                            |> fun (ok, bad) -> ok |> List.choose (fun (_, r) -> Result.toOption r), bad
+                            let candidateExceptions =
+                                GovernanceGit.listFiles root candidate ExceptionsPrefix
+                                |> Result.defaultValue []
+                                |> List.filter (fun p -> not (state.Exceptions |> List.exists (fun (q, _) -> q = p)))
+                                |> List.map (fun p -> p, (show root candidate p |> Option.map GovernanceJson.parseException |> Option.defaultValue (Error "unreadable")))
 
-                        let weakenings =
-                            match trust, show root candidate TrustRootPath with
-                            | Some protectedRoot, Some text ->
-                                match GovernanceJson.parseTrustRoot text with
-                                | Ok proposed -> VerifierTrust.weakenings protectedRoot proposed
-                                | Error e -> [ $"the candidate's trust root is unreadable: {e}" ]
-                            | _ -> []
+                            let exceptions, exceptionErrors =
+                                state.Exceptions @ candidateExceptions
+                                |> List.partition (fun (_, r) -> Result.isOk r)
+                                |> fun (ok, bad) -> ok |> List.choose (fun (_, r) -> Result.toOption r), bad
 
-                        let platformEnforced =
-                            request.GovernanceReport
-                            |> Option.map (fun path ->
-                                match GovernanceJson.parseReport (File.ReadAllText path) with
-                                | Ok report -> report.Controls |> List.forall (fun c -> ControlStatus.isSatisfied c.Status || c.Status = ControlStatus.PlatformUnavailable || c.Id.StartsWith "GOV-TRUST" || c.Id = "GOV-VERIFIED-COMPLETION" || c.Id = "GOV-VALIDATION-POLICY")
-                                | Error _ -> false)
+                            let weakenings =
+                                match trust, show root candidate TrustRootPath with
+                                | Some protectedRoot, Some text ->
+                                    match GovernanceJson.parseTrustRoot text with
+                                    | Ok proposed -> VerifierTrust.weakenings protectedRoot proposed
+                                    | Error e -> [ $"the candidate's trust root is unreadable: {e}" ]
+                                | _ -> []
 
-                        let tracked = GovernanceGit.listFiles root state.Head "" |> Result.defaultValue []
-                        let ciReferenced = Classification.ciReferencedPaths (show root state.Head) state.WorkflowTexts tracked
+                            let platformEnforced =
+                                request.GovernanceReport
+                                |> Option.map (fun path ->
+                                    match GovernanceJson.parseReport (File.ReadAllText path) with
+                                    | Ok report -> report.Controls |> List.forall (fun c -> ControlStatus.isSatisfied c.Status || c.Status = ControlStatus.PlatformUnavailable || c.Id.StartsWith "GOV-TRUST" || c.Id = "GOV-VERIFIED-COMPLETION" || c.Id = "GOV-VALIDATION-POLICY")
+                                    | Error _ -> false)
 
-                        let ros = match state.Ros with Some(Ok r) -> Some r | _ -> None
+                            let ciReferenced = Classification.ciReferencedPaths (show root state.Head) state.WorkflowTexts tracked
+                            let ros = match state.Ros with Some(Ok r) -> Some r | _ -> None
+                            let expected = branchOf state.Ref
 
-                        let facts =
-                            { Repository = ros |> Option.bind _.Repository |> Option.defaultValue request.Repository
-                              RequestedRepository = request.Repository
-                              ExpectedTarget = state.Ref.Substring(state.Ref.LastIndexOf '/' + 1)
-                              TargetBranch = pull |> Option.map _.BaseRef |> Option.defaultValue (state.Ref.Substring(state.Ref.LastIndexOf '/' + 1))
-                              TargetHead = state.Head
-                              CandidateHead = candidate
-                              CandidateContainsTarget = containsTarget
-                              ChangedPaths = changes
-                              CiReferenced = ciReferenced
-                              DeclaredWorkItems = declared
-                              AuthorizedWorkItems = state.OpenWorkItems
-                              Standing = state.Standing
-                              RequireVerifiedCompletion = (fst state.Profile).RequireVerifiedMerge || (ros |> Option.exists _.RequireVerifiedCompletion)
-                              Policy = (match state.Policy with Some(Ok p) -> Some p | _ -> None)
-                              Trust = trust
-                              Receipts = receipts
-                              VerifiedCommits = verifiedCommits
-                              Authorities = state.Authorities
-                              ElevatedApprovals = approvals
-                              Exceptions = exceptions
-                              TrustRootWeakenings = weakenings
-                              PlatformEnforced = platformEnforced
-                              EvaluatedAt = now () }
+                            let facts =
+                                { Repository = ros |> Option.bind _.Repository |> Option.defaultValue request.Repository
+                                  RequestedRepository = request.Repository
+                                  ExpectedTarget = expected
+                                  TargetBranch = pull |> Option.map _.BaseRef |> Option.defaultValue expected
+                                  TargetHead = state.Head
+                                  CandidateHead = candidate
+                                  CandidateContainsTarget = containsTarget
+                                  ChangedPaths = changes
+                                  CiReferenced = ciReferenced
+                                  DeclaredWorkItems = declared
+                                  AuthorizedWorkItems = state.AuthorizedWorkItems @ authorizedByComment |> List.distinct
+                                  Standing = state.Standing
+                                  RequireVerifiedCompletion = (fst state.Profile).RequireVerifiedMerge || (ros |> Option.exists _.RequireVerifiedCompletion)
+                                  Policy = (match state.Policy with Some(Ok p) -> Some p | _ -> None)
+                                  Trust = trust
+                                  Receipts = receipts
+                                  VerifiedCommits = verifiedCommits
+                                  Authorities = state.Authorities
+                                  ElevatedApprovals = approvals |> Option.defaultValue []
+                                  Exceptions = exceptions
+                                  CandidateExceptionIds = candidateExceptions |> List.choose (fun (_, r) -> match r with Ok e -> Some e.Id | Error _ -> None)
+                                  TrustRootWeakenings = weakenings
+                                  PlatformEnforced = platformEnforced
+                                  EvaluatedAt = now () }
 
-                        let decision = MergeAuthorization.decide facts
+                            let decision = MergeAuthorization.decide facts
 
-                        let unreadable =
-                            exceptionErrors
-                            |> List.map (fun (path, r) ->
-                                let why = match r with Error e -> e | Ok _ -> ""
-                                GovernanceFinding.create "MRG.EXCEPTION_INVALID" $"{path}: {why}" "fix or remove the exception record" Principal.ExceptionAuthority)
+                            let unreadable =
+                                exceptionErrors
+                                |> List.map (fun (path, r) ->
+                                    let why = match r with Error e -> e | Ok _ -> ""
+                                    GovernanceFinding.create "MRG.EXCEPTION_INVALID" $"{path}: {why}" "fix or remove the exception record" Principal.ExceptionAuthority)
 
-                        if unreadable.IsEmpty then decision
-                        else { decision with Outcome = MergeOutcome.Refused; Refusals = decision.Refusals @ unreadable }))))
+                            let configuration =
+                                [ match state.ProfileError with
+                                  | Some e -> GovernanceFinding.create "MRG.POLICY_UNAVAILABLE" $"the protected governance profile is malformed: {e}" "fix ros.json governance through an elevated change" Principal.RepositoryAdministrator
+                                  | None -> ()
+                                  match state.AuthoritiesError with
+                                  | Some e -> GovernanceFinding.create "MRG.POLICY_UNAVAILABLE" $"the protected authorities are malformed: {e}" "fix .praxis/governance/authorities.json through an elevated change" Principal.RepositoryAdministrator
+                                  | None -> () ]
+
+                            let extra = unreadable @ configuration @ pullErrors @ approvalErrors @ authorizationErrors
+
+                            if extra.IsEmpty then decision
+                            else { decision with Outcome = MergeOutcome.Refused; Refusals = decision.Refusals @ extra })))))
 
     // ---- integration audit --------------------------------------------------
 
@@ -398,9 +461,23 @@ module GovernanceOperations =
 
                         let required =
                             parent
-                            |> Option.bind (fun p -> show root p "ros.json")
-                            |> Option.map (fun t -> GovernanceJson.parseRos t |> Result.map _.RequireVerifiedCompletion |> Result.defaultValue false)
+                            |> Option.map (fun p ->
+                                [ "ros.json"; ".echelon/ros.json" ]
+                                |> List.choose (show root p)
+                                |> List.exists (fun t ->
+                                    (GovernanceJson.parseRos t |> Result.map _.RequireVerifiedCompletion |> Result.defaultValue false)
+                                    || (GovernanceJson.parseProfile t |> Result.map (fun (profile, _) -> profile.RequireVerifiedMerge) |> Result.defaultValue false)))
                             |> Option.defaultValue false
+
+                        let mergeTree =
+                            match entry.Parents with
+                            | [ first; second ] -> GovernanceGit.mergeTreeMatches root entry.Commit first second
+                            | _ -> None
+
+                        let confirmed =
+                            match request.Repository with
+                            | Some _ when pr.IsSome -> Some(pulls |> List.exists (fun p -> p.MergeCommitSha = Some entry.Commit))
+                            | _ -> None
 
                         let gate =
                             match candidate with
@@ -433,6 +510,8 @@ module GovernanceOperations =
                           ActiveWorkItemsIntroduced = introduced
                           VerifiedCompletionRequired = required
                           Gate = gate
+                          MergeTreeMatches = mergeTree
+                          PlatformConfirmed = confirmed
                           StrandedAfterMerge = stranded })
 
                 let previous =
@@ -454,7 +533,6 @@ module GovernanceOperations =
               TrustRoot = (match state.Trust with Some(Ok t) -> Some t | _ -> None)
               TrustRootError = (match state.Trust with Some(Error e) -> Some e | _ -> None)
               ValidationPolicyPresent = (match state.Policy with Some(Ok _) -> true | _ -> false)
-              MergeGateWorkflowPresent = state.Workflows |> List.exists (fun (p, _) -> p = ".github/workflows/praxis-merge-gate.yml")
-              VerifyWorkflowPresent = state.Workflows |> List.exists (fun (p, _) -> p = ".github/workflows/praxis-merge-gate.yml")
+              MergeGateWorkflowPresent = state.Workflows |> List.exists (fun (p, _) -> p = MergeGatePath)
               HostAuthorityNamed = env "PRAXIS_COMPLETION_AUTHORITY"
               HostVerifierSocketNamed = env "PRAXIS_VERIFIER_SOCKET" })

@@ -3,7 +3,9 @@ namespace Praxis.Domain.Governance
 open System
 open System.Text.RegularExpressions
 
-/// A validation's declared proof that it executed tests. A suite that exits
+/// A validation's declared proof that it executed tests. It catches empty or
+/// undiscovered suites; it is not an adversarial control (candidate code can
+/// print a matching line). A suite that exits
 /// 0 after running nothing (a filter that matches nothing, a discovery
 /// failure, an emptied project) must not pass a mandatory validation.
 type TestExecutionExpectation =
@@ -45,8 +47,9 @@ module TestExecution =
                     let count = List.max counts
                     if count < expectation.MinimumTests then TestExecutionAssessment.TooFew(count, expectation.MinimumTests)
                     else TestExecutionAssessment.Executed count
-        with :? ArgumentException as error ->
-            TestExecutionAssessment.InvalidPattern error.Message
+        with
+        | :? RegexMatchTimeoutException -> TestExecutionAssessment.InvalidPattern "the pattern timed out on the output"
+        | :? ArgumentException as error -> TestExecutionAssessment.InvalidPattern error.Message
 
     /// Whether a passing exit code may stand. Any assessment other than
     /// `Executed` turns a pass into a failure, with the reason.

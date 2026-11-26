@@ -58,7 +58,7 @@ module GitHubGovernance =
 
     /// Capture a snapshot of `repository`'s governance on `branch`.
     /// `workflows` are (path, triggers) read from the protected branch by Git.
-    let capture (repository: string) (branch: string option) (workflows: Result<(string * string list) list, string>) (capturedAt: DateTimeOffset) =
+    let capture (repository: string) (branch: string option) (workflows: Result<(string * string list * bool) list, string>) (capturedAt: DateTimeOffset) =
         let repo = observe $"/repos/{repository}"
 
         let target =
@@ -99,6 +99,7 @@ module GitHubGovernance =
         node["rulesets"] <- details
         node["rulesetsListing"] <- observe $"/repos/{repository}/rulesets?includes_parents=true"
         node["headChecks"] <- checks
+        node["workflowPermissions"] <- observe $"/repos/{repository}/actions/permissions/workflow"
 
         node["workflows"] <-
             match workflows with
@@ -106,9 +107,10 @@ module GitHubGovernance =
             | Ok list ->
                 let items = JsonArray()
 
-                for path, triggers in list do
+                for path, triggers, writesChecks in list do
                     let entry = JsonObject()
                     entry["path"] <- JsonValue.Create path
+                    entry["writesChecks"] <- JsonValue.Create writesChecks
                     entry["triggers"] <- JsonArray(triggers |> List.map (fun t -> JsonValue.Create t :> JsonNode) |> List.toArray)
                     items.Add entry
 
@@ -285,6 +287,31 @@ module GitHubGovernance =
                         )
                     | _ -> Observed.Unknown "check runs are not in the expected shape"
 
+            let tokenPermission =
+                match raw["workflowPermissions"] with
+                | null -> Observed.Unknown "not captured"
+                | p when isUnknown p -> Observed.Unknown(reasonOf p)
+                | p ->
+                    match p["default_workflow_permissions"] with
+                    | null -> Observed.Unknown "default_workflow_permissions is absent"
+                    | v -> Observed.Known(v.ToString())
+
+            let checkWriters =
+                match raw["workflows"] with
+                | :? JsonArray as items ->
+                    Observed.Known(
+                        items
+                        |> Seq.filter (fun w ->
+                            let triggers = w["triggers"].AsArray() |> Seq.map (fun t -> t.ToString()) |> Seq.toList
+                            let writes = match w["writesChecks"] with null -> true | v -> v.GetValue<bool>()
+                            writes
+                            && w["path"].ToString() <> ".github/workflows/praxis-merge-gate.yml"
+                            && triggers |> List.exists (fun t -> t = "pull_request" || t = "pull_request_target" || t = "unparsed"))
+                        |> Seq.map (fun w -> w["path"].ToString())
+                        |> Seq.toList
+                    )
+                | other -> Observed.Unknown(reasonOf other)
+
             Ok
                 { Repository = raw["repositoryName"].ToString()
                   OwnerKind =
@@ -296,7 +323,9 @@ module GitHubGovernance =
                   Rules = effectiveRules raw["branchProtection"] raw["rulesForBranch"] raw["rulesets"]
                   Workflows = workflows
                   HeadChecks = checks
-                  ReleaseTagsProtected = releaseTags raw["rulesetsListing"] }
+                  ReleaseTagsProtected = releaseTags raw["rulesetsListing"]
+                  DefaultTokenPermission = tokenPermission
+                  CheckWriters = checkWriters }
         with error ->
             Error $"the snapshot cannot be read: {error.Message}"
 
@@ -309,6 +338,7 @@ module GitHubGovernance =
           HeadRef: string
           HeadSha: string
           Body: string
+          MergeCommitSha: string option
           MergedAt: DateTimeOffset option }
 
     let private pull (node: JsonNode) =
@@ -318,6 +348,7 @@ module GitHubGovernance =
           HeadRef = (at (at node "head") "ref").ToString()
           HeadSha = (at (at node "head") "sha").ToString()
           Body = (match node["body"] with null -> "" | b -> b.ToString())
+          MergeCommitSha = (match node["merge_commit_sha"] with null -> None | v -> Some(v.ToString()))
           MergedAt = (match node["merged_at"] with null -> None | v -> Some(DateTimeOffset.Parse(v.ToString()))) }
 
     let getPull (repository: string) (number: int) =
@@ -333,28 +364,67 @@ module GitHubGovernance =
         | Ok(status, body) -> Error $"HTTP {status}: {message body}"
         | Error failure -> Error(sprintf "%A" failure)
 
-    /// `/praxis approve-elevated <sha> [reason]` comments on a pull request.
+    /// The `/praxis …` command comments on a pull request:
+    /// (login, command, argument, rest, createdAt, viaApplication, edited).
     /// `performed_via_github_app` marks a comment an application posted on
-    /// the commenter's behalf, which is never an elevated approval.
-    let elevatedApprovals (repository: string) (number: int) : Result<ElevatedApproval list, string> =
+    /// the commenter's behalf; `updated_at` later than `created_at` marks an
+    /// edit (any writer can edit another's comment). Neither is ever accepted
+    /// as a person's approval.
+    let private commands (repository: string) (number: int) =
         match GitHubApi.getRaw $"/repos/{repository}/issues/{number}/comments?per_page=100" with
         | Ok(200, body) ->
             (JsonNode.Parse body).AsArray()
             |> Seq.choose (fun c ->
                 let text = (match c["body"] with null -> "" | b -> b.ToString()).Trim()
-                let prefix = "/praxis approve-elevated "
 
-                if text.StartsWith(prefix, StringComparison.Ordinal) then
-                    let rest = text.Substring(prefix.Length).Trim()
-                    let sha, reason = match rest.IndexOf ' ' with -1 -> rest, "" | i -> rest.Substring(0, i), rest.Substring(i + 1)
+                if text.StartsWith("/praxis ", StringComparison.Ordinal) then
+                    let parts = text.Substring(8).Split(' ', 3, StringSplitOptions.RemoveEmptyEntries)
+                    let created = DateTimeOffset.Parse((at c "created_at").ToString())
+                    let updated = match c["updated_at"] with null -> created | v -> DateTimeOffset.Parse(v.ToString())
 
-                    Some
-                        { Approver = (at (at c "user") "login").ToString()
-                          CandidateHead = sha
-                          ApprovedAt = DateTimeOffset.Parse(c["created_at"].ToString())
-                          ViaApplication = (match c["performed_via_github_app"] with null -> None | app -> Some(app["slug"].ToString()))
-                          Reason = reason }
+                    if parts.Length >= 2 then
+                        Some(
+                            (at (at c "user") "login").ToString(),
+                            parts[0],
+                            parts[1],
+                            (if parts.Length = 3 then parts[2] else ""),
+                            created,
+                            (match c["performed_via_github_app"] with null -> None | app -> Some((at app "slug").ToString())),
+                            updated > created.AddSeconds 1.0
+                        )
+                    else None
                 else None)
+            |> Seq.toList
+            |> Ok
+        | Ok(status, body) -> Error $"HTTP {status}: {message body}"
+        | Error failure -> Error(sprintf "%A" failure)
+
+    let elevatedApprovals (repository: string) (number: int) : Result<ElevatedApproval list, string> =
+        commands repository number
+        |> Result.map (
+            List.choose (fun (login, command, argument, rest, created, via, edited) ->
+                if command = "approve-elevated" then
+                    Some { Approver = login; CandidateHead = argument; ApprovedAt = created; ViaApplication = via; Edited = edited; Reason = rest }
+                else None)
+        )
+
+    let workAuthorizations (repository: string) (number: int) : Result<WorkAuthorization list, string> =
+        commands repository number
+        |> Result.map (
+            List.choose (fun (login, command, argument, _, created, via, edited) ->
+                if command = "authorize-work" then
+                    Some { Authorizer = login; WorkItem = argument; AuthorizedAt = created; ViaApplication = via; Edited = edited }
+                else None)
+        )
+
+    /// Conclusions of this workflow run's jobs (latest attempt): name -> (conclusion, startedAt, completedAt, id).
+    let runJobs (repository: string) (runId: string) =
+        match GitHubApi.getRaw $"/repos/{repository}/actions/runs/{Uri.EscapeDataString runId}/jobs?filter=latest&per_page=100" with
+        | Ok(200, body) ->
+            (at (JsonNode.Parse body) "jobs").AsArray()
+            |> Seq.map (fun j ->
+                let time (name: string) = match j[name] with null -> None | v -> Some(DateTimeOffset.Parse(v.ToString()))
+                (at j "name").ToString(), ((match j["conclusion"] with null -> "pending" | v -> v.ToString()), time "started_at", time "completed_at", (at j "id").ToString()))
             |> Seq.toList
             |> Ok
         | Ok(status, body) -> Error $"HTTP {status}: {message body}"

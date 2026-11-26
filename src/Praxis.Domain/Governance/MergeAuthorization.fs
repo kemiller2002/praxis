@@ -50,6 +50,9 @@ type MergeFacts =
       Authorities: GovernanceAuthorities
       ElevatedApprovals: ElevatedApproval list
       Exceptions: GovernanceException list
+      /// IDs of exceptions the candidate itself adds: valid only with an
+      /// elevated approval of this head by the exception's own authority.
+      CandidateExceptionIds: string list
       /// Weakenings of the candidate's trust root against the protected one.
       TrustRootWeakenings: string list
       /// `Some true` when `governance inspect` showed the platform enforces
@@ -106,7 +109,15 @@ module MergeAuthorization =
               refuse "MRG.TARGET_MISMATCH" $"the pull request targets {facts.TargetBranch}, not {facts.ExpectedTarget}" "retarget the pull request" Principal.AgentImplementer ]
 
     let private authorization (facts: MergeFacts) =
-        let paths = facts.ChangedPaths |> List.map _.Path
+        // A rename's source counts as changed too, so moving a file out of a
+        // prohibited path is not covered by a category that allows the target.
+        let paths =
+            facts.ChangedPaths
+            |> List.collect (fun c ->
+                match c.Kind with
+                | ChangeKind.Renamed previous -> [ previous; c.Path ]
+                | _ -> [ c.Path ])
+            |> List.distinct
 
         if facts.DeclaredWorkItems.IsEmpty then
             [], [ refuse "MRG.WORK_ITEM_UNDECLARED" "the pull request names no work item (a 'Praxis-Work-Item: ID' line in its description)" "declare the work item the change implements" Principal.AgentImplementer ]
@@ -283,7 +294,22 @@ module MergeAuthorization =
             identity facts @ authorizationRefusals @ protectedRefusals @ verificationRefusals @ freshness facts
             |> List.distinctBy (fun f -> f.Code, f.Detail)
 
-        let exceptionChecks = facts.Exceptions |> List.map (fun e -> e, Authority.validateException facts.Authorities facts.Repository facts.CandidateHead facts.EvaluatedAt e)
+        let approvedBy =
+            facts.ElevatedApprovals
+            |> List.filter (fun a -> Result.isOk (Authority.elevated facts.Authorities facts.CandidateHead a))
+            |> List.map (fun a -> a.Approver.ToLowerInvariant())
+
+        let exceptionChecks =
+            facts.Exceptions
+            |> List.map (fun e ->
+                let validated = Authority.validateException facts.Authorities facts.Repository facts.CandidateHead facts.EvaluatedAt e
+
+                let authenticated =
+                    if List.contains e.Id facts.CandidateExceptionIds && not (List.contains (e.AuthorizedBy.ToLowerInvariant()) approvedBy) then
+                        Error $"it is added by this candidate, and {e.AuthorizedBy} has not approved this head in person"
+                    else Ok e
+
+                e, (validated |> Result.bind (fun _ -> authenticated)))
         let validExceptions = exceptionChecks |> List.choose (fun (e, r) -> match r with Ok _ -> Some e | Error _ -> None)
 
         let invalidExceptions =

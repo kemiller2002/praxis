@@ -88,6 +88,7 @@ module GovernanceTests =
           Authorities = authorities
           ElevatedApprovals = []
           Exceptions = []
+          CandidateExceptionIds = []
           TrustRootWeakenings = []
           PlatformEnforced = Some true
           EvaluatedAt = now }
@@ -100,7 +101,7 @@ module GovernanceTests =
         Assert.isTrue (List.contains code (codes d)) $"expected {code}, got {codes d}"
         d
 
-    let private approval sha : ElevatedApproval = { Approver = "owner"; CandidateHead = sha; ApprovedAt = now; ViaApplication = None; Reason = "rotation" }
+    let private approval sha : ElevatedApproval = { Approver = "owner"; CandidateHead = sha; ApprovedAt = now; ViaApplication = None; Edited = false; Reason = "rotation" }
 
     let private exceptionFor waives : GovernanceException =
         { Id = "EX-1"
@@ -161,18 +162,21 @@ module GovernanceTests =
 
     // ---- raw GitHub snapshots ------------------------------------------------------
 
-    let private snapshot (protection: string) (rules: string) (rulesets: string) (workflows: string) =
+    let private snapshotWith (permission: string) (protection: string) (rules: string) (rulesets: string) (workflows: string) =
         JsonNode.Parse(
             $$"""{ "schema": "praxis.governance-snapshot/1", "capturedAt": "2026-11-26T12:00:00Z", "repositoryName": "{{repository}}", "branch": "main",
   "repository": { "full_name": "{{repository}}", "owner": { "type": "User" }, "visibility": "public", "default_branch": "main" },
   "branchProtection": {{protection}}, "rulesForBranch": {{rules}}, "rulesets": {{rulesets}}, "rulesetsListing": [],
   "headChecks": { "check_runs": [ { "name": "praxis-merge-gate", "app": { "slug": "github-actions" }, "conclusion": "success" } ] },
+  "workflowPermissions": { "default_workflow_permissions": "{{permission}}" },
   "workflows": {{workflows}} }"""
         )
 
+    let private snapshot = snapshotWith "read"
+
     let private unprotected = snapshot """{ "notProtected": true }""" "[]" "[]" "[]"
 
-    let private gateWorkflow = """[ { "path": ".github/workflows/praxis-merge-gate.yml", "triggers": [ "pull_request_target" ] } ]"""
+    let private gateWorkflow = """[ { "path": ".github/workflows/praxis-merge-gate.yml", "triggers": [ "pull_request_target" ], "writesChecks": false } ]"""
 
     let private fullRules =
         """[ { "type": "deletion", "ruleset_id": 1 }, { "type": "non_fast_forward", "ruleset_id": 1 },
@@ -183,7 +187,7 @@ module GovernanceTests =
     let private protectedSnapshot = snapshot """{ "notProtected": true }""" fullRules """[ { "id": 1, "bypass_actors": [] } ]""" gateWorkflow
 
     let private praxisReady: PraxisConfiguration =
-        { Installed = true; RequireVerifiedCompletion = true; TrustRoot = Some(workloadTrust ()); TrustRootError = None; ValidationPolicyPresent = true; GovernanceProfileDeclared = true }
+        { Installed = true; RequireVerifiedCompletion = true; TrustRoot = Some(workloadTrust ()); TrustRootError = None; ValidationPolicyPresent = true; GovernanceProfileDeclared = true; ProfileError = None }
 
     let private evaluate raw praxis =
         match GitHubGovernance.toPlatform raw with
@@ -494,20 +498,37 @@ module GovernanceTests =
                   let forgedToken = (workloadReceipt bytes []).Token
                   Assert.equal "GOV.RECEIPT_INVALID_SIGNATURE" (refusedWith { Payload = bytes; Token = forgedToken.Substring(0, forgedToken.Length - 4) + "AAAA" }) }
 
-          { Name = "governance #29: the gate template never gives candidate code an OIDC token, a secret or a write token"
+          { Name = "governance #29/#1: candidate code never reaches the attestation identity, and the gate never reads files it wrote"
             Run =
               fun () ->
-                  let text = GovernanceBootstrap.mergeGateWorkflow
-                  let observe = text.Substring(text.IndexOf "  observe:", text.IndexOf "  praxis-merge-gate:" - text.IndexOf "  observe:")
-                  let gate = text.Substring(text.IndexOf "  praxis-merge-gate:")
-                  Assert.isTrue (not (observe.Contains "id-token")) "observe must not mint OIDC tokens"
-                  Assert.isTrue (not (observe.Contains "secrets.")) "observe must see no secret"
-                  Assert.isTrue (observe.Contains "contents: read" && not (observe.Contains "write")) "observe has a read-only token"
+                  let text = GovernanceBootstrap.mergeGateWorkflow "main"
+                  let section (name: string) (next: string option) =
+                      let from = text.IndexOf name
+                      match next with
+                      | Some n -> text.Substring(from, text.IndexOf n - from)
+                      | None -> text.Substring from
+                  let plan = section "  plan:" (Some "  observe:")
+                  let observe = section "  observe:" (Some "  praxis-merge-gate:")
+                  let gate = section "  praxis-merge-gate:" None
+                  for job in [ plan; observe ] do
+                      Assert.isTrue (not (job.Contains "id-token")) "only the gate job may mint OIDC tokens"
+                      Assert.isTrue (not (job.Contains "secrets.") && not (job.Contains "github.token")) "jobs running candidate code see no secret or token variable"
+                      Assert.isTrue (job.Contains "contents: read" && not (job.Contains ": write")) "read-only token"
+                  Assert.isTrue (observe.Contains "matrix.validation") "one isolated job per validation"
+                  Assert.isTrue (not (gate.Contains "governance observe") && not (gate.Contains "download-artifact")) "the gate neither runs candidate code nor reads artifacts candidate code wrote"
+                  Assert.isTrue (gate.Contains "--run-id \"$GITHUB_RUN_ID\"") "results come from GitHub's record of this run's jobs"
                   Assert.isTrue (text.Contains "permissions: {}") "workflow default permissions are empty"
-                  Assert.isTrue (text.Contains "pull_request_target" && not (text.Contains "\n  pull_request:")) "only the base definition runs"
-                  Assert.isTrue (not (gate.Contains "dotnet test") && not (gate.Contains "governance observe")) "the gate job never runs candidate code"
-                  Assert.isTrue (not (text.Contains "github.event.pull_request.head.ref") && not (text.Contains "github.event.pull_request.title")) "no untrusted text is interpolated into scripts"
+                  Assert.isTrue (text.Contains "branches: [main]" && text.Contains "--base \"origin/main\"") "the protected branch is fixed, not taken from the pull request"
+                  Assert.isTrue (not (text.Contains "github.event.pull_request.base.ref") && not (text.Contains "head.ref") && not (text.Contains "pull_request.title")) "no untrusted text is interpolated into scripts"
                   Assert.equal [ "pull_request_target" ] (GovernanceOperations.workflowTriggers text) }
+
+          { Name = "governance #1b: attestation maps job conclusions, never a pass for anything but success"
+            Run =
+              fun () ->
+                  Assert.equal (CheckStatus.Passed, Some 0) (GovernanceBootstrap.statusOf "success")
+                  Assert.equal (CheckStatus.Failed, Some 1) (GovernanceBootstrap.statusOf "failure")
+                  for other in [ "cancelled"; "skipped"; "timed_out"; "missing"; "pending"; "neutral" ] do
+                      Assert.equal (CheckStatus.Unavailable, None) (GovernanceBootstrap.statusOf other) }
 
           // ---- platform governance -------------------------------------------------------
 
@@ -546,7 +567,7 @@ module GovernanceTests =
           { Name = "governance: unreadable branch rules are unknown and fail closed"
             Run =
               fun () ->
-                  let report = evaluate (snapshot """{ "unknown": true, "reason": "HTTP 403: Upgrade to GitHub Pro" }""" "[]" "[]" gateWorkflow) praxisReady
+                  let report = evaluate (snapshot """{ "unknown": true, "reason": "HTTP 403: Resource not accessible by integration" }""" "[]" "[]" gateWorkflow) praxisReady
                   Assert.equal ControlStatus.Unknown (control "GOV-RULES" report).Status
                   Assert.isTrue (report.Level <> ReadinessLevel.PlatformEnforced && report.Level <> ReadinessLevel.VerifiedCompletionEnabled) "unknown is not enforced" }
 
@@ -567,7 +588,7 @@ module GovernanceTests =
                   let d =
                       AuthorityDiagnostics.diagnose
                           { RequireVerifiedCompletion = false; RequireAttestedEvidence = false; PinnedKeyIds = []; TrustRoot = None; TrustRootError = None
-                            ValidationPolicyPresent = false; MergeGateWorkflowPresent = false; VerifyWorkflowPresent = false; HostAuthorityNamed = false; HostVerifierSocketNamed = false }
+                            ValidationPolicyPresent = false; MergeGateWorkflowPresent = false; HostAuthorityNamed = false; HostVerifierSocketNamed = false }
 
                   Assert.isTrue (not d.Ready) "not ready"
                   Assert.equal Principal.OrganizationOwner d.ResolvedBy
@@ -616,23 +637,35 @@ module GovernanceTests =
                   Assert.isTrue (not (fst (IntegrationAudit.demonstrated report))) "not operationally demonstrated"
                   ignore initial }
 
-          { Name = "governance #30b: the same integration with a verified gate decision is clean apart from the pending completion record"
+          { Name = "governance #30b: a verified gate check leaves only the pending completion record; a decision file is not platform evidence"
             Run =
               fun () ->
-                  let root = repo "assurance-verified"
-                  write root "README.md" "x\n"
+                  let at gate =
+                      IntegrationAudit.examine "praxis-merge-gate" { Commit = head; Parents = [ targetHead; head ]; Committer = "GitHub"; Subject = "Merge pull request #4 from x"; PullRequest = Some 4; Candidate = Some head; ActiveWorkItemsIntroduced = [ "WI-9" ]; VerifiedCompletionRequired = true; Gate = gate; MergeTreeMatches = Some true; PlatformConfirmed = Some true; StrandedAfterMerge = 0 }
+                      |> List.map _.Code
+
+                  Assert.equal [ "AUD.COMPLETION_PENDING" ] (at (GateObservation.Check("success", "github-actions")))
+                  Assert.equal [ "AUD.GATE_DECISION_UNAUTHENTICATED"; "AUD.INTEGRATED_WHILE_ACTIVE" ] (at (GateObservation.Decision "verified")) }
+
+          { Name = "governance #5c: an evil merge (tree differs from the merge of its parents) and an unconfirmed merge claim are reported"
+            Run =
+              fun () ->
+                  let root = repo "evil-merge"
+                  write root "a.txt" "1\n"
                   commitAs root "GitHub" "Initial commit" |> ignore
                   git root [ "checkout"; "-q"; "-b"; "feature" ] |> ignore
-                  write root ".ros/context/current.json" """{ "workItems": [ { "id": "WI-9", "state": "active" } ] }"""
-                  let candidate = commitAs root "Claude" "Work"
+                  write root "b.txt" "verified\n"
+                  commitAs root "Claude" "Verified work" |> ignore
                   git root [ "checkout"; "-q"; "main" ] |> ignore
-                  git root [ "-c"; "user.name=GitHub"; "merge"; "-q"; "--no-ff"; "-m"; "Merge pull request #4 from x/feature"; "feature" ] |> ignore
-                  let decisions = Path.Combine(root, "..", Path.GetFileName root + "-decisions")
-                  Directory.CreateDirectory decisions |> ignore
-                  File.WriteAllText(Path.Combine(decisions, "d.json"), $$"""{ "schema": "praxis.merge-decision/1", "candidateHead": "{{candidate}}", "outcome": "verified" }""")
-                  let report = GovernanceOperations.audit { auditRequest root with DecisionDirectory = Some decisions } |> Result.defaultWith failwith
-                  Assert.equal [ "AUD.COMPLETION_PENDING" ] (report.Findings |> List.map _.Code)
-                  Assert.equal 1 report.VerifiedIntegrations }
+                  git root [ "-c"; "user.name=GitHub"; "merge"; "-q"; "--no-ff"; "--no-commit"; "feature" ] |> ignore
+                  write root "evil.txt" "never verified\n"
+                  git root [ "add"; "-A" ] |> ignore
+                  git root [ "-c"; "user.name=GitHub"; "commit"; "-q"; "-m"; "Merge pull request #8 from x/feature" ] |> ignore
+                  let report = GovernanceOperations.audit (auditRequest root) |> Result.defaultWith failwith
+                  Assert.isTrue (report.Findings |> List.exists (fun f -> f.Code = "AUD.MERGE_TREE_MISMATCH")) $"{report.Findings}"
+                  let unconfirmed =
+                      IntegrationAudit.examine "praxis-merge-gate" { Commit = head; Parents = [ targetHead ]; Committer = "GitHub"; Subject = "Change (#9)"; PullRequest = Some 9; Candidate = Some head; ActiveWorkItemsIntroduced = []; VerifiedCompletionRequired = true; Gate = GateObservation.Check("success", "github-actions"); MergeTreeMatches = None; PlatformConfirmed = Some false; StrandedAfterMerge = 0 }
+                  Assert.equal [ "AUD.UNCONFIRMED_MERGE" ] (unconfirmed |> List.map _.Code) }
 
           { Name = "governance #20b/#19: a direct push and a rewritten history are detected by the audit"
             Run =
@@ -641,7 +674,7 @@ module GovernanceTests =
                   write root "a.txt" "1\n"
                   let first = commitAs root "GitHub" "Initial commit"
                   write root "a.txt" "2\n"
-                  let pushed = commitAs root "agent" "Change straight to main"
+                  let pushed = commitAs root "GitHub" "Change straight to main (web editor)"
                   let report = GovernanceOperations.audit (auditRequest root) |> Result.defaultWith failwith
                   Assert.isTrue (report.Findings |> List.exists (fun f -> f.Code = "AUD.DIRECT_PUSH" && f.Commit = pushed)) $"{report.Findings}"
                   git root [ "reset"; "-q"; "--hard"; first ] |> ignore
@@ -654,7 +687,7 @@ module GovernanceTests =
             Run =
               fun () ->
                   let at gate =
-                      IntegrationAudit.examine "praxis-merge-gate" { Commit = head; Parents = [ targetHead; head ]; Committer = "GitHub"; Subject = "Merge pull request #5 from x"; PullRequest = Some 5; Candidate = Some head; ActiveWorkItemsIntroduced = []; VerifiedCompletionRequired = true; Gate = gate; StrandedAfterMerge = 0 }
+                      IntegrationAudit.examine "praxis-merge-gate" { Commit = head; Parents = [ targetHead; head ]; Committer = "GitHub"; Subject = "Merge pull request #5 from x"; PullRequest = Some 5; Candidate = Some head; ActiveWorkItemsIntroduced = []; VerifiedCompletionRequired = true; Gate = gate; MergeTreeMatches = Some true; PlatformConfirmed = Some true; StrandedAfterMerge = 0 }
                       |> List.map _.Code
 
                   Assert.equal [ "AUD.GATE_REFUSED_BUT_MERGED" ] (at (GateObservation.Check("failure", "github-actions")))
@@ -665,12 +698,16 @@ module GovernanceTests =
             Run =
               fun () ->
                   let root = repo "merge-authorize"
-                  let policyText = $$"""{ "schemaVersion": "echelon.validation-policy/1", "policyId": "example-merge-gate-v1", "repository": "{{repository}}", "validations": [ { "name": "tests", "evidenceId": "tests", "command": ["true"] } ] }"""
+                  let policyText = $$"""{ "schemaVersion": "echelon.validation-policy/1", "policyId": "example-merge-gate-v1", "repository": "{{repository}}", "validations": [ { "name": "tests", "evidenceId": "tests", "command": ["true"] } ] }""" + "\n"
                   let realPolicy = { policy with Digest = CompletionGate.sha256 (Encoding.UTF8.GetBytes policyText); RequiredValidations = [ "tests" ] }
                   write root "ros.json" $$"""{ "repository": { "identity": { "repository": "{{repository}}" } }, "governance": { "requireVerifiedMerge": true } }"""
                   write root GovernanceOperations.PolicyPath policyText
                   write root GovernanceOperations.TrustRootPath (GovernanceJson.indented (GovernanceJson.renderTrustRoot (trust ())))
-                  write root ".ros/context/current.json" """{ "workItems": [ { "id": "WI-1", "state": "active" } ] }"""
+                  write root ".ros/context/current.json" """{ "workItems": [ { "id": "WI-1", "state": "active" }, { "id": "WI-SELF", "state": "active" } ] }"""
+                  write root GovernanceOperations.AuthoritiesPath """{ "schema": "praxis.governance-authorities/1", "workAuthorizers": ["owner"], "elevatedApprovers": ["owner"], "exceptionAuthorities": ["owner"], "agentIdentities": ["claude[bot]"] }"""
+                  write root GovernanceOperations.WorkAuthorizationsPath """{ "authorizations": [ { "workItem": "WI-1", "authorizer": "owner" }, { "workItem": "WI-AGENT", "authorizer": "claude[bot]" } ] }"""
+                  write root ".github/workflows/ci.yml" "name: ci\non: [pull_request]\npermissions:\n  contents: read\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: ./scripts/ci.sh\n"
+                  write root "scripts/ci.sh" "dotnet test\n"
                   commitAs root "GitHub" "Initial commit" |> ignore
                   git root [ "checkout"; "-q"; "-b"; "feature" ] |> ignore
                   write root "src/App.fs" "module App\n"
@@ -686,7 +723,15 @@ module GovernanceTests =
 
                   let ok = GovernanceOperations.authorize request |> Result.defaultWith failwith
                   Assert.equal MergeOutcome.Verified ok.Outcome
+                  let selfAuthorized = GovernanceOperations.authorize { request with WorkItems = [ "WI-SELF" ] } |> Result.defaultWith failwith
+                  Assert.isTrue (selfAuthorized.Refusals |> List.exists (fun f -> f.Code = "MRG.WORK_ITEM_UNAUTHORIZED")) "an item merely present in .ros/ is not authorized"
+                  let agentAuthorized = GovernanceOperations.authorize { request with WorkItems = [ "WI-AGENT" ] } |> Result.defaultWith failwith
+                  Assert.isTrue (agentAuthorized.Refusals |> List.exists (fun f -> f.Code = "MRG.WORK_ITEM_UNAUTHORIZED")) "an agent identity cannot authorize work"
                   Assert.equal (Some verified) ok.VerifiedCommit
+                  write root "scripts/ci.sh" "exit 0\n"
+                  let script = commitAs root "Claude" "Weaken the CI script"
+                  let weakened = GovernanceOperations.authorize { request with Candidate = script } |> Result.defaultWith failwith
+                  Assert.isTrue (weakened.Refusals |> List.exists (fun f -> f.Code = "MRG.PROTECTED_CHANGE_UNAUTHORIZED")) $"a script CI runs is protected: {weakened.Refusals}"
                   write root "src/App.fs" "module App\nlet sneaky = 1\n"
                   let changed = commitAs root "Claude" "Change after verification"
                   let late = GovernanceOperations.authorize { request with Candidate = changed } |> Result.defaultWith failwith
@@ -720,4 +765,115 @@ module GovernanceTests =
                   File.Delete(Path.Combine(root, GovernanceOperations.TrustRootPath))
                   match GovernanceBootstrap.bootstrap request with
                   | Error message -> Assert.isTrue (message.Contains "already has a completion authority") message
-                  | Ok _ -> failwith "bootstrap replaced a protected trust root" } ]
+                  | Ok _ -> failwith "bootstrap replaced a protected trust root" }
+
+          // ---- review findings (WI-0116 adversarial review round 1) -------------------
+
+          { Name = "governance review: an edited approval comment is never an approval; a 12+ character head prefix is"
+            Run =
+              fun () ->
+                  let facts = { baseFacts () with ChangedPaths = [ { Path = ".github/workflows/ci.yml"; Kind = ChangeKind.Modified } ] }
+                  { facts with ElevatedApprovals = [ { approval head with Edited = true } ] } |> refused "MRG.PROTECTED_CHANGE_UNAUTHORIZED" |> ignore
+                  Assert.equal MergeOutcome.Verified (MergeAuthorization.decide { facts with ElevatedApprovals = [ approval (head.Substring(0, 12)) ] }).Outcome
+                  { facts with ElevatedApprovals = [ approval (head.Substring(0, 11)) ] } |> refused "MRG.PROTECTED_CHANGE_UNAUTHORIZED" |> ignore }
+
+          { Name = "governance review: a pull request into any branch but the protected one is refused"
+            Run = fun () -> { baseFacts () with TargetBranch = "evil" } |> refused "MRG.TARGET_MISMATCH" |> ignore }
+
+          { Name = "governance review: work authorization requires a listed human authorizer, in person, unedited"
+            Run =
+              fun () ->
+                  let a: WorkAuthorization = { Authorizer = "owner"; WorkItem = "WI-1"; AuthorizedAt = now; ViaApplication = None; Edited = false }
+                  Assert.isTrue (Authority.workAuthorized authorities a) "the owner"
+                  Assert.isTrue (not (Authority.workAuthorized authorities { a with Authorizer = "claude[bot]" })) "an agent identity"
+                  Assert.isTrue (not (Authority.workAuthorized authorities { a with ViaApplication = Some "claude" })) "via an application"
+                  Assert.isTrue (not (Authority.workAuthorized authorities { a with Edited = true })) "edited"
+                  Assert.isTrue (not (Authority.workAuthorized authorities { a with Authorizer = "stranger" })) "not listed" }
+
+          { Name = "governance review: a rename out of a prohibited path is not covered by standing authorization"
+            Run =
+              fun () ->
+                  let standing =
+                      { Id = "SA-docs"; Repositories = [ repository ]; Categories = [ { Name = "docs"; AllowedPaths = [ "docs/**" ]; MaxChangedFiles = 10 } ]
+                        ProhibitedPaths = [ "docs/security/**" ]; ApprovedBy = "owner"; ValidFrom = now.AddDays -1.0; ExpiresAt = now.AddDays 1.0; RevokedAt = None }
+
+                  { baseFacts () with AuthorizedWorkItems = []; Standing = [ standing ]; ChangedPaths = [ { Path = "docs/policy.md"; Kind = ChangeKind.Renamed "docs/security/policy.md" } ] }
+                  |> refused "MRG.WORK_ITEM_UNAUTHORIZED"
+                  |> ignore }
+
+          { Name = "governance review: an exception the candidate adds is valid only with its authority's own approval of this head"
+            Run =
+              fun () ->
+                  let ex = exceptionFor [ "MRG.VALIDATION_INCOMPLETE" ]
+                  let facts = { baseFacts () with Receipts = []; Exceptions = [ ex ]; CandidateExceptionIds = [ ex.Id ]; ChangedPaths = [ { Path = ".praxis/governance/exceptions/EX-1.json"; Kind = ChangeKind.Added } ] }
+                  facts |> refused "MRG.EXCEPTION_INVALID" |> ignore
+                  let approved = MergeAuthorization.decide { facts with ElevatedApprovals = [ approval head ] }
+                  Assert.equal (MergeOutcome.AuthorizedByException [ "EX-1" ]) approved.Outcome }
+
+          { Name = "governance review: a workload verifier's events, issuer or repository change is a weakening"
+            Run =
+              fun () ->
+                  let wider =
+                      { workloadTrust () with
+                          ConfigVersion = 2
+                          Verifiers = (workloadTrust ()).Verifiers |> List.map (fun v -> { v with Identity = (match v.Identity with VerifierIdentity.Workload w -> VerifierIdentity.Workload { w with Events = w.Events @ [ "push" ] } | other -> other) }) }
+
+                  Assert.isTrue (VerifierTrust.weakenings (workloadTrust ()) wider |> List.exists (fun w -> w.Contains "replaces the identity")) "events widened" }
+
+          { Name = "governance review: a write-by-default workflow token and other check-writing PR workflows are not enforcement"
+            Run =
+              fun () ->
+                  let writeDefault = evaluate (snapshotWith "write" """{ "notProtected": true }""" fullRules """[ { "id": 1, "bypass_actors": [] } ]""" gateWorkflow) praxisReady
+                  Assert.equal ControlStatus.NotEnforced (control "GOV-DEFAULT-TOKEN" writeDefault).Status
+                  let writers = gateWorkflow.Replace("]", ", { \"path\": \".github/workflows/ci.yml\", \"triggers\": [ \"pull_request\" ], \"writesChecks\": true } ]")
+                  let report = evaluate (snapshot """{ "notProtected": true }""" fullRules """[ { "id": 1, "bypass_actors": [] } ]""" writers) praxisReady
+                  Assert.equal ControlStatus.NotEnforced (control "GOV-CHECK-WRITERS" report).Status
+                  Assert.isTrue (report.Level <> ReadinessLevel.VerifiedCompletionEnabled) "not reported as enforced"
+                  Assert.isTrue (GovernanceOperations.writesChecks "on: pull_request\njobs: {}\n") "no permissions block inherits the default"
+                  Assert.isTrue (not (GovernanceOperations.writesChecks "permissions:\n  contents: read\n")) "read-only" }
+
+          { Name = "governance review: branch rules unavailable on the plan are platform-unavailable, not absent"
+            Run =
+              fun () ->
+                  let report = evaluate (snapshot """{ "unknown": true, "reason": "HTTP 403: Upgrade to GitHub Pro or make this repository public to enable this feature." }""" "[]" "[]" gateWorkflow) praxisReady
+                  Assert.equal ControlStatus.PlatformUnavailable (control "GOV-RULES" report).Status
+                  Assert.equal ControlStatus.NotEnforced (control "GOV-PR" report).Status }
+
+          { Name = "governance review: drift reports an enforced control becoming not required; profile errors are reported"
+            Run =
+              fun () ->
+                  let enforced = evaluate protectedSnapshot praxisReady
+                  let relaxed = { enforced with Controls = enforced.Controls |> List.map (fun c -> if c.Id = "GOV-PR" then { c with Status = ControlStatus.NotRequired } else c) }
+                  Assert.isTrue (PlatformGovernance.drift enforced relaxed |> List.exists (fun f -> f.Detail.StartsWith "GOV-PR")) "relaxation is drift"
+                  let broken = evaluate protectedSnapshot { praxisReady with ProfileError = Some "requirePullRequest must be a boolean" }
+                  Assert.equal ControlStatus.NotEnforced (control "GOV-PROFILE" broken).Status }
+
+          { Name = "governance review: branch names with slashes and quoted validation commands are handled"
+            Run =
+              fun () ->
+                  Assert.equal "release/1.x" (GovernanceOperations.branchOf "origin/release/1.x")
+                  Assert.equal "main" (GovernanceOperations.branchOf "refs/heads/main")
+                  Assert.equal (Ok("tests", [ "sh"; "-c"; "make test" ])) (GovernanceFiles.validationArgument "tests=[\"sh\",\"-c\",\"make test\"]")
+                  Assert.equal (Ok("tests", [ "dotnet"; "test" ])) (GovernanceFiles.validationArgument "tests=dotnet test")
+                  Assert.isTrue (Result.isError (GovernanceFiles.validationArgument "tests=[]")) "an empty command is refused" }
+
+          { Name = "governance review: the policy digest is over the exact committed bytes, trailing newline included"
+            Run =
+              fun () ->
+                  let root = repo "policy-digest"
+                  let text = "{ \"schemaVersion\": \"echelon.validation-policy/1\", \"policyId\": \"p\", \"validations\": [ { \"name\": \"t\", \"evidenceId\": \"t\", \"command\": [\"true\"] } ] }\n"
+                  write root GovernanceOperations.PolicyPath text
+                  commitAs root "GitHub" "Initial commit" |> ignore
+                  let state = GovernanceOperations.loadProtected root "main" |> Result.defaultWith failwith
+                  let fromGit = match state.Policy with Some(Ok p) -> p.Digest | _ -> failwith "no policy"
+                  let fromFile = (ValidationPolicyJson.readFile (Path.Combine(root, GovernanceOperations.PolicyPath)) |> Result.defaultWith failwith).Digest
+                  Assert.equal fromFile fromGit }
+
+          { Name = "governance review: the validated rung needs a passing GitHub Actions check on the protected head, not one from another app"
+            Run =
+              fun () ->
+                  let other = protectedSnapshot.DeepClone()
+                  other["headChecks"] <- JsonNode.Parse """{ "check_runs": [ { "name": "praxis-merge-gate", "app": { "slug": "some-bot" }, "conclusion": "success" } ] }"""
+                  let report = evaluate other praxisReady
+                  Assert.isTrue (report.Ladder |> List.exists (fun r -> r.Level = ReadinessLevel.Validated && not r.Reached)) "another app's check does not validate" }
+        ]
