@@ -175,6 +175,8 @@ module MergeAuthorization =
             None, [], [ refuse "MRG.TRUST_ROOT_UNAVAILABLE" "no completion authority trust root is provisioned on the protected branch" "provision one (docs/governance/bootstrap.md)" Principal.OrganizationOwner ]
         | None, _ ->
             None, [], [ refuse "MRG.POLICY_UNAVAILABLE" "no validation policy is on the protected branch" "add .praxis/validation-policy.json through an elevated change" Principal.OrganizationOwner ]
+        | Some policy, Some _ when policy.RequiredValidations.IsEmpty ->
+            None, [], [ refuse "MRG.POLICY_UNAVAILABLE" "the protected policy requires no validation; an empty policy cannot verify anything" "add validations to the protected policy" Principal.RepositoryAdministrator ]
         | Some policy, Some _ ->
             let invalid = facts.Receipts |> List.choose (fun r -> match r.Check with Error f -> Some(receiptFinding { f with Detail = $"{r.Source}: {f.Detail}" }) | Ok _ -> None)
             let trusted = facts.Receipts |> List.choose (fun r -> match r.Check with Ok v -> Some v | Error _ -> None)
@@ -221,10 +223,7 @@ module MergeAuthorization =
             | [] ->
                 let required = String.concat ", " policy.RequiredValidations
                 let incomplete =
-                    if policy.RequiredValidations.IsEmpty then
-                        refuse "MRG.POLICY_UNAVAILABLE" "the protected policy requires no validation; an empty policy cannot verify anything" "add validations to the protected policy" Principal.RepositoryAdministrator
-                    else
-                        refuse "MRG.VALIDATION_INCOMPLETE" $"no commit has a trusted receipt for every required validation ({required})" "run the protected verification workflow on the candidate" Principal.VerificationService
+                    refuse "MRG.VALIDATION_INCOMPLETE" $"no commit has a trusted receipt for every required validation ({required})" "run the protected verification workflow on the candidate" Principal.VerificationService
 
                 None, [], repository @ invalid @ policyMismatch @ foreignItem @ [ incomplete ]
             | (commit, (_, chosen, _, failed)) :: _ ->
