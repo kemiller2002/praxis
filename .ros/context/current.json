@@ -12299,11 +12299,22 @@
         }
       },
       "completedAt": "2026-11-26T04:47:30.456Z"
+    },
+    {
+      "id": "WI-0116",
+      "type": "requirements",
+      "state": "active",
+      "semanticState": "active",
+      "evidence": [],
+      "updatedAt": "2026-11-26T14:13:52Z",
+      "telemetryExecutionIds": [
+        "EXE-20261126T141354111Z-c30acdff"
+      ]
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-26T04:47:30.456Z",
+  "updatedAt": "2026-11-26T14:13:52Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
