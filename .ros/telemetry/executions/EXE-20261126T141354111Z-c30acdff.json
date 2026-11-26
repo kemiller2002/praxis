@@ -769,14 +769,30 @@
     },
     {
       "metricId": "agent.interruptions",
-      "status": "unknown",
-      "reason": "runtime capability not reported or mapped",
-      "discoveredAt": "2026-11-26T14:13:54.111Z",
+      "status": "derived",
+      "reason": "normalized measurement recorded",
+      "discoveredAt": "2026-11-26T14:14:22Z",
       "source": {
-        "type": "environment",
-        "name": "runtime-identity",
-        "mechanism": "explicit-or-unmapped-environment"
-      }
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "lastAssessedAt": "2026-11-26T14:14:22Z",
+      "recordedAt": "2026-11-26T14:14:22Z",
+      "history": [
+        {
+          "status": "unknown",
+          "reason": "runtime capability not reported or mapped",
+          "source": {
+            "type": "environment",
+            "name": "runtime-identity",
+            "mechanism": "explicit-or-unmapped-environment"
+          },
+          "discoveredAt": "2026-11-26T14:13:54.111Z",
+          "lastAssessedAt": "2026-11-26T14:13:54.111Z",
+          "recordedAt": "2026-11-26T14:13:54.111Z"
+        }
+      ]
     },
     {
       "metricId": "agent.resumes",
@@ -1618,6 +1634,26 @@
       },
       "collectedAt": "2026-11-26T14:13:54.111Z",
       "schemaVersion": "1.0.0"
+    },
+    {
+      "measurementId": "MEAS-622c97615c7368ffd5388126",
+      "id": "agent.interruptions",
+      "value": 1,
+      "unit": "count",
+      "currency": null,
+      "quality": "derived",
+      "confidence": null,
+      "scope": "execution",
+      "aggregation": "sum",
+      "dimensions": {},
+      "pricing": null,
+      "source": {
+        "type": "calculated",
+        "name": "ros-work-protocol",
+        "mechanism": "blocked-transition"
+      },
+      "collectedAt": "2026-11-26T14:14:22Z",
+      "schemaVersion": "1.0.0"
     }
   ],
   "rawTelemetry": [],
@@ -1630,6 +1666,17 @@
         "name": "ros",
         "mechanism": "work-lifecycle"
       }
+    },
+    {
+      "type": "work.blocked",
+      "occurredAt": "2026-11-26T14:14:22Z",
+      "reason": "Proposed requirements await owner approval; implementation not authorized",
+      "source": {
+        "type": "ros-clock",
+        "name": "ros",
+        "mechanism": "work-lifecycle"
+      },
+      "eventId": "TEVT-ac3e2fad417c1a10e5bde84f"
     }
   ],
   "repository": {

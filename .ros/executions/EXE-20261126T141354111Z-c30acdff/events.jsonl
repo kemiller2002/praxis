@@ -1,1 +1,2 @@
 {"entry":"transition","transition":"execution.start","state":"active","origin":"work-transition","originReference":"work.begin","actor":"anthropic/claude","actorKind":"agent","at":"2026-11-26T14:13:54.938Z"}
+{"entry":"transition","transition":"work.block","state":"blocked","reason":"Proposed requirements await owner approval; implementation not authorized","actor":"anthropic/claude","actorKind":"agent","at":"2026-11-26T14:14:24.984Z"}

@@ -50,8 +50,8 @@
   "humanOnlyTransitions": [],
   "parentExecution": null,
   "startedAt": "2026-11-26T14:13:54.921Z",
-  "state": "active",
-  "stateReason": null,
+  "state": "blocked",
+  "stateReason": "Proposed requirements await owner approval; implementation not authorized",
   "origin": {
     "kind": "work-transition",
     "reference": "work.begin"
