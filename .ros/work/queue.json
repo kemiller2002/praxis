@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 116,
+  "nextSeq": 117,
   "items": [
     {
       "id": "WI-0001",
@@ -7362,6 +7362,29 @@
         "provider": "github",
         "model": "unknown",
         "runtime": "github-actions"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0116",
+      "title": "Registry maintenance requirements (RM-01..17), proposed; re-opened after WI-0110 ID collision",
+      "description": null,
+      "tags": [
+        "governance"
+      ],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-26T14:13:45Z",
+      "updatedAt": "2026-11-26T14:13:52Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
       },
       "source": "manual",
       "sourceReference": null

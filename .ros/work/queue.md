@@ -391,6 +391,7 @@
 | WI-0113 | INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets | complete |  | medium |
 | WI-0114 | Pin Praxis 3.26.0 (echelon-current 1.43.0) as the self-hosting toolchain | complete |  | medium |
 | WI-0115 | Fix praxis foundations verify Forma usage detection: plain HTML class="forma-*"/class='ef-*' attributes (including non-first classes) are not recognised because usageMarkers carries a literal backslash | complete |  | medium |
+| WI-0116 | Registry maintenance requirements (RM-01..17), proposed; re-opened after WI-0110 ID collision | ready | governance | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
