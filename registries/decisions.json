@@ -2926,5 +2926,54 @@
     "title": "Praxis carries the reliability and cache-readiness tenets into repository governance through a declared-applicability file, report-only first",
     "updated": "2026-11-25",
     "version": "0.1.0"
+  },
+  {
+    "confidence": "high",
+    "created": "2026-11-26",
+    "decision_type": "dependency",
+    "derived_from": [],
+    "id": "DF-ROS-2026-A077",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/decisions/DF-ROS-2026-A077--keep-ordo-library-pins-at-1-8-2.md",
+    "provenance": {
+      "contributions": {
+        "EXE-20261125T212905301Z-3ab94da5": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-26T03:18:18.012Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0112: keep Ordo library pins at 1.8.2 under owner-delegated decision"
+        }
+      }
+    },
+    "related_documents": [
+      "vendor/nuget/ordo-core.lock",
+      "vendor/nuget/ordo-construction.lock",
+      ".echelon/foundations.json",
+      "docs/construction.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "supports": [],
+    "tags": [
+      "ordo",
+      "dependency",
+      "pin",
+      "construction",
+      "cohort",
+      "decision"
+    ],
+    "title": "Praxis keeps its vendored Ordo.Core and Ordo.Construction library pins at 1.8.2; echelon-current selects only the Ordo CLI",
+    "updated": "2026-11-26",
+    "version": "1.0.0"
   }
 ]

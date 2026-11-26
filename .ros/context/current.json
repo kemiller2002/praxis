@@ -12100,10 +12100,19 @@
     {
       "id": "WI-0112",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-26T03:17:22Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "research/decisions/DF-ROS-2026-A077--keep-ordo-library-pins-at-1-8-2.md"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T04:00:40Z",
       "telemetryExecutionIds": [
         "EXE-20261125T212905301Z-3ab94da5"
       ],
@@ -12127,7 +12136,9 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-11-26T04:00:40Z",
+      "conclusion": "Option (b) decided under owner delegation (DF-ROS-2026-A077): keep Ordo.Core/Ordo.Construction 1.8.2 library pins, unchanged and verified by the foundations self-check (ordo 1.8.2 installed, pinned, used); adopting 1.20 is a separate feature needing per-cohort authorization scoping and ResolveUndecidedTransition/DecideExtension routing"
     },
     {
       "id": "RELEASE-3-26-0",
@@ -12205,10 +12216,23 @@
     {
       "id": "WI-0115",
       "type": "task",
-      "state": "active",
-      "semanticState": "active",
-      "evidence": [],
-      "updatedAt": "2026-11-26T03:13:14Z",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Foundations/FormaPin.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Cli/Foundations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/FoundationsTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T04:00:55Z",
       "telemetryExecutionIds": [
         "EXE-20261126T031316515Z-432ed1a5"
       ],
@@ -12231,12 +12255,13 @@
           "status": "verified",
           "mechanism": "git-remote-observation"
         }
-      }
+      },
+      "completedAt": "2026-11-26T04:00:55Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-26T03:17:22Z",
+  "updatedAt": "2026-11-26T04:00:55Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"
