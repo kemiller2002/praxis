@@ -12331,11 +12331,56 @@
         }
       },
       "blockReason": "Proposed requirements await owner approval; implementation not authorized"
+    },
+    {
+      "id": "WI-0117",
+      "type": "task",
+      "state": "complete",
+      "semanticState": "complete",
+      "evidence": [
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Domain/Governance/MergeAuthorization.fs"
+        },
+        {
+          "type": "implementation",
+          "path": "src/Praxis.Infrastructure/Governance/GovernanceOperations.fs"
+        },
+        {
+          "type": "tests",
+          "path": "tests/Praxis.Tests/GovernanceTests.fs"
+        }
+      ],
+      "updatedAt": "2026-11-26T18:05:57.000Z",
+      "telemetryExecutionIds": [
+        "EXE-20261126T180305348Z-4a73a3a9"
+      ],
+      "latestCheckpoint": {
+        "id": "848f2da00452690c36e7c3c7",
+        "recordedAt": "2026-11-26T18:05:54.000Z",
+        "executionId": "EXE-20261126T180305348Z-4a73a3a9",
+        "repository": "repository-operating-system",
+        "branch": "claude/praxis-verified-completion-eu4ydu",
+        "commit": "4c5075b163d147c574192a2894b5c52872de2bc8",
+        "remote": {
+          "name": "origin",
+          "url": "https://github.com/kemiller2002/praxis"
+        },
+        "remoteBranch": "claude/praxis-verified-completion-eu4ydu",
+        "remoteCommit": "4c5075b163d147c574192a2894b5c52872de2bc8",
+        "summary": "Re-landed WI-0116 governance work as WI-0117 on current main after an ID collision; targeted tests and praxis validate pass",
+        "nextAction": "Merge PR #312 on the owner's instruction",
+        "verification": {
+          "status": "verified",
+          "mechanism": "git-remote-observation"
+        }
+      },
+      "completedAt": "2026-11-26T18:05:57.000Z"
     }
   ],
   "protocolVersion": "1.0.0",
   "actor": "openai/codex",
-  "updatedAt": "2026-11-26T14:14:22Z",
+  "updatedAt": "2026-11-26T18:05:57.000Z",
   "startedAt": "2026-08-16T20:34:24.696Z",
   "baselineDirtyPaths": [
     "prompts/modify-daemon.md"

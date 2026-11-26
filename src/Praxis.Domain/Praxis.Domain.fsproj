@@ -133,5 +133,13 @@
     <Compile Include="Autonomy/Evaluator.fs" />
     <Compile Include="Autonomy/Lifecycle.fs" />
     <Compile Include="Autonomy/Review.fs" />
+    <Compile Include="Governance/Model.fs" />
+    <Compile Include="Governance/VerifierTrust.fs" />
+    <Compile Include="Governance/PlatformGovernance.fs" />
+    <Compile Include="Governance/Authority.fs" />
+    <Compile Include="Governance/MergeAuthorization.fs" />
+    <Compile Include="Governance/IntegrationAudit.fs" />
+    <Compile Include="Governance/TestExecution.fs" />
+    <Compile Include="Governance/AuthorityDiagnostics.fs" />
   </ItemGroup>
 </Project>

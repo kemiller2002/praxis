@@ -8,7 +8,10 @@ type PolicyValidation =
     { Name: string
       EvidenceId: string
       Command: string list
-      Timeout: TimeSpan }
+      Timeout: TimeSpan
+      /// Optional proof that tests executed (WI-0117): a passing exit code
+      /// with no matching test count, or too few, fails the validation.
+      TestExpectation: Praxis.Domain.Governance.TestExecutionExpectation option }
 
 /// I5: a path whose bytes at the candidate commit are pinned by SHA-256.
 type ProtectedPath = { Path: string; Sha256: string }

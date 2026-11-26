@@ -11,3 +11,7 @@
 | Runtime hooks or raw exports expose prompts, commands, paths, or credentials | Medium | High | Keep content capture off; redact sensitive keys; bound snapshots; validate and review adapters | Repository governance |
 | Per-execution telemetry grows repository history | Medium | Medium | Segment records, cap raw snapshots, measure growth, and defer external storage/retention until scale warrants it | Repository governance |
 | Agent-reported R&D, scope, and correction facts are mistaken for mechanical evidence | Medium | High | Preserve source/quality and require factual context; never make tax/legal eligibility claims | Repository governance |
+| Governance requirements exist only as documents on unprotected branches (GOV-INC-2026-001) | High (observed: every checked Echelon repository) | High | `praxis governance inspect`/`audit`; bootstrap and ruleset per repository (docs/governance/rollout.md) | Owner |
+| Agents act on GitHub as the owner's account, so platform approvals cannot separate them | High | High | Elevated approvals refuse app-posted comments; provision a distinct agent App identity (OQ-706) | Owner |
+| Candidate code can subvert its own CI `observe` job (runner sudo) | Low | High | Least-privilege jobs, protected oracle paths, protected test/CI classes; stronger isolation is future work | Repository governance |
+| Workload receipts depend on GitHub's published OIDC keys | Medium | Medium | Archive the JWKS with decisions; `--jwks` for later verification | Repository governance |

@@ -84,6 +84,7 @@
     <Compile Include="TelemetryReliabilityCommands.fs" />
     <Compile Include="RequirementsCommands.fs" />
     <Compile Include="AutonomyCommands.fs" />
+    <Compile Include="GovernanceCommands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,8 @@ ROS governance, executable artifact validation, portable bootstrap, provider-neu
 
 Remote execution for agents without a local runtime (GH-90, `RQ-ROS-2026-A021`, `DF-ROS-2026-A041`) is implemented on branch `claude/remote-execution-capability-2i5s9u` (PR #91) and verified locally and in CI. It includes the `praxis.remote` 1.2 protocol, `praxis remote execute|classify|describe`, the request journal, expected-SHA binding, identity roles, steps and usage, the verified bootstrap, and the GitHub Actions adapter. The live end-to-end proof, PRAXIS-REMOTE-11, is blocked on merging the PR, publishing an attested release that contains the remote commands, and pinning it.
 
+Enforceable governance (WI-0117, RQ-ROS-2026-A039, `docs/governance/`) is implemented on branch `claude/praxis-verified-completion-eu4ydu`: platform governance inspection with a readiness ladder and drift, an integration audit that reproduces the echelon-assurance PR #3 incident, a keyless completion authority (GitHub Actions OIDC workload identity) with a secure one-merge bootstrap, `praxis merge authorize` with receipt bindings, standing authorization, exceptions and elevated approvals, and a protected merge-gate workflow template. It is not yet enforced anywhere: no Echelon repository, including Praxis, has branch rules or a provisioned trust root; each needs one owner merge and one ruleset import (`docs/governance/rollout.md`).
+
 ## Active research streams
 
 Real-repository adoption measurement, external adapter consumer feedback, and calibration-history collection from observed Ordo outcomes.

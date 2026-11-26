@@ -202,5 +202,6 @@ let main argv =
     @ AttestedCompletionTests.tests
     @ AttestedCompletionTests.finishTests
     @ AttestedCompletionTests.idempotenceTests
+    @ GovernanceTests.tests
     |> TestRunner.run
   | other -> eprintfn "unknown arguments: %s (expected none, --suite browser, or --suite pinned-release)" (String.concat " " other); 2

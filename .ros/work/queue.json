@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 117,
+  "nextSeq": 118,
   "items": [
     {
       "id": "WI-0001",
@@ -7382,6 +7382,27 @@
       "createdByActor": {
         "kind": "agent",
         "id": "anthropic/claude",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0117",
+      "title": "Enforceable governance, keyless completion authority and verified merge gate (re-landed from WI-0116 after an ID collision with main's WI-0116)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-11-26T18:02:46.600Z",
+      "updatedAt": "2026-11-26T18:05:57.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
         "provider": "anthropic",
         "model": "unknown",
         "runtime": "claude-code"
