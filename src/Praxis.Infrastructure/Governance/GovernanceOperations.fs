@@ -149,7 +149,7 @@ module GovernanceOperations =
     let private show root rev path = GovernanceGit.show root rev path |> Result.defaultValue None
 
     let loadProtected (root: string) (baseRef: string) : Result<ProtectedState, string> =
-        GovernanceGit.resolve root baseRef
+        GovernanceGit.resolveProtected root baseRef
         |> Result.map (fun head ->
             let read = show root head
             let ros = read "ros.json" |> Option.orElse (read ".echelon/ros.json")
@@ -408,7 +408,17 @@ module GovernanceOperations =
                                   | Some e -> GovernanceFinding.create "MRG.POLICY_UNAVAILABLE" $"the protected authorities are malformed: {e}" "fix .praxis/governance/authorities.json through an elevated change" Principal.RepositoryAdministrator
                                   | None -> () ]
 
-                            let extra = unreadable @ configuration @ pullErrors @ approvalErrors @ authorizationErrors
+                            let headCheck =
+                                if request.Live then
+                                    match GitHubGovernance.branchHead request.Repository expected with
+                                    | Ok(Some platformHead) when platformHead = state.Head -> []
+                                    | Ok(Some platformHead) ->
+                                        [ GovernanceFinding.create "MRG.TARGET_HEAD_MISMATCH" $"the local {state.Ref} is {state.Head} but the platform's {expected} is {platformHead}" "re-run the gate" Principal.HostingProvider ]
+                                    | Ok None -> [ GovernanceFinding.create "MRG.TARGET_HEAD_MISMATCH" $"the platform has no branch {expected}" "target the protected branch" Principal.AgentImplementer ]
+                                    | Error e -> [ GovernanceFinding.create "MRG.PLATFORM_UNAVAILABLE" $"the protected branch head could not be read: {e}" "re-run the gate" Principal.HostingProvider ]
+                                else []
+
+                            let extra = unreadable @ configuration @ pullErrors @ approvalErrors @ authorizationErrors @ headCheck
 
                             if extra.IsEmpty then decision
                             else { decision with Outcome = MergeOutcome.Refused; Refusals = decision.Refusals @ extra })))))
@@ -431,7 +441,7 @@ module GovernanceOperations =
         let root = request.Root
         let decisions = decisionsIn request.DecisionDirectory
 
-        GovernanceGit.resolve root request.BranchRef
+        GovernanceGit.resolveProtected root request.BranchRef
         |> Result.bind (fun head ->
             GovernanceGit.firstParent root head request.Limit request.Since
             |> Result.map (fun entries ->

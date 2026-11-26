@@ -29,6 +29,25 @@ module GovernanceGit =
     /// The full object ID of a revision.
     let resolve root (revision: string) = text root [ "rev-parse"; "--verify"; "--quiet"; revision + "^{commit}" ]
 
+    /// The protected branch's commit, never shadowed by a tag: Git resolves
+    /// `refs/tags/<name>` before `refs/remotes/<name>`, and anyone who can push
+    /// a tag could otherwise name one `origin/main`. Only fully qualified
+    /// branch refs are read.
+    let resolveProtected root (reference: string) =
+        let candidates =
+            if reference.StartsWith("refs/heads/", StringComparison.Ordinal) || reference.StartsWith("refs/remotes/", StringComparison.Ordinal) then [ reference ]
+            elif reference.StartsWith("refs/", StringComparison.Ordinal) then []
+            else [ "refs/remotes/" + reference; "refs/heads/" + reference ]
+
+        candidates
+        |> List.tryPick (fun full ->
+            match run root [ "show-ref"; "--verify"; "--hash"; full ] with
+            | Ok result when result.ExitCode = 0 -> Some(result.Stdout.Trim())
+            | _ -> None)
+        |> function
+            | Some sha -> Ok sha
+            | None -> Error $"'{reference}' is not a branch (tags and other refs are never read as the protected branch)"
+
     let tree root (commit: string) = text root [ "rev-parse"; "--verify"; commit + "^{tree}" ]
 
     /// A file at a revision, byte-exact (never trimmed: digests are computed

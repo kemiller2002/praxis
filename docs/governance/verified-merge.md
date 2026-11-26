@@ -103,7 +103,7 @@ workflow (or push) after commenting.
 
 A change is covered only if every path matches one category, within its file limit, none is prohibited, and
 the policy is active. Standing authorization never covers a protected class: those always need an elevated
-approval (`/praxis approve-elevated <head-sha>` by an elevated approver, posted in person). Required
+approval (`/praxis approve-elevated <full head SHA>` by an elevated approver, posted in person). Required
 validations come from the protected policy, never from the standing authorization. The file itself is a
 protected path. Elevated approval is required for trust roots, verification policy and workflows, governance
 records, exceptions, build and dependency configuration, credentials and permission expansion. Production

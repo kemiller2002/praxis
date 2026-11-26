@@ -309,7 +309,24 @@ module PlatformGovernance =
     let private tokenControls (profile: GovernanceProfile) (snapshot: PlatformSnapshot) =
         let gate = profile.RequiredChecks |> List.map _.Context |> String.concat ", "
 
-        [ (match snapshot.DefaultTokenPermission with
+        [ (match snapshot.OwnerKind with
+           | OwnerKind.User ->
+               control
+                   "GOV-GATE-EXCLUSIVE"
+                   "Only the protected gate can produce the required check"
+                   ControlStatus.PlatformUnavailable
+                   $"any Actions job named {gate} in a workflow the candidate adds produces a same-named check from GitHub Actions; personal accounts have no required-workflow rule to prevent it"
+                   "give agent identities no workflow-write permission (they then cannot add workflows); `governance audit` reports gate checks from any other workflow (AUD.GATE_SOURCE_UNTRUSTED); an organization account can require the workflow itself"
+                   Principal.OrganizationOwner
+           | OwnerKind.Organization ->
+               control
+                   "GOV-GATE-EXCLUSIVE"
+                   "Only the protected gate can produce the required check"
+                   ControlStatus.Unknown
+                   $"a same-named job in a candidate-added workflow can produce {gate}; Praxis does not read organization required-workflow rulesets"
+                   "require the merge-gate workflow through an organization ruleset; give agents no workflow-write permission"
+                   Principal.OrganizationOwner)
+          (match snapshot.DefaultTokenPermission with
            | Observed.Known "read" -> control "GOV-DEFAULT-TOKEN" "Workflow tokens are read-only by default" ControlStatus.Enforced "the default GITHUB_TOKEN permission is read" "" Principal.RepositoryAdministrator
            | Observed.Known other ->
                control
@@ -381,7 +398,8 @@ module PlatformGovernance =
     let residualBoundaries (snapshot: PlatformSnapshot) =
         [ "A principal with administrative rights on the repository can change or remove these rules; Praxis detects the change afterwards (drift, audit) and cannot prevent it."
           "Agents that push with the owner's platform identity act as the owner to the platform: a platform approval by that identity is not separation of duties."
-          "An agent credential with workflow-write permission can redefine CI under triggers other than pull_request_target; grant agent identities no workflow permission."
+          "An agent credential with workflow-write permission can add a workflow whose job is named like the gate, producing a same-named check from GitHub Actions; grant agent identities no workflow permission (audit detects such checks afterwards)."
+          "Validation results are only as trustworthy as the isolation of the job that runs candidate code: the gate removes sudo and Docker access first, but a kernel-level escape is outside what Praxis controls."
           if snapshot.OwnerKind = OwnerKind.User then
               "Personal-account repositories cannot restrict who may push or merge beyond rulesets, and have no audit log." ]
 

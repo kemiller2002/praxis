@@ -65,8 +65,8 @@ the authorities is a protected change that needs an elevated approval bound to t
 | Suppressed failures, interrupted runs | Latest receipt per validation must pass; `unavailable` refused; truncated receipts refused | `#16`, `#16b`, `#22`, `#23` |
 | Changes between validation and merge, stale base | Candidate must contain the target head; post-verification changes allowed only under `.ros/`, `.praxis/receipts/`, `.praxis/evidence/` | `#27`, Git end-to-end test |
 | Direct push, force push, admin bypass | Rulesets (inspected), audit findings `AUD.DIRECT_PUSH`, `AUD.HISTORY_REWRITTEN`, `AUD.GATE_REFUSED_BUT_MERGED`, `AUD.GATE_SOURCE_UNTRUSTED` | `#19`–`#21c` |
-| Spoofed required check | Required check pinned to GitHub Actions' integration; gate workflow only under `pull_request_target` for the protected branch; default workflow token read-only (`GOV-DEFAULT-TOKEN`); no other pull-request workflow may write checks (`GOV-CHECK-WRITERS`) | inspect and review tests |
-| Gate run against an attacker-chosen base branch | Branch filter and a fixed `--base`; a pull request into another branch is `MRG.TARGET_MISMATCH` | `#29`, review tests |
+| Spoofed required check | **Partly a platform limit (personal accounts):** a same-named job in a candidate-added workflow also comes from GitHub Actions; preventive only if agents lack workflow-write permission, detected by the audit (`AUD.GATE_SOURCE_UNTRUSTED`), reported as `GOV-GATE-EXCLUSIVE`. Also: required check pinned to GitHub Actions' integration; gate workflow only under `pull_request_target` for the protected branch; default workflow token read-only (`GOV-DEFAULT-TOKEN`); no other pull-request workflow may write checks (`GOV-CHECK-WRITERS`) | inspect and review tests |
+| Gate run against an attacker-chosen base branch or a tag shadowing it | Branch filter; fixed, fully qualified `--base`; tags never read as the protected branch; live cross-check of the platform's branch head | `#29`, review and round-2 tests |
 | Self-authorized work via `.ros/` state | Authorization only from listed authorizers (comment or protected file) | Git end-to-end test |
 | Evil merge / forged "merge" commit | Audit re-merges parents (`git merge-tree`) and, live, confirms the platform's `merge_commit_sha`; the committer name is never trusted | `#5c`, `#20b` |
 | Candidate code reaching attestation credentials | `observe` job: read-only token, no secret, no `id-token`; gate job runs no candidate code | `#29` (template assertions) |
@@ -91,9 +91,12 @@ the authorities is a protected change that needs an elevated approval bound to t
    tests can be pinned (`protectedPaths`, checked before candidate code runs), and changes to tests, test
    projects and CI scripts are protected classes. The executed-test count catches empty suites, not
    adversaries. Third-party actions are pinned by tag, not commit SHA.
-4. **Workflow-write credentials.** An agent credential with workflow permission can add a workflow under
-   other triggers; it cannot satisfy the pinned workload identity, but it can consume CI and post checks.
-   Grant agents no workflow permission.
+4. **Workflow-write credentials (most important residual on personal accounts).** An agent credential with
+   workflow permission can add a workflow whose job is named like the gate; GitHub then shows a passing
+   same-named check from GitHub Actions, and personal accounts have no rule that requires a specific workflow.
+   It cannot produce a valid workload receipt or a `verified` decision, and the audit reports the foreign check,
+   but the platform may accept the merge. Grant agents no workflow permission; an organization account can
+   require the workflow itself.
 5. **Issuer key rotation.** Workload receipts are verified against GitHub's published keys. After GitHub
    retires a key, old receipts can be re-verified only against an archived JWKS (`--jwks`). Decision records
    in the evidence artifact keep the result.

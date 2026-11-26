@@ -436,13 +436,39 @@ module GitHubGovernance =
         | Ok(200, body) ->
             let runs = (at (JsonNode.Parse body) "check_runs").AsArray() |> Seq.toList
 
-            match runs |> List.sortByDescending (fun r -> match r["completed_at"] with null -> "" | v -> v.ToString()) with
+            // Any Actions job named like the gate produces a same-named check
+            // from the same app, so the producer is identified down to the
+            // workflow file and event of its check suite. Every run of that
+            // name must come from the protected gate workflow.
+            let source (run: JsonNode) =
+                let app = match run["app"] with null -> "" | a -> (at a "slug").ToString()
+                let suite = match run["check_suite"] with null -> "" | s -> (at s "id").ToString()
+
+                if app <> "github-actions" || suite = "" then app
+                else
+                    match GitHubApi.getRaw $"/repos/{repository}/actions/runs?check_suite_id={suite}&per_page=1" with
+                    | Ok(200, body) ->
+                        match (at (JsonNode.Parse body) "workflow_runs") with
+                        | :? JsonArray as items when items.Count > 0 ->
+                            let wr = items[0]
+                            let path = (at wr "path").ToString()
+                            let event = (at wr "event").ToString()
+                            if path.StartsWith(".github/workflows/praxis-merge-gate.yml", StringComparison.Ordinal) && event = "pull_request_target" then "github-actions"
+                            else $"github-actions ({path}, {event})"
+                        | _ -> "github-actions (workflow unknown)"
+                    | _ -> "github-actions (workflow unknown)"
+
+            let ordered = runs |> List.sortByDescending (fun r -> match r["completed_at"] with null -> "" | v -> v.ToString())
+
+            match ordered with
             | [] -> Ok GateObservation.NotObserved
             | latest :: _ ->
+                let foreign = ordered |> List.map source |> List.tryFind (fun s -> s <> "github-actions")
+
                 Ok(
                     GateObservation.Check(
                         (match latest["conclusion"] with null -> "pending" | v -> v.ToString()),
-                        (match latest["app"] with null -> "" | a -> a["slug"].ToString())
+                        (match foreign with Some other -> other | None -> source latest)
                     )
                 )
         | Ok(status, body) -> Error $"HTTP {status}: {message body}"

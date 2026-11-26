@@ -518,7 +518,7 @@ module GovernanceTests =
                   Assert.isTrue (not (gate.Contains "governance observe") && not (gate.Contains "download-artifact")) "the gate neither runs candidate code nor reads artifacts candidate code wrote"
                   Assert.isTrue (gate.Contains "--run-id \"$GITHUB_RUN_ID\"") "results come from GitHub's record of this run's jobs"
                   Assert.isTrue (text.Contains "permissions: {}") "workflow default permissions are empty"
-                  Assert.isTrue (text.Contains "branches: [main]" && text.Contains "--base \"origin/main\"") "the protected branch is fixed, not taken from the pull request"
+                  Assert.isTrue (text.Contains "branches: [main]" && text.Contains "--base \"refs/remotes/origin/main\"") "the protected branch is fixed, not taken from the pull request"
                   Assert.isTrue (not (text.Contains "github.event.pull_request.base.ref") && not (text.Contains "head.ref") && not (text.Contains "pull_request.title")) "no untrusted text is interpolated into scripts"
                   Assert.equal [ "pull_request_target" ] (GovernanceOperations.workflowTriggers text) }
 
@@ -769,13 +769,39 @@ module GovernanceTests =
 
           // ---- review findings (WI-0116 adversarial review round 1) -------------------
 
-          { Name = "governance review: an edited approval comment is never an approval; a 12+ character head prefix is"
+          { Name = "governance review: an edited approval comment is never an approval, nor is a short prefix (collision grinding)"
             Run =
               fun () ->
                   let facts = { baseFacts () with ChangedPaths = [ { Path = ".github/workflows/ci.yml"; Kind = ChangeKind.Modified } ] }
                   { facts with ElevatedApprovals = [ { approval head with Edited = true } ] } |> refused "MRG.PROTECTED_CHANGE_UNAUTHORIZED" |> ignore
-                  Assert.equal MergeOutcome.Verified (MergeAuthorization.decide { facts with ElevatedApprovals = [ approval (head.Substring(0, 12)) ] }).Outcome
-                  { facts with ElevatedApprovals = [ approval (head.Substring(0, 11)) ] } |> refused "MRG.PROTECTED_CHANGE_UNAUTHORIZED" |> ignore }
+                  { facts with ElevatedApprovals = [ approval (head.Substring(0, 12)) ] } |> refused "MRG.PROTECTED_CHANGE_UNAUTHORIZED" |> ignore
+                  Assert.equal MergeOutcome.Verified (MergeAuthorization.decide { facts with ElevatedApprovals = [ approval (head.ToUpperInvariant()) ] }).Outcome }
+
+          { Name = "governance round 2: a tag named like the protected branch is never read as the protected branch"
+            Run =
+              fun () ->
+                  let root = repo "tag-shadow"
+                  write root "a.txt" "1\n"
+                  let real = commitAs root "GitHub" "Initial commit"
+                  git root [ "update-ref"; "refs/remotes/origin/main"; real ] |> ignore
+                  write root "a.txt" "2\n"
+                  let forged = commitAs root "agent" "Forged protected state"
+                  git root [ "tag"; "origin/main"; forged ] |> ignore
+                  Assert.equal forged (git root [ "rev-parse"; "origin/main" ])
+                  Assert.equal (Ok real) (GovernanceGit.resolveProtected root "origin/main")
+                  Assert.equal (Ok real) (GovernanceGit.resolveProtected root "refs/remotes/origin/main")
+                  Assert.isTrue (Result.isError (GovernanceGit.resolveProtected root "refs/tags/origin/main")) "a tag ref is refused" }
+
+          { Name = "governance round 2: the gate removes sudo and Docker before candidate code, reads a qualified branch ref, and same-named checks are not exclusive on personal accounts"
+            Run =
+              fun () ->
+                  let text = GovernanceBootstrap.mergeGateWorkflow "main"
+                  let observe = text.Substring(text.IndexOf "  observe:", text.IndexOf "  praxis-merge-gate:" - text.IndexOf "  observe:")
+                  Assert.isTrue (observe.IndexOf "/etc/sudoers" < observe.IndexOf "governance observe" && observe.Contains "docker.sock") "privileges dropped first"
+                  Assert.isTrue (text.Contains "--base \"refs/remotes/origin/main\"") "qualified ref"
+                  let report = evaluate protectedSnapshot praxisReady
+                  Assert.equal ControlStatus.PlatformUnavailable (control "GOV-GATE-EXCLUSIVE" report).Status
+                  Assert.isTrue (report.ResidualTrustBoundaries |> List.exists (fun b -> b.Contains "named like the gate")) "residual stated" }
 
           { Name = "governance review: a pull request into any branch but the protected one is refused"
             Run = fun () -> { baseFacts () with TargetBranch = "evil" } |> refused "MRG.TARGET_MISMATCH" |> ignore }

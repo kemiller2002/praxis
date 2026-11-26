@@ -78,7 +78,7 @@ it introduces.
 ## Rotation, revocation, emergency recovery
 
 - **Rotation** (e.g. renamed workflow, new branch, host key change): a PR adds the new verifier and sets
-  `validUntil` on the old one, increments `configVersion`; it needs `/praxis approve-elevated <head-sha>` by an
+  `validUntil` on the old one, increments `configVersion`; it needs `/praxis approve-elevated <full head SHA>` by an
   elevated approver (in person, not via an app). Receipts observed before `validUntil` stay valid.
 - **Revocation** (suspected compromise of a host key, or a workflow found unsafe): set `revokedAt` and
   `revocationReason`. Revoking is never a weakening, but it touches a protected path, so it still needs an

@@ -101,13 +101,11 @@ module Authority =
     let private listed (logins: string list) (login: string) =
         logins |> List.exists (fun candidate -> String.Equals(candidate, login, StringComparison.OrdinalIgnoreCase))
 
-    /// An approval names the candidate by its full ID or a prefix of at least
-    /// 12 hexadecimal characters (unique in practice, easy to type on a phone).
+    /// An approval names the candidate by its full object ID. A short prefix
+    /// is refused: an implementer can grind two commits sharing a 48-bit
+    /// prefix in seconds and swap the approved one for the other.
     let namesHead (named: string) (candidateHead: string) =
-        named.Length >= 12
-        && named.Length <= candidateHead.Length
-        && named |> Seq.forall Uri.IsHexDigit
-        && candidateHead.StartsWith(named.ToLowerInvariant(), StringComparison.Ordinal)
+        String.Equals(named, candidateHead, StringComparison.OrdinalIgnoreCase)
 
     /// Whether `approval` authorizes protected changes in `candidateHead`.
     let elevated (authorities: GovernanceAuthorities) (candidateHead: string) (approval: ElevatedApproval) =
@@ -156,6 +154,7 @@ module Authority =
               "MRG.TARGET_MISMATCH"
               "MRG.RECEIPT_FORGED"
               "MRG.EXCEPTION_INVALID"
+              "MRG.TARGET_HEAD_MISMATCH"
               "MRG.PROTECTED_CHANGE_UNAUTHORIZED" ]
 
     /// Validate an exception for one candidate. Fails closed on any missing

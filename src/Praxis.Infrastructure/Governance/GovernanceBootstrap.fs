@@ -118,6 +118,12 @@ jobs:
           dotnet-version: 10.0.x
       - if: hashFiles('Praxis.slnx') != ''
         run: dotnet build Praxis.slnx --configuration Release
+      - name: Remove administrative rights before candidate code runs
+        run: |
+          sudo chmod 600 /var/run/docker.sock || true
+          sudo rm -f /etc/sudoers.d/*
+          sudo sed -i -e '/^runner/d' -e '/^%sudo/d' -e '/^%admin/d' /etc/sudoers
+          if sudo -n true 2>/dev/null; then echo "::error::sudo is still available"; exit 1; fi
       - name: Run one protected validation on the candidate
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -164,7 +170,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          ./praxis merge authorize --repository "$GITHUB_REPOSITORY" --base "origin/{{{branch}}}" \
+          ./praxis merge authorize --repository "$GITHUB_REPOSITORY" --base "refs/remotes/origin/{{{branch}}}" \
             --candidate "$HEAD_SHA" --pull-request "$PR" --receipts "$RUNNER_TEMP/receipts" \
             --live --evidence-out "$RUNNER_TEMP/decision/merge-decision.json"
       - uses: actions/upload-artifact@v4
@@ -214,7 +220,7 @@ jobs:
     /// worktree) already has a trust root: replacing one is a rotation.
     let bootstrap (request: BootstrapRequest) : Result<string list, string> =
         let protectedTrust =
-            GovernanceGit.resolve request.Root request.BaseRef
+            GovernanceGit.resolveProtected request.Root request.BaseRef
             |> Result.bind (fun head -> GovernanceGit.show request.Root head GovernanceOperations.TrustRootPath)
 
         match protectedTrust with
