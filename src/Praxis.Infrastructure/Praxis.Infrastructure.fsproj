@@ -156,10 +156,13 @@
     <Compile Include="Planning/FileGroupTelemetry.fs" />
     <Compile Include="Construction/ConstructionCheck.fs" />
     <Compile Include="Construction/ConstructionService.fs" />
+    <Compile Include="Foundations/FoundationsJson.fs" />
     <Compile Include="Foundations/LimenManifestReader.fs" />
     <Compile Include="Foundations/FormaRelease.fs" />
     <Compile Include="Foundations/RouteInventoryReader.fs" />
     <Compile Include="Foundations/RoutingFoundation.fs" />
+    <Compile Include="Foundations/ReliabilityDeclarationReader.fs" />
+    <Compile Include="Foundations/ReliabilityFoundation.fs" />
     <Compile Include="Requirements/FilePreservationInputs.fs" />
     <Compile Include="Work/FileIntegrationStreams.fs" />
     <Compile Include="Autonomy/AutonomyJson.fs" />

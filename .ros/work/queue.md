@@ -387,7 +387,7 @@
 | WI-0110 | Upgrade to echelon-current 1.42.0 (praxis pin 3.12.0 -> 3.25.0, ordo 1.5.0 -> 1.20.0) | complete |  | medium |
 | WI-0111 | Move Praxis web/hub presentation from vendored Forma 0.4.1 to Forma 1.0.1 (echelon-current 1.42.0): ef- to forma- namespace in WebInterface/Hub/WebHttp/Foundations and tests, vendor/forma lock, optional echelon-theme 1.1.0 | complete |  | medium |
 | WI-0112 | Decide whether Praxis's vendored Ordo.Core/Ordo.Construction 1.8.2 library pins (vendor/nuget) should follow Ordo 1.20.0; the echelon-current set selects only the Ordo CLI | complete |  | medium |
-| WI-0113 | INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets | active |  | medium |
+| WI-0113 | INIT-012: propose portfolio reliability applicability declaration (RQ-ROS-2026-A038) and decision DF-ROS-2026-A076 for continuous availability and cache-readiness tenets | complete |  | medium |
 | WI-0114 | Pin Praxis 3.26.0 (echelon-current 1.43.0) as the self-hosting toolchain | complete |  | medium |
 | WI-0115 | Fix praxis foundations verify Forma usage detection: plain HTML class="forma-*"/class='ef-*' attributes (including non-first classes) are not recognised because usageMarkers carries a literal backslash | complete |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |

@@ -7267,10 +7267,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-25T20:12:44.906Z",
-      "updatedAt": "2026-11-25T20:12:54Z",
+      "updatedAt": "2026-11-26T01:23:19.000Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

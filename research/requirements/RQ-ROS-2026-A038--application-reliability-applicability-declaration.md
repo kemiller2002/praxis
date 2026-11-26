@@ -1,11 +1,11 @@
 ---
 id: RQ-ROS-2026-A038
 title: Every Echelon repository declares its applicability to the reliability and cache-readiness tenets, with honest compliance states
-status: draft
-version: 0.1.0
+status: implemented
+version: 0.2.0
 owners: [repository-governance]
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 research_area: repository-operating-system
 priority: high
 related_documents:
@@ -17,8 +17,9 @@ tags: [reliability, availability, cache-readiness, applicability, compliance, fo
 provenance:
   contributions:
     EXE-20261125T201255923Z-3477d5c5:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-11-25T20:14:03.054Z
+      last: 2026-11-26T00:55:40.317Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -30,18 +31,19 @@ provenance:
 
 # Reliability applicability declaration
 
-**Status: draft.** Proposed under INIT-012 (echelon-organization-administration issues #12 and #14; mission
-"Echelon Continuous Availability, Durable Execution, and Cache-Ready Architecture"). Nothing below is
-implemented. The tenets themselves are owner-approved; this record proposes how Praxis would verify that
-each repository has *declared* its position. It does not make any repository adopt runtime machinery, and it
-does not claim that a declaration proves runtime reliability.
+**Status: implemented, report-only, in part** (see "Implementation status" below for exactly which items).
+Proposed under INIT-012 (echelon-organization-administration issues #12 and #14; mission
+"Echelon Continuous Availability, Durable Execution, and Cache-Ready Architecture"); DF-ROS-2026-A076 remains
+draft. The tenets themselves are owner-approved; this record
+states how Praxis verifies that each repository has *declared* its position. It does not make any repository
+adopt runtime machinery, and it does not claim that a declaration proves runtime reliability.
 
 Normative portfolio requirements (EAR-*) and evidence: [INIT-012 index](https://github.com/kemiller2002/echelon-organization-administration/blob/claude/echelon-availability-architecture-ezhitq/application-governance/availability-architecture/00-INDEX.md).
 
 ## Requirements
 
 Each requirement lists: statement · rationale · applicability · acceptance · verification · priority.
-Status of every item: proposed, not implemented.
+Status of each item: see "Implementation status".
 
 1. **PRX-REL-001 Declaration file.** A repository installed with Praxis SHOULD contain
    `.echelon/reliability.json` conforming to `echelon.reliability/v1`
@@ -85,5 +87,38 @@ Status of every item: proposed, not implemented.
 
 ## Acceptance for this record
 
-This record moves from draft to accepted only when DF-ROS-2026-A076 is accepted by the owner. Implementation
-in `praxis foundations verify` is a separate work item.
+This record's acceptance still depends on DF-ROS-2026-A076, which remains draft; recording that decision's
+acceptance is the owner's. The report-only implementation below (WI-0113) does not accept it.
+
+## Implementation status (2026-11-26, WI-0113)
+
+Implemented in `praxis foundations verify`, report-only: it reads `.echelon/reliability.json` and reports a separate `reliability`
+section (finding codes `ECHELON-FND-RELIABILITY-001..013`, all `info`; they never change `passed` or the exit code).
+The evaluation is pure (`src/Praxis.Domain/Foundations/ReliabilityDeclaration.fs`, over the parse in
+`src/Praxis.Infrastructure/Foundations/ReliabilityDeclarationReader.fs`); the file reads and rendering are in
+`src/Praxis.Infrastructure/Foundations/ReliabilityFoundation.fs`, called from `src/Praxis.Cli/Foundations.fs`. Tests: `tests/Praxis.Tests/ReliabilityDeclarationTests.fs`. Praxis declares itself in
+`.echelon/reliability.json` (`developer-tooling`). Documentation: `docs/application-foundations.md`.
+
+| Item | Status |
+|---|---|
+| PRX-REL-001 | Implemented, report-only: present / absent / invalid. Absent is a note, never a failure. Enforcing mode is not implemented (open owner decision U-14). |
+| PRX-REL-002 | Implemented (system class enumeration). |
+| PRX-REL-003 | Implemented (three tenets, applicability enumeration, non-empty reason unless `applicable`). EAR-TEN-004 has no field to check. |
+| PRX-REL-004 | Implemented: a `compliant`/`partially-compliant` family with no evidence, or with any evidence ref that does not resolve, is reported with effective state `unverified`. |
+| PRX-REL-005 | **Partly implemented:** the evidence class enumeration is validated. The cross-check that a family is not `compliant` on `automated` evidence alone where its requirements name integration or operational verification is **not implemented**: no vendored requirement-family verification table exists in Praxis. |
+| PRX-REL-006 | Implemented: every exception field is required; an `expires` date before today is reported; an unparseable expiry is reported. |
+| PRX-REL-007 | Implemented (presence of `designEvidence.decision`, `serviceLevels`, `failureModes` when continuous availability is `applicable`); content remains architectural review. |
+| PRX-REL-008 | **Partly implemented:** exception requirement identifiers are checked against `EAR-[A-Z]{3}-\d{3}`. Resolution against a vendored published list is **not implemented** (no vendored list). |
+| PRX-REL-009 | **Partly implemented:** each dependency must name its capability and a non-empty pin. Whether the pin is immutable or matches the consumed capability is **not checked**. |
+| PRX-REL-010 | Implemented (presence of `migrationPlan`). |
+
+### Interpretations recorded as unresolved questions
+
+These are the implementer's readings, not owner decisions; each is report-only, so none can fail a repository.
+
+1. *Immutable external reference* (PRX-REL-004) is read as an absolute URL that names a full 40-hex commit or a
+   `sha256:` digest. Other URLs, absolute paths, paths escaping the repository and record identifiers (for example
+   `DF-...`) do not resolve. A repository path's `#fragment` is ignored.
+2. *Applicable and not compliant* (PRX-REL-010) is read as: some tenet is exactly `applicable`, and either no
+   family is declared or some family's *effective* state is neither `compliant` nor `not-applicable`.
+3. The schema forbids unknown properties (including `$schema`); the check reports them as invalid.

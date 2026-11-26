@@ -73,6 +73,7 @@ let main argv =
     @ FoundationsTests.tests
     @ RoutingFoundationsTests.tests
     @ RoutingFoundationsTests.limenTests
+    @ ReliabilityDeclarationTests.tests
     @ UrlStateTests.tests
     @ OrdoObservationTests.tests
     @ OrdoContractAdmissionTests.tests

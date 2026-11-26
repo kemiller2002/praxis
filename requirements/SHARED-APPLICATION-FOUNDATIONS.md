@@ -45,9 +45,9 @@ This section is a portfolio-wide standard. It applies to **every Echelon web app
 9. **SAF-URL-9 Routes are parsed and formatted by pure, round-trip-tested functions.** The route table is an immutable value that is validated when defined (`RouteTable.define`, `defineRoutes`). One pure codec owns the mapping (`RouteCodec.create`/`parse`/`format`, `createRouteCodec`). It does no I/O and touches no browser globals. For every route and every generated parameter set, `format (parse url) = canonical url` and `parse (format route) = route`, property-tested in CI. Malformed input parses to a typed failure, never an exception. An application on Limen 0.9.0 or later uses Limen's routing module rather than a local router (ECHELON-FND-ROUTING-003). On an earlier Limen the check is pending (ECHELON-FND-ROUTING-005), never passed or failed. *Test:* the property tests run in CI.
 10. **SAF-URL-10 Sharing is one action away where it is natural.** Views that people discuss or hand off, such as entity detail, filtered lists, reports and dashboards, offer a "Copy link" action that copies the canonical URL (Limen `Link.share`, `shareLink`). The action confirms the copy accessibly and works by keyboard. *Test:* activate Copy link, paste into a fresh context, and land on the same view.
 
-## Application reliability and cache readiness (proposed)
+## Application reliability and cache readiness (report-only)
 
-Proposed, not in force: [`APPLICATION-RELIABILITY-DECLARATION.md`](APPLICATION-RELIABILITY-DECLARATION.md) (RQ-ROS-2026-A038, DF-ROS-2026-A076) would add a per-repository applicability declaration for the owner-approved Continuous Availability and Cache-Readiness tenets. Until that decision is accepted, nothing in it is required.
+[`APPLICATION-RELIABILITY-DECLARATION.md`](APPLICATION-RELIABILITY-DECLARATION.md) (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, draft) adds a per-repository applicability declaration for the owner-approved Continuous Availability and Cache-Readiness tenets. `praxis foundations verify` reports on it report-only: its findings never fail verification. Nothing in it is required; whether it ever becomes enforcing is open owner decision U-14.
 
 ## Dependency discipline and completion
 
