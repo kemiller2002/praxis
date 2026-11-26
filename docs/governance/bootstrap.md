@@ -57,10 +57,13 @@ with the .NET base library (no new dependency).
 |---|---|---|---|
 | 1 | Agent | `praxis governance bootstrap --repository OWNER/NAME --approved-by OWNER --validation tests="./build.sh test" [--agent AGENT-LOGIN]` on a branch; open a PR | — (writes a proposal; creates no key) |
 | 2 | **Owner** | Review and merge the PR (GitHub mobile is sufficient) | Establishes the initial human identity and approves the trust root, policy and gate. An agent merging it would be the agent establishing its own verifier |
-| 3 | **Owner** | Settings → Rules → Rulesets → Import `.praxis/governance/ruleset-main.json` (or recreate it: protect `main`; block deletion and force push; require a PR; require status check `praxis-merge-gate` from GitHub Actions; require up-to-date; no bypass actors) | Only an administrator can change platform rules; agents must not hold that permission |
-| 4 | Agent | `praxis governance inspect --repository OWNER/NAME --out report.json` and commit the report as bootstrap evidence | — |
+| 3 | Agent | Open a trivial PR (declaring `Praxis-Work-Item:`) and confirm the `praxis-merge-gate` check runs and passes | A required gate that cannot run would block every merge, including its own fix |
+| 4 | **Owner** | Settings → Actions → General → Workflow permissions: **Read repository contents** | Otherwise any pull-request workflow's token can post a check named like the gate |
+| 5 | **Owner** | Settings → Rules → Rulesets → New branch ruleset (desktop-mode browser on a phone works): target the default branch; *Restrict deletions*; *Block force pushes*; *Require a pull request* (0 approvals); *Require status checks*: add `praxis-merge-gate`, source **GitHub Actions**, *require branches to be up to date*; no bypass list. (Alternatively import `.praxis/governance/ruleset-main.json`.) | Only an administrator can change platform rules; agents must not hold that permission |
+| 6 | Agent | `praxis governance inspect --repository OWNER/NAME --out .praxis/evidence/inspect.json` and commit it as bootstrap evidence | — |
 
-Bootstrap writes `.praxis/trust/verifiers.json`, `.praxis/validation-policy.json` (names the repository),
+`--validation NAME=COMMAND` takes words or a JSON array (`tests=["sh","-c","make test"]`); add
+`testCountPattern`/`minimumTests` to the generated policy for test suites. Bootstrap writes `.praxis/trust/verifiers.json`, `.praxis/validation-policy.json` (names the repository),
 `.praxis/governance/authorities.json`, `.github/workflows/praxis-merge-gate.yml`,
 `.praxis/governance/ruleset-main.json`, and `ros.json` `governance.requireVerifiedMerge: true` with the
 required check. It refuses to run when the protected branch already has a trust root, so an ordinary agent

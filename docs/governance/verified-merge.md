@@ -20,6 +20,12 @@ pinned `ecdsa-p256` verifier, or as `praxis.workload-receipt/1`: the exact paylo
 token whose audience is `praxis-receipt:<sha256 of payload>` and whose `repository`, `job_workflow_ref` and
 `event_name` match a pinned workload verifier.
 
+In the CI path each policy validation runs in its own `observe (<name>)` job. The gate job builds each receipt
+itself from GitHub's record of that job's conclusion in the same run (`success` → passed, `failure` → failed,
+anything else → unavailable), the candidate's tree from Git, and the protected policy; it never reads a file
+candidate code could write. The workload receipts are kept in the decision artifact so the decision can be
+re-verified later, outside the run, against the issuer's keys.
+
 | Brief element | Bound by |
 |---|---|
 | Organization / repository | Validation-policy digest (the protected policy names `repository`); workload token `repository`; request repository must equal protected `ros.json` identity |
@@ -75,6 +81,14 @@ termination, network loss, CI interruption or a duplicate request yields the sam
 `observe` yields no or `unavailable` receipts (refused); a stale generation is refused; GitHub's own
 `synchronize` re-runs the gate for a new head. Claims, leases, checkpoints and the autonomy merge journal keep
 their existing recovery semantics (`docs/work-claims.md`, `docs/autonomous-execution/`).
+
+## Work authorization
+
+A work item is authorized when a listed work authorizer posts `/praxis authorize-work <ID>` on the pull request
+(unedited, not through an application), or lists it in the protected
+`.praxis/governance/work-authorizations.json`, or a standing authorization covers the change. Presence in
+`.ros/` state is not authorization: any change can add to it. Comments do not re-run the gate; re-run the
+workflow (or push) after commenting.
 
 ## Standing authorization (`.praxis/standing-authorization.json`)
 

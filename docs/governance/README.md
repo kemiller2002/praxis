@@ -19,18 +19,19 @@ merges on verified evidence, and detects integrations that bypassed governance.
 | [verified-merge.md](verified-merge.md) | Receipt bindings, merge decision, lifecycle, standing authorization, exceptions, provenance, evidence |
 | [incident-2026-11-26-echelon-assurance-pr3.md](incident-2026-11-26-echelon-assurance-pr3.md) | Root-cause analysis of the assurance merge |
 | [rollout.md](rollout.md) | Cross-repository rollout, migration risks, human actions |
+| [review-2026-11-26.md](review-2026-11-26.md) | Multiple-agent review findings and dispositions |
 | [../../research/requirements/RQ-ROS-2026-A039--enforceable-governance-and-verified-merge.md](../../research/requirements/RQ-ROS-2026-A039--enforceable-governance-and-verified-merge.md) | Requirements and traceability |
 
 ## Commands
 
 | Command | Purpose | Exit |
 |---|---|---|
-| `praxis governance inspect (--repository O/N \| --snapshot F) [--save-snapshot F] [--out F] [--require LEVEL] [--json]` | Read-only platform governance evaluation and readiness ladder | 0; 3 below `--require` |
+| `praxis governance inspect (--repository O/N \| --snapshot F) [--audit] [--save-snapshot F] [--out F] [--require LEVEL] [--json]` | Read-only platform governance evaluation and readiness ladder (`--audit` also assesses operational demonstration) | 0; 3 below `--require` |
 | `praxis governance drift --baseline REPORT (--repository O/N \| --snapshot F)` | Controls satisfied in the baseline and no longer | 0 none; 3 drift |
 | `praxis governance audit [--repository O/N] [--branch REF] [--limit N] [--since SHA] [--previous-head SHA] [--decisions DIR]` | Integrations without verified evidence, direct pushes, bypassed gates, rewritten history, stranded commits | 0; 3 error findings |
 | `praxis governance authority [--base REF]` | Completion-authority diagnosis: what is missing, why, who, how, what may continue | 0 ready; 3 not |
 | `praxis governance bootstrap --repository O/N --approved-by LOGIN --validation NAME=COMMAND…` | Write the keyless bootstrap proposal (refuses if a trust root exists) | 0; 3 refused |
-| `praxis governance observe` / `attest` | CI only: run the protected policy on the candidate; bind observations to the workflow's OIDC identity | |
+| `praxis governance validations` / `observe` / `attest` | CI only: list the policy's validations (matrix); run one validation on the candidate; build receipts from this run's job conclusions and bind them to the workflow's OIDC identity | |
 | `praxis merge authorize --repository O/N --candidate SHA [--base REF] [--pull-request N] [--receipts DIR]… [--live] [--evidence-out F]` | The merge decision | 0 permits; 3 refused |
 | `praxis verifier run … --ephemeral-key` | Observation receipts for a later attestation step (never trusted by key) | |
 

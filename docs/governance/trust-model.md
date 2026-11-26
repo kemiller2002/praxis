@@ -30,7 +30,7 @@ Code: `src/Praxis.Domain/Governance/`.
 |---|---|---|---|---|---|---|
 | Organization owner | Platform account (`authorities.json`) | Platform account (GitHub login, 2FA per account policy) | Approve bootstrap; elevated approvals; exceptions; rulesets | Be impersonated by an agent's comment: approvals posted through an app are refused | Account controls | Unavailable owner blocks only elevated changes; routine work continues under standing authorization |
 | Repository administrator | Platform account with admin | Platform | Change rules and settings | Change them invisibly: `governance drift` / `audit` detect weakening afterwards | Platform | Drift is reported as `GOV.DRIFT` |
-| Human work authorizer | Login in `workAuthorizers` | Platform (creating the work item on the protected branch via a merged change) | Authorize work items | Authorize work an agent created only on its own branch | Remove from list (elevated change) | Unauthorized work: `MRG.WORK_ITEM_UNAUTHORIZED` |
+| Human work authorizer | Login in `workAuthorizers` | Platform account: an unedited `/praxis authorize-work ID` comment posted in person, or an entry in the protected `.praxis/governance/work-authorizations.json` | Authorize work items | Be replaced by `.ros/` state (any change can add to it) or by an agent identity | Remove from list (elevated change) | Unauthorized work: `MRG.WORK_ITEM_UNAUTHORIZED` |
 | Agent implementer | Self-reported provenance (`docs/agent-provenance.md`); platform identity is today the owner's account | Self-reported (not authentication) | Branches, commits, PRs, plain evidence, durable checkpoints | Produce trusted receipts, approve elevated changes, grant exceptions, alter the protected workflow, policy or trust root | Revoke its platform credential | Self-attestation: `MRG.RECEIPT_UNTRUSTED` |
 | Automated implementer | As agent; CI actor `github-actions[bot]` | Platform (workflow identity) | As agent | As agent | Workflow change (elevated) | As agent |
 | Work coordinator | Praxis claims (fenced generations) | Claim token (local) | Claim, renew, release work | Complete another's generation | Lease expiry | `PRX.CLAIM.*` |
@@ -38,7 +38,7 @@ Code: `src/Praxis.Domain/Governance/`.
 | Release authority | Release workflow on the protected branch | Workload | Publish releases | Release from an unprotected ref (tag rulesets: `GOV-RELEASE-TAGS`) | Workflow change | Release not attested |
 | Exception authority | Login in `exceptionAuthorities` | Platform account | Grant bounded exceptions (≤ 30 days, exact heads, compensating safeguards, follow-up) | Waive identity, forgery or protected-change refusals; approve its own implementation; label a merge verified | Expiry; remove record | Invalid exception: `MRG.EXCEPTION_INVALID` |
 | Hosting provider (GitHub) | — | TLS | Enforce rulesets; issue OIDC tokens; record merges | — | — | Unreadable API: controls `unknown`; issuer keys unavailable: workload receipts unverifiable (fail closed) |
-| CI environment | GitHub-hosted runner | Workload identity | Run candidate code in `observe` with read-only token, no secret, no OIDC | Reach the attestation identity (only the gate job has `id-token: write`) | — | Interrupted run: `unavailable` receipt or none (refused) |
+| CI environment | GitHub-hosted runner, one per validation | Workload identity | Run candidate code in one `observe` job per validation, read-only token, no OIDC, CI credentials blanked in the validation's environment | Reach the attestation identity, or write anything the gate reads (the gate reads each job's conclusion from GitHub's record of the run) | — | Interrupted or cancelled job: `unavailable` receipt (refused) |
 | Evidence storage | Git history + workflow artifacts (90 days) | Git object IDs | Hold receipts and decisions | Be called immutable: it is not | — | Missing evidence: `AUD.UNVERIFIED_INTEGRATION` |
 
 **Credential lifecycle.** No long-lived signing key is required. The default verifier is the OIDC workload
@@ -65,7 +65,10 @@ the authorities is a protected change that needs an elevated approval bound to t
 | Suppressed failures, interrupted runs | Latest receipt per validation must pass; `unavailable` refused; truncated receipts refused | `#16`, `#16b`, `#22`, `#23` |
 | Changes between validation and merge, stale base | Candidate must contain the target head; post-verification changes allowed only under `.ros/`, `.praxis/receipts/`, `.praxis/evidence/` | `#27`, Git end-to-end test |
 | Direct push, force push, admin bypass | Rulesets (inspected), audit findings `AUD.DIRECT_PUSH`, `AUD.HISTORY_REWRITTEN`, `AUD.GATE_REFUSED_BUT_MERGED`, `AUD.GATE_SOURCE_UNTRUSTED` | `#19`–`#21c` |
-| Spoofed required check | Required check must be pinned to GitHub Actions' integration; gate workflow must run only under `pull_request_target`/`merge_group` | inspect tests |
+| Spoofed required check | Required check pinned to GitHub Actions' integration; gate workflow only under `pull_request_target` for the protected branch; default workflow token read-only (`GOV-DEFAULT-TOKEN`); no other pull-request workflow may write checks (`GOV-CHECK-WRITERS`) | inspect and review tests |
+| Gate run against an attacker-chosen base branch | Branch filter and a fixed `--base`; a pull request into another branch is `MRG.TARGET_MISMATCH` | `#29`, review tests |
+| Self-authorized work via `.ros/` state | Authorization only from listed authorizers (comment or protected file) | Git end-to-end test |
+| Evil merge / forged "merge" commit | Audit re-merges parents (`git merge-tree`) and, live, confirms the platform's `merge_commit_sha`; the committer name is never trusted | `#5c`, `#20b` |
 | Candidate code reaching attestation credentials | `observe` job: read-only token, no secret, no `id-token`; gate job runs no candidate code | `#29` (template assertions) |
 | Unauthorized exceptions | Exception validation (authority, not agent, not implementer, ≤ 30 days, exact heads, non-waivable codes) | `#25`, `#25b` |
 | The assurance incident | Audit | `#30`, `#30b` |
@@ -76,14 +79,18 @@ the authorities is a protected change that needs an elevated approval bound to t
    allows. Praxis detects this afterwards (`drift`, `audit`); it cannot prevent it.
 2. **Agents act as the owner on GitHub.** Today agent pull requests are authored by the owner's account. The
    platform cannot separate them, the owner cannot approve such a PR, and an app-posted comment is the only
-   distinguishing signal (`performed_via_github_app`). A token that lets an agent post as the owner *without*
-   an app (a personal access token) would defeat elevated approval. Mitigation: never give agents a personal
-   token; provision a distinct GitHub App identity for agents (OQ-706).
-3. **Candidate code in `observe`.** The candidate's tests are candidate code; with `sudo` on a hosted runner,
-   a malicious candidate can falsify its own job's results. CI-attested receipts prove the protected workflow
-   ran the protected policy and reported these outcomes; they do not prove the outcomes could not be
-   subverted from inside the job. Oracle tests can be pinned (`protectedPaths`), and changes to tests,
-   test projects and CI scripts are protected classes.
+   distinguishing signal (`performed_via_github_app`); edited comments are refused because any writer can edit
+   another's comment. A token that lets an agent post as the owner *without* an app (a personal access token)
+   would defeat elevated approval and work authorization. Mitigation: never give agents a personal token;
+   provision a distinct GitHub App identity for agents (OQ-706), after which native PR reviews can replace
+   comment commands.
+3. **Candidate code in `observe`.** Each validation runs in its own job on its own runner, and the gate takes
+   each result from GitHub's record of that job's conclusion, so candidate code cannot forge *another*
+   validation's result or the attestation. It can still make the job that runs it succeed (a test that exits 0
+   regardless, or a printed test count): a validation is only as trustworthy as the code it executes. Oracle
+   tests can be pinned (`protectedPaths`, checked before candidate code runs), and changes to tests, test
+   projects and CI scripts are protected classes. The executed-test count catches empty suites, not
+   adversaries. Third-party actions are pinned by tag, not commit SHA.
 4. **Workflow-write credentials.** An agent credential with workflow permission can add a workflow under
    other triggers; it cannot satisfy the pinned workload identity, but it can consume CI and post checks.
    Grant agents no workflow permission.

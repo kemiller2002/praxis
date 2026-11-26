@@ -43,8 +43,8 @@ first rollout step (`praxis governance inspect`), not assumed.
    with the repository's real test commands; add `testCountPattern`/`minimumTests` to the generated policy for
    each test suite (e.g. Praxis: `(?<count>\d+) test\(s\);`). PR declaring `Praxis-Work-Item:`.
 4. **Owner:** review and merge the bootstrap PR.
-5. **Owner:** import `.praxis/governance/ruleset-main.json` as the default-branch ruleset.
-6. Open a trivial routine PR; confirm the gate returns `verified`; `praxis governance inspect --out
+5. Open a trivial routine PR; confirm the gate runs and returns `verified`.
+6. **Owner:** set workflow permissions to read-only and create the default-branch ruleset (bootstrap.md steps 4–5); `praxis governance inspect --out
    .praxis/evidence/inspect-after.json` should reach `verified-completion-enabled`; after the first verified
    integration, `praxis governance audit` should show it (`operationally-demonstrated`).
 7. Optionally add a standing authorization for documentation and tests (elevated change).
@@ -55,7 +55,10 @@ first rollout step (`praxis governance inspect`), not assumed.
 |---|---|
 | Existing CI checks named generically (`validate`, twice in assurance) are not identifiable | The gate check has a unique name and is pinned to GitHub Actions |
 | Gate refuses PRs that change workflows, build files or dependencies | Expected: those need `/praxis approve-elevated <sha>`; consider a dependency-update standing category only after review |
-| Long test suites run on every PR event | The gate runs on `opened`, `synchronize`, `reopened`, `edited`, `ready_for_review`; drop `edited` if work-item declarations are stable |
+| Long test suites run on every PR update | The gate runs on `opened`, `synchronize`, `reopened`, `ready_for_review` (not `edited`); make it the only per-PR validation workflow; strict up-to-date re-runs open PRs after each merge |
+| Workflows that push to `main` (Praxis `release.yml` bumps the version) are refused once the ruleset is active | Route the release bump through a pull request before importing the ruleset |
+| Pull requests created by `GITHUB_TOKEN` (`praxis-remote.yml` pull-request mode, `praxis-reconcile-apply.yml`) do not start workflows, so the gate never runs | A person re-runs or closes/reopens them, or they move to an App identity |
+| Private repositories on a free plan do not enforce rules | `inspect` reports `GOV-RULES` platform-unavailable; public repositories enforce at no cost |
 | Issuer or API outage blocks merges | Exception procedure (bootstrap.md, emergency) |
 | Agents authored as the owner cannot be approved on GitHub | Elevated approval uses the comment command, not reviews; a distinct agent App identity is recommended (OQ-706) |
 

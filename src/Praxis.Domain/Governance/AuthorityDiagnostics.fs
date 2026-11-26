@@ -93,7 +93,7 @@ module AuthorityDiagnostics =
                   "an agent runs `praxis governance bootstrap --repository OWNER/NAME --approved-by LOGIN --validation NAME=COMMAND` on a branch and opens a pull request (it writes the trust root, validation policy, authorities and the merge-gate workflow; it creates no key)"
                   "the owner reviews and merges that pull request (the one human action that establishes the trust root; mobile is sufficient)"
                   "an agent opens a trivial pull request and confirms the praxis-merge-gate check runs and passes; only then"
-                  "the owner creates the default-branch ruleset (docs/governance/bootstrap.md, step 3) so the gate is required and administrators cannot bypass it"
+                  "the owner creates the default-branch ruleset and sets workflow permissions to read-only (docs/governance/bootstrap.md, steps 4-5) so the gate is required and administrators cannot bypass it"
                   "`praxis governance inspect` then reports the readiness level reached" ]
               MayContinue = continueSafely
               Blocked = blocked }
