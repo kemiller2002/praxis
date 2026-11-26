@@ -7,6 +7,12 @@ on:
   pull_request:
   push:
 
+# Read-only token (WI-0117, GOV-CHECK-WRITERS): candidate code in these jobs
+# must not be able to post check runs or statuses, such as the merge gate's.
+permissions:
+  contents: read
+  attestations: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest

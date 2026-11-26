@@ -171,6 +171,11 @@
     <Compile Include="Autonomy/MergeLifecycle.fs" />
     <Compile Include="Autonomy/LocalReview.fs" />
     <Compile Include="Autonomy/AutonomyOperations.fs" />
+    <Compile Include="Governance/GovernanceGit.fs" />
+    <Compile Include="Governance/GovernanceJson.fs" />
+    <Compile Include="Governance/GitHubGovernance.fs" />
+    <Compile Include="Governance/GovernanceOperations.fs" />
+    <Compile Include="Governance/GovernanceBootstrap.fs" />
   </ItemGroup>
 
   <!-- The scaffold this CLI installs, compiled into the assembly so a released

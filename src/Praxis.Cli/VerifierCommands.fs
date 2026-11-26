@@ -14,7 +14,7 @@ open Praxis.Infrastructure.Work
 module VerifierCommands =
     let usage =
         "verifier serve --socket PATH --policy FILE --contract-digest sha256:HEX [--key-file PEM] | "
-        + "verifier run --repo PATH --commit SHA --work-item ID --claimant NAME --generation N [--store local|git] [--remote NAME] --policy FILE --contract-digest sha256:HEX --key-file PEM --out FILE | "
+        + "verifier run --repo PATH --commit SHA --work-item ID --claimant NAME --generation N [--store local|git] [--remote NAME] --policy FILE --contract-digest sha256:HEX (--key-file PEM | --ephemeral-key) --out FILE | "
         + "work verify --id ID --token TOKEN [--timeout-seconds N] [--store local|git] [--remote NAME] | work claims migrate [--keep-legacy]"
 
     let private value = ClaimArguments.optionValue
@@ -55,7 +55,14 @@ module VerifierCommands =
                             | Ok None -> Error "--generation is required"
                             | Error message -> Error message))))
 
-        match request, required "--policy" arguments, required "--contract-digest" arguments, required "--key-file" arguments, required "--out" arguments with
+        let key =
+            match value "--key-file" arguments, List.contains "--ephemeral-key" arguments with
+            | Some file, false -> Ok(Some file)
+            | None, true -> Ok None
+            | Some _, true -> Error "--key-file and --ephemeral-key are exclusive"
+            | None, false -> Error "--key-file PEM or --ephemeral-key is required"
+
+        match request, required "--policy" arguments, required "--contract-digest" arguments, key, required "--out" arguments with
         | Error message, _, _, _, _
         | _, Error message, _, _, _
         | _, _, Error message, _, _

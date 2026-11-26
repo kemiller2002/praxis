@@ -2213,5 +2213,54 @@
     "title": "Every Echelon repository declares its applicability to the reliability and cache-readiness tenets, with honest compliance states",
     "updated": "2026-11-26",
     "version": "0.2.0"
+  },
+  {
+    "created": "2026-11-26",
+    "id": "RQ-ROS-2026-A039",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-A039--enforceable-governance-and-verified-merge.md",
+    "priority": "high",
+    "provenance": {
+      "contributions": {
+        "EXE-20261126T180305348Z-4a73a3a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-26T18:03:17.576Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0117: enforceable governance and verified merge (re-landed from WI-0116)"
+        }
+      }
+    },
+    "related_documents": [
+      "docs/governance/README.md",
+      "docs/governance/trust-model.md",
+      "docs/governance/bootstrap.md",
+      "docs/governance/verified-merge.md",
+      "docs/governance/incident-2026-11-26-echelon-assurance-pr3.md",
+      "docs/governance/rollout.md",
+      "docs/verified-completion-rollout.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "implemented",
+    "tags": [
+      "governance",
+      "verified-completion",
+      "trust-root",
+      "merge-gate",
+      "audit",
+      "provenance"
+    ],
+    "title": "Governance is enforced by platform rules and verified evidence, not by documents; merges require verified completion; bypasses are detected",
+    "updated": "2026-11-26",
+    "version": "0.1.0"
   }
 ]
