@@ -224,3 +224,9 @@ module GovernanceCommands =
         | "observe" :: rest -> observe root rest
         | "attest" :: rest -> attest root rest
         | _ -> invalid "unknown governance command"
+
+    /// `merge authorize`.
+    let merge root (arguments: string list) =
+        match arguments with
+        | "authorize" :: rest -> authorize root rest
+        | _ -> invalid "unknown merge command (expected: merge authorize)"

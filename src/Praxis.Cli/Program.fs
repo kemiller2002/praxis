@@ -2834,9 +2834,7 @@ let private repositoryDispatch root packageRoot arguments =
     | "git" :: "status" :: rest when rest |> List.forall ((=) "--json") ->
         runGitStatus (rest |> List.contains "--json") gitRepository
     | "pacing" :: rest -> PacingCommands.run root rest
-    | ("sync" | "tutela" | "streams" | "autonomy") as command :: rest -> (match command with "sync" -> SyncCommands.run | "streams" -> StreamsCommands.run | "autonomy" -> AutonomyCommands.run | _ -> TutelaCommands.run) root rest
-    | "governance" :: rest -> GovernanceCommands.run root rest
-    | "merge" :: "authorize" :: rest -> GovernanceCommands.authorize root rest
+    | ("sync" | "tutela" | "streams" | "autonomy" | "governance" | "merge") as command :: rest -> (match command with "sync" -> SyncCommands.run | "streams" -> StreamsCommands.run | "autonomy" -> AutonomyCommands.run | "governance" -> GovernanceCommands.run | "merge" -> GovernanceCommands.merge | _ -> TutelaCommands.run) root rest
     | "work" :: "decide" :: rest -> runWorkDecision rest
     | "work" :: "plan" :: rest -> runWorkPlan root rest
     | "work" :: "context-plan" :: rest -> runWorkContextPlan root rest
