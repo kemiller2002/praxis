@@ -67,6 +67,7 @@
     <Compile Include="LifecycleTests.fs" />
     <Compile Include="FoundationsTests.fs" />
     <Compile Include="RoutingFoundationsTests.fs" />
+    <Compile Include="ReliabilityDeclarationTests.fs" />
     <Compile Include="UrlStateTests.fs" />
     <Compile Include="OrdoObservationTests.fs" />
     <Compile Include="OrdoContractAdmissionTests.fs" />

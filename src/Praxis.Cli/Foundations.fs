@@ -44,7 +44,9 @@ module Foundations =
           Configuration: string
           Passed: bool
           Capabilities: CapabilityResult list
-          Findings: Finding list }
+          Findings: Finding list
+          /// Report-only (RQ-ROS-2026-A038); never changes `Passed`.
+          Reliability: ReliabilitySection }
 
     let private ignoredDirectories =
         set
@@ -81,30 +83,12 @@ module Foundations =
 
     let private projectExtensions = set [ ".fsproj"; ".csproj"; ".props"; ".targets" ]
 
-    let private tryProperty (name: string) (element: JsonElement) =
-        let mutable value = Unchecked.defaultof<JsonElement>
-        if element.ValueKind = JsonValueKind.Object && element.TryGetProperty(name, &value) then Some value else None
-
-    let private stringProperty name element =
-        tryProperty name element
-        |> Option.bind (fun value ->
-            if value.ValueKind = JsonValueKind.String then
-                value.GetString() |> Option.ofObj
-            else
-                None)
-
-    let private boolProperty defaultValue name element =
-        match tryProperty name element with
-        | Some value when value.ValueKind = JsonValueKind.True -> true
-        | Some value when value.ValueKind = JsonValueKind.False -> false
-        | _ -> defaultValue
-
     let private parseRule name (element: JsonElement) =
         { Name = name
-          Required = boolProperty false "required" element
-          Version = stringProperty "version" element
-          SourceCommit = stringProperty "sourceCommit" element
-          BoundaryManifest = stringProperty "boundaryManifest" element
+          Required = FoundationsJson.boolProperty false "required" element
+          Version = FoundationsJson.stringProperty "version" element
+          SourceCommit = FoundationsJson.stringProperty "sourceCommit" element
+          BoundaryManifest = FoundationsJson.stringProperty "boundaryManifest" element
           Routing = RoutingFoundation.declaration element }
 
     let private readConfig root =
@@ -117,7 +101,7 @@ module Foundations =
                 use document = JsonDocument.Parse(File.ReadAllText path)
                 let rootElement = document.RootElement
                 let schemaVersion =
-                    tryProperty "schemaVersion" rootElement
+                    FoundationsJson.tryProperty "schemaVersion" rootElement
                     |> Option.filter (fun value -> value.ValueKind = JsonValueKind.Number)
                     |> Option.map _.GetInt32()
                     |> Option.defaultValue 0
@@ -125,17 +109,17 @@ module Foundations =
                 if schemaVersion <> 1 then
                     Error $"{ConfigRelativePath} schemaVersion must be 1"
                 else
-                    match tryProperty "capabilities" rootElement with
+                    match FoundationsJson.tryProperty "capabilities" rootElement with
                     | None -> Error $"{ConfigRelativePath} must contain a capabilities object"
                     | Some capabilities when capabilities.ValueKind <> JsonValueKind.Object ->
                         Error $"{ConfigRelativePath} capabilities must be an object"
                     | Some capabilities ->
                         let application =
-                            stringProperty "application" rootElement
+                            FoundationsJson.stringProperty "application" rootElement
                             |> Option.defaultValue (DirectoryInfo(root).Name)
 
                         let rule name =
-                            tryProperty name capabilities
+                            FoundationsJson.tryProperty name capabilities
                             |> Option.map (parseRule name)
                             |> Option.defaultValue
                                 { Name = name
@@ -209,9 +193,9 @@ module Foundations =
 
                 sections
                 |> List.tryPick (fun section ->
-                    tryProperty section document.RootElement
+                    FoundationsJson.tryProperty section document.RootElement
                     |> Option.bind (fun dependencies ->
-                        tryProperty packageName dependencies
+                        FoundationsJson.tryProperty packageName dependencies
                         |> Option.bind (fun value ->
                             if value.ValueKind = JsonValueKind.String then
                                 value.GetString() |> Option.ofObj
@@ -431,7 +415,7 @@ module Foundations =
 
             result, findings
 
-    let verify (root: string) : Result<Report, string> =
+    let verifyOn (today: DateOnly) (root: string) : Result<Report, string> =
         let absoluteRoot = Path.GetFullPath root
 
         match readConfig absoluteRoot with
@@ -447,7 +431,10 @@ module Foundations =
                   Configuration = ConfigRelativePath
                   Passed = findings |> List.forall (isError >> not)
                   Capabilities = capabilities
-                  Findings = findings }
+                  Findings = findings
+                  Reliability = ReliabilityFoundation.verify today absoluteRoot }
+
+    let verify root = verifyOn (ReliabilityFoundation.today ()) root
 
     let private optionNode (value: string option) =
         match value with
@@ -499,6 +486,7 @@ module Foundations =
         root["passed"] <- JsonValue.Create report.Passed
         root["capabilities"] <- capabilities
         root["findings"] <- findings
+        root["reliability"] <- ReliabilityFoundation.json report.Reliability
         root["summary"] <- summary
         root.ToJsonString(JsonSerializerOptions(WriteIndented = true, IndentSize = 2))
 
@@ -526,6 +514,7 @@ module Foundations =
                 lines.Add((if isError finding then "  " else "  NOTE ") + $"{finding.Code} {finding.Message}")
                 lines.Add($"    REPAIR {finding.Remediation}")
 
+        ReliabilityFoundation.textLines report.Reliability |> List.iter lines.Add
         lines.Add("")
         let errors, notes = report.Findings |> List.partition isError
         let noted = if notes.IsEmpty then "" else $" ({notes.Length} note(s))"

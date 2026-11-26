@@ -1,0 +1,18 @@
+{
+  "schema": "echelon.reliability/v1",
+  "systemClass": "developer-tooling",
+  "tenets": {
+    "continuousAvailability": {
+      "applicability": "partially-applicable",
+      "reason": "Praxis is a CLI and a local server, not an operated service: it accepts no remote work and has no durable queue. Retry and recovery already must respect idempotency and unknown-effect state for repository mutation, package installation, Git operations and agent/provider invocation (requirements/SHARED-APPLICATION-FOUNDATIONS.md, Aegis item 4)."
+    },
+    "cacheReadiness": {
+      "applicability": "not-applicable",
+      "reason": "No server-side query workload; Praxis reads repository files and its own local state directly."
+    },
+    "reliabilityByConstruction": {
+      "applicability": "not-applicable",
+      "reason": "No operated runtime or service-level commitments; correctness is established by the test suite and repository validation, not by runtime reliability machinery."
+    }
+  }
+}
