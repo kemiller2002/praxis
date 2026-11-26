@@ -87,6 +87,24 @@ module GitHubApi =
         | :? TaskCanceledException -> Error(CallFailure.Transient "the request timed out")
         | :? IO.IOException as error -> Error(CallFailure.Transient $"network: {error.Message}")
 
+    /// A read-only GET for governance inspection: the status and body, so a
+    /// 404 or 403 can be classified by the caller rather than thrown away.
+    let getRaw (path: string) = send HttpMethod.Get path None
+
+    /// A GET of an absolute URL with no credential attached (a public
+    /// document such as an OIDC issuer's keys); the GitHub token is never
+    /// sent to another endpoint.
+    let getRawAbsolute (url: string) : Result<int * string, CallFailure> =
+        try
+            use request = new HttpRequestMessage(HttpMethod.Get, url)
+            use response = client.Value.Send(request)
+            use reader = new IO.StreamReader(response.Content.ReadAsStream())
+            Ok(int response.StatusCode, reader.ReadToEnd())
+        with
+        | :? HttpRequestException as error -> Error(CallFailure.Transient $"network: {error.Message}")
+        | :? TaskCanceledException -> Error(CallFailure.Transient "the request timed out")
+        | :? IO.IOException as error -> Error(CallFailure.Transient $"network: {error.Message}")
+
     let private getJson path =
         send HttpMethod.Get path None
         |> Result.bind (fun (status, body) -> if status = 200 then Ok(JsonNode.Parse body) else Error(classify status body))

@@ -95,15 +95,24 @@ module IntegrationAudit =
 
         let gate = if commit.PullRequest.IsSome || commit.Candidate.IsSome then gateFindings gateCheck commit else []
 
+        let gateVerified =
+            match commit.Gate with
+            | GateObservation.Check("success", "github-actions")
+            | GateObservation.Decision "verified" -> true
+            | _ -> false
+
         let active =
             commit.ActiveWorkItemsIntroduced
             |> List.map (fun item ->
-                finding
-                    commit
-                    "AUD.INTEGRATED_WHILE_ACTIVE"
-                    "error"
-                    $"work item {item} was integrated while still active: its completion was never recorded"
-                    $"complete {item} with verified evidence for the integrated state, or block it with the reason")
+                if gateVerified then
+                    finding commit "AUD.COMPLETION_PENDING" "notice" $"work item {item} was integrated with a verified merge-gate decision; its completion record is not yet written" $"complete {item} citing the merge decision"
+                else
+                    finding
+                        commit
+                        "AUD.INTEGRATED_WHILE_ACTIVE"
+                        "error"
+                        $"work item {item} was integrated while still active and without verified evidence: the repository state says the work is unfinished"
+                        $"complete {item} with verified evidence for the integrated state, or block it with the reason")
 
         let stranded =
             if commit.StrandedAfterMerge > 0 then

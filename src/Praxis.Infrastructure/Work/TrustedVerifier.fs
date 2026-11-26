@@ -108,7 +108,20 @@ module ValidationPolicyJson =
                         | true, _ -> failwith "'timeoutSeconds' must be a positive number"
                         | _ -> TimeSpan.FromMinutes 30.0
 
-                    { Name = name; EvidenceId = evidenceId; Command = command; Timeout = timeout })
+                    let expectation =
+                        match item.TryGetProperty "testCountPattern" with
+                        | true, pattern when pattern.ValueKind = JsonValueKind.String ->
+                            let minimum =
+                                match item.TryGetProperty "minimumTests" with
+                                | true, value when value.ValueKind = JsonValueKind.Number && value.GetInt32() >= 1 -> value.GetInt32()
+                                | true, _ -> failwith "'minimumTests' must be a positive integer"
+                                | _ -> 1
+
+                            Some({ CountPattern = pattern.GetString(); MinimumTests = minimum }: Praxis.Domain.Governance.TestExecutionExpectation)
+                        | true, _ -> failwith "'testCountPattern' must be a string"
+                        | _ -> None
+
+                    { Name = name; EvidenceId = evidenceId; Command = command; Timeout = timeout; TestExpectation = expectation })
 
             if validations.IsEmpty then failwith "the policy names no validations"
 
@@ -281,7 +294,12 @@ module TrustedVerifierEngine =
         | [] -> CheckStatus.Unavailable, None, "no command\n"
         | executable :: arguments ->
             match ClaimProcess.run executable clone [] None validation.Timeout arguments with
-            | Ok result when result.ExitCode = 0 -> CheckStatus.Passed, Some 0, result.Stdout + result.Stderr
+            | Ok result when result.ExitCode = 0 ->
+                let output = result.Stdout + result.Stderr
+
+                match Praxis.Domain.Governance.TestExecution.gate validation.TestExpectation output with
+                | Ok _ -> CheckStatus.Passed, Some 0, output
+                | Error reason -> CheckStatus.Failed, Some 0, output + "\n" + reason + "\n"
             | Ok result -> CheckStatus.Failed, Some result.ExitCode, result.Stdout + result.Stderr
             | Error(ClaimProcessFailure.TimedOut after) -> CheckStatus.Unavailable, None, $"timed out after {after.TotalSeconds:F0}s\n"
             | Error(ClaimProcessFailure.NotStarted reason) -> CheckStatus.Unavailable, None, $"did not start: {reason}\n"
@@ -310,6 +328,48 @@ module TrustedVerifierEngine =
 
         { Envelope = VerifierKey.sign key (VerificationReceipt.render payload); Payload = payload; Output = output }
 
+    /// Clone, check protected paths and run every policy validation at the
+    /// request's commit, signing one receipt each. No claim is consulted:
+    /// `run` admits the claim first; the CI path (`governance observe`)
+    /// binds the pull request's commit and policy instead, and the merge
+    /// gate checks that binding.
+    let observe (key: VerifierKey) (policy: ValidationPolicy) (contractDigest: string) (request: VerifyRequest) : VerifierResponse =
+        let now () = DateTimeOffset.UtcNow
+        let repository = Path.GetFullPath request.RepoPath
+        let clone = Path.Combine(Path.GetTempPath(), $"praxis-verifier-{Guid.NewGuid():N}")
+
+        try
+            try
+                match checkout repository clone request.Commit with
+                | Error message -> VerifierResponse.Refused(VerifierEngine.CommitUnavailableCode, message)
+                | Ok treeId ->
+                    match VerifierEngine.protectedPathFindings policy (observeProtected clone request.Commit) with
+                    | (_ :: _) as violations ->
+                        let output = (violations |> String.concat "\n") + "\n"
+                        let at = now ()
+
+                        let receipts =
+                            policy.Validations
+                            |> List.map (fun validation -> receipt key policy contractDigest request treeId validation at at CheckStatus.Unavailable None output)
+
+                        VerifierResponse.Signed(receipts, violations |> List.map (fun item -> $"{VerifierEngine.ProtectedPathCode}: {item}"))
+                    | [] ->
+                        let receipts =
+                            policy.Validations
+                            |> List.map (fun validation ->
+                                let startedAt = now ()
+                                let status, exitCode, output = runValidation clone validation
+                                receipt key policy contractDigest request treeId validation startedAt (now ()) status exitCode output)
+
+                        VerifierResponse.Signed(receipts, [])
+            with error ->
+                VerifierResponse.Refused(VerifierEngine.UnavailableCode, error.Message)
+        finally
+            try
+                if Directory.Exists clone then Directory.Delete(clone, true)
+            with _ ->
+                ()
+
     /// Runs the engine for one request; never throws.
     let run (key: VerifierKey) (policy: ValidationPolicy) (contractDigest: string) (request: VerifyRequest) : VerifierResponse =
         let now () = DateTimeOffset.UtcNow
@@ -327,40 +387,7 @@ module TrustedVerifierEngine =
         | Ok current ->
             match VerifierEngine.admit (now ()) request current with
             | Error(code, detail) -> VerifierResponse.Refused(code, detail)
-            | Ok _ ->
-                let clone = Path.Combine(Path.GetTempPath(), $"praxis-verifier-{Guid.NewGuid():N}")
-
-                try
-                    try
-                        match checkout repository clone request.Commit with
-                        | Error message -> VerifierResponse.Refused(VerifierEngine.CommitUnavailableCode, message)
-                        | Ok treeId ->
-                            match VerifierEngine.protectedPathFindings policy (observeProtected clone request.Commit) with
-                            | (_ :: _) as violations ->
-                                let output = (violations |> String.concat "\n") + "\n"
-                                let at = now ()
-
-                                let receipts =
-                                    policy.Validations
-                                    |> List.map (fun validation -> receipt key policy contractDigest request treeId validation at at CheckStatus.Unavailable None output)
-
-                                VerifierResponse.Signed(receipts, violations |> List.map (fun item -> $"{VerifierEngine.ProtectedPathCode}: {item}"))
-                            | [] ->
-                                let receipts =
-                                    policy.Validations
-                                    |> List.map (fun validation ->
-                                        let startedAt = now ()
-                                        let status, exitCode, output = runValidation clone validation
-                                        receipt key policy contractDigest request treeId validation startedAt (now ()) status exitCode output)
-
-                                VerifierResponse.Signed(receipts, [])
-                    with error ->
-                        VerifierResponse.Refused(VerifierEngine.UnavailableCode, error.Message)
-                finally
-                    try
-                        if Directory.Exists clone then Directory.Delete(clone, true)
-                    with _ ->
-                        ()
+            | Ok _ -> observe key policy contractDigest request
 
 /// The verifier's Unix domain socket: one newline-delimited request and one
 /// response per connection, handled in arrival order.
@@ -526,12 +553,15 @@ module FileTrustedVerifier =
             |> Result.bind (fun policy -> loadKey keyFile |> Result.bind (fun key -> VerifierSocket.serve socketPath key policy digest ready)))
 
     /// One-shot: the same engine, writing the response document to `out`.
-    let runOnce (request: VerifyRequest) (policyPath: string) (contractDigest: string) (keyFile: string) (out: string) =
+    /// `keyFile = None` signs with an ephemeral in-memory key: the receipts
+    /// are then only an observation for a separate attestation step
+    /// (`verifier attest-workload`), never trusted by key.
+    let runOnce (request: VerifyRequest) (policyPath: string) (contractDigest: string) (keyFile: string option) (out: string) =
         validDigest contractDigest
         |> Result.bind (fun digest ->
             ValidationPolicyJson.readFile policyPath
             |> Result.bind (fun policy ->
-                VerifierKey.fromPemFile keyFile
+                loadKey keyFile
                 |> Result.bind (fun key ->
                     let response = TrustedVerifierEngine.run key policy digest request
 

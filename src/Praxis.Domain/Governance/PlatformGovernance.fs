@@ -72,7 +72,11 @@ type GovernanceProfile =
       AllowAdminBypass: bool
       /// The protected workflow that runs `praxis merge authorize`.
       MergeGateWorkflow: string
-      RequireReleaseTagProtection: bool }
+      RequireReleaseTagProtection: bool
+      /// Every merge to the protected branch needs a verified merge-gate
+      /// decision (the CI verification path); `ros.json`
+      /// `workProtocol.requireVerifiedCompletion` is the host-verifier path.
+      RequireVerifiedMerge: bool }
 
 /// What Praxis's own configuration on the protected branch provides.
 type PraxisConfiguration =
@@ -175,12 +179,13 @@ module PlatformGovernance =
           BlockDeletion = true
           AllowAdminBypass = false
           MergeGateWorkflow = ".github/workflows/praxis-merge-gate.yml"
-          RequireReleaseTagProtection = false }
+          RequireReleaseTagProtection = false
+          RequireVerifiedMerge = false }
 
     let private control id title status detail remedy who =
         { Id = id; Title = title; Status = status; Detail = detail; Remedy = remedy; ResolvedBy = who }
 
-    let private ruleset = "a repository ruleset on the default branch (Settings > Rules > Rulesets), or import docs/governance/templates/ruleset-main.json"
+    let private ruleset = "the default-branch ruleset (import .praxis/governance/ruleset-main.json, written by `praxis governance bootstrap`, under Settings > Rules > Rulesets)"
 
     let private ruleControls (profile: GovernanceProfile) (snapshot: PlatformSnapshot) =
         match snapshot.Rules with
@@ -193,10 +198,12 @@ module PlatformGovernance =
                   "inspect with a credential that can read branch protection and rulesets (repository administration: read)"
                   Principal.RepositoryAdministrator ]
         | Observed.Known rules ->
+            let anything = rules.RequiresPullRequest || not rules.RequiredChecks.IsEmpty || rules.BlocksForcePush || rules.BlocksDeletion
+
             let flag id title required actual detail =
                 if not required then control id title ControlStatus.NotRequired detail "" Principal.RepositoryAdministrator
                 elif actual then control id title ControlStatus.Enforced detail "" Principal.RepositoryAdministrator
-                else control id title ControlStatus.NotEnforced detail $"enable it in {ruleset}" Principal.RepositoryAdministrator
+                else control id title ControlStatus.NotEnforced $"not enforced, so it does not hold that {detail}" $"enable it in {ruleset}" Principal.RepositoryAdministrator
 
             let checks =
                 profile.RequiredChecks
@@ -231,6 +238,8 @@ module PlatformGovernance =
 
                 if profile.AllowAdminBypass then
                     control "GOV-BYPASS" "No administrative bypass" ControlStatus.NotRequired "the profile allows bypass" "" Principal.RepositoryAdministrator
+                elif not anything then
+                    control "GOV-BYPASS" "No administrative bypass" ControlStatus.NotEnforced "no rule applies to the branch, so there is nothing to bypass: every writer can do anything" $"create {ruleset}" Principal.RepositoryAdministrator
                 elif not rules.BypassVisible then
                     control "GOV-BYPASS" "No administrative bypass" ControlStatus.Unknown "a ruleset's bypass list is not visible to this credential" "inspect with an administrator credential" Principal.RepositoryAdministrator
                 elif admins then
@@ -264,7 +273,7 @@ module PlatformGovernance =
                     "Merge gate runs from the protected branch"
                     ControlStatus.NotEnforced
                     $"'{profile.MergeGateWorkflow}' is not on the protected branch"
-                    "merge the template docs/governance/templates/praxis-merge-gate.yml through a reviewed change"
+                    "merge the workflow `praxis governance bootstrap` writes, through a reviewed change"
                     Principal.RepositoryAdministrator
             | Some(_, triggers) when triggers |> List.exists (fun t -> t <> "pull_request_target" && t <> "merge_group" && t <> "workflow_dispatch") ->
                 let names = String.concat ", " triggers
@@ -299,9 +308,9 @@ module PlatformGovernance =
                 control "GOV-TRUST-ROOT" "Completion authority trust root" ControlStatus.Enforced $"configVersion {root.ConfigVersion}, {root.Verifiers.Length} verifier(s), approved by {root.ApprovedBy}" "" Principal.OrganizationOwner
 
         [ (if praxis.RequireVerifiedCompletion then
-               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.Enforced "workProtocol.requireVerifiedCompletion is set on the protected branch" "" Principal.RepositoryAdministrator
+               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.Enforced "verified completion (workProtocol.requireVerifiedCompletion or governance.requireVerifiedMerge) is required on the protected branch" "" Principal.RepositoryAdministrator
            else
-               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.NotEnforced "the protected ros.json does not require verified completion" "set workProtocol.requireVerifiedCompletion through an elevated change" Principal.OrganizationOwner)
+               control "GOV-VERIFIED-COMPLETION" "Verified completion required" ControlStatus.NotEnforced "the protected ros.json requires neither verified merges nor verified completion" "set governance.requireVerifiedMerge (bootstrap does) or workProtocol.requireVerifiedCompletion through an elevated change" Principal.OrganizationOwner)
           trust
           (if praxis.ValidationPolicyPresent then
                control "GOV-VALIDATION-POLICY" "Protected validation policy" ControlStatus.Enforced "the validation policy is read from the protected branch" "" Principal.RepositoryAdministrator

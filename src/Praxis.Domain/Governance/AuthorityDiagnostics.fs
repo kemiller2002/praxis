@@ -69,8 +69,8 @@ module AuthorityDiagnostics =
                   | Some _, None when workloadVerifiers.IsEmpty && state.PinnedKeyIds.IsEmpty -> "an unrevoked verifier in the trust root"
                   | _ -> ()
                   if not state.ValidationPolicyPresent then "the protected validation policy (.praxis/validation-policy.json)"
-                  if not state.VerifyWorkflowPresent then "the protected verification workflow (.github/workflows/praxis-verify.yml)"
-                  if not state.MergeGateWorkflowPresent then "the protected merge gate workflow (.github/workflows/praxis-merge-gate.yml)" ]
+                  if not (state.VerifyWorkflowPresent && state.MergeGateWorkflowPresent) then
+                      "the protected verification and merge-gate workflow (.github/workflows/praxis-merge-gate.yml)" ]
 
             let reusable =
                 [ if not state.PinnedKeyIds.IsEmpty then
@@ -86,9 +86,9 @@ module AuthorityDiagnostics =
               Reusable = reusable
               ResolvedBy = Principal.OrganizationOwner
               Procedure =
-                [ "an agent runs `praxis governance bootstrap --repository OWNER/NAME --approved-by LOGIN` on a branch and opens a pull request (it writes the trust root, validation policy and both workflows; it creates no key)"
+                [ "an agent runs `praxis governance bootstrap --repository OWNER/NAME --approved-by LOGIN --validation NAME=COMMAND` on a branch and opens a pull request (it writes the trust root, validation policy, authorities and the merge-gate workflow; it creates no key)"
                   "the owner reviews and merges that pull request (the one human action that establishes the trust root; mobile is sufficient)"
-                  "the owner applies the default-branch ruleset (docs/governance/templates/ruleset-main.json) so the gate is required"
+                  "the owner imports the default-branch ruleset the bootstrap wrote (.praxis/governance/ruleset-main.json) so the gate is required and administrators cannot bypass it"
                   "`praxis governance inspect` then reports the readiness level reached" ]
               MayContinue = continueSafely
               Blocked = blocked }
