@@ -761,6 +761,16 @@ rewritten only by a mutation, its history intact. Every group command prints
 exactly one `{command, schemaVersion, status, ...}` document with `--json`;
 unknown values are `null`, never `0`.
 
+### `governance inspect|drift|audit|authority|bootstrap|observe|attest`, `merge authorize`
+
+Enforceable governance (RQ-ROS-2026-A039, WI-0116). `inspect` reads the platform's branch rules (read-only)
+and reports each control as enforced, not enforced, unknown or platform-unavailable, with a readiness level;
+`drift` compares with a saved report; `audit` examines the protected branch's integrations; `authority`
+diagnoses a missing completion authority; `bootstrap` writes the keyless trust-root proposal;
+`observe`/`attest` run in the protected merge-gate workflow; `merge authorize` is the merge decision.
+Exit 0 satisfied, 3 refused / drift / audit errors / not ready, 2 invalid arguments, 1 failure. Reference:
+[docs/governance/README.md](governance/README.md).
+
 ### `tutela ingest`, `tutela metrics`
 
 ```
