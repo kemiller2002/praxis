@@ -123,6 +123,42 @@ declaration can say so: `"limenRoutingVersion": "X.Y.Z"` names the first
 release, and `"limenRoutingModule": "<name>"` names the module source must
 reference. Neither needs a new Praxis release.
 
+## Reliability declaration (report-only)
+
+`praxis foundations verify` also reads `.echelon/reliability.json`
+(`echelon.reliability/v1`,
+[`requirements/APPLICATION-RELIABILITY-DECLARATION.md`](../requirements/APPLICATION-RELIABILITY-DECLARATION.md),
+RQ-ROS-2026-A038). The check is **report-only** (DF-ROS-2026-A076, owner
+decision U-14): it adds a separate `reliability` section to the text and
+`--json` reports, every finding is `info`, and it never changes `passed` or
+the exit code. The section states whether the declaration is `present`,
+`absent` or `invalid`, the system class, each tenet's applicability and
+each requirement family's *effective* state.
+
+| Code | Requirement | Meaning |
+|---|---|---|
+| `ECHELON-FND-RELIABILITY-001` | PRX-REL-001 | the declaration is absent |
+| `ECHELON-FND-RELIABILITY-002` | PRX-REL-001 | not a JSON object, wrong `schema`, wrong JSON type or unknown property |
+| `ECHELON-FND-RELIABILITY-003` | PRX-REL-002 | `systemClass` is missing or not in the enumeration |
+| `ECHELON-FND-RELIABILITY-004` | PRX-REL-003 | a tenet is missing or its applicability is not in the enumeration |
+| `ECHELON-FND-RELIABILITY-005` | PRX-REL-003 | a tenet other than `applicable` has no non-empty reason |
+| `ECHELON-FND-RELIABILITY-006` | PRX-REL-004 | a `compliant`/`partially-compliant` family has no evidence; reported as `unverified` |
+| `ECHELON-FND-RELIABILITY-007` | PRX-REL-004 | an evidence ref does not resolve; the family is reported as `unverified` |
+| `ECHELON-FND-RELIABILITY-008` | PRX-REL-004/005 | a family, state or evidence class is not in the enumeration, or a ref is empty |
+| `ECHELON-FND-RELIABILITY-009` | PRX-REL-006/008 | an exception is incomplete, its expiry is not a date, or its requirement does not match `EAR-[A-Z]{3}-\d{3}` |
+| `ECHELON-FND-RELIABILITY-010` | PRX-REL-006 | an exception's `expires` date is before today |
+| `ECHELON-FND-RELIABILITY-011` | PRX-REL-007 | continuous availability is `applicable` but a `designEvidence` reference is missing |
+| `ECHELON-FND-RELIABILITY-012` | PRX-REL-010 | a tenet is `applicable`, not every family is effectively compliant, and no `migrationPlan` is named |
+| `ECHELON-FND-RELIABILITY-013` | PRX-REL-009 | a dependency does not name its capability and a non-empty pin |
+
+An evidence ref resolves when it is a repository-relative path (a
+`#fragment` is ignored) that exists, or an external URL naming a full
+40-hex commit or a `sha256:` digest. Absolute paths and paths that escape
+the repository never resolve. A family whose claim does not resolve is shown
+as `unverified` with the reason; Praxis never prints `compliant` for it.
+Codes 002 to 005, 008 and 009 make the declaration `invalid`. Praxis's own
+declaration is [`.echelon/reliability.json`](../.echelon/reliability.json).
+
 ## Ownership
 
 - **Praxis** owns verification semantics, finding codes, and the executable

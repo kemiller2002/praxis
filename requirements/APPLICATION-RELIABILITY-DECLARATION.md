@@ -1,7 +1,8 @@
 # Application reliability applicability declaration
 
-Status: **Proposed** (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, proposed). Not implemented; nothing in this file is
-enforced by `praxis validate` or `praxis foundations verify` today.
+Status: **Report-only** (RQ-ROS-2026-A038; decision DF-ROS-2026-A076, accepted 2026-11-26). `praxis foundations verify`
+reports on the declaration (see [docs/application-foundations.md](../docs/application-foundations.md#reliability-declaration-report-only));
+no finding fails verification, and `praxis validate` does not check it.
 
 Portfolio tenets (owner-approved, echelon-organization-administration #12, #14): Continuous Availability and Durable
 Execution; Cache-Ready, Not Cache-Dependent; Reliability by Construction; Infrastructure Minimalism. Detailed

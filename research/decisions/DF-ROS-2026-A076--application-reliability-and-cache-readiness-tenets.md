@@ -1,12 +1,12 @@
 ---
 id: DF-ROS-2026-A076
 title: Praxis carries the reliability and cache-readiness tenets into repository governance through a declared-applicability file, report-only first
-status: draft
-version: 0.1.0
+status: accepted
+version: 1.0.0
 owners:
   - repository-governance
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 research_area: repository-operating-system
 decision_type: governance
 supports: [RQ-ROS-2026-A038]
@@ -21,8 +21,9 @@ derived_from: []
 provenance:
   contributions:
     EXE-20261125T201255923Z-3477d5c5:
-      operations: [created]
+      operations: [created, modified]
       at: 2026-11-25T20:14:03.943Z
+      last: 2026-11-26T00:30:01.118Z
       actor:
         kind: agent
         id: anthropic/claude-code
@@ -44,7 +45,7 @@ tooling, static sites or research and must not be pushed into runtime machinery;
 `requirements/SHARED-APPLICATION-FOUNDATIONS.md` already establishes the precedent of a portfolio-wide standard owned
 by Praxis and verified where a repository can show it (URL-addressable state).
 
-# Decision (proposed)
+# Decision
 
 1. Praxis owns the *declaration and its verification*, not the runtime capability.
 2. Each repository declares applicability in `.echelon/reliability.json` (RQ-ROS-2026-A038, schema
@@ -72,4 +73,7 @@ a new schema to maintain. Implementation requires a separate work item.
 
 # Status
 
-Draft (proposed) by an agent; not accepted. Acceptance requires the owner.
+Accepted by owner instruction to implement (2026-11-26).
+
+Drafted by an agent on 2026-11-25. Implemented report-only under WI-0113; RQ-ROS-2026-A038 states which
+PRX-REL items are implemented. Item 5 (the Engineering Standards paragraph) is not done by this change.

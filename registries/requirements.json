@@ -2185,8 +2185,10 @@
             "runtime": "claude-code"
           },
           "at": "2026-11-25T20:14:03.054Z",
+          "last": "2026-11-26T00:30:00.170Z",
           "operations": [
-            "created"
+            "created",
+            "modified"
           ],
           "reason": "WI-0113: INIT-012 reliability applicability declaration (proposed)"
         }
@@ -2199,7 +2201,7 @@
       "requirements/echelon-reliability-v1.schema.json"
     ],
     "research_area": "repository-operating-system",
-    "status": "draft",
+    "status": "implemented",
     "tags": [
       "reliability",
       "availability",
@@ -2209,7 +2211,7 @@
       "foundations"
     ],
     "title": "Every Echelon repository declares its applicability to the reliability and cache-readiness tenets, with honest compliance states",
-    "updated": "2026-11-25",
-    "version": "0.1.0"
+    "updated": "2026-11-26",
+    "version": "0.2.0"
   }
 ]

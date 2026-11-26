@@ -160,6 +160,7 @@
     <Compile Include="Foundations/FormaRelease.fs" />
     <Compile Include="Foundations/RouteInventoryReader.fs" />
     <Compile Include="Foundations/RoutingFoundation.fs" />
+    <Compile Include="Foundations/ReliabilityDeclarationReader.fs" />
     <Compile Include="Requirements/FilePreservationInputs.fs" />
     <Compile Include="Work/FileIntegrationStreams.fs" />
     <Compile Include="Autonomy/AutonomyJson.fs" />
