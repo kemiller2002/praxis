@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 118,
+  "nextSeq": 120,
   "items": [
     {
       "id": "WI-0001",
@@ -7399,6 +7399,48 @@
       "attachments": [],
       "createdAt": "2026-11-26T18:02:46.600Z",
       "updatedAt": "2026-11-26T18:05:57.000Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0118",
+      "title": "Decision lifecycle requirements exposed by an approved multi-repository strategy: authority stages, decision currency, cross-repository propagation (proposed RQs, DAF-agnostic)",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-11-26T20:40:28.433Z",
+      "updatedAt": "2026-11-26T20:42:43Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0119",
+      "title": "Record owner acceptance (2026-11-27) of RQ-ROS-2026-6C17, 0863, 6D60",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "complete",
+      "attachments": [],
+      "createdAt": "2026-11-27T02:44:55.518Z",
+      "updatedAt": "2026-11-27T02:46:08Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

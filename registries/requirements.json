@@ -1,5 +1,183 @@
 [
   {
+    "created": "2026-11-26",
+    "id": "RQ-ROS-2026-0863",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-0863--decision-currency-and-invalidation.md",
+    "priority": "medium",
+    "provenance": {
+      "contributions": {
+        "EXE-20261126T204033635Z-01b9955f": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-26T20:41:26Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-6C17",
+      "RQ-ROS-2026-6D60",
+      "framework/protocols/SUPERSESSION.md",
+      "framework/standards/CONFIDENCE.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "decisions",
+      "freshness",
+      "assumptions",
+      "invalidation",
+      "supersession",
+      "consistency"
+    ],
+    "title": "Decision records carry review dates, evidence as-of dates, monitored assumptions and invalidation conditions, and Praxis reports overdue decisions and citations of superseded decisions",
+    "updated": "2026-11-27",
+    "version": "0.2.0"
+  },
+  {
+    "created": "2026-11-26",
+    "id": "RQ-ROS-2026-6C17",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-6C17--decision-authority-stages-and-conditional-gates.md",
+    "priority": "medium",
+    "provenance": {
+      "contributions": {
+        "EXE-20261126T204033635Z-01b9955f": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-26T20:41:26Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-0863",
+      "RQ-ROS-2026-6D60",
+      "framework/protocols/ARTIFACT-LIFECYCLE.md",
+      "framework/protocols/SUPERSESSION.md"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "decisions",
+      "authority",
+      "approval",
+      "authorization",
+      "gates",
+      "lifecycle"
+    ],
+    "title": "Decision records distinguish strategic approval from implementation authorization through an ordered authority-stage ladder with conditional gates that never auto-advance",
+    "updated": "2026-11-27",
+    "version": "0.2.0"
+  },
+  {
+    "created": "2026-11-26",
+    "id": "RQ-ROS-2026-6D60",
+    "owners": [
+      "repository-governance"
+    ],
+    "path": "research/requirements/RQ-ROS-2026-6D60--cross-repository-decision-propagation.md",
+    "priority": "medium",
+    "provenance": {
+      "contributions": {
+        "EXE-20261126T204033635Z-01b9955f": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-26T20:41:26Z",
+          "operations": [
+            "created"
+          ],
+          "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
+        }
+      }
+    },
+    "related_documents": [
+      "RQ-ROS-2026-6C17",
+      "RQ-ROS-2026-0863",
+      "RQ-ROS-2026-A037"
+    ],
+    "research_area": "repository-operating-system",
+    "status": "accepted",
+    "tags": [
+      "decisions",
+      "cross-repository",
+      "propagation",
+      "traceability",
+      "requirements"
+    ],
+    "title": "Decisions taken in one repository propagate to others through implication records with an immutable source reference, a target, a disposition class, acceptance criteria and validation requirements",
+    "updated": "2026-11-27",
+    "version": "0.2.0"
+  },
+  {
     "created": "2026-09-25",
     "id": "RQ-ROS-2026-A001",
     "owners": [
