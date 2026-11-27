@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "repository": "repository-operating-system",
-  "nextSeq": 119,
+  "nextSeq": 120,
   "items": [
     {
       "id": "WI-0001",
@@ -7420,6 +7420,27 @@
       "attachments": [],
       "createdAt": "2026-11-26T20:40:28.433Z",
       "updatedAt": "2026-11-26T20:42:43Z",
+      "createdBy": "unknown",
+      "createdByActor": {
+        "kind": "agent",
+        "id": "anthropic/claude-code",
+        "provider": "anthropic",
+        "model": "unknown",
+        "runtime": "claude-code"
+      },
+      "source": "manual",
+      "sourceReference": null
+    },
+    {
+      "id": "WI-0119",
+      "title": "Record owner acceptance (2026-11-27) of RQ-ROS-2026-6C17, 0863, 6D60",
+      "description": null,
+      "tags": [],
+      "priority": "medium",
+      "status": "ready",
+      "attachments": [],
+      "createdAt": "2026-11-27T02:44:55.518Z",
+      "updatedAt": "2026-11-27T02:44:55Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",

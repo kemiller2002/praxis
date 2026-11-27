@@ -22,6 +22,20 @@
             "created"
           ],
           "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
         }
       }
     },
@@ -32,19 +46,18 @@
       "framework/standards/CONFIDENCE.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "proposed",
+    "status": "accepted",
     "tags": [
       "decisions",
       "freshness",
       "assumptions",
       "invalidation",
       "supersession",
-      "consistency",
-      "proposal"
+      "consistency"
     ],
     "title": "Decision records carry review dates, evidence as-of dates, monitored assumptions and invalidation conditions, and Praxis reports overdue decisions and citations of superseded decisions",
-    "updated": "2026-11-26",
-    "version": "0.1.0"
+    "updated": "2026-11-27",
+    "version": "0.2.0"
   },
   {
     "created": "2026-11-26",
@@ -69,6 +82,20 @@
             "created"
           ],
           "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
         }
       }
     },
@@ -79,19 +106,18 @@
       "framework/protocols/SUPERSESSION.md"
     ],
     "research_area": "repository-operating-system",
-    "status": "proposed",
+    "status": "accepted",
     "tags": [
       "decisions",
       "authority",
       "approval",
       "authorization",
       "gates",
-      "lifecycle",
-      "proposal"
+      "lifecycle"
     ],
     "title": "Decision records distinguish strategic approval from implementation authorization through an ordered authority-stage ladder with conditional gates that never auto-advance",
-    "updated": "2026-11-26",
-    "version": "0.1.0"
+    "updated": "2026-11-27",
+    "version": "0.2.0"
   },
   {
     "created": "2026-11-26",
@@ -116,6 +142,20 @@
             "created"
           ],
           "reason": "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+        },
+        "EXE-20261127T024457548Z-5edaf2a9": {
+          "actor": {
+            "id": "anthropic/claude-code",
+            "kind": "agent",
+            "model": "unknown",
+            "provider": "anthropic",
+            "runtime": "claude-code"
+          },
+          "at": "2026-11-27T02:45:12Z",
+          "operations": [
+            "modified"
+          ],
+          "reason": "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
         }
       }
     },
@@ -125,18 +165,17 @@
       "RQ-ROS-2026-A037"
     ],
     "research_area": "repository-operating-system",
-    "status": "proposed",
+    "status": "accepted",
     "tags": [
       "decisions",
       "cross-repository",
       "propagation",
       "traceability",
-      "requirements",
-      "proposal"
+      "requirements"
     ],
     "title": "Decisions taken in one repository propagate to others through implication records with an immutable source reference, a target, a disposition class, acceptance criteria and validation requirements",
-    "updated": "2026-11-26",
-    "version": "0.1.0"
+    "updated": "2026-11-27",
+    "version": "0.2.0"
   },
   {
     "created": "2026-09-25",

@@ -1,11 +1,11 @@
 ---
 id: RQ-ROS-2026-0863
 title: Decision records carry review dates, evidence as-of dates, monitored assumptions and invalidation conditions, and Praxis reports overdue decisions and citations of superseded decisions
-status: proposed
-version: 0.1.0
+status: accepted
+version: 0.2.0
 owners: [repository-governance]
 created: 2026-11-26
-updated: 2026-11-26
+updated: 2026-11-27
 research_area: repository-operating-system
 priority: medium
 related_documents:
@@ -13,7 +13,7 @@ related_documents:
   - RQ-ROS-2026-6D60
   - framework/protocols/SUPERSESSION.md
   - framework/standards/CONFIDENCE.md
-tags: [decisions, freshness, assumptions, invalidation, supersession, consistency, proposal]
+tags: [decisions, freshness, assumptions, invalidation, supersession, consistency]
 provenance:
   contributions:
     EXE-20261126T204033635Z-01b9955f:
@@ -26,11 +26,25 @@ provenance:
         model: unknown
         runtime: claude-code
       reason: "WI-0118: DAF-agnostic decision lifecycle requirement exposed by an approved multi-repository strategy (proposed)"
+    EXE-20261127T024457548Z-5edaf2a9:
+      operations: [modified]
+      at: 2026-11-27T02:45:12Z
+      actor:
+        kind: agent
+        id: anthropic/claude-code
+        provider: anthropic
+        model: unknown
+        runtime: claude-code
+      reason: "WI-0119: record owner acceptance (2026-11-27, PR #314): status proposed -> accepted; not implemented"
 ---
 
 # Decision currency: freshness, assumptions and invalidation
 
-**Status: proposed.** Not accepted, not implemented. Work item WI-0118.
+**Status: accepted** (owner, 2026-11-27). **Not implemented.** Proposed under WI-0118; acceptance recorded under
+WI-0119. The owner confirmed in session the direction posted on praxis PR #314: "Owner approves the three
+proposed decision lifecycle, currency and cross-repository propagation requirements for ratification. Preserve
+governance and validation gates." Acceptance does not implement anything; implementation, its tests and the
+validation requirements below remain separate work.
 
 ## Origin
 
@@ -75,8 +89,8 @@ All fields are optional and additive.
 
 ## Acceptance for this record
 
-Owner acceptance of the field names and of the severities (warning for overdue and breached; error for an
-observed invalidation left unreviewed).
+Accepted by the owner on 2026-11-27, including the items this section previously named for owner
+acceptance. Implementation is a separate work item.
 
 ## Validation requirements
 

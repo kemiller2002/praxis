@@ -394,6 +394,7 @@
 | WI-0116 | Registry maintenance requirements (RM-01..17), proposed; re-opened after WI-0110 ID collision | blocked | governance | medium |
 | WI-0117 | Enforceable governance, keyless completion authority and verified merge gate (re-landed from WI-0116 after an ID collision with main's WI-0116) | complete |  | medium |
 | WI-0118 | Decision lifecycle requirements exposed by an approved multi-repository strategy: authority stages, decision currency, cross-repository propagation (proposed RQs, DAF-agnostic) | complete |  | medium |
+| WI-0119 | Record owner acceptance (2026-11-27) of RQ-ROS-2026-6C17, 0863, 6D60 | ready |  | medium |
 | WI-ACTIVE | Active item | abandoned |  | medium |
 | WI-READY | Ready item | abandoned |  | medium |
 | WI-UPSTREAM-SYNC-20261001 | Add elapsed-time upstream synchronization policy and drift reporting | complete | governance, git, agents | high |
