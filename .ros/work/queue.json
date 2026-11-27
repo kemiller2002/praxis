@@ -7437,10 +7437,10 @@
       "description": null,
       "tags": [],
       "priority": "medium",
-      "status": "ready",
+      "status": "complete",
       "attachments": [],
       "createdAt": "2026-11-27T02:44:55.518Z",
-      "updatedAt": "2026-11-27T02:44:55Z",
+      "updatedAt": "2026-11-27T02:46:08Z",
       "createdBy": "unknown",
       "createdByActor": {
         "kind": "agent",
